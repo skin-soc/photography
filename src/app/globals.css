@@ -1,26 +1,49 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+} 
+
+.border {
+  border-width: 0px !important;
+}
+.border-b {
+  border-bottom-width: 0px !important;
+}
+.border-t {
+  border-top-width: 0px !important;
+}
+
+/* styles.css or in your component's styles */
+.react-calendar {
+  background-color: #1a1a1a; /* Dark background */
+  color: #ffffff; /* Light text color */
+}
+
+.react-calendar__tile {
+  background: none; /* Remove default background */
+  color: #ffffff; /* Light text color */
+}
+
+.react-calendar__tile--active {
+  background-color: #931020; /* Highlight active tile */
+  color: #ffffff; /* Light text color */
+}
+
+.react-calendar__tile--now {
+  background-color: #333333; /* Different color for today's date */
+  color: #ffffff; /* Light text color */
+}
+
+.react-calendar__tile:hover {
+  background-color: #444444; /* Hover effect */
+  color: #ffffff; /* Light text color */
 }
