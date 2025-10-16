@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
-    "build": "open-next build",
-    "start": "open-next start",
+    "build": "next build",
+    "start": "next start",
+    "preview": "opennextjs-cloudflare preview", 
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "lint": "next lint"
   },
   "keywords": [],
