@@ -12,17 +12,17 @@ const italiana = Italiana({
 
 export const metadata: Metadata = {
   title: 'Gus McEwan Photography',
-  description: 'Portfolio of Gus McEwan: recording light and shadows',
+  description: 'Portfolio of Gus McEwan - People, places and nature',
   openGraph: {
     title: 'Gus McEwan Photography',
-    description: 'Portfolio of Gus McEwan: recording light and shadows',
+    description: 'Portfolio of Gus McEwan - People, places and nature',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     creator: '@gusmcewanphoto',
     title: 'Gus McEwan Photography',
-    description: 'Portfolio of Gus McEwan: recording light and shadows',
+    description: 'Portfolio of Gus McEwan - People, places and nature',
   },
 }
 
