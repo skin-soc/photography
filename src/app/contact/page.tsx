@@ -21,7 +21,7 @@ export default function Contact() {
             <p className="text-xl text-[#931020]">Copenhagen - London</p>
           {/* Services Section */}
           <div className="mt-16">  
-            <h1 className="text-5xl font-bold mb-4 text-black dark:text-white"><a className="text-black dark:text-white hover:text-[#931020]" href="https://x.com/mcewangus" target="_blank">𝕏</a></h1>
+            <h1 className="text-5xl font-bold mb-4 text-black dark:text-white"><a className="text-black dark:text-white hover:text-[#931020]" href="https://x.com/gusmcewanphoto" target="_blank">𝕏</a></h1>
           </div>
           <div className="mt-16">  
             <h2 className="text-3xl font-bold mb-8 text-center text-black dark:text-white">Get in touch!</h2>
