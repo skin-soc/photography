@@ -210,7 +210,7 @@ export default function Portfolio() {
                 width={0}  // Realistic placeholder for large images
                 height={0}  // Adjust based on common aspect ratio
                 className="w-auto h-auto max-w-full max-h-full object-contain"
-                sizes="100vw"
+                sizes="100vh"
                 unoptimized={true}
               />
             </picture>
