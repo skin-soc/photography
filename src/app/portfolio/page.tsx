@@ -195,6 +195,44 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+      {/* Lightbox Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative w-full max-w-6xl max-h-[90vh]">
+            <picture>
+              <source srcSet={getWebPSrc(selectedImage.src)} type="image/webp" />
+              <Image
+                src={selectedImage.src}
+                alt={selectedImage.alt}
+                width={1920}  // Realistic placeholder for large images
+                height={1080}  // Adjust based on common aspect ratio
+                className="object-contain"
+                style={{ width: '100%', height: '100%' }}
+                sizes="90vw"
+                unoptimized={true}
+              />
+            </picture>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setSelectedImage(null)
+              }}
+              className="absolute top-4 right-4 text-white hover:text-[#931020] p-2 bg-black/50 rounded-full"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="absolute bottom-4 left-4 text-white bg-black/50 p-4 rounded-lg">
+              <h3 className="text-xl font-medium text-black dark:text-white">{selectedImage.title}</h3>
+              <p className="text-[#931020] font-medium">{selectedImage.category}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
