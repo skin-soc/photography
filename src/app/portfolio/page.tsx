@@ -212,17 +212,17 @@ export default function Portfolio() {
       {/* Lightbox Modal */}
       {selectedImage && (
   <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)} />
-    <div className="relative w-full max-w-[95vw] max-h-[90vh]">
+    <div className="relative w-full max-w-[95vw] max-h-[90vh]" />
       <picture>
         <source srcSet={getWebPSrc(selectedImage.src)} type="image/webp" />
         <Image
           src={selectedImage.src}
           alt={selectedImage.alt}
-          width={1920}  // Use actual avg width (e.g., from your images)
-          height={1280}  // Use actual avg height/aspect ratio
+          width={1920} 
+          height={1280}  
           className="object-contain"
-          style={{ width: '100%', height: 'auto' }}  // Height auto for proper scaling
-          sizes="100vw"  // Full viewport width
+          style={{ width: '100%', height: 'auto' }}  
+          sizes="100vw"
           unoptimized={true}
         />
       </picture>
