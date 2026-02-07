@@ -34,6 +34,7 @@ export default function Home() {
           sizes="100vw"
           style={{ objectPosition: '21% 0' }}
           quality={100}
+          unoptimized={true}
         />
       </div>
 
