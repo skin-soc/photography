@@ -1,9 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Image from 'next/image'
-
 const categories = ['All', 'Nature', 'People', 'Places']
-
 // Add your images here
 type GalleryImage = {
   src: string
@@ -11,7 +9,6 @@ type GalleryImage = {
   category: string
   title: string
 }
-
 // Using placeholder images until you add your own
 const images: GalleryImage[] = [
   {
@@ -123,7 +120,6 @@ const images: GalleryImage[] = [
     title: 'Swanset'
   }
 ]
-
 // Add placeholder images for development
 if (process.env.NODE_ENV === 'development') {
   // Generate placeholder images if no real images exist
@@ -138,18 +134,14 @@ if (process.env.NODE_ENV === 'development') {
     }
   }
 }
-
 export default function Portfolio() {
   const [activeCategory, setActiveCategory] = useState('All')
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
-
   const filteredImages = images.filter(
     img => activeCategory === 'All' || img.category === activeCategory
   )
-
   // Helper to get WebP src (assumes .webp exists alongside .jpg)
   const getWebPSrc = (src: string) => src.replace(/\.\w+$/, '.webp')
-
   return (
     <>
       <div className="min-h-screen bg-white dark:bg-black py-32">
@@ -173,8 +165,8 @@ export default function Portfolio() {
           {/* Masonry Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredImages.map((image, i) => (
-              <div key={i} className="relative group cursor-pointer bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shadow-md" />
-                <div className="relative aspect-[3/4]" />
+              <div key={i} className="relative group cursor-pointer bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shadow-md">
+                <div className="relative aspect-[3/4]">
                   <picture>
                     <source srcSet={getWebPSrc(image.src)} type="image/webp" />
                     <Image
@@ -183,18 +175,18 @@ export default function Portfolio() {
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      loading="lazy"  // Explicit for clarity
-                      unoptimized={true}  // Per-component if needed, but global config handles it
+                      loading="lazy" // Explicit for clarity
+                      unoptimized={true} // Per-component if needed, but global config handles it
                     />
                   </picture>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <button onClick={() => setSelectedImage(image)} className="bg-[#931020] text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-[#931020]/90 shadow-lg transform transition-transform duration-200 hover:scale-105" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300"></div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button onClick={() => setSelectedImage(image)} className="bg-[#931020] text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-[#931020]/90 shadow-lg transform transition-transform duration-200 hover:scale-105">
                       View Full Size
                     </button>
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-900" />
+                <div className="p-4 bg-white dark:bg-gray-900">
                   <h3 className="text-lg font-medium text-black dark:text-white">{image.title}</h3>
                   <p className="text-[#931020] font-medium">{image.category}</p>
                 </div>
