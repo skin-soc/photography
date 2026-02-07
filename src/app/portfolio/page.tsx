@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import Image from 'next/image'
 
@@ -41,7 +40,7 @@ const images: GalleryImage[] = [
   },
   {
     src: '/images/gallery/PL00007.jpg',
-    alt: 'Copenhagen Ski and Incenation Plant',
+    alt: 'Copenhagen Ski and Inceneration Plant',
     category: 'Places',
     title: 'ARC'
   },
@@ -104,7 +103,7 @@ const images: GalleryImage[] = [
     alt: 'An Australian seagull',
     category: 'Nature',
     title: 'Surfer Gull'
-  },  
+  },
   {
     src: '/images/gallery/NT00005.jpg',
     alt: 'Blackhead gull on a frozen lake',
@@ -148,6 +147,9 @@ export default function Portfolio() {
     img => activeCategory === 'All' || img.category === activeCategory
   )
 
+  // Helper to get WebP src (assumes .webp exists alongside .jpg)
+  const getWebPSrc = (src: string) => src.replace(/\.\w+$/, '.webp')
+
   return (
     <>
       <div className="min-h-screen bg-white dark:bg-black py-32">
@@ -168,7 +170,6 @@ export default function Portfolio() {
               </button>
             ))}
           </div>
-
           {/* Masonry Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredImages.map((image, i) => (
@@ -177,16 +178,21 @@ export default function Portfolio() {
                 className="relative group cursor-pointer bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shadow-md"
               >
                 <div className="relative aspect-[3/4]">
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
+                  <picture>
+                    <source srcSet={getWebPSrc(image.src)} type="image/webp" />
+                    <Image
+                      src={image.src}
+                      alt={image.alt}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      loading="lazy"  // Explicit for clarity
+                      unoptimized={true}  // Per-component if needed, but global config handles it
+                    />
+                  </picture>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300" />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button 
+                    <button
                       onClick={() => setSelectedImage(image)}
                       className="bg-[#931020] text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-[#931020]/90 shadow-lg transform transition-transform duration-200 hover:scale-105"
                     >
@@ -203,23 +209,26 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
-
       {/* Lightbox Modal */}
       {selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
         >
           <div className="relative w-full max-w-6xl max-h-[90vh]">
-            <Image
-              src={selectedImage.src}
-              alt={selectedImage.alt}
-              width={85}
-              height={85}
-              className="object-contain"
-              style={{ width: '100%', height: '100%' }}
-              sizes="90vw"
-            />
+            <picture>
+              <source srcSet={getWebPSrc(selectedImage.src)} type="image/webp" />
+              <Image
+                src={selectedImage.src}
+                alt={selectedImage.alt}
+                width={1920}  // Realistic placeholder for large images
+                height={1080}  // Adjust based on common aspect ratio
+                className="object-contain"
+                style={{ width: '100%', height: '100%' }}
+                sizes="90vw"
+                unoptimized={true}
+              />
+            </picture>
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -240,4 +249,4 @@ export default function Portfolio() {
       )}
     </>
   )
-} 
+}
