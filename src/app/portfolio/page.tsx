@@ -212,7 +212,7 @@ export default function Portfolio() {
       {/* Lightbox Modal */}
       {selectedImage && (
   <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)} />
-    <div className="relative w-full max-w-[95vw] max-h-[90vh]">  {/* Increased max-w to 95vw for larger monitors */}
+    <div className="relative w-full max-w-[95vw] max-h-[90vh]">
       <picture>
         <source srcSet={getWebPSrc(selectedImage.src)} type="image/webp" />
         <Image
