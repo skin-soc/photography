@@ -25,6 +25,7 @@ export default function Home() {
     <div className="relative min-h-screen">
       {/* Hero Image */}
       <div className="absolute inset-0">
+        <source srcSet={isDarkMode ? '/images/dark.webp' : '/images/light.webp'} type="image/webp" />
         <Image
           src={isDarkMode ? '/images/dark.jpg' : '/images/light.jpg'}
           alt="Gus McEwan's architectural photograph"
