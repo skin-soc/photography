@@ -8,6 +8,7 @@ export default function About() {
           {/* Profile Section */}
           <div className="text-center mb-16">
             <div className="w-64 h-64 mx-auto mb-8 relative rounded-full overflow-hidden">
+              <source srcSet={isDarkMode ? '/images/gus-mcewan.webp' : '/images/gus-mcewan.webp'} type="image/webp" />
               <Image
                 src="/images/gus-mcewan.jpg"
                 alt="Gus McEwan"
