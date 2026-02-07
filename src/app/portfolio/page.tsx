@@ -173,11 +173,8 @@ export default function Portfolio() {
           {/* Masonry Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredImages.map((image, i) => (
-              <div
-                key={i}
-                className="relative group cursor-pointer bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shadow-md"
-              >
-                <div className="relative aspect-[3/4]">
+              <div key={i} className="relative group cursor-pointer bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shadow-md" />
+                <div className="relative aspect-[3/4]" />
                   <picture>
                     <source srcSet={getWebPSrc(image.src)} type="image/webp" />
                     <Image
@@ -191,16 +188,13 @@ export default function Portfolio() {
                     />
                   </picture>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button
-                      onClick={() => setSelectedImage(image)}
-                      className="bg-[#931020] text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-[#931020]/90 shadow-lg transform transition-transform duration-200 hover:scale-105"
-                    >
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <button onClick={() => setSelectedImage(image)} className="bg-[#931020] text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-[#931020]/90 shadow-lg transform transition-transform duration-200 hover:scale-105" />
                       View Full Size
                     </button>
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-900">
+                <div className="p-4 bg-white dark:bg-gray-900" />
                   <h3 className="text-lg font-medium text-black dark:text-white">{image.title}</h3>
                   <p className="text-[#931020] font-medium">{image.category}</p>
                 </div>
@@ -209,41 +203,6 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
-      {/* Lightbox Modal */}
-      {selectedImage && (
-      <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)} />
-        <div className="relative w-full max-w-[95vw] max-h-[90vh]" />
-          <picture>
-            <source srcSet={getWebPSrc(selectedImage.src)} type="image/webp" />
-            <Image
-              src={selectedImage.src}
-              alt={selectedImage.alt}
-              width={1920} 
-              height={1280}  
-              className="object-contain"
-              style={{ width: '100%', height: 'auto' }}  
-              sizes="100vw"
-              unoptimized={true}
-            />
-          </picture>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setSelectedImage(null)
-            }}
-            className="absolute top-4 right-4 text-white hover:text-[#931020] p-2 bg-black/50 rounded-full"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <div className="absolute bottom-4 left-4 text-white bg-black/50 p-4 rounded-lg">
-            <h3 className="text-xl font-medium text-black dark:text-white">{selectedImage.title}</h3>
-            <p className="text-[#931020] font-medium">{selectedImage.category}</p>
-          </div>
-        </div>
-      </div>
-    )}
     </>
   )
 }
