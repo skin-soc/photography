@@ -11,6 +11,9 @@
     "binding": "ASSETS",
     "directory": ".open-next/assets"
   },
+  "images": {
+    "binding": "IMAGES"
+  },
   "observability": {
     "enabled": true
   },
