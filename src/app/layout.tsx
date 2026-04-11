@@ -50,14 +50,6 @@ export default function RootLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center space-y-2">
               <p className="text-black dark:text-white text-sm md:text-base">Copyright © {new Date().getFullYear()} Gus McEwan Photography. All rights reserved.</p>
-              <a 
-                href="https://x.com/gusmcewanphoto" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="inline-block text-[#931020] hover:text-black dark:hover:text-white text-sm"
-              >
-                𝕏
-              </a>
             </div>
           </div>
         </footer>
