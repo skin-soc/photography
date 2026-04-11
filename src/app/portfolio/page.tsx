@@ -19,9 +19,9 @@ const images: GalleryImage[] = [
   },
   {
     src: '/images/gallery/PL00002.jpg',
-    alt: 'Copenhagen Tivoli Gardens',
+    alt: 'Copenhagen Marble Church - Marmorkirken (infrared)',
     category: 'Places',
-    title: 'Tivoli'
+    title: 'Marmorkirken'
   },
   {
     src: '/images/gallery/PL00003.jpg',
