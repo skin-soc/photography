@@ -91,9 +91,9 @@ const images: GalleryImage[] = [
   },
   {
     src: '/images/gallery/NT00012.jpg',
-    alt: 'A lone fisherman during the 2019 COVID pandemic',
+    alt: 'A lone fisherman during the 2020 COVID pandemic',
     category: 'Nature',
-    title: 'COVID Fishing'
+    title: 'COVID'
   },
   {
     src: '/images/gallery/NT00002.jpg',
