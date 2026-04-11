@@ -35,25 +35,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-      <link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
-      <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
-      <link rel="shortcut icon" href="/images/favicon.ico" />
-      <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
-      <meta name="apple-mobile-web-app-title" content="Gus" />
-      <link rel="manifest" href="/images/site.webmanifest" />
+        <link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+        <link rel="shortcut icon" href="/images/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="Gus" />
+        <link rel="manifest" href="/images/site.webmanifest" />
       </head>
       <body className={`${italiana.className} bg-white dark:bg-black text-black dark:text-white`}>
         <Navigation />
         <main className="min-h-screen">
           {children}
         </main>
-        <footer className="border-t border-black dark:border-white py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center space-y-2">
-              <p className="text-black dark:text-white text-sm md:text-base">Copyright © {new Date().getFullYear()} Gus McEwan Photography. All rights reserved.</p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
         <script dangerouslySetInnerHTML={{ __html: `
           window.addEventListener('scroll', function() {
             const nav = document.getElementById('main-nav');
@@ -69,4 +63,4 @@ export default function RootLayout({
       </body>
     </html>
   )
-} 
+}
