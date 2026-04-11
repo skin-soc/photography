@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Italiana } from 'next/font/google'
 import Navigation from './components/Navigation'
+import Footer from './components/Footer'
 import './globals.css'
 
 const italiana = Italiana({ 
