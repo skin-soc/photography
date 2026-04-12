@@ -42,7 +42,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Gus" />
         <link rel="manifest" href="/images/site.webmanifest" />
       </head>
-      <body className={`${italiana.className} bg-white dark:bg-black text-black dark:text-white`}>
+      <body className={`${italiana.className} bg-black text-white`}>
         <Navigation />
         <main className="min-h-screen">
           {children}
@@ -52,10 +52,10 @@ export default function RootLayout({
           window.addEventListener('scroll', function() {
             const nav = document.getElementById('main-nav');
             if (window.scrollY > window.innerHeight - 100) {
-              nav.classList.add('bg-white/80', 'dark:bg-black/80', 'backdrop-blur-sm', 'border-black', 'dark:border-white');
+              nav.classList.add('bg-black/80', 'backdrop-blur-sm', 'border-white');
               nav.classList.remove('border-white/20');
             } else {
-              nav.classList.remove('bg-white/80', 'dark:bg-black/80', 'backdrop-blur-sm', 'border-black', 'dark:border-white');
+              nav.classList.remove('bg-black/80', 'backdrop-blur-sm', 'border-white');
               nav.classList.add('border-white/20');
             }
           });
