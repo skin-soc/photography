@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 
 const categories = ['All', 'Nature', 'People', 'Places']
@@ -49,12 +49,29 @@ if (process.env.NODE_ENV === 'development') {
 export default function Portfolio() {
   const [activeCategory, setActiveCategory] = useState('All')
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
+  const lightboxRef = useRef<HTMLDivElement>(null)
 
   const filteredImages = images.filter(
     img => activeCategory === 'All' || img.category === activeCategory
   )
 
   const getWebPSrc = (src: string) => src.replace(/\.\w+$/, '.webp')
+
+  const openLightbox = (image: GalleryImage) => {
+    setSelectedImage(image)
+    setTimeout(() => {
+      if (lightboxRef.current && document.fullscreenEnabled) {
+        lightboxRef.current.requestFullscreen().catch(() => {})
+      }
+    }, 50)
+  }
+
+  const closeLightbox = () => {
+    setSelectedImage(null)
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {})
+    }
+  }
 
   return (
     <>
@@ -98,7 +115,7 @@ export default function Portfolio() {
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300"></div>
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button
-                      onClick={() => setSelectedImage(image)}
+                      onClick={() => openLightbox(image)}
                       className="bg-[#931020] text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-[#931020]/90 shadow-lg transform transition-transform duration-200 hover:scale-105"
                     >
                       View Full Size
@@ -118,8 +135,9 @@ export default function Portfolio() {
       {/* Lightbox Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-6 sm:p-10"
-          onClick={() => setSelectedImage(null)}
+          ref={lightboxRef}
+          className="fixed inset-0 bg-black z-50 flex items-center justify-center p-6 sm:p-10"
+          onClick={closeLightbox}
         >
           <div
             className="relative flex items-center justify-center"
@@ -172,7 +190,7 @@ export default function Portfolio() {
 
             {/* Close button */}
             <button
-              onClick={() => setSelectedImage(null)}
+              onClick={closeLightbox}
               className="absolute -top-4 -right-4 text-white hover:text-[#931020] p-2 bg-black rounded-full shadow-lg"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
