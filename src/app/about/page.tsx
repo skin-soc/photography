@@ -1,89 +1,71 @@
 import Image from 'next/image'
-  
+
 export default function About() {
   return (
-    <div className="min-h-screen bg-white dark:bg-black py-32">
+    <div className="min-h-screen bg-black py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
+
           {/* Profile Section */}
           <div className="text-center mb-16">
             <div className="w-64 h-64 mx-auto mb-8 relative rounded-full overflow-hidden">
-              <source srcSet={'/images/gus-mcewan.webp'} type="image/webp" />
-              <Image
-                src="/images/gus-mcewan.jpg"
-                alt="Gus McEwan"
-                fill
-                className="object-cover scale-100"
-                style={{ objectPosition: '0px 0px' }}
-                priority
-              />
+              <picture>
+                <source srcSet="/images/gus-mcewan.webp" type="image/webp" />
+                <Image
+                  src="/images/gus-mcewan.jpg"
+                  alt="Gus McEwan"
+                  fill
+                  className="object-cover scale-100"
+                  style={{ objectPosition: '0px 0px' }}
+                  priority
+                />
+              </picture>
             </div>
-            <h1 className="text-4xl font-bold mb-4 text-black dark:text-white">Gus McEwan</h1>
+            <h1 className="text-4xl font-bold mb-4 text-white">Gus McEwan</h1>
             <p className="text-xl text-[#931020]">Husband, Photographer, Scientist</p>
           </div>
 
           {/* Bio Section */}
           <div className="prose prose-lg mx-auto">
-            <h2 className="text-3xl font-bold mb-8 text-black dark:text-white">About Gus</h2>
-            <p className="mb-6 text-black dark:text-white">
-              My journey in photography began when my grandfather gave me his old
-              Leica camera, I was 12 years old. Since then, I&apos;ve had the privilege 
-              of learning and working with amazing people and cultures from all around
-              the world.
+            <h2 className="text-3xl font-bold mb-8 text-white">About Gus</h2>
+            <p className="mb-6 text-white leading-relaxed">
+              It started with a Leica. His grandfather&apos;s, to be precise — pressed into
+              twelve-year-old hands with no instruction manual and no expectations.
+              That camera became a lifelong companion, and the act of looking through
+              a viewfinder became, for Gus McEwan, a way of making sense of the world.
             </p>
-            <p className="mb-6 text-black dark:text-white">
-              I spent a long part of my life studying Earth sciences and I tended to 
-              use photography to escape the rigors of science, until the day when it 
-              was no longer possible to return from my escapades. That said I am proud
-              of my contributions to the battle against human cognitive dissonance on 
-              climate change.
+            <p className="mb-6 text-white leading-relaxed">
+              Before photography consumed him entirely, Gus built a distinguished career
+              in Earth sciences, contributing original research to our understanding of
+              climate change and the stubborn human tendency to look away from
+              uncomfortable truths. Science taught him precision, patience, and the
+              value of bearing honest witness — qualities that now define his work
+              behind the lens.
             </p>
-            <p className="mb-6 text-black dark:text-white">
-              I specialise in natural light photography. I believe it is important to
-              be a faithful recording agent. Recording light (and shadows) can be very
-              challenging in itself, particularly when we all perceive and sense it ever 
-              so slightly differently. For me, photography is one of mankind&apos;s attempts 
-              to freeze time, an eternally failed attempt - and yet - one that continues 
-              to illude us all. 
+            <p className="mb-6 text-white leading-relaxed">
+              Gus is a natural light photographer in the most committed sense of the
+              phrase. He does not bend light to his will — he waits for it, studies it,
+              and follows where it leads. His images are acts of faithful observation:
+              an attempt to record not just what something looks like, but how it
+              actually felt to be there. Light and shadow, he believes, carry emotional
+              weight that no artificial setup can replicate.
             </p>
-            <p className="mb-6 text-black dark:text-white">
-              My work has been featured in several publications such as Vogue, 
-              National Geographic and The Guardian. I&apos;ve also had the honor of 
-              receiving some awards, such as The Best Music Moment of The Year 
-              from the British Journal of Photography in 2017.
+            <p className="mb-6 text-white leading-relaxed">
+              That philosophy has taken him across the world — through festivals and
+              conflict zones, royal courts and coastal wilderness — and his work has
+              appeared in the pages of Vogue, National Geographic, and The Guardian.
+              In 2017, the British Journal of Photography recognised him with their
+              Best Music Moment of the Year award.
+            </p>
+            <p className="mb-6 text-white leading-relaxed">
+              He describes photography as mankind&apos;s most beautiful failure: an
+              eternal attempt to freeze time that never quite succeeds — and is all
+              the more compelling for it.
             </p>
           </div>
 
-          {/* Services Section */}
-          {/* <div className="mt-16">
-            <h2 className="text-3xl font-bold mb-8 text-center text-black dark:text-white">Services</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  title: 'Portrait Photography',
-                  description: 'Capturing your unique personality and style.'
-                },
-                {
-                  title: 'Event Coverage',
-                  description: 'Documenting your special moments with care.'
-                },
-                {
-                  title: 'Commercial Photography',
-                  description: 'Professional images for your business needs.'
-                }
-              ].map((service) => (
-                <div
-                  key={service.title}
-                  className="bg-white dark:bg-black border border-[#931020] p-6 rounded-lg text-center"
-                >
-                  <h3 className="text-xl font-bold mb-4 text-black dark:text-white">{service.title}</h3>
-                  <p className="text-[#931020]">{service.description}</p>
-                </div>
-              ))}
-            </div>
-          </div> */}
         </div>
       </div>
     </div>
   )
-} 
+}
