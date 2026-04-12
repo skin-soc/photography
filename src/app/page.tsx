@@ -1,30 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-
 export default function Home() {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      setIsDarkMode(e.matches);
-    };
-
-    setIsDarkMode(mediaQuery.matches);
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
   return (
     <div className="relative min-h-screen">
       {/* Hero Image */}
       <div className="absolute inset-0">
         <picture>
-          <source srcSet={isDarkMode ? '/images/dark.webp' : '/images/light.webp'} type="image/webp" />
+          <source srcSet="/images/dark.webp" type="image/webp" />
           <img
-            src={isDarkMode ? '/images/dark.jpg' : '/images/light.jpg'}
+            src="/images/dark.jpg"
             alt="Gus McEwan's architectural photograph"
             loading="eager"
             className="object-cover w-full h-full"
@@ -39,8 +23,8 @@ export default function Home() {
           <h1
             className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em]"
             style={{
-              color: isDarkMode ? 'white' : 'black',
-              WebkitTextStroke: isDarkMode ? '1px black' : '1px white',
+              color: 'white',
+              WebkitTextStroke: '1px black',
             }}
           >
             McEWAN
@@ -50,10 +34,7 @@ export default function Home() {
 
       {/* Copyright overlay */}
       <div className="absolute bottom-0 left-0 right-0 pb-4 sm:pb-6">
-        <p
-          className="text-center text-xs sm:text-sm opacity-70"
-          style={{ color: isDarkMode ? 'white' : 'black' }}
-        >
+        <p className="text-center text-xs sm:text-sm opacity-70" style={{ color: 'white' }}>
           Copyright © {new Date().getFullYear()} Gus McEwan Photography. All rights reserved.
         </p>
       </div>
