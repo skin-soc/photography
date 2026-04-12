@@ -198,36 +198,46 @@ export default function Portfolio() {
       {/* Lightbox Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-6 sm:p-10"
           onClick={() => setSelectedImage(null)}
         >
-          <div className="relative flex items-center justify-center w-full h-full">
-            <picture>
-              <source srcSet={getWebPSrc(selectedImage.src)} type="image/webp" />
-              <Image
-                src={selectedImage.src}
-                alt={selectedImage.alt}
-                width={0}  // Realistic placeholder for large images
-                height={0}  // Adjust based on common aspect ratio
-                className="w-auto h-auto max-w-full max-h-full object-contain"
-                sizes="95vw"
-                unoptimized={true}
-              />
-            </picture>
+          <div
+            className="relative flex items-center justify-center"
+            style={{ maxWidth: '90vw', maxHeight: '90vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Gallery-style white mat/border */}
+            <div className="bg-white p-3 sm:p-5 shadow-2xl">
+              <picture>
+                <source srcSet={getWebPSrc(selectedImage.src)} type="image/webp" />
+                <img
+                  src={selectedImage.src}
+                  alt={selectedImage.alt}
+                  style={{
+                    maxWidth: '80vw',
+                    maxHeight: '80vh',
+                    width: 'auto',
+                    height: 'auto',
+                    display: 'block',
+                  }}
+                />
+              </picture>
+            </div>
+
+            {/* Close button */}
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setSelectedImage(null)
-              }}
-              className="absolute top-4 right-4 text-white hover:text-[#931020] p-2 bg-black/50 rounded-full"
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-4 -right-4 text-white hover:text-[#931020] p-2 bg-black rounded-full shadow-lg"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="absolute bottom-4 left-4 text-white bg-black/50 p-4 rounded-lg">
-              <h3 className="text-xl font-medium text-black dark:text-white">{selectedImage.title}</h3>
-              <p className="text-[#931020] font-medium">{selectedImage.category}</p>
+
+            {/* Caption */}
+            <div className="absolute -bottom-8 left-0 right-0 text-center">
+              <span className="text-white text-sm opacity-70">{selectedImage.title}</span>
+              <span className="text-[#931020] text-sm font-medium"> · {selectedImage.category}</span>
             </div>
           </div>
         </div>
