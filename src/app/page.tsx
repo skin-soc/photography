@@ -20,13 +20,7 @@ export default function Home() {
       {/* Overlay Content */}
       <div className="relative min-h-screen flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-          <h1
-            className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em]"
-            style={{
-              color: 'white',
-              WebkitTextStroke: '1px black',
-            }}
-          >
+          <h1 className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em] text-white">
             McEWAN
           </h1>
         </div>
@@ -34,7 +28,7 @@ export default function Home() {
 
       {/* Copyright overlay */}
       <div className="absolute bottom-0 left-0 right-0 pb-4 sm:pb-6">
-        <p className="text-center text-xs sm:text-sm opacity-70" style={{ color: 'white' }}>
+        <p className="text-center text-xs sm:text-sm text-white opacity-70">
           Copyright © {new Date().getFullYear()} Gus McEwan Photography. All rights reserved.
         </p>
       </div>
