@@ -206,6 +206,19 @@ export default function Portfolio() {
             style={{ maxWidth: '90vw', maxHeight: '90vh' }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Prev arrow */}
+            {filteredImages.indexOf(selectedImage) > 0 && (
+              <button
+                onClick={() => setSelectedImage(filteredImages[filteredImages.indexOf(selectedImage) - 1])}
+                className="absolute -left-10 sm:-left-14 text-[#931020] hover:text-[#931020]/70 transition-colors"
+                aria-label="Previous image"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
             {/* Gallery-style white mat/border */}
             <div className="bg-white p-3 sm:p-5 shadow-2xl">
               <picture>
@@ -223,6 +236,19 @@ export default function Portfolio() {
                 />
               </picture>
             </div>
+
+            {/* Next arrow */}
+            {filteredImages.indexOf(selectedImage) < filteredImages.length - 1 && (
+              <button
+                onClick={() => setSelectedImage(filteredImages[filteredImages.indexOf(selectedImage) + 1])}
+                className="absolute -right-10 sm:-right-14 text-[#931020] hover:text-[#931020]/70 transition-colors"
+                aria-label="Next image"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
 
             {/* Close button */}
             <button
