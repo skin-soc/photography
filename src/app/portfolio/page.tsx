@@ -25,7 +25,7 @@ const images: GalleryImage[] = [
   { src: '/images/gallery/PP00002.jpg', alt: 'Bjorn Fredrik Martin Gunnarsson', category: 'People', title: 'Bjorn' },
   { src: '/images/gallery/PP00003.jpg', alt: 'A punter dances at Distortion in Copenhagen, Denmark', category: 'People', title: 'Amelie' },
   { src: '/images/gallery/PP00001.jpg', alt: 'English waterpolo player', category: 'People', title: 'Jamie' },
-  { src: '/images/gallery/NT00011.jpg', alt: 'Persian Lynx', category: 'Nature', title: 'Persiam Lynx' },
+  { src: '/images/gallery/NT00011.jpg', alt: 'Persian Lynx', category: 'Nature', title: 'Persian Lynx' },
   { src: '/images/gallery/NT00012.jpg', alt: 'A lone fisherman during the 2020 COVID pandemic', category: 'Nature', title: 'COVID' },
   { src: '/images/gallery/NT00002.jpg', alt: 'An Australian seagull', category: 'Nature', title: 'Surfer Gull' },
   { src: '/images/gallery/NT00005.jpg', alt: 'Blackhead gull on a frozen lake', category: 'Nature', title: 'Blackhead Freezer' },
