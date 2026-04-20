@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Image from 'next/image'
 
-const categories = ['All', 'Nature', 'People', 'Places']
+const categories = ['People', 'Places', 'Nature', 'All']
 
 type GalleryImage = {
   src: string
@@ -33,21 +33,8 @@ const images: GalleryImage[] = [
   { src: '/images/gallery/NT00004.jpg', alt: 'Swan in Copenhagen Lakes', category: 'Nature', title: 'Swanset' },
 ]
 
-if (process.env.NODE_ENV === 'development') {
-  if (images.length === 0) {
-    for (let i = 1; i <= 9; i++) {
-      images.push({
-        src: `https://picsum.photos/800/1200?random=${i}`,
-        alt: `Sample Photo ${i}`,
-        category: categories[Math.floor((i - 1) / 3) + 1],
-        title: `Sample Photo ${i}`
-      })
-    }
-  }
-}
-
 export default function Portfolio() {
-  const [activeCategory, setActiveCategory] = useState('All')
+  const [activeCategory, setActiveCategory] = useState('Places')
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
   const lightboxRef = useRef<HTMLDivElement>(null)
 
