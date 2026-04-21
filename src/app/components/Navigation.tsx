@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -18,16 +17,16 @@ export default function Navigation() {
                 alt="Gus McEwan Photography"
                 width={64}
                 height={64}
-                className="w-full h-full text-white"
+                className="w-full h-full"
               />
             </Link>
           </div>
           {/* Desktop Menu */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              <Link href="/portfolio" className="text-black dark:text-white hover:text-[#931020] px-3 py-2 text-sm">Portfolio</Link>
-              <Link href="/about" className="text-black dark:text-white hover:text-[#931020] px-3 py-2 text-sm">About</Link>
-              <Link href="/contact" className="text-black dark:text-white hover:text-[#931020] px-3 py-2 text-sm">Contact</Link>
+            <div className="ml-10 flex items-baseline space-x-8" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+              <Link href="/portfolio" className="text-white hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200">Portfolio</Link>
+              <Link href="/about" className="text-white hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200">About</Link>
+              <Link href="/contact" className="text-white hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200">Contact</Link>
             </div>
           </div>
           {/* Mobile menu button */}
@@ -50,33 +49,14 @@ export default function Navigation() {
           </div>
         </div>
       </div>
-
       {/* Mobile Menu */}
       <div className={`md:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
         <div className="px-2 pt-2 pb-3 space-y-1 bg-black/90 backdrop-blur-sm">
-          <Link
-            href="/portfolio"
-            className="text-white hover:text-[#931020] block px-3 py-2 text-base"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Portfolio
-          </Link>
-          <Link
-            href="/about"
-            className="text-white hover:text-[#931020] block px-3 py-2 text-base"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            About
-          </Link>
-          <Link
-            href="/contact"
-            className="text-white hover:text-[#931020] block px-3 py-2 text-base"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Contact
-          </Link>
+          <Link href="/portfolio" className="text-white hover:text-[#931020] block px-3 py-2 text-base transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>Portfolio</Link>
+          <Link href="/about" className="text-white hover:text-[#931020] block px-3 py-2 text-base transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>About</Link>
+          <Link href="/contact" className="text-white hover:text-[#931020] block px-3 py-2 text-base transition-colors duration-200" onClick={() => setIsMenuOpen(false)}>Contact</Link>
         </div>
       </div>
     </nav>
   )
-} 
+}
