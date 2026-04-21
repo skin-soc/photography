@@ -29,11 +29,11 @@ const images: GalleryImage[] = [
   { src: '/images/gallery/PP00007.jpg', alt: 'Torquay club hug', category: 'People', title: 'Matt' },
   { src: '/images/gallery/PP00004.jpg', alt: 'King Charles III', category: 'People', title: 'Charles III' },
   { src: '/images/gallery/NT00011.jpg', alt: 'Persian Lynx', category: 'Nature', title: 'Persian Lynx' },
-  { src: '/images/gallery/NT00012.jpg', alt: 'A lone fisherman during the 2020 COVID pandemic', category: 'Nature', title: 'COVID' },
+  { src: '/images/gallery/NT00008.jpg', alt: 'Polar Bear, Australia', category: 'Nature', title: 'Polar Bear' },
+  { src: '/images/gallery/NT00004.jpg', alt: 'Swan flying at sunset over Copenhagen lakes', category: 'Nature', title: 'Swan at Sunset' },
+  { src: '/images/gallery/NT00006.jpg', alt: 'A Grey Heron static in water', category: 'Nature', title: 'Grey Heron' },
+  { src: '/images/gallery/NT00012.jpg', alt: 'A lone fisherman in the peak of the COVID pandemic, Denmark', category: 'Nature', title: 'COVID fisherman' },
   { src: '/images/gallery/NT00002.jpg', alt: 'An Australian seagull', category: 'Nature', title: 'Surfer Gull' },
-  { src: '/images/gallery/NT00005.jpg', alt: 'Blackhead gull on a frozen lake', category: 'Nature', title: 'Blackhead Freezer' },
-  { src: '/images/gallery/NT00007.jpg', alt: 'Royal stag morning mating call', category: 'Nature', title: 'Royal Stag' },
-  { src: '/images/gallery/NT00004.jpg', alt: 'Swan in Copenhagen Lakes', category: 'Nature', title: 'Swanset' },
 ]
 
 export default function Portfolio() {
