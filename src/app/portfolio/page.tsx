@@ -25,7 +25,7 @@ const images: GalleryImage[] = [
   { src: '/images/gallery/PP00001.jpg', alt: 'English waterpolo player', category: 'People', title: 'Jamie' },
   { src: '/images/gallery/PP00003.jpg', alt: 'A punter dances at Distortion in Copenhagen, Denmark', category: 'People', title: 'Amelie' },
   { src: '/images/gallery/PP00009.jpg', alt: 'A psychiatric nurse ponders, Sweden', category: 'People', title: 'Anders' },
-  { src: '/images/gallery/PP00006.jpg', alt: 'Drag artist, Belgium', category: 'People', title: 'Adam' },
+  { src: '/images/gallery/PP00005.jpg', alt: 'Bryce Anderville Hixson Jr., California, USA', category: 'People', title: 'Bryce' },
   { src: '/images/gallery/PP00007.jpg', alt: 'Lolly and Matt hug in a Torquay night club, England', category: 'People', title: 'Matt' },
   { src: '/images/gallery/PP00004.jpg', alt: 'King Charles III', category: 'People', title: 'Charles III' },
   { src: '/images/gallery/NT00011.jpg', alt: 'Persian Lynx', category: 'Nature', title: 'Persian Lynx' },
