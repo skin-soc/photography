@@ -9,16 +9,16 @@ export default function Navigation() {
   const pathname = usePathname()
   const isHome = pathname === '/'
 
-  const linkClass = isHome
-    ? 'text-[#1a1208] hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200'
-    : 'text-white hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200'
+const linkClass = isHome
+    ? 'text-[#1a1208] hover:text-[#931020] px-3 py-2 text-sm font-medium transition-colors duration-200'
+    : 'text-white hover:text-[#931020] px-3 py-2 text-sm font-medium transition-colors duration-200'
 
   return (
     <nav id="main-nav" className={`fixed w-full z-50 transition-colors duration-300 ${isMenuOpen ? 'border-b border-white/20' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <Link href="/" className="block w-12 h-12 md:w-16 md:h-16">
+            <Link href="/" className="block w-12 h-12 md:w-20 md:h-20">
               <Image
                 src="/images/logo.svg"
                 alt="Gus McEwan Photography"
