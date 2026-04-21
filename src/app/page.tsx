@@ -17,11 +17,16 @@ export default function Home() {
       </div>
 
       {/* Overlay Content */}
-      <div className="relative min-h-screen flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-          <h1 className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em] md:tracking-[0.3em] font-bold md:font-medium text-[#000000]" >McEWAN</h1>
-        </div>
-      </div>
+      <div className="relative min-h-screen flex flex-col items-center justify-center">
+  <div className="w-full flex justify-center">
+    <h1 
+      className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em] md:tracking-[0.3em] font-bold md:font-medium text-[#000000]"
+      style={{ marginRight: '-0.2em' }}
+    >
+      McEWAN
+    </h1>
+  </div>
+</div>
 
       {/* Copyright overlay */}
       <div className="absolute bottom-0 left-0 right-0 pb-4 sm:pb-6">
