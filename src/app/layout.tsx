@@ -11,12 +11,6 @@ const italiana = Italiana({
   variable: '--font-italiana',
 })
 
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  viewportFit: 'cover',
-}
-
 export const metadata: Metadata = {
   title: 'Gus McEwan Photography',
   description: 'Portfolio of Gus McEwan - People, places and nature',
@@ -31,6 +25,9 @@ export const metadata: Metadata = {
     title: 'Gus McEwan Photography',
     description: 'Portfolio of Gus McEwan - People, places and nature',
   },
+  other: {
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+  }
 }
 
 export default function RootLayout({
