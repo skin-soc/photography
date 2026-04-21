@@ -31,8 +31,8 @@ body {
   color: #ffffff;
 }
 .react-calendar__tile--active {
-  background-color: #931020;
-  color: #ffffff;
+  background-color: #ffffff;
+  color: #931020;
 }
 .react-calendar__tile--now {
   background-color: #333333;
