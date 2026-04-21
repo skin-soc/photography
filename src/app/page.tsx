@@ -20,9 +20,9 @@ export default function Home() {
       {/* Overlay Content */}
       <div className="relative min-h-screen flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-          <h1 className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em] text-[#1a1208]" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
-            McEWAN
-          </h1>
+          <h1 className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.1em] md:tracking-[0.2em] font-medium text-[#1a1208]" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
+  McEWAN
+</h1>
         </div>
       </div>
 
