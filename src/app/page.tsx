@@ -19,7 +19,7 @@ export default function Home() {
       {/* Overlay Content */}
       <div className="relative min-h-screen flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-          <h1 className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em] md:tracking-[0.3em] font-bold md:font-bold text-[#1a1208]" >
+          <h1 className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em] md:tracking-[0.3em] font-bold md:font-medium text-[#000000]" >
              McEWAN
           </h1>
         </div>
