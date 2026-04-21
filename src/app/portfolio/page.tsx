@@ -77,7 +77,7 @@ export default function Portfolio() {
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors
                   ${activeCategory === category
                     ? 'bg-[#931020] text-white shadow-md'
-                    : 'bg-gray-800 text-white hover:bg-[#931020] hover:text-white shadow-sm'
+                    : 'text-white hover:bg-[#931020] hover:text-white shadow-sm'
                   }`}
               >
                 {category}
