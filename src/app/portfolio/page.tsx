@@ -17,7 +17,7 @@ const images: GalleryImage[] = [
   { src: '/images/gallery/PL00001.jpg', alt: 'Danish Supreme Court', category: 'Places', title: 'Københavns Domhus' },
   { src: '/images/gallery/PL00004.jpg', alt: 'Amagerstrand, Copenhagen, Denmark', category: 'Places', title: 'Baltic' },
   { src: '/images/gallery/PL00008.jpg', alt: 'Copenhagen Gemini Residence', category: 'Places', title: 'Gemini' },
-  { src: '/images/gallery/PL00006.jpg', alt: 'Brisbane and sculpture, Australia', category: 'Places', title: 'The Hand' },
+  { src: '/images/gallery/PL00011.jpg', alt: 'Brisbane and sculpture, Australia', category: 'Places', title: 'The Hand' },
   { src: '/images/gallery/PL00007.jpg', alt: 'Copenhagen Ski and Incineration Plant', category: 'Places', title: 'ARC' },
   { src: '/images/gallery/PL00013.jpg', alt: 'Det Kongelige Teater', category: 'Places', title: 'Operaen' },
   { src: '/images/gallery/PL00006.jpg', alt: 'The Kelpies, Scotland', category: 'Places', title: 'Kelpies' },
