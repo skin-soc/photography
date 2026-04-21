@@ -88,7 +88,7 @@ export default function Portfolio() {
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredImages.map((image, i) => (
-              <div key={i} className="relative group cursor-pointer bg-gray-800 rounded-lg overflow-hidden shadow-md">
+              <div key={i} className="relative group cursor-pointer rounded-lg overflow-hidden shadow-md">
                 <div className="relative aspect-[3/4]">
                   <picture>
                     <source srcSet={getWebPSrc(image.src)} type="image/webp" />
@@ -112,7 +112,7 @@ export default function Portfolio() {
                     </button>
                   </div>
                 </div>
-                <div className="p-4 bg-gray-900">
+                <div className="p-4">
                   <h3 className="text-lg font-medium text-white">{image.title}</h3>
                   <p className="text-[#931020] font-medium">{image.category}</p>
                 </div>
