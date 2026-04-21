@@ -74,7 +74,7 @@ export default function Portfolio() {
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors
+                className={`px-4 py-2 text-sm font-medium transition-colors
                   ${activeCategory === category
                     ? 'bg-[#931020] text-white shadow-md'
                     : 'text-white hover:bg-[#931020] hover:text-white shadow-sm'
@@ -88,7 +88,7 @@ export default function Portfolio() {
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredImages.map((image, i) => (
-              <div key={i} className="relative group cursor-pointer rounded-lg overflow-hidden shadow-md">
+              <div key={i} className="relative group cursor-pointer overflow-hidden shadow-md">
                 <div className="relative aspect-[3/4]">
                   <picture>
                     <source srcSet={getWebPSrc(image.src)} type="image/webp" />
@@ -106,7 +106,7 @@ export default function Portfolio() {
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button
                       onClick={() => openLightbox(image)}
-                      className="bg-[#931020] text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-[#931020]/90 shadow-lg transform transition-transform duration-200 hover:scale-105"
+                      className="bg-[#931020] text-white px-6 py-3 text-sm font-medium hover:bg-[#931020]/90 shadow-lg transform transition-transform duration-200 hover:scale-105"
                     >
                       View Full Size
                     </button>
