@@ -42,3 +42,13 @@ body {
   background-color: #444444;
   color: #ffffff;
 }
+
+.landscape-position {
+  object-position: center;
+}
+
+@media (max-width: 768px) {
+  .landscape-position {
+    object-position: 35% center;
+  }
+}
