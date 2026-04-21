@@ -11,7 +11,7 @@ export default function Navigation() {
   const isHome = pathname === '/'
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 5)
+    const handleScroll = () => setIsScrolled(window.scrollY > 1)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
