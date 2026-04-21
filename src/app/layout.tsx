@@ -11,6 +11,12 @@ const italiana = Italiana({
   variable: '--font-italiana',
 })
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
+
 export const metadata: Metadata = {
   title: 'Gus McEwan Photography',
   description: 'Portfolio of Gus McEwan - People, places and nature',
