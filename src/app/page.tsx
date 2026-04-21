@@ -21,7 +21,7 @@ export default function Home() {
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
           <h1 
   className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.1em] md:tracking-[0.2em] font-bold md:font-medium text-[#1a1208]"
-  style={{ WebkitTextStroke: '1px rgba(255,255,255,0.4)' }}
+  style={{ WebkitTextStroke: '1px rgba(255,255,255,0.8)' }}
 >
   McEWAN
 </h1>
