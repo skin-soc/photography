@@ -13,12 +13,15 @@ type GalleryImage = {
 }
 
 const images: GalleryImage[] = [
-  { src: '/images/gallery/PL00001.jpg', alt: 'Danish Supreme Court', category: 'Places', title: 'Københavns Domhus' },
-  { src: '/images/gallery/PL00002.jpg', alt: 'Copenhagen Marble Church - Marmorkirken (infrared)', category: 'Places', title: 'Marmorkirken' },
   { src: '/images/gallery/PL00003.jpg', alt: 'Volcano in Fuerteventura, Spain', category: 'Places', title: 'Calderon Hondo' },
-  { src: '/images/gallery/PL00006.jpg', alt: 'The Kelpies, Falkirk, Scotland', category: 'Places', title: 'The Kelpies' },
-  { src: '/images/gallery/PL00007.jpg', alt: 'Copenhagen Ski and Inceneration Plant', category: 'Places', title: 'ARC' },
+  { src: '/images/gallery/PL00001.jpg', alt: 'Danish Supreme Court', category: 'Places', title: 'Københavns Domhus' },
+  { src: '/images/gallery/PL00004.jpg', alt: 'Amagerstrand, Copenhagen, Denmark', category: 'Places', title: 'Baltic' },
   { src: '/images/gallery/PL00008.jpg', alt: 'Copenhagen Gemini Residence', category: 'Places', title: 'Gemini' },
+  { src: '/images/gallery/PL00006.jpg', alt: 'Brisbane and sculpture, Australia', category: 'Places', title: 'The Hand' },
+  { src: '/images/gallery/PL00007.jpg', alt: 'Copenhagen Ski and Incineration Plant', category: 'Places', title: 'ARC' },
+  { src: '/images/gallery/PL00013.jpg', alt: 'Det Kongelige Teater', category: 'Places', title: 'Operaen' },
+  { src: '/images/gallery/PL00006.jpg', alt: 'The Kelpies, Scotland', category: 'Places', title: 'Kelpies' },
+  { src: '/images/gallery/PL00002.jpg', alt: 'The Marble Church, Copenhagen, Denmark', category: 'Places', title: 'Marmorkirken' },
   { src: '/images/gallery/PP00001.jpg', alt: 'English waterpolo player', category: 'People', title: 'Jamie' },
   { src: '/images/gallery/PP00003.jpg', alt: 'A punter dances at Distortion in Copenhagen, Denmark', category: 'People', title: 'Amelie' },
   { src: '/images/gallery/PP00009.jpg', alt: 'A psychiatric nurse ponders, Sweden', category: 'People', title: 'Anders' },
