@@ -3,8 +3,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function Navigation() {
+export default function Navigation({ isHome = false }: { isHome?: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const linkClass = isHome
+    ? 'text-[#1a1208] hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200'
+    : 'text-white hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200'
 
   return (
     <nav id="main-nav" className={`fixed w-full z-50 transition-colors duration-300 ${isMenuOpen ? 'border-b border-white/20' : ''}`}>
@@ -24,16 +28,16 @@ export default function Navigation() {
           {/* Desktop Menu */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
-              <Link href="/portfolio" className="text-white hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200">Portfolio</Link>
-              <Link href="/about" className="text-white hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200">About</Link>
-              <Link href="/contact" className="text-white hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200">Contact</Link>
+              <Link href="/portfolio" className={linkClass}>Portfolio</Link>
+              <Link href="/about" className={linkClass}>About</Link>
+              <Link href="/contact" className={linkClass}>Contact</Link>
             </div>
           </div>
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white p-2"
+              className={`${isHome ? 'text-[#1a1208]' : 'text-white'} p-2`}
               aria-label="Toggle menu"
             >
               {!isMenuOpen ? (
