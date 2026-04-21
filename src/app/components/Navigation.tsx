@@ -1,10 +1,13 @@
 'use client'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function Navigation({ isHome = false }: { isHome?: boolean }) {
+export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathname = usePathname()
+  const isHome = pathname === '/'
 
   const linkClass = isHome
     ? 'text-[#1a1208] hover:text-[#931020] px-3 py-2 text-sm transition-colors duration-200'
