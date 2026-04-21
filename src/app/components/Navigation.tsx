@@ -30,7 +30,7 @@ export default function Navigation() {
           </div>
           {/* Desktop Menu */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+            <div className="ml-10 flex items-baseline space-x-8">
               <Link href="/portfolio" className={linkClass}>Portfolio</Link>
               <Link href="/about" className={linkClass}>About</Link>
               <Link href="/contact" className={linkClass}>Contact</Link>
