@@ -4,15 +4,14 @@ export default function Home() {
   return (
     <div className="relative min-h-screen">
       {/* Hero Image */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 hero-image-container">
         <picture>
           <source srcSet="/images/dark.webp" type="image/webp" />
           <img
             src="/images/dark.jpg"
             alt="Gus McEwan's vast landscape photograph"
             loading="eager"
-            className="object-cover w-full h-full landscape-position"
-            style={{ objectPosition: '21% 0' }}
+            className="object-cover w-full h-full landscape-position "
           />
         </picture>
       </div>
