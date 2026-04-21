@@ -12,32 +12,26 @@ body {
   background: rgb(var(--background-rgb));
 }
 
-.border {
-  border-width: 0px !important;
-}
-.border-b {
-  border-bottom-width: 0px !important;
-}
-.border-t {
-  border-top-width: 0px !important;
-}
-
 .react-calendar {
   background-color: #1a1a1a;
   color: #ffffff;
 }
+
 .react-calendar__tile {
   background: none;
   color: #ffffff;
 }
+
 .react-calendar__tile--active {
   background-color: #ffffff;
   color: #931020;
 }
+
 .react-calendar__tile--now {
   background-color: #333333;
   color: #ffffff;
 }
+
 .react-calendar__tile:hover {
   background-color: #444444;
   color: #ffffff;
