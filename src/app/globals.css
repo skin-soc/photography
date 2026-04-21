@@ -49,6 +49,6 @@ body {
 
 @media (max-width: 768px) {
   .landscape-position {
-    object-position: 35% center;
+    object-position: 60% center;
   }
 }
