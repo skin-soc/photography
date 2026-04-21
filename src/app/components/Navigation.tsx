@@ -6,7 +6,7 @@ import Image from 'next/image'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(!isHome)
   const pathname = usePathname()
   const isHome = pathname === '/'
 
@@ -15,8 +15,6 @@ export default function Navigation() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-const [isScrolled, setIsScrolled] = useState(!isHome)
   
   const linkClass = isHome && !isScrolled
     ? 'text-[#1a1208] hover:text-[#931020] px-3 py-2 text-sm font-medium transition-colors duration-200'
