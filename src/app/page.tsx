@@ -11,7 +11,7 @@ export default function Home() {
             src="/images/dark.jpg"
             alt="Gus McEwan's vast landscape photograph"
             loading="eager"
-            className="object-cover w-full h-full"
+            className="object-cover w-full h-full landscape-position"
             style={{ objectPosition: '21% 0' }}
           />
         </picture>
