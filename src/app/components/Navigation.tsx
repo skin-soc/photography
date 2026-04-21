@@ -1,20 +1,27 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
   const isHome = pathname === '/'
 
-const linkClass = isHome
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const linkClass = isHome && !isScrolled
     ? 'text-[#1a1208] hover:text-[#931020] px-3 py-2 text-sm font-medium transition-colors duration-200'
     : 'text-white hover:text-[#931020] px-3 py-2 text-sm font-medium transition-colors duration-200'
 
   return (
-    <nav id="main-nav" className={`fixed w-full z-50 transition-colors duration-300 ${isMenuOpen ? 'border-b border-white/20' : ''}`}>
+    <nav id="main-nav" className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/80 backdrop-blur-sm border-b border-white/10' : ''} ${isMenuOpen ? 'border-b border-white/20' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
@@ -22,8 +29,8 @@ const linkClass = isHome
               <Image
                 src="/images/logo.svg"
                 alt="Gus McEwan Photography"
-                width={64}
-                height={64}
+                width={80}
+                height={80}
                 className="w-full h-full"
               />
             </Link>
@@ -40,7 +47,7 @@ const linkClass = isHome
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`${isHome ? 'text-[#1a1208]' : 'text-white'} p-2`}
+              className={`${isHome && !isScrolled ? 'text-[#1a1208]' : 'text-white'} p-2`}
               aria-label="Toggle menu"
             >
               {!isMenuOpen ? (
