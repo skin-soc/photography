@@ -5,10 +5,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export default function Navigation() {
+  const isHome = pathname === '/'
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(!isHome)
   const pathname = usePathname()
-  const isHome = pathname === '/'
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
