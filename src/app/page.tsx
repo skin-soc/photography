@@ -27,7 +27,7 @@ export default function Home() {
 
       {/* Copyright overlay */}
       <div className="absolute bottom-0 left-0 right-0 pb-4 sm:pb-6">
-        <p className="text-center text-xs sm:text-sm text-white opacity-90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+        <p className="text-center text-xs sm:text-sm text-[#1a1208] opacity-90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
           Copyright © {new Date().getFullYear()} Gus McEwan Photography. All rights reserved.
         </p>
       </div>
