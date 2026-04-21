@@ -11,7 +11,7 @@ export default function Navigation() {
   const isHome = pathname === '/'
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 1)
+    const handleScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -21,7 +21,7 @@ export default function Navigation() {
     : 'text-white hover:text-[#931020] px-3 py-2 text-sm font-medium transition-colors duration-200'
 
   return (
-    <nav id="main-nav" className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/80 backdrop-blur-sm' : ''} ${isMenuOpen ? '' : ''}`}>
+    <nav id="main-nav" className={`fixed w-full z-50 transition-all duration-300 ${!isHome || isScrolled ? 'bg-black/80 backdrop-blur-sm' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
