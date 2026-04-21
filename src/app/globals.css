@@ -49,7 +49,7 @@ body {
 
 @media (max-width: 768px) {
   .landscape-position {
-    object-position: 60% center;
+    object-position: 50% center;
   }
 
   .hero-image-container {
