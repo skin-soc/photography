@@ -51,4 +51,9 @@ body {
   .landscape-position {
     object-position: 60% center;
   }
+
+  .hero-image-container {
+    position: fixed;
+    inset: 0;
+  }
 }
