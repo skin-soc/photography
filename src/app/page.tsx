@@ -20,7 +20,7 @@ export default function Home() {
       <div className="relative min-h-screen flex flex-col items-center justify-center">
   <div className="w-full flex justify-center">
     <h1 
-  className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em] md:tracking-[0.3em] font-bold md:font-medium text-white mix-blend-exclusion"
+  className="text-[15vw] md:text-[12vw] lg:text-[14vw] tracking-[0.2em] md:tracking-[0.3em] font-bold md:font-medium text-white mix-blend-overlay"
   style={{ marginRight: '-0.3em' }}
 >
   McEWAN
