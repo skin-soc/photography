@@ -9,9 +9,9 @@ export default function Home() {
           <source srcSet="/images/dark.webp" type="image/webp" />
           <img
             src="/images/dark.jpg"
-            alt="Gus McEwan's vast landscape photograph"
+            alt="Gus McEwan's sports photograph"
             loading="eager"
-            className="object-cover w-full h-full landscape-position "
+            className="object-cover object-top w-full h-full landscape-position"
           />
         </picture>
       </div>
