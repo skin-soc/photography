@@ -57,7 +57,7 @@ body {
   }
 
   .hero-image-container {
-    position: fixed;
+    position: absolute;
     inset: 0;
   }
 }
