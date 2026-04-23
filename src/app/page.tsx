@@ -2,7 +2,7 @@
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen min-h-[100dvh]">
+    <div className="relative min-h-screen min-h-[100dvh] isolate">
       {/* Hero Image */}
       <div className="absolute inset-0 hero-image-container">
         <picture>
