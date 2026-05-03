@@ -54,20 +54,46 @@ function g(n: number) {
   return { src: `${B}/gear.${p}.jpg`, alt: `Gear ${p}` }
 }
 
-// 14 images in reverse, grouped into triples (14,13,12), (11,10,9), (8,7,6), (5,4,3), remainder (2,1)
 const triples = [
-  [14, 13, 12],
-  [11, 10,  9],
-  [ 8,  7,  6],
-  [ 5,  4,  3],
-  [ 2,  1],
+  [18, 17, 16],
+  [15, 14, 13],
+  [12, 11, 10],
+  [ 9, 8, 7],
+  [ 6, 5, 4],
+  [ 3, 2, 1],
 ]
 
 export default function About() {
   return (
-    <main>
+    <main className="pt-[72px]">
 
-      {/* Hero image — full bleed under nav */}
+      {/* Bio — Oskar-style: large text left, contact right */}
+      <div className="px-12 py-20 md:px-20 md:py-28 flex flex-col md:flex-row md:items-start gap-16 md:gap-24">
+
+        {/* Left: bio text */}
+        <div className="flex-1">
+          <p className="font-serif font-light text-[2rem] md:text-[2.6rem] leading-[1.3] tracking-wide text-white">
+            Gus McEwan is a photographer based between Copenhagen and London.
+          </p>
+          <p className="font-serif font-light text-[2rem] md:text-[2.6rem] leading-[1.3] tracking-wide text-white mt-6">
+            His work spans portraiture, landscape, and the natural world — drawn to light, stillness, and the space between moments.
+          </p>
+        </div>
+
+        {/* Right: contact */}
+        <div className="md:w-[280px] md:flex-shrink-0 pt-1">
+          <p className="text-[10px] font-light tracking-[0.2em] uppercase text-white mb-3">Contact</p>
+          <a href="mailto:hello&#64;gusmcewan.com" className="text-[13px] font-light text-white/70 hover:text-white transition-colors block mb-8">hello&#64;gusmcewan.com</a>
+          <p className="text-[10px] font-light tracking-[0.2em] uppercase text-white mb-3">Commissions</p>
+          <p className="text-[13px] font-light text-white/70 leading-[1.8]">
+            Available for editorial,<br />
+            portrait and landscape work.
+          </p>
+        </div>
+
+      </div>
+
+      {/* Hero image */}
       <div className="w-full aspect-[16/7] overflow-hidden bg-[#0a0a0a]">
         <img
           src={`${B}/gus-travels.jpg`}
@@ -81,50 +107,8 @@ export default function About() {
         />
       </div>
 
-      {/* Bio section */}
-      <div className="px-[3px] py-[3px]">
-        <div className="flex flex-col md:flex-row gap-[3px]">
-
-          {/* Portrait */}
-          <div className="w-full md:w-[340px] md:flex-shrink-0 aspect-square overflow-hidden bg-[#0a0a0a]">
-            <img
-              src={`${B}/gus-mcewan.webp`}
-              alt="Gus McEwan"
-              className="w-full h-full object-cover block select-none pointer-events-none"
-              draggable={false}
-              onContextMenu={(e) => e.preventDefault()}
-              loading="eager"
-              decoding="sync"
-              style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
-            />
-          </div>
-
-          {/* Text */}
-          <div className="flex-1 flex flex-col justify-end bg-[#0a0a0a] px-8 py-10 md:px-12 md:py-12">
-            <h1 className="font-serif font-light text-[2.25rem] tracking-wide mb-8">
-              Gus McEwan
-            </h1>
-            <p className="text-[13px] font-light leading-[1.9] text-white/55 tracking-wide mb-5">
-              Photographer based between Copenhagen and London. Working across portraiture,
-              landscape, and the natural world — drawn to light, stillness, and the space
-              between moments.
-            </p>
-            <p className="text-[13px] font-light leading-[1.9] text-white/55 tracking-wide mb-10">
-              Available for commissioned work. Selected clients and editorial enquiries welcome.
-            </p>
-            <a
-              href="mailto:hello&#64;gusmcewan.com"
-              className="text-[9px] font-light tracking-[0.22em] uppercase text-white border-b border-[#931020] pb-px hover:text-white/70 transition-colors w-fit"
-            >
-              hello&#64;gusmcewan.com
-            </a>
-          </div>
-
-        </div>
-      </div>
-
       {/* Gear gallery — all triples, reverse order */}
-      <div className="flex flex-col gap-[3px] px-[3px] pb-[3px]">
+      <div className="flex flex-col gap-[3px] px-[3px] pb-[3px] mt-[3px]">
         {triples.map((group, i) => (
           <div key={i} className="flex gap-[3px] min-h-[28vw] max-h-[45vh]">
             {group.map((n) => (
