@@ -38,12 +38,7 @@ export default function Nature() {
         <h1 className="font-serif font-light text-[2rem] tracking-wide">Nature</h1>
       </div>
       <GalleryStack items={items} />
-      <GalleryFooter links={[
-        { href: '/people', label: 'People' },
-        { href: '/places', label: 'Places' },
-        { href: 'https://instagram.com/gusmcewan', label: 'Instagram' },
-        { href: '/about', label: 'Contact' },
-      ]} />
+      <GalleryFooter />
     </main>
   )
 }

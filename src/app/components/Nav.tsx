@@ -14,8 +14,8 @@ export default function Nav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-7 h-[52px] bg-black/90 backdrop-blur-sm border-b border-white/5">
-      <Link href="/" className="font-serif font-light text-[17px] tracking-wider text-white hover:text-white/80 transition-colors">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-7 h-[52px] backdrop-blur-md">
+      <Link href="/" className="font-serif font-light text-[17px] tracking-wider text-white hover:text-white/70 transition-colors">
         Gus McEwan
       </Link>
       <ul className="flex items-center gap-8">

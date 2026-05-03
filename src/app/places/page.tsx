@@ -48,12 +48,7 @@ export default function Places() {
         <h1 className="font-serif font-light text-[2rem] tracking-wide">Places</h1>
       </div>
       <GalleryStack items={items} />
-      <GalleryFooter links={[
-        { href: '/people', label: 'People' },
-        { href: '/nature', label: 'Nature' },
-        { href: 'https://instagram.com/gusmcewan', label: 'Instagram' },
-        { href: '/about', label: 'Contact' },
-      ]} />
+      <GalleryFooter />
     </main>
   )
 }

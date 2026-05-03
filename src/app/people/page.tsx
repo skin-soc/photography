@@ -41,12 +41,7 @@ export default function People() {
         <h1 className="font-serif font-light text-[2rem] tracking-wide">People</h1>
       </div>
       <GalleryStack items={items} />
-      <GalleryFooter links={[
-        { href: '/places', label: 'Places' },
-        { href: '/nature', label: 'Nature' },
-        { href: 'https://instagram.com/gusmcewan', label: 'Instagram' },
-        { href: '/about', label: 'Contact' },
-      ]} />
+      <GalleryFooter />
     </main>
   )
 }
