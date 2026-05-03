@@ -1,13 +1,13 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
+
 export type GalleryItem =
   | { type: 'single'; src: string; alt: string; aspect?: 'hero' | 'wide' | 'tall' | 'mid' }
   | { type: 'pair'; images: { src: string; alt: string }[] }
 
 interface Props {
   items: GalleryItem[]
-  // Set to false on the homepage where we handle offset ourselves
-  topOffset?: boolean
 }
 
 const heightClasses: Record<string, string> = {
@@ -15,6 +15,37 @@ const heightClasses: Record<string, string> = {
   wide: 'min-h-[38vw] max-h-screen',
   tall: 'min-h-[60vh] max-h-screen',
   mid:  'min-h-[50vw] max-h-[80vh]',
+}
+
+// Scroll-reveal: slides up from 40px below, fades in
+function RevealBlock({ children, className }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { threshold: 0.04 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(40px)',
+        transition: 'opacity 0.7s ease, transform 0.7s ease',
+      }}
+    >
+      {children}
+    </div>
+  )
 }
 
 function GalleryImg({
@@ -29,10 +60,7 @@ function GalleryImg({
   priority?: boolean
 }) {
   return (
-    <div
-      className="w-full h-full select-none"
-      onContextMenu={(e) => e.preventDefault()}
-    >
+    <div className="w-full h-full select-none" onContextMenu={(e) => e.preventDefault()}>
       <img
         src={src}
         alt={alt}
@@ -49,28 +77,36 @@ function GalleryImg({
   )
 }
 
-export default function GalleryStack({ items, topOffset = true }: Props) {
+export default function GalleryStack({ items }: Props) {
   return (
-    <div className="flex flex-col gap-[3px] px-[3px] pt-[3px]">
-      {/* Transparent spacer so first image isn't hidden behind the floating nav */}
-      {topOffset && <div className="h-20" />}
+    // No top padding — first image goes full bleed under transparent nav
+    <div className="flex flex-col gap-[3px] px-[3px]">
       {items.map((item, i) => {
         if (item.type === 'single') {
           const cls = heightClasses[item.aspect ?? 'hero']
+          // First image: no reveal animation, load immediately, fills screen from top
+          if (i === 0) {
+            return (
+              <div key={i} className={`w-full overflow-hidden bg-[#0a0a0a] ${cls}`}>
+                <GalleryImg src={item.src} alt={item.alt} sizes="100vw" priority />
+              </div>
+            )
+          }
           return (
-            <div key={i} className={`w-full overflow-hidden bg-[#0a0a0a] ${cls}`}>
-              <GalleryImg src={item.src} alt={item.alt} sizes="100vw" priority={i === 0} />
-            </div>
+            <RevealBlock key={i} className={`w-full overflow-hidden bg-[#0a0a0a] ${cls}`}>
+              <GalleryImg src={item.src} alt={item.alt} sizes="100vw" />
+            </RevealBlock>
           )
         }
+
         return (
-          <div key={i} className="flex gap-[3px] min-h-[40vw] max-h-[65vh]">
+          <RevealBlock key={i} className="flex gap-[3px] min-h-[40vw] max-h-[65vh]">
             {item.images.map((img, j) => (
               <div key={j} className="flex-1 overflow-hidden bg-[#0a0a0a]">
                 <GalleryImg src={img.src} alt={img.alt} sizes="50vw" />
               </div>
             ))}
-          </div>
+          </RevealBlock>
         )
       })}
     </div>
