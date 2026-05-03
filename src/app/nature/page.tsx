@@ -2,28 +2,30 @@ import Link from 'next/link'
 import GalleryStack, { GalleryItem } from '../components/GalleryStack'
 import GalleryFooter from '../components/GalleryFooter'
 
-// Replace with your actual nature image paths
-const BASE = 'https://gusmcewan.com/images/gallery'
+// NT00001–NT00012 (12 images)
+// Nature benefits from a slower, more contemplative rhythm than People or Places.
+// More singles, fewer pairs — let each image breathe.
+// Wide/hero aspect suits landscapes; tall suits vertical nature (trees, waterfalls, cliffs).
+// Pairs only where two images clearly share light quality or subject matter.
+const B = '/images/gallery'
 
 const items: GalleryItem[] = [
-  { type: 'single', aspect: 'hero', src: `${BASE}/NA00001.jpg`, alt: 'Nature — Gus McEwan' },
-  {
-    type: 'pair',
-    images: [
-      { src: `${BASE}/NA00002.jpg`, alt: 'Nature — Gus McEwan' },
-      { src: `${BASE}/NA00003.jpg`, alt: 'Nature — Gus McEwan' },
-    ],
-  },
-  { type: 'single', aspect: 'tall', src: `${BASE}/NA00004.jpg`, alt: 'Nature — Gus McEwan' },
-  { type: 'single', aspect: 'mid',  src: `${BASE}/NA00005.jpg`, alt: 'Nature — Gus McEwan' },
-  {
-    type: 'pair',
-    images: [
-      { src: `${BASE}/NA00006.jpg`, alt: 'Nature — Gus McEwan' },
-      { src: `${BASE}/NA00007.jpg`, alt: 'Nature — Gus McEwan' },
-    ],
-  },
-  { type: 'single', aspect: 'hero', src: `${BASE}/NA00008.jpg`, alt: 'Nature — Gus McEwan' },
+  { type: 'single', aspect: 'hero', src: `${B}/NT00001.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  { type: 'single', aspect: 'mid',  src: `${B}/NT00002.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  { type: 'pair', images: [
+    { src: `${B}/NT00003.jpg`, alt: 'Nature — Gus McEwan Photography' },
+    { src: `${B}/NT00004.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  ]},
+  { type: 'single', aspect: 'hero', src: `${B}/NT00005.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  { type: 'single', aspect: 'tall', src: `${B}/NT00006.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  { type: 'single', aspect: 'hero', src: `${B}/NT00007.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  { type: 'pair', images: [
+    { src: `${B}/NT00008.jpg`, alt: 'Nature — Gus McEwan Photography' },
+    { src: `${B}/NT00009.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  ]},
+  { type: 'single', aspect: 'mid',  src: `${B}/NT00010.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  { type: 'single', aspect: 'hero', src: `${B}/NT00011.jpg`, alt: 'Nature — Gus McEwan Photography' },
+  { type: 'single', aspect: 'mid',  src: `${B}/NT00012.jpg`, alt: 'Nature — Gus McEwan Photography' },
 ]
 
 export default function Nature() {
