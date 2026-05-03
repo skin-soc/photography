@@ -15,8 +15,15 @@ export default function Nav() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-7 h-[52px] backdrop-blur-md">
-      <Link href="/" className="font-serif font-light text-[17px] tracking-wider text-white hover:text-white/70 transition-colors">
-        Gus McEwan
+      <Link href="/" className="flex items-center h-full py-3">
+        {/* Logo SVG inline so we can control fill colour via CSS */}
+        <img
+          src="/images/logo.svg"
+          alt="Gus McEwan Photography"
+          className="h-7 w-auto"
+          draggable={false}
+          style={{ filter: 'brightness(0) saturate(100%) invert(12%) sepia(74%) saturate(2800%) hue-rotate(340deg) brightness(85%) contrast(110%)' }}
+        />
       </Link>
       <ul className="flex items-center gap-8">
         {links.map(({ href, label }) => {

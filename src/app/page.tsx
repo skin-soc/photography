@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
-const PLACES = [
+// PL00003 (Calderon Hondo) is always first. The rest are shuffled into a queue.
+// When the queue is exhausted it reshuffles, ensuring every image plays before repeating.
+const ALL_PLACES = [
   { src: '/images/gallery/PL00003.jpg', alt: 'Calderon Hondo, Fuerteventura' },
   { src: '/images/gallery/PL00001.jpg', alt: 'Københavns Domhus, Copenhagen' },
   { src: '/images/gallery/PL00002.jpg', alt: 'Marmorkirken, Copenhagen' },
@@ -20,52 +22,114 @@ const PLACES = [
   { src: '/images/gallery/PL00014.jpg', alt: 'Places — Gus McEwan' },
 ]
 
-function nextRandom(current: number, total: number): number {
-  let next = current
-  while (next === current) next = Math.floor(Math.random() * total)
-  return next
+function buildQueue(excludeIndex: number): number[] {
+  const indices = ALL_PLACES.map((_, i) => i).filter(i => i !== excludeIndex)
+  // Fisher-Yates shuffle
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+  return indices
 }
 
 export default function Home() {
-  const [current, setCurrent] = useState(0)
-  const [fading, setFading]   = useState(false)
+  // Two slots: bottom (prev) and top (next). We crossfade by fading the top layer in.
+  const [bottom, setBottom] = useState(0)   // image underneath, always visible
+  const [top, setTop]       = useState<number | null>(null) // image fading in
+  const [topVisible, setTopVisible] = useState(false)       // controls opacity of top layer
+  const queueRef = useRef<number[]>([])
+
+  function advance() {
+    // Replenish queue if empty
+    if (queueRef.current.length === 0) {
+      const currentBottom = bottom
+      queueRef.current = buildQueue(currentBottom)
+    }
+    const next = queueRef.current.shift()!
+
+    // Preload the next image before crossfading
+    const preload = new Image()
+    preload.src = ALL_PLACES[next].src
+    preload.onload = () => {
+      // Mount top layer at 0 opacity
+      setTop(next)
+      setTopVisible(false)
+      // Small rAF delay to let React paint the top layer before transitioning
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTopVisible(true)
+          // After fade completes, promote top to bottom and reset
+          setTimeout(() => {
+            setBottom(next)
+            setTop(null)
+            setTopVisible(false)
+          }, 900) // must match transition duration below
+        })
+      })
+    }
+  }
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setFading(true)
-      setTimeout(() => {
-        setCurrent(prev => nextRandom(prev, PLACES.length))
-        setFading(false)
-      }, 600)
-    }, 5000)
+    // Build initial queue excluding the first image
+    queueRef.current = buildQueue(0)
+    const interval = setInterval(advance, 5000)
     return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const img = PLACES[current]
+  const bottomImg = ALL_PLACES[bottom]
+  const topImg    = top !== null ? ALL_PLACES[top] : null
 
   return (
-    <main className="fixed inset-0">
-      <div
-        className="absolute inset-0 transition-opacity duration-700 ease-in-out select-none"
-        style={{ opacity: fading ? 0 : 1 }}
-        onContextMenu={(e) => e.preventDefault()}
-      >
+    <main className="fixed inset-0 bg-black overflow-hidden">
+
+      {/* Bottom layer — always fully visible */}
+      <div className="absolute inset-0 select-none" onContextMenu={(e) => e.preventDefault()}>
         <img
-          src={img.src}
-          alt={img.alt}
+          key={`bottom-${bottom}`}
+          src={bottomImg.src}
+          alt={bottomImg.alt}
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
-          className="w-full h-full object-cover select-none pointer-events-none"
+          className="w-full h-full object-cover pointer-events-none"
           style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/25 pointer-events-none" />
       </div>
+
+      {/* Top layer — fades in over the bottom */}
+      {topImg && (
+        <div
+          className="absolute inset-0 select-none"
+          style={{
+            opacity: topVisible ? 1 : 0,
+            transition: 'opacity 900ms ease-in-out',
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <img
+            src={topImg.src}
+            alt={topImg.alt}
+            draggable={false}
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+            className="w-full h-full object-cover pointer-events-none"
+            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+          />
+        </div>
+      )}
+
+      {/* Vignette */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30 pointer-events-none" />
+
+      {/* Caption bottom-left */}
       <div className="absolute bottom-8 left-7 pointer-events-none select-none">
         <span className="font-serif font-light text-white/30 text-[13px] tracking-[0.12em]">
-          {img.alt}
+          {topImg ? topImg.alt : bottomImg.alt}
         </span>
       </div>
+
+      {/* Category links bottom-right */}
       <div className="absolute bottom-8 right-7 flex gap-6">
         {[
           { href: '/people', label: 'People' },
@@ -81,6 +145,7 @@ export default function Home() {
           </Link>
         ))}
       </div>
+
     </main>
   )
 }
