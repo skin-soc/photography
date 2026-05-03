@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react'
 const B = '/images'
 const GEAR_COUNT = 14
 
-// Generate gear images in reverse numerical order (14 → 1)
 const gearImages = Array.from({ length: GEAR_COUNT }, (_, i) => {
   const n = GEAR_COUNT - i
   const padded = String(n).padStart(5, '0')
@@ -110,7 +109,7 @@ export default function About() {
               href="mailto:hello@gusmcewan.com"
               className="text-[9px] font-light tracking-[0.22em] uppercase text-white border-b border-[#931020] pb-px hover:text-white/70 transition-colors w-fit"
             >
-              hello@gusmcewan.com
+              {'hello@gusmcewan.com'}
             </a>
           </div>
 
