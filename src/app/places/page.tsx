@@ -40,7 +40,7 @@ const items: GalleryItem[] = [
 
 export default function Places() {
   return (
-    <main className="pt-[52px]">
+    <main className="pt-[72px] pb-10">
       <div className="flex items-baseline gap-5 px-7 py-10 border-b border-white/5">
         <Link href="/" className="text-[9px] font-light tracking-[0.2em] uppercase text-white/35 hover:text-white transition-colors">
           ← All work
