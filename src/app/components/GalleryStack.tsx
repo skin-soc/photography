@@ -51,7 +51,7 @@ function GalleryImg({
 
 export default function GalleryStack({ items, topOffset = true }: Props) {
   return (
-    <div className="flex flex-col gap-[3px] p-[3px]">
+    <div className="flex flex-col gap-[3px] px-[3px] pt-[3px]">
       {/* Transparent spacer so first image isn't hidden behind the floating nav */}
       {topOffset && <div className="h-20" />}
       {items.map((item, i) => {

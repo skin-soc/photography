@@ -24,7 +24,7 @@ const items: GalleryItem[] = [
 
 export default function Nature() {
   return (
-    <main className="pb-10">
+    <main>
       <GalleryStack items={items} />
       <GalleryFooter />
     </main>
