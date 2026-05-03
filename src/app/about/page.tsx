@@ -56,12 +56,12 @@ export default function About() {
       {/* Bio */}
       <div className="flex flex-col md:flex-row md:items-start px-10 md:px-16 pt-24 pb-32 gap-12 md:gap-0">
 
-        {/* Left: bio text — constrained width like Oskar */}
+        {/* Left: bio text */}
         <div className="md:w-[52%] md:pr-16">
-          <p className="text-[13px] font-light leading-[1.9] tracking-[0.08em] uppercase text-white mb-6">
+          <p className="font-serif text-[1.6rem] md:text-[2rem] leading-[1.4] tracking-wide text-white font-light mb-6">
             Gus McEwan is a photographer based between Copenhagen and London.
           </p>
-          <p className="text-[13px] font-light leading-[1.9] tracking-[0.08em] uppercase text-white">
+          <p className="font-serif text-[1.6rem] md:text-[2rem] leading-[1.4] tracking-wide text-white font-light">
             His work spans portraiture, landscape, and the natural world — drawn to light, stillness, and the space between moments.
           </p>
         </div>
@@ -95,7 +95,7 @@ export default function About() {
 
       {/* Gear gallery — 3 CSS columns, masonry */}
       <div className="columns-3 gap-[3px] px-[3px] pb-[3px] mt-[3px]">
-        {[18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1].map((n) => {
+        {[18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((n) => {
           const p = String(n).padStart(5, '0')
           return (
             <RevealImg
