@@ -106,10 +106,11 @@ export default function About() {
               Available for commissioned work. Selected clients and editorial enquiries welcome.
             </p>
             
-              href="mailto:hello&#64;gusmcewan.com"
+            <a
+              href="mailto:hello@gusmcewan.com
               className="text-[9px] font-light tracking-[0.22em] uppercase text-white border-b border-[#931020] pb-px hover:text-white/70 transition-colors w-fit"
             >
-              hello&#64;gusmcewan.com
+              hello@gusmcewan.com
             </a>
           </div>
 
