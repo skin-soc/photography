@@ -18,7 +18,7 @@ export default function Nav() {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-start justify-between"
-        style={{ padding: '4vw 5vw' }}>
+        style={{ padding: '3vw 6vw' }}>
 
         <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
           <img
@@ -41,7 +41,7 @@ export default function Nav() {
               <li key={href}>
                 <Link
                   href={href}
-                  className={`text-[12px] font-light tracking-[0.22em] uppercase transition-colors ${
+                  className={`text-[11px] font-light tracking-[0.22em] uppercase transition-colors ${
                     active
                       ? 'text-white border-b border-[#931020] pb-px'
                       : 'text-white/60 hover:text-white'
