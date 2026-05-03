@@ -49,20 +49,6 @@ function RevealImg({ src, alt, className }: { src: string; alt: string; classNam
   )
 }
 
-function g(n: number) {
-  const p = String(n).padStart(5, '0')
-  return { src: `${B}/gear.${p}.jpg`, alt: `Gear ${p}` }
-}
-
-const triples: number[][] = [
-  [18, 17, 16],
-  [15, 14, 13],
-  [12, 11, 10],
-  [9, 8, 7],
-  [6, 5, 4],
-  [3, 2, 1],
-]
-
 export default function About() {
   return (
     <main className="pt-[72px]">
@@ -102,9 +88,9 @@ export default function About() {
         />
       </div>
 
-      {/* Gear gallery — 3 CSS columns, masonry, no gaps */}
+      {/* Gear gallery — 3 CSS columns, masonry */}
       <div className="columns-3 gap-[3px] px-[3px] pb-[3px] mt-[3px]">
-        {[18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((n) => {
+        {[18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1].map((n) => {
           const p = String(n).padStart(5, '0')
           return (
             <RevealImg
