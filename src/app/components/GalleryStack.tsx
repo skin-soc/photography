@@ -37,7 +37,6 @@ function GalleryImg({
     >
       <picture className="block w-full h-full">
         <source srcSet={toWebP(src)} type="image/webp" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={alt}

@@ -1,11 +1,6 @@
-import Link from 'next/link'
+'use client'
 
-// Cover images — chosen as the strongest hero candidates per category:
-//   People:  PP00001 — opens the gallery, assumed strong portrait
-//   Places:  PL00003 — Calderon Hondo, volcanic, dramatic
-//   Nature:  NT00001 — opens the gallery, assumed strong landscape
-// All images are served from /images/gallery (local public dir) — no hotlink risk.
-// WebP preferred via <picture> source, jpg fallback.
+import Link from 'next/link'
 
 const categories = [
   {
@@ -48,12 +43,9 @@ export default function Home() {
             className={`group relative overflow-hidden bg-[#111] ${
               hero ? 'col-span-2 aspect-[16/7]' : 'aspect-[4/3]'
             }`}
-            draggable={false}
-            onContextMenu={(e) => e.preventDefault()}
           >
             <picture className="absolute inset-0 w-full h-full">
               <source srcSet={webp} type="image/webp" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={jpg}
                 alt={alt}
@@ -65,9 +57,7 @@ export default function Home() {
                 loading={hero ? 'eager' : 'lazy'}
               />
             </picture>
-            {/* gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent pointer-events-none" />
-            {/* label */}
             <div className="absolute bottom-0 left-0 right-0 px-7 pb-6 pt-16 pointer-events-none">
               <h2
                 className="font-serif font-light text-white tracking-wide leading-none"
