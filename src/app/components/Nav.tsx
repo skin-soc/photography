@@ -18,7 +18,7 @@ export default function Nav() {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-start justify-between"
-        style={{ padding: '48px 60px' }}>
+        style={{ padding: '2vw 3vw' }}>
 
         <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
           <img
@@ -57,7 +57,7 @@ export default function Nav() {
         {/* Mobile hamburger — two bars */}
         <button
           className="md:hidden flex flex-col justify-center gap-[7px] w-8 h-8 shrink-0"
-          style={{ paddingTop: '10px' }}
+          style={{ paddingTop: '16px' }}
           onClick={() => setOpen(o => !o)}
           aria-label="Menu"
         >

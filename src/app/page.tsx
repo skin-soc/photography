@@ -3,20 +3,20 @@
 import { useEffect, useRef, useState } from 'react'
 
 const ALL_PLACES = [
-  { src: '/images/gallery/PL00003.jpg', alt: 'Calderon Hondo, Fuerteventura' },
-  { src: '/images/gallery/PL00001.jpg', alt: 'Københavns Domhus, Copenhagen' },
-  { src: '/images/gallery/PL00002.jpg', alt: 'Marmorkirken, Copenhagen' },
-  { src: '/images/gallery/PL00004.jpg', alt: 'Amagerstrand, Copenhagen' },
-  { src: '/images/gallery/PL00005.jpg', alt: 'Places — Gus McEwan' },
-  { src: '/images/gallery/PL00006.jpg', alt: 'The Kelpies, Scotland' },
-  { src: '/images/gallery/PL00007.jpg', alt: 'ARC, Copenhagen' },
-  { src: '/images/gallery/PL00008.jpg', alt: 'Gemini Residence, Copenhagen' },
-  { src: '/images/gallery/PL00009.jpg', alt: 'Places — Gus McEwan' },
-  { src: '/images/gallery/PL00010.jpg', alt: 'Places — Gus McEwan' },
-  { src: '/images/gallery/PL00011.jpg', alt: 'The Hand, Brisbane' },
-  { src: '/images/gallery/PL00012.jpg', alt: 'Places — Gus McEwan' },
-  { src: '/images/gallery/PL00013.jpg', alt: 'Operaen, Copenhagen' },
-  { src: '/images/gallery/PL00014.jpg', alt: 'Places — Gus McEwan' },
+  { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo, Fuerteventura' },
+  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus, Copenhagen' },
+  { src: '/images/gallery/PL00002.webp', alt: 'Marmorkirken, Copenhagen' },
+  { src: '/images/gallery/PL00004.webp', alt: 'Amagerstrand, Copenhagen' },
+  { src: '/images/gallery/PL00005.webp', alt: 'Places — Gus McEwan' },
+  { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies, Scotland' },
+  { src: '/images/gallery/PL00007.webp', alt: 'ARC, Copenhagen' },
+  { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence, Copenhagen' },
+  { src: '/images/gallery/PL00009.webp', alt: 'Places — Gus McEwan' },
+  { src: '/images/gallery/PL00010.webp', alt: 'Places — Gus McEwan' },
+  { src: '/images/gallery/PL00011.webp', alt: 'The Hand, Brisbane' },
+  { src: '/images/gallery/PL00012.webp', alt: 'Places — Gus McEwan' },
+  { src: '/images/gallery/PL00013.webp', alt: 'Operaen, Copenhagen' },
+  { src: '/images/gallery/PL00014.webp', alt: 'Places — Gus McEwan' },
 ]
 
 function buildQueue(excludeIndex: number): number[] {
