@@ -58,9 +58,9 @@ const triples: number[][] = [
   [18, 17, 16],
   [15, 14, 13],
   [12, 11, 10],
-  [ 9,  8,  7],
-  [ 6,  5,  4],
-  [ 3,  2,  1],
+  [9, 8, 7],
+  [6, 5, 4],
+  [3, 2, 1],
 ]
 
 export default function About() {
@@ -102,17 +102,19 @@ export default function About() {
         />
       </div>
 
-      {/* Gear gallery — masonry triples, images show fully, bottoms may not align */}
-      <div className="flex flex-col gap-[3px] px-[3px] pb-[3px] mt-[3px]">
-        {triples.map((group, i) => (
-          <div key={i} className="flex gap-[3px] items-start">
-            {group.map((n) => (
-              <div key={n} className="flex-1 overflow-hidden bg-[#0a0a0a]">
-                <RevealImg {...g(n)} />
-              </div>
-            ))}
-          </div>
-        ))}
+      {/* Gear gallery — 3 CSS columns, masonry, no gaps */}
+      <div className="columns-3 gap-[3px] px-[3px] pb-[3px] mt-[3px]">
+        {[18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((n) => {
+          const p = String(n).padStart(5, '0')
+          return (
+            <RevealImg
+              key={n}
+              src={`${B}/gear.${p}.jpg`}
+              alt={`Gear ${p}`}
+              className="w-full mb-[3px] break-inside-avoid overflow-hidden bg-[#0a0a0a]"
+            />
+          )
+        })}
       </div>
 
     </main>
