@@ -43,8 +43,8 @@ export default function Nav() {
                   href={href}
                   className={`text-[11px] font-light tracking-[0.22em] uppercase transition-colors ${
                     active
-                      ? 'text-[#931020] border-b border-white pb-px'
-                      : 'text-white hover:text-[#931020]'
+                      ? 'text-white border-b border-[#931020] pb-px'
+                      : 'text-white border-b border-[#931020] pb-px'
                   }`}
                 >
                   {label}
