@@ -17,7 +17,7 @@ const items: GalleryItem[] = [
   ]},
   { type: 'single', aspect: 'hero', src: `${B}/PP00003.webp`, alt: 'Distortion Punter' },
   { type: 'pair', images: [
-    { src: `${B}/PP00011.webp`, alt: 'Tom Francis' },
+    { src: `${B}/PP00011.webp`, alt: 'Aaron Vogelmann' },
     { src: `${B}/PP00009.webp`, alt: 'Anders Malmgren' },
   ]},
 ]
