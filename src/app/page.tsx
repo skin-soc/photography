@@ -9,6 +9,7 @@ const ALL_PLACES = [
   { src: '/images/gallery/PL00004.webp', alt: 'Amagerstrand' },
   { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies' },
   { src: '/images/gallery/PL00007.webp', alt: 'ARC' },
+  { src: '/images/gallery/PL00015.webp', alt: 'Notre Dame Cathedral' },
   { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence' },
   { src: '/images/gallery/PL00011.webp', alt: 'The Hand' },
   { src: '/images/gallery/PL00013.webp', alt: 'Operæn' },
