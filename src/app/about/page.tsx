@@ -54,24 +54,29 @@ export default function About() {
     <main className="pt-[72px]">
 
       {/* Bio */}
-      <div className="px-12 py-20 md:px-20 md:py-28 flex flex-col md:flex-row md:items-start gap-16 md:gap-24">
-        <div className="flex-1">
-          <p className="font-serif font-light text-[2rem] md:text-[2.6rem] leading-[1.3] tracking-wide text-white">
+      <div className="flex flex-col md:flex-row md:items-start px-10 md:px-16 pt-24 pb-32 gap-12 md:gap-0">
+
+        {/* Left: bio text — constrained width like Oskar */}
+        <div className="md:w-[52%] md:pr-16">
+          <p className="text-[13px] font-light leading-[1.9] tracking-[0.08em] uppercase text-white mb-6">
             Gus McEwan is a photographer based between Copenhagen and London.
           </p>
-          <p className="font-serif font-light text-[2rem] md:text-[2.6rem] leading-[1.3] tracking-wide text-white mt-6">
+          <p className="text-[13px] font-light leading-[1.9] tracking-[0.08em] uppercase text-white">
             His work spans portraiture, landscape, and the natural world — drawn to light, stillness, and the space between moments.
           </p>
         </div>
-        <div className="md:w-[280px] md:flex-shrink-0 pt-1">
-          <p className="text-[10px] font-light tracking-[0.2em] uppercase text-white mb-3">Contact</p>
-          <a href="mailto:hello&#64;gusmcewan.com" className="text-[13px] font-light text-white/70 hover:text-white transition-colors block mb-8">hello&#64;gusmcewan.com</a>
-          <p className="text-[10px] font-light tracking-[0.2em] uppercase text-white mb-3">Commissions</p>
-          <p className="text-[13px] font-light text-white/70 leading-[1.8]">
+
+        {/* Right: contact */}
+        <div className="md:w-[48%] md:pl-16 md:border-l md:border-white/10">
+          <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-2">Contact</p>
+          <a href="mailto:hello&#64;gusmcewan.com" className="text-[13px] font-light tracking-[0.04em] text-white/55 hover:text-white transition-colors block mb-8">hello&#64;gusmcewan.com</a>
+          <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-2">Commissions</p>
+          <p className="text-[13px] font-light tracking-[0.04em] text-white/55 leading-[1.9]">
             Available for editorial,<br />
             portrait and landscape work.
           </p>
         </div>
+
       </div>
 
       {/* Hero image */}
