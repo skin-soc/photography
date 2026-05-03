@@ -17,8 +17,11 @@ const heightClasses: Record<string, string> = {
   mid:  'min-h-[50vw] max-h-[80vh]',
 }
 
-// Scroll-reveal: slides up from 40px below, fades in
-function RevealBlock({ children, className }: { children: React.ReactNode; className?: string }) {
+function RevealBlock({ children, className, delay = 0 }: {
+  children: React.ReactNode
+  className?: string
+  delay?: number
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
 
@@ -27,7 +30,7 @@ function RevealBlock({ children, className }: { children: React.ReactNode; class
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
-      { threshold: 0.04 }
+      { threshold: 0.06, rootMargin: '0px 0px -40px 0px' }
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -40,7 +43,7 @@ function RevealBlock({ children, className }: { children: React.ReactNode; class
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(40px)',
-        transition: 'opacity 0.7s ease, transform 0.7s ease',
+        transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
       }}
     >
       {children}
@@ -78,13 +81,13 @@ function GalleryImg({
 }
 
 export default function GalleryStack({ items }: Props) {
+  let revealIndex = 0
+
   return (
-    // No top padding — first image goes full bleed under transparent nav
     <div className="flex flex-col gap-[3px] px-[3px]">
       {items.map((item, i) => {
         if (item.type === 'single') {
           const cls = heightClasses[item.aspect ?? 'hero']
-          // First image: no reveal animation, load immediately, fills screen from top
           if (i === 0) {
             return (
               <div key={i} className={`w-full overflow-hidden bg-[#0a0a0a] ${cls}`}>
@@ -92,15 +95,17 @@ export default function GalleryStack({ items }: Props) {
               </div>
             )
           }
+          const delay = (revealIndex++ % 3) * 80
           return (
-            <RevealBlock key={i} className={`w-full overflow-hidden bg-[#0a0a0a] ${cls}`}>
+            <RevealBlock key={i} delay={delay} className={`w-full overflow-hidden bg-[#0a0a0a] ${cls}`}>
               <GalleryImg src={item.src} alt={item.alt} sizes="100vw" />
             </RevealBlock>
           )
         }
 
+        const delay = (revealIndex++ % 3) * 80
         return (
-          <RevealBlock key={i} className="flex gap-[3px] min-h-[40vw] max-h-[65vh]">
+          <RevealBlock key={i} delay={delay} className="flex gap-[3px] min-h-[40vw] max-h-[65vh]">
             {item.images.map((img, j) => (
               <div key={j} className="flex-1 overflow-hidden bg-[#0a0a0a]">
                 <GalleryImg src={img.src} alt={img.alt} sizes="50vw" />
