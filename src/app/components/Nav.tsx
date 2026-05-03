@@ -14,9 +14,9 @@ export default function Nav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-start justify-between p-5">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-start justify-between"
+      style={{ padding: '36px 44px' }}>
 
-      {/* Logo — top-left, large, close to corner */}
       <Link href="/" className="shrink-0">
         <img
           src="/images/logo.svg"
@@ -30,8 +30,7 @@ export default function Nav() {
         />
       </Link>
 
-      {/* Nav links — top-right, small caps, close to corner */}
-      <ul className="flex items-center gap-9 pt-2">
+      <ul className="flex items-center" style={{ gap: '40px', paddingTop: '6px' }}>
         {links.map(({ href, label }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
