@@ -1,16 +1,6 @@
-import Link from 'next/link'
 import GalleryStack, { GalleryItem } from '../components/GalleryStack'
 import GalleryFooter from '../components/GalleryFooter'
 
-// PL00001–PL00014 (14 images)
-// Alt text from live site where known:
-//   PL00001 Københavns Domhus, PL00002 Marmorkirken, PL00003 Calderon Hondo Fuerteventura
-//   PL00004 Amagerstrand, PL00005-PL00006 Kelpies Scotland, PL00007 ARC Copenhagen
-//   PL00008 Gemini Residence, PL00009-PL00010 unknown, PL00011 The Hand Brisbane
-//   PL00012-PL00014 unknown + PL00013 Operaen
-// Open with Calderon Hondo — volcanic, dramatic, strong hero.
-// Copenhagen architecture works well paired (formal buildings complement each other).
-// End with Operaen as a closing statement — iconic Danish landmark.
 const B = '/images/gallery'
 
 const items: GalleryItem[] = [
@@ -40,13 +30,7 @@ const items: GalleryItem[] = [
 
 export default function Places() {
   return (
-    <main className="pt-[72px] pb-10">
-      <div className="flex items-baseline gap-5 px-7 py-10 border-b border-white/5">
-        <Link href="/" className="text-[9px] font-light tracking-[0.2em] uppercase text-white/35 hover:text-white transition-colors">
-          ← All work
-        </Link>
-        <h1 className="font-serif font-light text-[2rem] tracking-wide">Places</h1>
-      </div>
+    <main className="pb-10">
       <GalleryStack items={items} />
       <GalleryFooter />
     </main>

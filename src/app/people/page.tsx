@@ -1,13 +1,6 @@
-import Link from 'next/link'
 import GalleryStack, { GalleryItem } from '../components/GalleryStack'
 import GalleryFooter from '../components/GalleryFooter'
 
-// PP00001–PP00012 (12 images)
-// Layout rationale:
-//   Open with a strong single hero to establish mood.
-//   Alternate between pairs (intimacy, comparison) and singles (breathing room).
-//   Tall/portrait aspect on singles suits people photography naturally.
-//   Pairs work best when the two images share tone or complement each other.
 const B = '/images/gallery'
 
 const items: GalleryItem[] = [
@@ -33,13 +26,7 @@ const items: GalleryItem[] = [
 
 export default function People() {
   return (
-    <main className="pt-[72px] pb-10">
-      <div className="flex items-baseline gap-5 px-7 py-10 border-b border-white/5">
-        <Link href="/" className="text-[9px] font-light tracking-[0.2em] uppercase text-white/35 hover:text-white transition-colors">
-          ← All work
-        </Link>
-        <h1 className="font-serif font-light text-[2rem] tracking-wide">People</h1>
-      </div>
+    <main className="pb-10">
       <GalleryStack items={items} />
       <GalleryFooter />
     </main>

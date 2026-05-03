@@ -6,6 +6,8 @@ export type GalleryItem =
 
 interface Props {
   items: GalleryItem[]
+  // Set to false on the homepage where we handle offset ourselves
+  topOffset?: boolean
 }
 
 const heightClasses: Record<string, string> = {
@@ -47,9 +49,11 @@ function GalleryImg({
   )
 }
 
-export default function GalleryStack({ items }: Props) {
+export default function GalleryStack({ items, topOffset = true }: Props) {
   return (
     <div className="flex flex-col gap-[3px] p-[3px]">
+      {/* Transparent spacer so first image isn't hidden behind the floating nav */}
+      {topOffset && <div className="h-20" />}
       {items.map((item, i) => {
         if (item.type === 'single') {
           const cls = heightClasses[item.aspect ?? 'hero']
