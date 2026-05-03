@@ -3,13 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 
 const B = '/images'
-const GEAR_COUNT = 14
-
-const gearImages = Array.from({ length: GEAR_COUNT }, (_, i) => {
-  const n = GEAR_COUNT - i
-  const padded = String(n).padStart(5, '0')
-  return { src: `${B}/gear.${padded}.jpg`, alt: `Gear ${padded}` }
-})
 
 function RevealImg({ src, alt, className }: { src: string; alt: string; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -56,11 +49,25 @@ function RevealImg({ src, alt, className }: { src: string; alt: string; classNam
   )
 }
 
+function g(n: number) {
+  const p = String(n).padStart(5, '0')
+  return { src: `${B}/gear.${p}.jpg`, alt: `Gear ${p}` }
+}
+
+// 14 images in reverse, grouped into triples (14,13,12), (11,10,9), (8,7,6), (5,4,3), remainder (2,1)
+const triples = [
+  [14, 13, 12],
+  [11, 10,  9],
+  [ 8,  7,  6],
+  [ 5,  4,  3],
+  [ 2,  1],
+]
+
 export default function About() {
   return (
-    <main className="pt-[72px]">
+    <main>
 
-      {/* Hero image */}
+      {/* Hero image — full bleed under nav */}
       <div className="w-full aspect-[16/7] overflow-hidden bg-[#0a0a0a]">
         <img
           src={`${B}/gus-travels.jpg`}
@@ -105,27 +112,27 @@ export default function About() {
             <p className="text-[13px] font-light leading-[1.9] text-white/55 tracking-wide mb-10">
               Available for commissioned work. Selected clients and editorial enquiries welcome.
             </p>
-            
             <a
-              href="mailto:hello@gusmcewan.com"
+              href="mailto:hello&#64;gusmcewan.com"
               className="text-[9px] font-light tracking-[0.22em] uppercase text-white border-b border-[#931020] pb-px hover:text-white/70 transition-colors w-fit"
             >
-              hello@gusmcewan.com
+              hello&#64;gusmcewan.com
             </a>
           </div>
 
         </div>
       </div>
 
-      {/* Gear gallery */}
+      {/* Gear gallery — all triples, reverse order */}
       <div className="flex flex-col gap-[3px] px-[3px] pb-[3px]">
-        {gearImages.map((img, i) => (
-          <RevealImg
-            key={i}
-            src={img.src}
-            alt={img.alt}
-            className="w-full overflow-hidden bg-[#0a0a0a] min-h-[40vw] max-h-screen"
-          />
+        {triples.map((group, i) => (
+          <div key={i} className="flex gap-[3px] min-h-[28vw] max-h-[45vh]">
+            {group.map((n) => (
+              <div key={n} className="flex-1 overflow-hidden bg-[#0a0a0a]">
+                <RevealImg {...g(n)} className="w-full h-full" />
+              </div>
+            ))}
+          </div>
         ))}
       </div>
 
