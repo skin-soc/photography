@@ -34,7 +34,7 @@ export default function Nav() {
         </Link>
 
         {/* Desktop links */}
-        <ul className="hidden md:flex items-center" style={{ gap: '52px', paddingTop: '6px' }}>
+        <ul className="hidden md:flex items-center" style={{ gap: '52px', paddingTop: '16px' }}>
           {links.map(({ href, label }) => {
             const active = pathname === href || pathname.startsWith(href + '/')
             return (
