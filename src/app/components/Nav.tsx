@@ -44,7 +44,7 @@ export default function Nav() {
                   className={`text-[11px] font-light tracking-[0.22em] uppercase transition-colors ${
                     active
                       ? 'text-white border-b border-[#931020] pb-px'
-                      : 'text-white/60 hover:text-white'
+                      : 'text-white hover:text-[#931020]'
                   }`}
                 >
                   {label}
