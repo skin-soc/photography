@@ -28,6 +28,14 @@ function RevealBlock({ children, className, delay = 0 }: {
   useEffect(() => {
     const el = ref.current
     if (!el) return
+
+    // Already in viewport on mount — show immediately, skip animation
+    const rect = el.getBoundingClientRect()
+    if (rect.top < window.innerHeight) {
+      setVisible(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
       { threshold: 0.06, rootMargin: '0px 0px -40px 0px' }
