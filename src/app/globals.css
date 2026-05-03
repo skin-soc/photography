@@ -3,69 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-rgb: 0, 0, 0;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+  background: #000;
+  color: #fff;
 }
 
-.border {
-  border-width: 0px !important;
-}
-.border-b {
-  border-bottom-width: 0px !important;
-}
-.border-t {
-  border-top-width: 0px !important;
+.font-serif {
+  font-family: var(--font-serif);
 }
 
-.react-calendar {
-  background-color: #1a1a1a;
-  color: #ffffff;
-}
-
-.react-calendar__tile {
-  background: none;
-  color: #ffffff;
-}
-
-.react-calendar__tile--active {
-  background-color: #ffffff;
-  color: #931020;
-}
-
-.react-calendar__tile--now {
-  background-color: #333333;
-  color: #ffffff;
-}
-
-.react-calendar__tile:hover {
-  background-color: #444444;
-  color: #ffffff;
-}
-
-.landscape-position {
-  object-position: center top;
-}
-
-h1 {
-  text-shadow: 0 1px 3px rgba(0,0,0,1);
-}
-
-@media (max-width: 768px) {
-  h1 {
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+/* Mobile nav collapses to 2-col on small screens */
+@media (max-width: 480px) {
+  nav ul {
+    gap: 1rem;
   }
-  
-  .landscape-position {
-    object-position: 77% center;
+  nav ul a {
+    font-size: 8px;
+    letter-spacing: 0.12em;
   }
+}
 
-  .hero-image-container {
-    position: absolute;
-    inset: 0;
+/* Pair images equal height on mobile - stack */
+@media (max-width: 640px) {
+  .gallery-pair {
+    flex-direction: column;
   }
 }

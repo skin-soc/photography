@@ -1,17 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
-        italiana: ['var(--font-italiana)', 'serif'],
+        serif: ['var(--font-serif)', 'Georgia', 'serif'],
+      },
+      colors: {
+        accent: '#931020',
       },
     },
   },
   plugins: [],
 }
-
