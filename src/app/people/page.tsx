@@ -4,12 +4,12 @@ import GalleryFooter from '../components/GalleryFooter'
 const B = '/images/gallery'
 
 const items: GalleryItem[] = [
-  { type: 'single', aspect: 'tall', src: `${B}/PP00012.webp`, alt: 'Skater' },
+  { type: 'single', aspect: 'hero', src: `${B}/PP00012.webp`, alt: 'Skater' },
   { type: 'pair', images: [
     { src: `${B}/PP00001.webp`, alt: 'Jamie' },
     { src: `${B}/PP00010.webp`, alt: 'Alexander Frisch' },
   ]},
-  { type: 'single', aspect: 'tall', src: `${B}/PP00005.webp`, alt: 'Bryce Anderville Hixson Jr.' },
+  { type: 'single', aspect: 'hero', src: `${B}/PP00005.webp`, alt: 'Bryce Anderville Hixson Jr.' },
   { type: 'single', aspect: 'hero', src: `${B}/PP00004.webp`, alt: 'King Charles III' },
   { type: 'pair', images: [
     { src: `${B}/PP00007.webp`, alt: 'Lolly & Matt' },
