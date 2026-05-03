@@ -60,7 +60,7 @@ export default function About() {
   return (
     <main className="pt-[72px]">
 
-      {/* ── Hero image ── */}
+      {/* Hero image */}
       <div className="w-full aspect-[16/7] overflow-hidden bg-[#0a0a0a]">
         <img
           src={`${B}/gus-travels.jpg`}
@@ -74,7 +74,7 @@ export default function About() {
         />
       </div>
 
-      {/* ── Bio section ── */}
+      {/* Bio section */}
       <div className="px-[3px] py-[3px]">
         <div className="flex flex-col md:flex-row gap-[3px]">
 
@@ -106,17 +106,17 @@ export default function About() {
               Available for commissioned work. Selected clients and editorial enquiries welcome.
             </p>
             
-              href="mailto:hello@gusmcewan.com"
+              href="mailto:hello&#64;gusmcewan.com"
               className="text-[9px] font-light tracking-[0.22em] uppercase text-white border-b border-[#931020] pb-px hover:text-white/70 transition-colors w-fit"
             >
-              {'hello@gusmcewan.com'}
+              hello&#64;gusmcewan.com
             </a>
           </div>
 
         </div>
       </div>
 
-      {/* ── Gear gallery ── */}
+      {/* Gear gallery */}
       <div className="flex flex-col gap-[3px] px-[3px] pb-[3px]">
         {gearImages.map((img, i) => (
           <RevealImg
