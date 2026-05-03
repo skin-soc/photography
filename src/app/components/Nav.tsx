@@ -57,7 +57,7 @@ export default function Nav() {
         {/* Mobile hamburger — two bars */}
         <button
           className="md:hidden flex flex-col justify-center gap-[7px] w-8 h-8 shrink-0"
-          style={{ paddingTop: '20px' }}
+          style={{ paddingTop: '24px' }}
           onClick={() => setOpen(o => !o)}
           aria-label="Menu"
         >
