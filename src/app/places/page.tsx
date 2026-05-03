@@ -18,10 +18,10 @@ const items: GalleryItem[] = [
   { type: 'single', aspect: 'mid',  src: `${B}/PL00006.webp`, alt: 'The Kelpies, Scotland' },
   { type: 'single', aspect: 'hero', src: `${B}/PL00011.webp`, alt: 'The Hand, Brisbane, Australia' },
   { type: 'pair', images: [
-    { src: `${B}/PL00012.webp`, alt: 'Places — Gus McEwan Photography' },
-    { src: `${B}/PL00014.webp`, alt: 'Places — Gus McEwan Photography' },
+    { src: `${B}/PL00012.webp`, alt: 'Tivoli Gardens, Copenhagen' },
+    { src: `${B}/PL00014.webp`, alt: 'U-Bahn, Berlin' },
   ]},
-  { type: 'single', aspect: 'hero', src: `${B}/PL00013.webp`, alt: 'Operaen, Det Kongelige Teater, Copenhagen' },
+  { type: 'single', aspect: 'hero', src: `${B}/PL00013.webp`, alt: 'Operæn, Det Kongelige Teater, Copenhagen' },
 ]
 
 export default function Places() {

@@ -3,15 +3,15 @@
 import { useEffect, useRef, useState } from 'react'
 
 const ALL_PLACES = [
-  { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo, Fuerteventura' },
-  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus, Copenhagen' },
-  { src: '/images/gallery/PL00002.webp', alt: 'Marmorkirken, Copenhagen' },
-  { src: '/images/gallery/PL00004.webp', alt: 'Amagerstrand, Copenhagen' },
-  { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies, Scotland' },
-  { src: '/images/gallery/PL00007.webp', alt: 'ARC, Copenhagen' },
-  { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence, Copenhagen' },
-  { src: '/images/gallery/PL00011.webp', alt: 'The Hand, Brisbane' },
-  { src: '/images/gallery/PL00013.webp', alt: 'Operaen, Copenhagen' },
+  { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo' },
+  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus' },
+  { src: '/images/gallery/PL00002.webp', alt: 'Marmorkirken' },
+  { src: '/images/gallery/PL00004.webp', alt: 'Amagerstrand' },
+  { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies' },
+  { src: '/images/gallery/PL00007.webp', alt: 'ARC' },
+  { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence' },
+  { src: '/images/gallery/PL00011.webp', alt: 'The Hand' },
+  { src: '/images/gallery/PL00013.webp', alt: 'Operæn' },
 ]
 
 function buildQueue(excludeIndex: number): number[] {
