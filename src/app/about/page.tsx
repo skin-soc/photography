@@ -107,7 +107,7 @@ export default function About() {
             </p>
             
             <a
-              href="mailto:hello@gusmcewan.com
+              href="mailto:hello@gusmcewan.com"
               className="text-[9px] font-light tracking-[0.22em] uppercase text-white border-b border-[#931020] pb-px hover:text-white/70 transition-colors w-fit"
             >
               hello@gusmcewan.com
