@@ -21,6 +21,8 @@
 # Icon must end with two \r
 Icon
 
+#Claude
+.claude
 
 # Thumbnails
 ._*
