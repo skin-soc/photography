@@ -3,25 +3,29 @@ import GalleryFooter from '../components/GalleryFooter'
 
 const B = '/images/gallery'
 
+// Each image carries its real pixel dimensions so the container's aspect-ratio
+// matches the photo exactly — no cropping, photo always shown in full at the
+// width its slot allows (100 vw for singles, 50 vw for pairs, 33 vw for triples).
+
 const items: GalleryItem[] = [
-  { type: 'single', aspect: 'hero', src: `${B}/PL00003.webp`, alt: 'Calderon Hondo, Fuerteventura, Spain' },
+  { type: 'single', src: `${B}/PL00003.webp`, alt: 'Calderon Hondo, Fuerteventura, Spain', w: 3200, h: 2132 },
   { type: 'pair', images: [
-    { src: `${B}/PL00012.webp`, alt: 'Tivoli Gardens, Copenhagen' },
-    { src: `${B}/PL00004.webp`, alt: 'Amagerstrand, Copenhagen' },
+    { src: `${B}/PL00012.webp`, alt: 'Tivoli Gardens, Copenhagen', w: 3200, h: 2400 },
+    { src: `${B}/PL00004.webp`, alt: 'Amagerstrand, Copenhagen',   w: 4800, h: 3200 },
   ]},
-  { type: 'single', aspect: 'hero', src: `${B}/PL00001.webp`, alt: 'Københavns Domhus, Copenhagen' },
-  { type: 'single', aspect: 'hero',  src: `${B}/PL00007.webp`, alt: 'ARC, Copenhagen' },
+  { type: 'single', src: `${B}/PL00001.webp`, alt: 'Københavns Domhus, Copenhagen', w: 4800, h: 2700 },
+  { type: 'single', src: `${B}/PL00007.webp`, alt: 'ARC, Copenhagen',               w: 3200, h: 2400 },
   { type: 'pair', images: [
-    { src: `${B}/PL00002.webp`, alt: 'Marmorkirken, Copenhagen' },
-    { src: `${B}/PL00008.webp`, alt: 'Gemini Residence, Copenhagen' },
+    { src: `${B}/PL00002.webp`, alt: 'Marmorkirken, Copenhagen',     w: 6000, h: 4636 },
+    { src: `${B}/PL00008.webp`, alt: 'Gemini Residence, Copenhagen', w: 4800, h: 3200 },
   ]},
-  { type: 'single', aspect: 'hero',  src: `${B}/PL00006.webp`, alt: 'The Kelpies, Scotland' },
-  { type: 'single', aspect: 'mid', src: `${B}/PL00011.webp`, alt: 'The Hand, Brisbane, Australia' },
+  { type: 'single', src: `${B}/PL00006.webp`, alt: 'The Kelpies, Scotland',         w: 3200, h: 1792 },
+  { type: 'single', src: `${B}/PL00011.webp`, alt: 'The Hand, Brisbane, Australia', w: 4800, h: 2700 },
   { type: 'pair', images: [
-    { src: `${B}/PL00013.webp`, alt: 'Operæn, Det Kongelige Teater, Copenhagen' },
-    { src: `${B}/PL00014.webp`, alt: 'Christiansborg Palace, Copenhagen' },
+    { src: `${B}/PL00013.webp`, alt: 'Operæn, Det Kongelige Teater, Copenhagen', w: 3200, h: 2400 },
+    { src: `${B}/PL00014.webp`, alt: 'Christiansborg Palace, Copenhagen',         w: 3200, h: 3200 },
   ]},
-  { type: 'single', aspect: 'hero', src: `${B}/PL00015.webp`, alt: 'Notre Dame Cathedral, Paris' },
+  { type: 'single', src: `${B}/PL00015.webp`, alt: 'Notre Dame Cathedral, Paris', w: 3200, h: 1800 },
 ]
 
 export default function Places() {
