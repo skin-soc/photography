@@ -8,7 +8,7 @@ const items: GalleryItem[] = [
   { type: 'single', src: `${B}/NT00011.webp`, alt: 'Persian Lynx',    w: 3556, h: 2001 },
   { type: 'pair', images: [
     { src: `${B}/NT00001.webp`, alt: 'Baby African Elephant', w: 3200, h: 3200 },
-    { src: `${B}/NT00008.webp`, alt: 'Polar Bear',            w: 3600, h: 2027 },
+    { src: `${B}/NT00008.webp`, alt: 'Polar Bear',            w: 1643, h: 1643 },
   ]},
   { type: 'single', src: `${B}/NT00004.webp`, alt: 'King Swan',        w: 4000, h: 2250 },
   { type: 'single', src: `${B}/NT00012.webp`, alt: 'COVID Fisherman',  w: 5376, h: 3024 },
