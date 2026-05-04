@@ -14,6 +14,23 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: 'Gus McEwan Photography',
   description: 'Photographer based between Copenhagen and London.',
+
+  icons: {
+    // Primary: SVG for modern browsers
+    icon: [
+      {
+        url: '/images/favicon.svg',
+        type: 'image/svg+xml',   // Important
+        sizes: 'any',            // Allows any size (SVG advantage)
+      },
+      {
+        url: '/images/favicon.ico',
+        sizes: '32x32',          // or 'any'
+      },
+    ],
+  },
+  apple: '/images/apple-touch-icon.png', // if you have one
+
   openGraph: {
     title: 'Gus McEwan Photography',
     description: 'Photographer based between Copenhagen and London.',
