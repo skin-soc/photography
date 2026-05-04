@@ -28,8 +28,8 @@ export const metadata: Metadata = {
         sizes: '32x32',          // or 'any'
       },
     ],
+    apple: '/images/apple-touch-icon.png', // if you have one
   },
-  apple: '/images/apple-touch-icon.png', // if you have one
 
   openGraph: {
     title: 'Gus McEwan Photography',
