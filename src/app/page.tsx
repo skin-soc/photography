@@ -75,7 +75,7 @@ export default function Home() {
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
-          className="w-full h-full object-cover object-center pointer-events-none"
+          className="w-full h-full object-cover object-top pointer-events-none"
           style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
         />
       </div>
@@ -93,7 +93,7 @@ export default function Home() {
             draggable={false}
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
-            className="w-full h-full object-cover object-center pointer-events-none"
+            className="w-full h-full object-cover object-top pointer-events-none"
             style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
           />
         </div>
