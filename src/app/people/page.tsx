@@ -17,7 +17,7 @@ const items: GalleryItem[] = [
   { type: 'single', src: `${B}/PP00003.webp`, alt: 'Distortion Punter', w: 4613, h: 2595 },
   { type: 'pair', images: [
     { src: `${B}/PP00011.webp`, alt: 'Aaron Vogelmann', w: 3122, h: 3122 },
-    { src: `${B}/PP00009.webp`, alt: 'Anders Malmgren', w: 3200, h: 2133 },
+    { src: `${B}/PP00009.webp`, alt: 'Anders Malmgren', w: 3744, h: 3744 },
   ]},
   { type: 'single', src: `${B}/PP00002.webp`, alt: 'Young Solomon Islanders', w: 4031, h: 2687 },
   { type: 'single', src: `${B}/PP00012.webp`, alt: 'Danish Skater',           w: 3200, h: 2400 },
