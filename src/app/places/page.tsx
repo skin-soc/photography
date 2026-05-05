@@ -10,8 +10,8 @@ const B = '/images/gallery'
 const items: GalleryItem[] = [
   { type: 'single', src: `${B}/PL00003.webp`, alt: 'Calderon Hondo, Fuerteventura, Spain', w: 3200, h: 2132 },
   { type: 'pair', images: [
-    { src: `${B}/PL00012.webp`, alt: 'Tivoli Gardens, Copenhagen', w: 3200, h: 2400 },
-    { src: `${B}/PL00004.webp`, alt: 'Amagerstrand, Copenhagen',   w: 3200, h: 2133 },
+    { src: `${B}/PL00012.webp`, alt: 'Tivoli Gardens, Copenhagen', w: 3200, h: 3200 },
+    { src: `${B}/PL00004.webp`, alt: 'Amagerstrand, Copenhagen',   w: 3200, h: 3200 },
   ]},
   { type: 'single', src: `${B}/PL00001.webp`, alt: 'Københavns Domhus, Copenhagen', w: 3200, h: 1800 },
   { type: 'single', src: `${B}/PL00007.webp`, alt: 'ARC, Copenhagen',               w: 3200, h: 2400 },
