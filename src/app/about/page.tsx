@@ -116,15 +116,15 @@ export default function About() {
         <div className="md:w-[55%] md:pr-12">
           <p
             className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
-            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)' }}
+            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}
           >
             Gus McEwan is a photographer based between Copenhagen and London.
           </p>
           <p
             className="font-serif leading-[1.45] tracking-wide text-white font-light"
-            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)' }}
+            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}
           >
-            His work spans portraiture, landscape, and the natural world — drawn to light, stillness, and the space between moments.
+            His work spans people, places, and the natural worlds — drawn to light, stillness, and the space between moments.
           </p>
         </div>
 
@@ -135,12 +135,16 @@ export default function About() {
             href="mailto:hello&#64;gusmcewan.com"
             className="text-[13px] font-light tracking-[0.04em] text-white/55 hover:text-white transition-colors block mb-8"
           >
-            hello&#64;gusmcewan.com
+            hello [at] gusmcewan.com
           </a>
           <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-2">Commissions</p>
           <p className="text-[13px] font-light tracking-[0.04em] text-white/55 leading-[1.9]">
-            Available for editorial,<br />
-            portrait and landscape work.
+          <a
+            href="mailto:work&#64;gusmcewan.com"
+            className="text-[13px] font-light tracking-[0.04em] text-white/55 hover:text-white transition-colors block mb-8"
+          >
+            work [at] gusmcewan.com
+          </a>
           </p>
         </div>
 
