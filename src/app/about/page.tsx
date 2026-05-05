@@ -124,7 +124,8 @@ export default function About() {
             className="font-serif leading-[1.45] tracking-wide text-white font-light"
             style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}
           >
-            His work spans people, places, and the natural worlds — drawn to light, stillness, and the space between moments.
+            His work spans people, places, and the natural worlds.<br /> 
+            Drawn to light, stillness, and the space between moments.
           </p>
         </div>
 
