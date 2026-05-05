@@ -188,7 +188,8 @@ export default function About() {
           position: 'relative',
           zIndex: 1,
           overflow: 'hidden',
-          wordBreak: 'break-word'
+          maxWidth: '100%',
+          flexShrink: 1
         }}>
           <p
             className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
