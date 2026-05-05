@@ -22,7 +22,7 @@ const items: GalleryItem[] = [
   { type: 'single', src: `${B}/PL00006.webp`, alt: 'The Kelpies, Scotland',         w: 3200, h: 1792 },
   { type: 'single', src: `${B}/PL00011.webp`, alt: 'The Hand, Brisbane, Australia', w: 3200, h: 1800 },
   { type: 'pair', images: [
-    { src: `${B}/PL00013.webp`, alt: 'Operæn, Det Kongelige Teater, Copenhagen', w: 3200, h: 2400 },
+    { src: `${B}/PL00013.webp`, alt: 'Operæn, Det Kongelige Teater, Copenhagen', w: 3200, h: 3200 },
     { src: `${B}/PL00014.webp`, alt: 'Christiansborg Palace, Copenhagen',         w: 3200, h: 3200 },
   ]},
   { type: 'single', src: `${B}/PL00015.webp`, alt: 'Notre Dame Cathedral, Paris', w: 3200, h: 1800 },
