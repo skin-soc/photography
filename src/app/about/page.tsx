@@ -192,7 +192,7 @@ export default function About() {
         }}>
           <p
             className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
-            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}
+            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right', maxWidth: '100%' }}
           >
             Gus McEwan is a photographer based between Copenhagen and London.
           </p>
