@@ -10,50 +10,50 @@ const B = '/images'
 const gearItems: GalleryItem[] = [
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00018.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00017.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00016.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00018.jpg`, alt: 'Camera gear', w: 934,  h: 960 },
+      { src: `${B}/gear.00017.jpg`, alt: 'Camera gear', w: 870,  h: 960 },
+      { src: `${B}/gear.00016.jpg`, alt: 'Camera gear', w: 715,  h: 960 },
     ]
   },
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00015.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00014.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00013.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00015.jpg`, alt: 'Camera gear', w: 668,  h: 960 },
+      { src: `${B}/gear.00014.jpg`, alt: 'Camera gear', w: 960,  h: 740 },
+      { src: `${B}/gear.00013.jpg`, alt: 'Camera gear', w: 913,  h: 960 },
     ]
   },
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00012.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00011.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00010.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00012.jpg`, alt: 'Camera gear', w: 652,  h: 960 },
+      { src: `${B}/gear.00011.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
+      { src: `${B}/gear.00010.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
     ]
   },
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00009.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00008.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00007.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00009.jpg`, alt: 'Camera gear', w: 1200, h: 900 },
+      { src: `${B}/gear.00008.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
+      { src: `${B}/gear.00007.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
     ]
   },
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00006.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00005.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00004.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00006.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
+      { src: `${B}/gear.00005.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
+      { src: `${B}/gear.00004.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
     ]
   },
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00003.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00002.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-      { src: `${B}/gear.00001.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00003.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
+      { src: `${B}/gear.00002.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
+      { src: `${B}/gear.00001.jpg`, alt: 'Camera gear', w: 718,  h: 1248 },
     ]
   },
 ]
 
 const galleryItems: GalleryItem[] = [
-  { type: 'single', src: `${B}/gus-travels.jpg`, alt: 'Gus McEwan on location', w: 4800, h: 2700 },
+  { type: 'single', src: `${B}/gus-travels.jpg`, alt: 'Gus McEwan on location', w: 3200, h: 2133 },
   ...gearItems,
 ]
 

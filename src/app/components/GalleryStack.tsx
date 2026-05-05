@@ -65,7 +65,7 @@ function ParallaxImg({
       const rect = wrap.getBoundingClientRect()
       const vh   = window.innerHeight
       const progress = 1 - rect.bottom / (vh + rect.height)
-      const offset = (progress - 0.5) * strength * rect.height
+      const offset = ( 0.5 - progress ) * strength * rect.height
       img.style.transform = `translateY(${offset.toFixed(1)}px)`
     }
 
@@ -101,7 +101,7 @@ function ParallaxImg({
         draggable={false}
         onContextMenu={e => e.preventDefault()}
         onDragStart={e => e.preventDefault()}
-        className="w-full h-full object-cover object-center block select-none pointer-events-none"
+        className="w-full h-full object-cover object-top block select-none pointer-events-none"
         style={{
           scale:           '1.10',
           WebkitUserSelect: 'none',
@@ -118,7 +118,7 @@ function ParallaxImg({
 /* ─── Gallery stack ──────────────────────────────────────────────────────── */
 export default function GalleryStack({ items }: Props) {
   return (
-    <div className="flex flex-col gap-[3px] px-[3px]">
+    <div className="flex flex-col gap-[3px] px-[3px] overflow-x-hidden w-full">
       {items.map((item, i) => {
 
         if (item.type === 'single') {
@@ -136,21 +136,20 @@ export default function GalleryStack({ items }: Props) {
 
         if (item.type === 'pair' || item.type === 'triple') {
           const sizesAttr = `${Math.round(100 / item.images.length)}vw`
+          const pt = (100 / rowAspect(item.images)).toFixed(4)
           return (
-            <div
-              key={i}
-              className="flex gap-[3px]"
-              style={{ aspectRatio: `${rowAspect(item.images).toFixed(4)} / 1` }}
-            >
-              {item.images.map((img, j) => (
-                <div key={j} className="flex-1 min-w-0">
-                  <ParallaxImg
-                    src={img.src} alt={img.alt}
-                    sizes={sizesAttr}
-                    strength={0.06}
-                  />
-                </div>
-              ))}
+            <div key={i} style={{ position: 'relative', width: '100%', paddingTop: `${pt}%` }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', gap: '3px', overflow: 'hidden' }}>
+                {item.images.map((img, j) => (
+                  <div key={j} style={{ flex: 1, minWidth: 0 }}>
+                    <ParallaxImg
+                      src={img.src} alt={img.alt}
+                      sizes={sizesAttr}
+                      strength={0.06}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           )
         }
