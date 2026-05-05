@@ -3,16 +3,19 @@
 import { useEffect, useRef, useState } from 'react'
 
 const ALL_PLACES = [
+  { src: '/images/gallery/NT10012.webp', alt: 'COVID Fisherman' },
   { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo' },
-  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus' },
-  { src: '/images/gallery/PL00002.webp', alt: 'Marmorkirken' },
-  { src: '/images/gallery/PL00004.webp', alt: 'Amagerstrand' },
   { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies' },
+  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus' },
   { src: '/images/gallery/PL00007.webp', alt: 'ARC' },
-  { src: '/images/gallery/PL00015.webp', alt: 'Notre Dame Cathedral' },
   { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence' },
   { src: '/images/gallery/PL00011.webp', alt: 'The Hand' },
-  { src: '/images/gallery/PL00013.webp', alt: 'Operæn' },
+  { src: '/images/gallery/PP00001.webp', alt: 'Jamie' },
+  { src: '/images/gallery/PP00005.webp', alt: 'Bryce Anderville Hixson Jr.' },  
+  { src: '/images/gallery/PP00007.webp', alt: 'Lolly & Matt' },
+  { src: '/images/gallery/PP00006.webp', alt: 'Drag Queen' },
+  { src: '/images/gallery/NT00002.webp', alt: 'Australian Gull' },
+  { src: '/images/gallery/NT00011.webp', alt: 'Persian Lynx' },
 ]
 
 function buildQueue(excludeIndex: number): number[] {

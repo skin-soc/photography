@@ -11,7 +11,7 @@ const items: GalleryItem[] = [
     { src: `${B}/NT00008.webp`, alt: 'Polar Bear',            w: 1643, h: 1643 },
   ]},
   { type: 'single', src: `${B}/NT00004.webp`, alt: 'King Swan',        w: 3200, h: 1800 },
-  { type: 'single', src: `${B}/NT00012.webp`, alt: 'COVID Fisherman',  w: 3200, h: 1800 },
+  { type: 'single', src: `${B}/NT00012.webp`, alt: 'COVID Fisherman',  w: 6000, h: 3375 },
   { type: 'single', src: `${B}/NT00007.webp`, alt: 'Royal King Stag',  w: 3200, h: 1800 },
 ]
 
