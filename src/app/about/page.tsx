@@ -132,12 +132,14 @@ export default function About() {
         {/* Right: contact */}
         <div className="md:w-[45%] md:pl-12 md:border-l md:border-white/10">
           <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-2">Contact</p>
+           <p className="text-[13px] font-light tracking-[0.04em] text-white/55 leading-[1.9]">
           <a
             href="mailto:hello&#64;gusmcewan.com"
             className="text-[13px] font-light tracking-[0.04em] text-white/55 hover:text-white transition-colors block mb-8"
           >
             hello [at] gusmcewan.com
           </a>
+          </p>
           <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-2">Commissions</p>
           <p className="text-[13px] font-light tracking-[0.04em] text-white/55 leading-[1.9]">
           <a
