@@ -8,36 +8,48 @@ const B = '/images'
 
 /* ── Gear gallery items ───────────────────────────────────────────────────── */
 const gearItems: GalleryItem[] = [
-  { type: 'triple', images: [
-    { src: `${B}/gear.00018.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00017.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00016.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-  ]},
-  { type: 'triple', images: [
-    { src: `${B}/gear.00015.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00014.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00013.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-  ]},
-  { type: 'triple', images: [
-    { src: `${B}/gear.00012.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00011.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00010.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-  ]},
-  { type: 'triple', images: [
-    { src: `${B}/gear.00009.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00008.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00007.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-  ]},
-  { type: 'triple', images: [
-    { src: `${B}/gear.00006.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00005.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00004.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-  ]},
-  { type: 'triple', images: [
-    { src: `${B}/gear.00003.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00002.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-    { src: `${B}/gear.00001.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
-  ]},
+  {
+    type: 'triple', images: [
+      { src: `${B}/gear.00018.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00017.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00016.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+    ]
+  },
+  {
+    type: 'triple', images: [
+      { src: `${B}/gear.00015.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00014.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00013.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+    ]
+  },
+  {
+    type: 'triple', images: [
+      { src: `${B}/gear.00012.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00011.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00010.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+    ]
+  },
+  {
+    type: 'triple', images: [
+      { src: `${B}/gear.00009.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00008.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00007.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+    ]
+  },
+  {
+    type: 'triple', images: [
+      { src: `${B}/gear.00006.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00005.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00004.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+    ]
+  },
+  {
+    type: 'triple', images: [
+      { src: `${B}/gear.00003.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00002.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+      { src: `${B}/gear.00001.jpg`, alt: 'Camera gear', w: 3000, h: 2000 },
+    ]
+  },
 ]
 
 const galleryItems: GalleryItem[] = [
@@ -50,24 +62,22 @@ function ContactForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
 
   const inputStyle: React.CSSProperties = {
-    display: 'block',
-    width: '100%',
-    boxSizing: 'border-box',
-    WebkitAppearance: 'none',
-    backgroundColor: 'transparent',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-    borderLeft: 'none',
-    borderTop: 'none',
-    borderRight: 'none',
-    color: '#ffffff',
-    padding: '12px 0',
-    fontSize: '13px',
-    fontWeight: 300,
-    letterSpacing: '0.04em',
-    outline: 'none',
-    cursor: 'text',
-    transition: 'border-color 0.3s ease',
-  }
+  display: 'block',
+  width: '100%',
+  boxSizing: 'border-box',
+  backgroundColor: 'transparent',
+  border: 'none',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
+  color: '#ffffff',
+  padding: '16px 0 13px 0',
+  fontSize: '13px',
+  fontWeight: 300,
+  letterSpacing: '0.04em',
+  outline: 'none',
+  minHeight: '52px',
+  cursor: 'text',
+  transition: 'border-color 0.3s ease',
+};
 
   const textareaStyle: React.CSSProperties = {
     ...inputStyle,
@@ -117,9 +127,9 @@ function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <input type="text"  name="name"    placeholder="Name"    required style={inputStyle} />
-      <input type="email" name="email"   placeholder="Email"   required style={inputStyle} />
-      <textarea           name="message" placeholder="Message" required style={textareaStyle} />
+      <input type="text" name="name" placeholder="Name" required style={inputStyle} />
+      <input type="email" name="email" placeholder="Email" required style={inputStyle} />
+      <textarea name="message" placeholder="Message" required style={textareaStyle} />
 
       <button
         type="submit"
