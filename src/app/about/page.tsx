@@ -64,30 +64,26 @@ function ContactForm() {
   const inputStyle: React.CSSProperties = {
     display: 'block',
     width: '100%',
-    padding: '4px 0 12px 0',
+    padding: '8px 0 10px 0',
     minHeight: '48px',
     height: '48px',
     boxSizing: 'border-box',
-    WebkitAppearance: 'none',
     backgroundColor: 'transparent',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-    borderLeft: 'none',
-    borderTop: 'none',
-    borderRight: 'none',
-    color: '#ffffff',
+    borderBottom: '1px solid rgba(255,255,255,0.2)',
+    border: 'none',
+    color: '#fff',
     fontSize: '13px',
     fontWeight: 300,
     letterSpacing: '0.04em',
     outline: 'none',
     cursor: 'text',
-    transition: 'border-color 0.3s ease',
   }
 
   const textareaStyle: React.CSSProperties = {
     ...inputStyle,
-    fontFamily: 'inherit',
     resize: 'none',
-    minHeight: '100px',
+    minHeight: '120px',
+    height: 'auto',
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
