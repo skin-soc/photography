@@ -181,39 +181,37 @@ export default function About() {
     <main className="pt-[72px]">
 
       {/* ── Bio + contact form ─────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0">
-
+      <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0" style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Left: bio */}
         <div className="md:w-[55%] md:pr-12" style={{
           position: 'relative',
           zIndex: 1,
           overflow: 'hidden',
-          maxWidth: '100%',
-          flexShrink: 1
+          flexShrink: 0,
+          flexBasis: '55%'
         }}>
-          <p
-            className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
-            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right', maxWidth: '100%' }}
-          >
+          <p className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
+            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}>
             Gus McEwan is a photographer based between Copenhagen and London.
           </p>
-          <p
-            className="font-serif leading-[1.45] tracking-wide text-white font-light"
-            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}
-          >
+          <p className="font-serif leading-[1.45] tracking-wide text-white font-light"
+            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}>
             His work spans people, places, and the natural worlds.<br />
             Drawn to light, stillness, and the space between moments.
           </p>
         </div>
 
         {/* Right: contact */}
-        <div className="md:w-[45%] md:pl-12 md:border-l md:border-white/10" style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}>
-          <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">
-            Contact
-          </p>
+        <div className="md:w-[45%] md:pl-12 md:border-l md:border-white/10" style={{
+          position: 'relative',
+          zIndex: 10,
+          pointerEvents: 'auto',
+          flexShrink: 0,
+          flexBasis: '45%'
+        }}>
+          <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">Contact</p>
           <ContactForm />
         </div>
-
       </div>
 
       {/* ── Hero + gear gallery ────────────────────────────────────────── */}
