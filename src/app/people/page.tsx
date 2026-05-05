@@ -9,7 +9,7 @@ const items: GalleryItem[] = [
     { src: `${B}/PP00001.webp`, alt: 'Jamie',            w: 3200, h: 1800 },
     { src: `${B}/PP00010.webp`, alt: 'Alexander Frisch', w: 3200, h: 1800 },
   ]},
-  { type: 'single', src: `${B}/PP00005.webp`, alt: 'Bryce Anderville Hixson Jr.', w: 3200, h: 2133 },
+  { type: 'single', src: `${B}/PP00005.webp`, alt: 'Bryce Anderville Hixson Jr.', w: 3200, h: 1959 },
   { type: 'pair', images: [
     { src: `${B}/PP00007.webp`, alt: 'Lolly & Matt', w: 3200, h: 1800 },
     { src: `${B}/PP00006.webp`, alt: 'Drag Queen',   w: 3200, h: 1800 },
