@@ -64,7 +64,7 @@ function ContactForm() {
   const inputStyle: React.CSSProperties = {
     display: 'block',
     width: '100%',
-    minHeight: '48px',
+    minHeight: '40px',
     boxSizing: 'border-box',
     WebkitAppearance: 'none',
     backgroundColor: 'transparent',
@@ -73,7 +73,7 @@ function ContactForm() {
     borderTop: 'none',
     borderRight: 'none',
     color: '#ffffff',
-    padding: '16px 0 12px 0',
+    padding: '6px 0 10px 0',
     fontSize: '13px',
     fontWeight: 300,
     letterSpacing: '0.04em',
