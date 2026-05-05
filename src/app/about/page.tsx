@@ -177,7 +177,15 @@ export default function About() {
     <main className="pt-[72px]">
 
       {/* ── Bio + contact form ─────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0" style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+      <div
+        className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0"
+        style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          width: '100%',
+          position: 'relative'
+        }}
+      >
         {/* Left: bio */}
         <div className="md:w-[55%] md:pr-12" style={{
           position: 'relative',
