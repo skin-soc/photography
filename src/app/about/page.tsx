@@ -201,7 +201,7 @@ export default function About() {
         </div>
 
         {/* Right: contact */}
-        <div className="md:w-[45%] md:pl-12 md:border-l md:border-white/10">
+        <div className="md:w-[45%] md:pl-12 md:border-l md:border-white/10" style={{position:'relative', zIndex:10}}>
           <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">
             Contact
           </p>
