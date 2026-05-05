@@ -177,43 +177,53 @@ export default function About() {
     <main className="pt-[72px]">
 
       {/* ── Bio + contact form ─────────────────────────────────────────── */}
-      <div
-        className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0"
-        style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          width: '100%',
-          position: 'relative'
-        }}
-      >
-        {/* Left: bio */}
+      <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0 max-w-[1480px] mx-auto w-full">
+
+        {/* Bio */}
         <div className="md:w-[55%] md:pr-12" style={{
+          flex: '0 0 55%',
           position: 'relative',
           zIndex: 1,
           overflow: 'hidden',
-          flexShrink: 0,
-          flexBasis: '55%'
+          pointerEvents: 'none'
         }}>
           <p className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
-            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}>
+            style={{
+              fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
+              textAlign: 'right',
+              pointerEvents: 'none'
+            }}>
             Gus McEwan is a photographer based between Copenhagen and London.
           </p>
+          <p className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
+            style={{
+              fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
+              textAlign: 'right',
+              pointerEvents: 'none'
+            }}>
+            His work spans people, places, and the natural worlds - drawn to natural light, stillness, and the space between moments.
+          </p>
           <p className="font-serif leading-[1.45] tracking-wide text-white font-light"
-            style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}>
-            His work spans people, places, and the natural worlds.<br />
-            Drawn to light, stillness, and the space between moments.
+            style={{
+              fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
+              textAlign: 'right',
+              pointerEvents: 'none'
+            }}>
+            Through his lens, he invites you to pause, feel, and remember.
           </p>
         </div>
 
-        {/* Right: contact */}
+        {/* Contact */}
         <div className="md:w-[45%] md:pl-12 md:border-l md:border-white/10" style={{
+          flex: '0 0 45%',
           position: 'relative',
           zIndex: 10,
-          pointerEvents: 'auto',
-          flexShrink: 0,
-          flexBasis: '45%'
+          pointerEvents: 'auto'
         }}>
           <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">Contact</p>
+          <p className="text-[13px] font-light tracking-[0.04em] text-white/70 mb-6">
+            Let’s create something together. Drop me a line. Say hi. Ask a question. Or just share some good vibes.
+          </p>
           <ContactForm />
         </div>
       </div>
