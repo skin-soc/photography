@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 const ALL_PLACES = [
-  { src: '/images/gallery/NT00012.webp', alt: 'COVID Fisherman' },
   { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo' },
+  { src: '/images/gallery/NT00012.webp', alt: 'COVID Fisherman' },
   { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies' },
   { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus' },
   { src: '/images/gallery/PL00007.webp', alt: 'ARC' },
