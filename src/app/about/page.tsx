@@ -184,7 +184,12 @@ export default function About() {
       <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0">
 
         {/* Left: bio */}
-        <div className="md:w-[55%] md:pr-12" style={{ position: 'relative', zIndex: 1, pointerEvents: 'none' }}>
+        <div className="md:w-[55%] md:pr-12" style={{
+          position: 'relative',
+          zIndex: 1,
+          overflow: 'hidden',
+          wordBreak: 'break-word'
+        }}>
           <p
             className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
             style={{ fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', textAlign: 'right' }}
