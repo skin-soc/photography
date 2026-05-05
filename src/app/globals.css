@@ -19,10 +19,6 @@ body {
   font-family: var(--font-serif);
 }
 
-input::placeholder {
-  color: rgba(255, 255, 255, 0.15);
-}
-
 /* Mobile nav collapses to 2-col on small screens */
 @media (max-width: 480px) {
   nav ul {

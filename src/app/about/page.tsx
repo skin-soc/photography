@@ -62,22 +62,25 @@ function ContactForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
 
   const inputStyle: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  boxSizing: 'border-box',
-  backgroundColor: 'transparent',
-  border: 'none',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-  color: '#ffffff',
-  padding: '16px 0 13px 0',
-  fontSize: '13px',
-  fontWeight: 300,
-  letterSpacing: '0.04em',
-  outline: 'none',
-  minHeight: '52px',
-  cursor: 'text',
-  transition: 'border-color 0.3s ease',
-};
+    display: 'block',
+    width: '100%',
+    minHeight: '48px',
+    boxSizing: 'border-box',
+    WebkitAppearance: 'none',
+    backgroundColor: 'transparent',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
+    borderLeft: 'none',
+    borderTop: 'none',
+    borderRight: 'none',
+    color: '#ffffff',
+    padding: '16px 0 12px 0',
+    fontSize: '13px',
+    fontWeight: 300,
+    letterSpacing: '0.04em',
+    outline: 'none',
+    cursor: 'text',
+    transition: 'border-color 0.3s ease',
+  }
 
   const textareaStyle: React.CSSProperties = {
     ...inputStyle,
