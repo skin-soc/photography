@@ -102,13 +102,11 @@ function ParallaxImg({
       ref={wrapRef}
       className="w-full h-full overflow-hidden bg-[#0a0a0a] select-none"
       onContextMenu={e => e.preventDefault()}
-      onClick={onClick}
       style={{
-        opacity:     visible ? 1 : 0,
-        transform:   visible ? 'none' : 'translateY(28px)',
-        transition:  priority ? 'none' : 'opacity 0.75s ease, transform 0.75s ease',
-        cursor:      onClick ? 'zoom-in' : 'default',
-        touchAction: 'pan-y',
+        position:   'relative',
+        opacity:    visible ? 1 : 0,
+        transform:  visible ? 'none' : 'translateY(28px)',
+        transition: priority ? 'none' : 'opacity 0.75s ease, transform 0.75s ease',
       }}
     >
       <img
@@ -130,6 +128,27 @@ function ParallaxImg({
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
       />
+      {/* Button sits over the image — using a native interactive element
+          prevents iOS Safari from withholding the first touch gesture      */}
+      {onClick && (
+        <button
+          onClick={onClick}
+          onContextMenu={e => e.preventDefault()}
+          aria-label={`View ${alt}`}
+          style={{
+            position:   'absolute',
+            inset:      0,
+            background: 'none',
+            border:     'none',
+            cursor:     'zoom-in',
+            padding:    0,
+            display:    'block',
+            width:      '100%',
+            height:     '100%',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -487,12 +506,25 @@ function Lightbox({
 export default function GalleryStack({ items }: Props) {
   const allImages = flattenImages(items)
 
-  /* map from a specific Img object → its index in the flat list */
   const indexOf = useCallback((img: Img) => {
     return allImages.findIndex(i => i.src === img.src)
   }, [allImages])
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+
+  /* ── iOS: prevent rubber-band snap-back at scroll boundaries ────────────
+     Injecting a <style> tag is more reliable than element.style.setProperty
+     because it is parsed by the CSS engine before any gesture can land.    */
+  useEffect(() => {
+    const id = 'gs-overscroll'
+    if (!document.getElementById(id)) {
+      const s = document.createElement('style')
+      s.id = id
+      s.textContent = 'html,body{overscroll-behavior:none}'
+      document.head.appendChild(s)
+    }
+    return () => { document.getElementById(id)?.remove() }
+  }, [])
 
   const openAt = useCallback((img: Img) => {
     setLightboxIndex(indexOf(img))
@@ -504,7 +536,7 @@ export default function GalleryStack({ items }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-[3px] px-[3px] overflow-x-hidden w-full">
+      <div className="flex flex-col gap-[3px] px-[3px] w-full" style={{ contain: 'paint' }}>
         {items.map((item, i) => {
 
           if (item.type === 'single') {
