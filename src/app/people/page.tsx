@@ -18,7 +18,7 @@ const items: GalleryItem[] = [
     // Lolly & Matt: two faces centred, upper portion
     { src: `${B}/PP00007.webp`, alt: 'Lolly & Matt', w: 3200, h: 1800, fx: 50, fy: 35 },
     // Drag Queen: face centred, pink wig pushes mass upward
-    { src: `${B}/PP00006.webp`, alt: 'Drag Queen',   w: 3200, h: 1800, fx: 50, fy: 30 },
+    { src: `${B}/PP00006.webp`, alt: 'Simon Cravatte',   w: 3200, h: 1800, fx: 50, fy: 30 },
   ]},
   // Distortion Punter: red-haired woman, face upper-left, leaning into frame
   { type: 'single', src: `${B}/PP00003.webp`, alt: 'Distortion Punter', w: 3200, h: 1800, fx: 42, fy: 32 },

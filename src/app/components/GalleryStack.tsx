@@ -1,16 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
-interface Img {
-  src: string
-  alt: string
-  w: number
-  h: number
-  fx?: number
-  fy?: number
-  noParallax?: boolean  // disables parallax & removes scale buffer — use for detail/gear shots
-}
+interface Img { src: string; alt: string; w: number; h: number }
 
 export type GalleryItem =
   | ({ type: 'single' } & Img)
@@ -19,14 +12,24 @@ export type GalleryItem =
 
 interface Props { items: GalleryItem[] }
 
+/** Insert "GM-" before the filename portion of any gallery path.
+ *  /images/gallery/PL00001.webp → /images/gallery/GM-PL00001.webp */
+function fullSrc(src: string): string {
+  return src.replace(/\/([^/]+)$/, '/GM-$1')
+}
+
+/** Flatten all Img entries from the items array, preserving visual order. */
+function flattenImages(items: GalleryItem[]): Img[] {
+  return items.flatMap(item =>
+    item.type === 'single' ? [item] : item.images
+  )
+}
+
+/* ─── Row aspect-ratio helper ────────────────────────────────────────────── */
 function rowAspect(images: Img[]): number {
   const ratios = images.map(i => i.w / i.h)
   const geo = Math.pow(ratios.reduce((a, b) => a * b, 1), 1 / ratios.length)
   return ratios.length * geo
-}
-
-function focalPos(fx?: number, fy?: number): string {
-  return `${fx ?? 50}% ${fy ?? 50}%`
 }
 
 /* ─── Parallax image ─────────────────────────────────────────────────────── */
@@ -34,28 +37,20 @@ function ParallaxImg({
   src, alt, sizes,
   priority = false,
   strength = 0.06,
-  objectPosition = '50% 50%',
-  clampBottom = false,
-  noParallax = false,
+  onClick,
 }: {
   src: string
   alt: string
   sizes: string
   priority?: boolean
   strength?: number
-  objectPosition?: string
-  clampBottom?: boolean
-  noParallax?: boolean
+  onClick?: () => void
 }) {
-  const wrapRef        = useRef<HTMLDivElement>(null)
-  const imgRef         = useRef<HTMLImageElement>(null)
-  const rafRef         = useRef<number | null>(null)
-  const clampBottomRef = useRef(clampBottom)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const imgRef  = useRef<HTMLImageElement>(null)
+  const rafRef  = useRef<number | null>(null)
   const [visible, setVisible] = useState(priority)
 
-  useEffect(() => { clampBottomRef.current = clampBottom }, [clampBottom])
-
-  /* reveal on scroll — preload 300px before entering viewport */
   useEffect(() => {
     if (priority) return
     const el = wrapRef.current
@@ -64,15 +59,13 @@ function ParallaxImg({
     if (rect.top < window.innerHeight) { setVisible(true); return }
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0, rootMargin: '0px 0px 300px 0px' }
+      { threshold: 0.04, rootMargin: '0px 0px -30px 0px' }
     )
     obs.observe(el)
     return () => obs.disconnect()
   }, [priority])
 
-  /* parallax — skipped entirely when noParallax is true */
   useEffect(() => {
-    if (noParallax) return
     const wrap = wrapRef.current
     const img  = imgRef.current
     if (!wrap || !img) return
@@ -81,8 +74,7 @@ function ParallaxImg({
       const rect = wrap.getBoundingClientRect()
       const vh   = window.innerHeight
       const progress = 1 - rect.bottom / (vh + rect.height)
-      let offset = ( 0.5 - progress ) * strength * rect.height
-      if (clampBottomRef.current) offset = Math.max(0, offset)
+      const offset = ( 0.5 - progress ) * strength * rect.height
       img.style.transform = `translateY(${offset.toFixed(1)}px)`
     }
 
@@ -97,17 +89,19 @@ function ParallaxImg({
       window.removeEventListener('scroll', onScroll)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [strength, noParallax])
+  }, [strength])
 
   return (
     <div
       ref={wrapRef}
       className="w-full h-full overflow-hidden bg-[#0a0a0a] select-none"
       onContextMenu={e => e.preventDefault()}
+      onClick={onClick}
       style={{
         opacity:    visible ? 1 : 0,
         transform:  visible ? 'none' : 'translateY(28px)',
         transition: priority ? 'none' : 'opacity 0.75s ease, transform 0.75s ease',
+        cursor:     onClick ? 'zoom-in' : 'default',
       }}
     >
       <img
@@ -118,14 +112,12 @@ function ParallaxImg({
         draggable={false}
         onContextMenu={e => e.preventDefault()}
         onDragStart={e => e.preventDefault()}
-        className="w-full h-full object-cover block select-none pointer-events-none"
+        className="w-full h-full object-cover object-top block select-none pointer-events-none"
         style={{
-          objectPosition,
-          // No scale buffer needed when parallax is disabled — shows full image detail
-          scale:            noParallax ? '1' : '1.10',
+          scale:            '1.10',
           WebkitUserSelect: 'none',
           userSelect:       'none',
-          willChange:       noParallax ? 'auto' : 'transform',
+          willChange:       'transform',
         }}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
@@ -134,54 +126,385 @@ function ParallaxImg({
   )
 }
 
+/* ─── Lightbox ───────────────────────────────────────────────────────────── */
+
+const FRAME = 56   // white matte width in px — gallery / museum print weight
+
+function Lightbox({
+  images,
+  startIndex,
+  onClose,
+}: {
+  images: Img[]
+  startIndex: number
+  onClose: () => void
+}) {
+  const [index,   setIndex]   = useState(startIndex)
+  const [loaded,  setLoaded]  = useState(false)
+  const [visible, setVisible] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  const current = images[index]
+  const src     = fullSrc(current.src)
+
+  /* ── mount / unmount animations ── */
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisible(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  const close = useCallback(() => {
+    setLeaving(true)
+    setTimeout(onClose, 280)
+  }, [onClose])
+
+  /* ── navigate ── */
+  const prev = useCallback(() => {
+    setLoaded(false)
+    setIndex(i => i - 1)
+  }, [])
+
+  const next = useCallback(() => {
+    setLoaded(false)
+    setIndex(i => i + 1)
+  }, [])
+
+  /* ── preload next 2 images ── */
+  useEffect(() => {
+    if (images.length < 2) return
+    ;[1, 2].forEach(offset => {
+      const i = index + offset
+      if (i >= images.length) return
+      const img = new window.Image()
+      img.src = fullSrc(images[i].src)
+    })
+  }, [index, images])
+
+  /* ── keyboard ── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape')      close()
+      if (e.key === 'ArrowLeft'  && index > 0)                    prev()
+      if (e.key === 'ArrowRight' && index < images.length - 1)    next()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [close, prev, next])
+
+  /* ── prevent body scroll ── */
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
+  /* ── touch swipe ── */
+  const touchStartX = useRef<number | null>(null)
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(dx) > 50) {
+      if (dx < 0 && index < images.length - 1) next()
+      if (dx > 0 && index > 0) prev()
+    }
+    touchStartX.current = null
+  }
+
+  const overlayOpacity = leaving ? 0 : visible ? 1 : 0
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image viewer"
+      onContextMenu={e => e.preventDefault()}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      style={{
+        position:        'fixed',
+        inset:           0,
+        zIndex:          9999,
+        background:      `rgba(0,0,0,${leaving ? 0 : visible ? 0.96 : 0})`,
+        transition:      'background 280ms ease',
+        display:         'flex',
+        flexDirection:   'column',
+        alignItems:      'center',
+        justifyContent:  'center',
+        userSelect:      'none',
+        WebkitUserSelect:'none',
+      }}
+      /* click on the backdrop (not the frame) closes */
+      onClick={e => { if (e.target === e.currentTarget) close() }}
+    >
+
+      {/* ── Close ── */}
+      <button
+        onClick={close}
+        aria-label="Close"
+        style={{
+          position:   'absolute',
+          top:        '1.25rem',
+          right:      '1.5rem',
+          background: 'none',
+          border:     'none',
+          color:      'rgba(255,255,255,0.55)',
+          cursor:     'pointer',
+          padding:    '0.5rem',
+          lineHeight: 1,
+          transition: 'color 180ms ease',
+          fontFamily: 'var(--font-serif)',
+          fontSize:   '1.6rem',
+          fontWeight: 300,
+        }}
+        onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}
+      >
+        ×
+      </button>
+
+      {/* ── Counter ── */}
+      <div
+        style={{
+          position:    'absolute',
+          top:         '1.35rem',
+          left:        '1.75rem',
+          fontFamily:  'var(--font-serif)',
+          fontSize:    '0.78rem',
+          fontWeight:  300,
+          letterSpacing:'0.18em',
+          color:       'rgba(255,255,255,0.38)',
+          userSelect:  'none',
+        }}
+      >
+        {index + 1} / {images.length}
+      </div>
+
+      {/* ── Prev arrow ── */}
+      {index > 0 && (
+        <button
+          onClick={prev}
+          aria-label="Previous image"
+          style={{
+            position:   'absolute',
+            left:       '1.25rem',
+            top:        '50%',
+            transform:  'translateY(-50%)',
+            background: 'none',
+            border:     'none',
+            color:      'rgba(255,255,255,0.35)',
+            cursor:     'pointer',
+            padding:    '0.75rem',
+            transition: 'color 180ms ease',
+            lineHeight: 1,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+        >
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M18 4L8 14L18 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+
+      {/* ── Next arrow ── */}
+      {index < images.length - 1 && (
+        <button
+          onClick={next}
+          aria-label="Next image"
+          style={{
+            position:   'absolute',
+            right:      '1.25rem',
+            top:        '50%',
+            transform:  'translateY(-50%)',
+            background: 'none',
+            border:     'none',
+            color:      'rgba(255,255,255,0.35)',
+            cursor:     'pointer',
+            padding:    '0.75rem',
+            transition: 'color 180ms ease',
+            lineHeight: 1,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+        >
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M10 4L20 14L10 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+
+      {/* ── White-matte frame + image ── */}
+      <div
+        style={{
+          opacity:    overlayOpacity,
+          transform:  visible && !leaving ? 'scale(1)' : 'scale(0.97)',
+          transition: 'opacity 280ms ease, transform 280ms ease',
+          maxWidth:   'calc(100vw - 160px)',
+          maxHeight:  'calc(100vh - 80px)',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Frame — extra bottom padding seats the caption inside the matte */}
+        <div
+          style={{
+            position:   'relative',
+            background: '#fff',
+            padding:    `${FRAME}px ${FRAME}px ${Math.round(FRAME * 1.75)}px`,
+            boxShadow:  '0 32px 90px rgba(0,0,0,0.7)',
+            lineHeight: 0,
+          }}
+        >
+          {/* Loading shimmer */}
+          {!loaded && (
+            <div
+              style={{
+                position:   'absolute',
+                top:        FRAME, right: FRAME,
+                bottom:     Math.round(FRAME * 1.75),
+                left:       FRAME,
+                background: 'rgba(180,180,180,0.25)',
+                animation:  'lb-pulse 1.2s ease-in-out infinite',
+              }}
+            />
+          )}
+
+          <img
+            ref={imgRef}
+            key={src}
+            src={src}
+            alt={current.alt}
+            draggable={false}
+            onLoad={() => setLoaded(true)}
+            onContextMenu={e => e.preventDefault()}
+            onDragStart={e => e.preventDefault()}
+            style={{
+              display:         'block',
+              maxWidth:        `calc(100vw - 160px - ${FRAME * 2}px)`,
+              maxHeight:       `calc(100vh - 80px - ${FRAME}px - ${Math.round(FRAME * 1.75)}px)`,
+              width:           'auto',
+              height:          'auto',
+              objectFit:       'contain',
+              opacity:         loaded ? 1 : 0,
+              transition:      'opacity 220ms ease',
+              userSelect:      'none',
+              WebkitUserSelect:'none',
+              pointerEvents:   'none',
+            }}
+          />
+
+          {/* Caption — lives in the lower matte strip */}
+          <p
+            style={{
+              position:      'absolute',
+              bottom:        0,
+              left:          FRAME,
+              right:         FRAME,
+              height:        Math.round(FRAME * 1.75),
+              display:       'flex',
+              alignItems:    'center',
+              justifyContent:'center',
+              margin:        0,
+              fontFamily:    'var(--font-serif)',
+              fontSize:      '0.8rem',
+              fontWeight:    300,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color:         'rgba(0,0,0,0.45)',
+              lineHeight:    1,
+              userSelect:    'none',
+            }}
+          >
+            {current.alt.split(',')[0]}
+          </p>
+        </div>
+      </div>
+
+      {/* Keyframe for loading shimmer */}
+      <style>{`
+        @keyframes lb-pulse {
+          0%, 100% { opacity: 0.4; }
+          50%       { opacity: 0.8; }
+        }
+      `}</style>
+    </div>,
+    document.body
+  )
+}
+
 /* ─── Gallery stack ──────────────────────────────────────────────────────── */
 export default function GalleryStack({ items }: Props) {
+  const allImages = flattenImages(items)
+
+  /* map from a specific Img object → its index in the flat list */
+  const indexOf = useCallback((img: Img) => {
+    return allImages.findIndex(i => i.src === img.src)
+  }, [allImages])
+
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+
+  const openAt = useCallback((img: Img) => {
+    setLightboxIndex(indexOf(img))
+  }, [indexOf])
+
+  const closeLight = useCallback(() => {
+    setLightboxIndex(null)
+  }, [])
+
   return (
-    <div className="flex flex-col gap-[3px] px-[3px] w-full" style={{ contain: 'paint' }}>
-      {items.map((item, i) => {
-        const isLast = i === items.length - 1
+    <>
+      <div className="flex flex-col gap-[3px] px-[3px] overflow-x-hidden w-full">
+        {items.map((item, i) => {
 
-        if (item.type === 'single') {
-          return (
-            <div key={i} style={{ height: '100vh' }}>
-              <ParallaxImg
-                src={item.src} alt={item.alt}
-                sizes="100vw"
-                priority={i === 0}
-                strength={0.08}
-                objectPosition={focalPos(item.fx, item.fy)}
-                clampBottom={isLast}
-                noParallax={item.noParallax}
-              />
-            </div>
-          )
-        }
-
-        if (item.type === 'pair' || item.type === 'triple') {
-          const sizesAttr = `${Math.round(100 / item.images.length)}vw`
-          const pt = (100 / rowAspect(item.images)).toFixed(4)
-          return (
-            <div key={i} style={{ position: 'relative', width: '100%', paddingTop: `${pt}%` }}>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', gap: '3px', overflow: 'hidden' }}>
-                {item.images.map((img, j) => (
-                  <div key={j} style={{ flex: 1, minWidth: 0 }}>
-                    <ParallaxImg
-                      src={img.src} alt={img.alt}
-                      sizes={sizesAttr}
-                      strength={0.06}
-                      objectPosition={focalPos(img.fx, img.fy)}
-                      clampBottom={isLast}
-                      noParallax={img.noParallax}
-                    />
-                  </div>
-                ))}
+          if (item.type === 'single') {
+            return (
+              <div key={i} style={{ height: '100vh' }}>
+                <ParallaxImg
+                  src={item.src} alt={item.alt}
+                  sizes="100vw"
+                  priority={i === 0}
+                  strength={0.08}
+                  onClick={() => openAt(item)}
+                />
               </div>
-            </div>
-          )
-        }
+            )
+          }
 
-        return null
-      })}
-    </div>
+          if (item.type === 'pair' || item.type === 'triple') {
+            const sizesAttr = `${Math.round(100 / item.images.length)}vw`
+            const pt = (100 / rowAspect(item.images)).toFixed(4)
+            return (
+              <div key={i} style={{ position: 'relative', width: '100%', paddingTop: `${pt}%` }}>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', gap: '3px', overflow: 'hidden' }}>
+                  {item.images.map((img, j) => (
+                    <div key={j} style={{ flex: 1, minWidth: 0 }}>
+                      <ParallaxImg
+                        src={img.src} alt={img.alt}
+                        sizes={sizesAttr}
+                        strength={0.06}
+                        onClick={() => openAt(img)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          }
+
+          return null
+        })}
+      </div>
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          images={allImages}
+          startIndex={lightboxIndex}
+          onClose={closeLight}
+        />
+      )}
+    </>
   )
 }
