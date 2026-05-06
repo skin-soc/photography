@@ -212,7 +212,7 @@ export default function About() {
         }}>
           <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">Contact</p>
           <p className="text-[13px] font-light tracking-[0.04em] text-white/70 mb-6">
-            Let's create something together. Drop me a line. Say hi. Ask a question. Or just say hello.
+            Let's create something together. Drop me a line. Ask a question. Or just say hi.
           </p>
           <ContactForm />
         </div>
