@@ -151,24 +151,34 @@ function Lightbox({
   const [loaded,   setLoaded]   = useState(false)
   const [visible,  setVisible]  = useState(false)
   const [leaving,  setLeaving]  = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile,      setIsMobile]      = useState(false)
+  const [isConstrained, setIsConstrained] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
 
   const current = images[index]
   const src     = fullSrc(current.src)
 
-  /* ── responsive breakpoint ── */
+  /* ── responsive: portrait (narrow) OR landscape (short) ── */
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640)
+    const check = () => {
+      const narrow = window.innerWidth  < 640
+      const short  = window.innerHeight < 500
+      setIsMobile(narrow)
+      setIsConstrained(narrow || short)
+    }
     check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
+    window.addEventListener('resize',            check)
+    window.addEventListener('orientationchange', check)
+    return () => {
+      window.removeEventListener('resize',            check)
+      window.removeEventListener('orientationchange', check)
+    }
   }, [])
 
   /* ── responsive matte & clearance ── */
-  const m          = isMobile ? 14  : MATTE   // matte on all sides
-  const outerGap   = isMobile ? 0   : 160     // horizontal px reserved for arrows
-  const outerVGap  = isMobile ? 56  : 80      // vertical px reserved for chrome
+  const m         = isConstrained ? 14 : MATTE  // matte on all sides
+  const outerGap  = isConstrained ? 0  : 160    // px reserved for side arrows
+  const outerVGap = isConstrained ? 48 : 80     // px reserved for top/bottom chrome
 
   /* ── mount / unmount animations ── */
   useEffect(() => {
@@ -310,7 +320,7 @@ function Lightbox({
       </div>
 
       {/* ── Prev arrow — desktop only; mobile uses swipe ── */}
-      {!isMobile && index > 0 && (
+      {!isConstrained && index > 0 && (
         <button
           onClick={prev}
           aria-label="Previous image"
@@ -337,7 +347,7 @@ function Lightbox({
       )}
 
       {/* ── Next arrow — desktop only ── */}
-      {!isMobile && index < images.length - 1 && (
+      {!isConstrained && index < images.length - 1 && (
         <button
           onClick={next}
           aria-label="Next image"
