@@ -153,16 +153,22 @@ function Lightbox({
   const [leaving,  setLeaving]  = useState(false)
   const [isMobile,      setIsMobile]      = useState(false)
   const [isConstrained, setIsConstrained] = useState(false)
+  const [vw, setVw] = useState(0)
+  const [vh, setVh] = useState(0)
   const imgRef = useRef<HTMLImageElement>(null)
 
   const current = images[index]
   const src     = fullSrc(current.src)
 
-  /* ── responsive: portrait (narrow) OR landscape (short) ── */
+  /* ── responsive: use window.innerWidth/Height — bypasses iOS Safari 100vh bug ── */
   useEffect(() => {
     const check = () => {
-      const narrow = window.innerWidth  < 640
-      const short  = window.innerHeight < 500
+      const w      = window.innerWidth
+      const h      = window.innerHeight
+      const narrow = w < 640
+      const short  = h < 500
+      setVw(w)
+      setVh(h)
       setIsMobile(narrow)
       setIsConstrained(narrow || short)
     }
@@ -175,10 +181,15 @@ function Lightbox({
     }
   }, [])
 
-  /* ── responsive matte & clearance ── */
-  const m         = isConstrained ? 14 : MATTE  // matte on all sides
-  const outerGap  = isConstrained ? 0  : 160    // px reserved for side arrows
-  const outerVGap = isConstrained ? 48 : 80     // px reserved for top/bottom chrome
+  /* ── responsive matte & clearance (all in px, no vh/vw units) ── */
+  const m         = isConstrained ? 14  : MATTE
+  const outerGap  = isConstrained ? 0   : 160   // horizontal space for arrows
+  const outerVGap = isConstrained ? 64  : 80    // vertical space for close/counter
+
+  /* derived pixel budgets — safe even before first measure (vw/vh = 0 → 0px images,
+     which just means a single invisible frame until the effect fires) */
+  const maxW = vw > 0 ? vw - outerGap - m * 2 : undefined
+  const maxH = vh > 0 ? vh - outerVGap - m * 2 : undefined
 
   /* ── mount / unmount animations ── */
   useEffect(() => {
@@ -379,8 +390,8 @@ function Lightbox({
           opacity:    overlayOpacity,
           transform:  visible && !leaving ? 'scale(1)' : 'scale(0.97)',
           transition: 'opacity 280ms ease, transform 280ms ease',
-          maxWidth:   `calc(100vw - ${outerGap}px)`,
-          maxHeight:  `calc(100vh - ${outerVGap}px)`,
+          maxWidth:   maxW !== undefined ? `${maxW + m * 2}px` : undefined,
+          maxHeight:  maxH !== undefined ? `${maxH + m * 2}px` : undefined,
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -416,8 +427,8 @@ function Lightbox({
             onDragStart={e => e.preventDefault()}
             style={{
               display:          'block',
-              maxWidth:         `calc(100vw - ${outerGap}px - ${m * 2}px)`,
-              maxHeight:        `calc(100vh - ${outerVGap}px - ${m * 2}px)`,
+              maxWidth:         maxW !== undefined ? `${maxW}px` : undefined,
+              maxHeight:        maxH !== undefined ? `${maxH}px` : undefined,
               width:            'auto',
               height:           'auto',
               objectFit:        'contain',
