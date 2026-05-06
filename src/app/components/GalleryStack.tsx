@@ -104,10 +104,11 @@ function ParallaxImg({
       onContextMenu={e => e.preventDefault()}
       onClick={onClick}
       style={{
-        opacity:    visible ? 1 : 0,
-        transform:  visible ? 'none' : 'translateY(28px)',
-        transition: priority ? 'none' : 'opacity 0.75s ease, transform 0.75s ease',
-        cursor:     onClick ? 'zoom-in' : 'default',
+        opacity:     visible ? 1 : 0,
+        transform:   visible ? 'none' : 'translateY(28px)',
+        transition:  priority ? 'none' : 'opacity 0.75s ease, transform 0.75s ease',
+        cursor:      onClick ? 'zoom-in' : 'default',
+        touchAction: 'pan-y',
       }}
     >
       <img
