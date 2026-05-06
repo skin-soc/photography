@@ -27,6 +27,7 @@ function ParallaxImg({
   priority = false,
   strength = 0.06,
   objectPosition = '50% 50%',
+  clampBottom = false,
 }: {
   src: string
   alt: string
@@ -34,12 +35,18 @@ function ParallaxImg({
   priority?: boolean
   strength?: number
   objectPosition?: string
+  clampBottom?: boolean
 }) {
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const imgRef  = useRef<HTMLImageElement>(null)
-  const rafRef  = useRef<number | null>(null)
+  const wrapRef        = useRef<HTMLDivElement>(null)
+  const imgRef         = useRef<HTMLImageElement>(null)
+  const rafRef         = useRef<number | null>(null)
+  const clampBottomRef = useRef(clampBottom)
   const [visible, setVisible] = useState(priority)
 
+  /* keep ref in sync without touching the scroll effect's deps */
+  useEffect(() => { clampBottomRef.current = clampBottom }, [clampBottom])
+
+  /* reveal on scroll */
   useEffect(() => {
     if (priority) return
     const el = wrapRef.current
@@ -54,6 +61,7 @@ function ParallaxImg({
     return () => obs.disconnect()
   }, [priority])
 
+  /* parallax — deps array is always [strength], clampBottom read via ref */
   useEffect(() => {
     const wrap = wrapRef.current
     const img  = imgRef.current
@@ -63,7 +71,8 @@ function ParallaxImg({
       const rect = wrap.getBoundingClientRect()
       const vh   = window.innerHeight
       const progress = 1 - rect.bottom / (vh + rect.height)
-      const offset = ( 0.5 - progress ) * strength * rect.height
+      let offset = ( 0.5 - progress ) * strength * rect.height
+      if (clampBottomRef.current) offset = Math.max(0, offset)
       img.style.transform = `translateY(${offset.toFixed(1)}px)`
     }
 
@@ -117,8 +126,9 @@ function ParallaxImg({
 /* ─── Gallery stack ──────────────────────────────────────────────────────── */
 export default function GalleryStack({ items }: Props) {
   return (
-    <div className="flex flex-col gap-[3px] px-[3px] w-full style={{ contain: 'paint' }}">
+    <div className="flex flex-col gap-[3px] px-[3px] w-full" style={{ contain: 'paint' }}>
       {items.map((item, i) => {
+        const isLast = i === items.length - 1
 
         if (item.type === 'single') {
           return (
@@ -129,6 +139,7 @@ export default function GalleryStack({ items }: Props) {
                 priority={i === 0}
                 strength={0.08}
                 objectPosition={focalPos(item.fx, item.fy)}
+                clampBottom={isLast}
               />
             </div>
           )
@@ -147,6 +158,7 @@ export default function GalleryStack({ items }: Props) {
                       sizes={sizesAttr}
                       strength={0.06}
                       objectPosition={focalPos(img.fx, img.fy)}
+                      clampBottom={isLast}
                     />
                   </div>
                 ))}
