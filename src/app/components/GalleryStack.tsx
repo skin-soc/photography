@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-interface Img { src: string; alt: string; w: number; h: number; fx?: number; fy?: number }
+interface Img {
+  src: string
+  alt: string
+  w: number
+  h: number
+  fx?: number
+  fy?: number
+  noParallax?: boolean  // disables parallax & removes scale buffer — use for detail/gear shots
+}
 
 export type GalleryItem =
   | ({ type: 'single' } & Img)
@@ -28,6 +36,7 @@ function ParallaxImg({
   strength = 0.06,
   objectPosition = '50% 50%',
   clampBottom = false,
+  noParallax = false,
 }: {
   src: string
   alt: string
@@ -36,6 +45,7 @@ function ParallaxImg({
   strength?: number
   objectPosition?: string
   clampBottom?: boolean
+  noParallax?: boolean
 }) {
   const wrapRef        = useRef<HTMLDivElement>(null)
   const imgRef         = useRef<HTMLImageElement>(null)
@@ -43,7 +53,6 @@ function ParallaxImg({
   const clampBottomRef = useRef(clampBottom)
   const [visible, setVisible] = useState(priority)
 
-  /* keep ref in sync without touching the scroll effect's deps */
   useEffect(() => { clampBottomRef.current = clampBottom }, [clampBottom])
 
   /* reveal on scroll — preload 300px before entering viewport */
@@ -61,8 +70,9 @@ function ParallaxImg({
     return () => obs.disconnect()
   }, [priority])
 
-  /* parallax — deps array is always [strength], clampBottom read via ref */
+  /* parallax — skipped entirely when noParallax is true */
   useEffect(() => {
+    if (noParallax) return
     const wrap = wrapRef.current
     const img  = imgRef.current
     if (!wrap || !img) return
@@ -87,7 +97,7 @@ function ParallaxImg({
       window.removeEventListener('scroll', onScroll)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [strength])
+  }, [strength, noParallax])
 
   return (
     <div
@@ -111,10 +121,11 @@ function ParallaxImg({
         className="w-full h-full object-cover block select-none pointer-events-none"
         style={{
           objectPosition,
-          scale:            '1.10',
+          // No scale buffer needed when parallax is disabled — shows full image detail
+          scale:            noParallax ? '1' : '1.10',
           WebkitUserSelect: 'none',
           userSelect:       'none',
-          willChange:       'transform',
+          willChange:       noParallax ? 'auto' : 'transform',
         }}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
@@ -140,6 +151,7 @@ export default function GalleryStack({ items }: Props) {
                 strength={0.08}
                 objectPosition={focalPos(item.fx, item.fy)}
                 clampBottom={isLast}
+                noParallax={item.noParallax}
               />
             </div>
           )
@@ -159,6 +171,7 @@ export default function GalleryStack({ items }: Props) {
                       strength={0.06}
                       objectPosition={focalPos(img.fx, img.fy)}
                       clampBottom={isLast}
+                      noParallax={img.noParallax}
                     />
                   </div>
                 ))}

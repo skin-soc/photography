@@ -10,50 +10,40 @@ const B = '/images'
 const gearItems: GalleryItem[] = [
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00018.jpg`, alt: 'Camera gear', w: 934,  h: 960 },
-      { src: `${B}/gear.00017.jpg`, alt: 'Camera gear', w: 870,  h: 960 },
-      { src: `${B}/gear.00016.jpg`, alt: 'Camera gear', w: 715,  h: 960 },
+      { src: `${B}/gear.00018.jpg`, alt: 'Camera gear', w: 934,  h: 960,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00017.jpg`, alt: 'Camera gear', w: 870,  h: 960,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00016.jpg`, alt: 'Camera gear', w: 715,  h: 960,  fx: 50, fy: 50, noParallax: true },
+    ]
+  },
+  {
+    type: 'pair', images: [
+      { src: `${B}/gear.00014.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00010.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+    ]
+  },  {
+    type: 'pair', images: [
+      { src: `${B}/gear.00002.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00012.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+    ]
+  },
+  {
+    type: 'pair', images: [
+      { src: `${B}/gear.00005.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00004.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
     ]
   },
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00015.jpg`, alt: 'Camera gear', w: 668,  h: 960 },
-      { src: `${B}/gear.00014.jpg`, alt: 'Camera gear', w: 960,  h: 740 },
-      { src: `${B}/gear.00013.jpg`, alt: 'Camera gear', w: 913,  h: 960 },
-    ]
-  },
-  {
-    type: 'triple', images: [
-      { src: `${B}/gear.00012.jpg`, alt: 'Camera gear', w: 652,  h: 960 },
-      { src: `${B}/gear.00011.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-      { src: `${B}/gear.00010.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-    ]
-  },
-  {
-    type: 'triple', images: [
-      { src: `${B}/gear.00009.jpg`, alt: 'Camera gear', w: 1200, h: 900 },
-      { src: `${B}/gear.00008.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-      { src: `${B}/gear.00007.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-    ]
-  },
-  {
-    type: 'triple', images: [
-      { src: `${B}/gear.00006.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-      { src: `${B}/gear.00005.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-      { src: `${B}/gear.00004.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-    ]
-  },
-  {
-    type: 'triple', images: [
-      { src: `${B}/gear.00003.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-      { src: `${B}/gear.00002.jpg`, alt: 'Camera gear', w: 960,  h: 720 },
-      { src: `${B}/gear.00001.jpg`, alt: 'Camera gear', w: 718,  h: 1248 },
+      { src: `${B}/gear.00009.jpg`, alt: 'Camera gear', w: 1200, h: 900,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00008.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00001.jpg`, alt: 'Camera gear', w: 1248,  h: 718, fx: 10, fy: 50, noParallax: true },
     ]
   },
 ]
 
 const galleryItems: GalleryItem[] = [
-  { type: 'single', src: `${B}/gus-travels.jpg`, alt: 'Gus McEwan on location', w: 3200, h: 2133 },
+  // Hero — Gus in the Solomon Islands, subject left-of-centre
+  { type: 'single', src: `${B}/gus-travels.jpg`, alt: 'Gus McEwan on location', w: 3200, h: 2133, fx: 20, fy: 45 },
   ...gearItems,
 ]
 
@@ -201,7 +191,7 @@ export default function About() {
               textAlign: 'right',
               pointerEvents: 'none'
             }}>
-            His work spans people, places, and the natural worlds - drawn to natural light, stillness, and the space between moments.
+            His work spans people, places, and the natural world — drawn to natural light, stillness, and the space between moments.
           </p>
           <p className="font-serif leading-[1.45] tracking-wide text-white font-light"
             style={{
@@ -222,7 +212,7 @@ export default function About() {
         }}>
           <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">Contact</p>
           <p className="text-[13px] font-light tracking-[0.04em] text-white/70 mb-6">
-            Let’s create something together. Drop me a line. Say hi. Ask a question. Or just share some good vibes.
+            Let's create something together. Drop me a line. Say hi. Ask a question. Or just say hello.
           </p>
           <ContactForm />
         </div>
