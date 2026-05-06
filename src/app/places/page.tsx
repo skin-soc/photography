@@ -15,7 +15,7 @@ const items: GalleryItem[] = [
     { src: `${B}/PL00002.webp`, alt: 'Marmorkirken, Copenhagen',     w: 3200, h: 2133, fx: 50, fy: 40 },
     { src: `${B}/PL00008.webp`, alt: 'Gemini Residence, Copenhagen', w: 3200, h: 2133, fx: 50, fy: 10 },
   ]},
-  { type: 'single', src: `${B}/PL00006.webp`, alt: 'The Kelpies, Scotland',         w: 3200, h: 1792, fx: 80, fy: 90 },
+  { type: 'single', src: `${B}/PL00006.webp`, alt: 'The Kelpies, Scotland',         w: 3200, h: 1792, fx: 20, fy: 90 },
   { type: 'single', src: `${B}/PL00011.webp`, alt: 'The Hand, Brisbane, Australia', w: 3200, h: 1800, fx: 60, fy: 55 },
   { type: 'pair', images: [
     // Christiansborg left (lighter), Operæn right (darker) — better tonal balance
