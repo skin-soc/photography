@@ -3,19 +3,19 @@
 import { useEffect, useRef, useState } from 'react'
 
 const ALL_PLACES = [
-  { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo' },
-  { src: '/images/gallery/NT00012.webp', alt: 'COVID Fisherman' },
-  { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies' },
-  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus' },
-  { src: '/images/gallery/PL00007.webp', alt: 'ARC' },
-  { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence' },
-  { src: '/images/gallery/PL00011.webp', alt: 'The Hand' },
-  { src: '/images/gallery/PP00001.webp', alt: 'Jamie' },
-  { src: '/images/gallery/PP00005.webp', alt: 'Bryce Anderville Hixson Jr.' },  
-  { src: '/images/gallery/PP00007.webp', alt: 'Lolly & Matt' },
-  { src: '/images/gallery/PP00006.webp', alt: 'Drag Queen' },
-  { src: '/images/gallery/NT00002.webp', alt: 'Australian Gull' },
-  { src: '/images/gallery/NT00011.webp', alt: 'Persian Lynx' },
+  { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo',              fx: 50, fy: 5  },
+  { src: '/images/gallery/NT00012.webp', alt: 'COVID Fisherman',             fx: 50, fy: 99 },
+  { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies',                 fx: 80, fy: 90 },
+  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus',           fx: 49, fy: 10 },
+  { src: '/images/gallery/PL00007.webp', alt: 'ARC',                         fx: 40, fy: 50 },
+  { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence',            fx: 50, fy: 0 },
+  { src: '/images/gallery/PL00011.webp', alt: 'The Hand',                    fx: 60, fy: 55 },
+  { src: '/images/gallery/PP00001.webp', alt: 'Jamie',                       fx: 25, fy: 10 },
+  { src: '/images/gallery/PP00005.webp', alt: 'Bryce Anderville Hixson Jr.', fx: 43, fy: 5 },
+  { src: '/images/gallery/PP00007.webp', alt: 'Lolly & Matt',                fx: 54, fy: 35 },
+  { src: '/images/gallery/PP00006.webp', alt: 'Drag Queen',                  fx: 48, fy: 30 },
+  { src: '/images/gallery/NT00002.webp', alt: 'Australian Gull',             fx: 51, fy: 30 },
+  { src: '/images/gallery/NT00011.webp', alt: 'Persian Lynx',                fx: 35, fy: 50 },
 ]
 
 function buildQueue(excludeIndex: number): number[] {
@@ -78,8 +78,12 @@ export default function Home() {
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
-          className="w-full h-full object-cover object-top pointer-events-none"
-          style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+          className="w-full h-full object-cover pointer-events-none"
+          style={{
+            objectPosition: `${bottomImg.fx}% ${bottomImg.fy}%`,
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+          }}
         />
       </div>
 
@@ -96,8 +100,12 @@ export default function Home() {
             draggable={false}
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
-            className="w-full h-full object-cover object-top pointer-events-none"
-            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+            className="w-full h-full object-cover pointer-events-none"
+            style={{
+              objectPosition: `${topImg.fx}% ${topImg.fy}%`,
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+            }}
           />
         </div>
       )}
