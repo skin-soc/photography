@@ -117,7 +117,7 @@ function ParallaxImg({
 /* ─── Gallery stack ──────────────────────────────────────────────────────── */
 export default function GalleryStack({ items }: Props) {
   return (
-    <div className="flex flex-col gap-[3px] px-[3px] overflow-x-hidden w-full">
+    <div className="flex flex-col gap-[3px] px-[3px] w-full style={{ contain: 'paint' }}">
       {items.map((item, i) => {
 
         if (item.type === 'single') {
