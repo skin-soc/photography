@@ -129,6 +129,7 @@ function ParallaxImg({
 /* ─── Lightbox ───────────────────────────────────────────────────────────── */
 
 const FRAME = 56   // white matte width in px — gallery / museum print weight
+const MATTE = Math.round(FRAME * 1.75)  // uniform margin on all four sides
 
 function Lightbox({
   images,
@@ -353,7 +354,7 @@ function Lightbox({
           style={{
             position:   'relative',
             background: '#fff',
-            padding:    `${FRAME}px ${FRAME}px ${Math.round(FRAME * 1.75)}px`,
+            padding:    `${MATTE}px`,
             boxShadow:  '0 32px 90px rgba(0,0,0,0.7)',
             lineHeight: 0,
           }}
@@ -363,9 +364,9 @@ function Lightbox({
             <div
               style={{
                 position:   'absolute',
-                top:        FRAME, right: FRAME,
-                bottom:     Math.round(FRAME * 1.75),
-                left:       FRAME,
+                top:        MATTE, right: MATTE,
+                bottom:     MATTE,
+                left:       MATTE,
                 background: 'rgba(180,180,180,0.25)',
                 animation:  'lb-pulse 1.2s ease-in-out infinite',
               }}
@@ -383,8 +384,8 @@ function Lightbox({
             onDragStart={e => e.preventDefault()}
             style={{
               display:         'block',
-              maxWidth:        `calc(100vw - 160px - ${FRAME * 2}px)`,
-              maxHeight:       `calc(100vh - 80px - ${FRAME}px - ${Math.round(FRAME * 1.75)}px)`,
+              maxWidth:        `calc(100vw - 160px - ${MATTE * 2}px)`,
+              maxHeight:       `calc(100vh - 80px - ${MATTE * 2}px)`,
               width:           'auto',
               height:          'auto',
               objectFit:       'contain',
@@ -401,9 +402,9 @@ function Lightbox({
             style={{
               position:      'absolute',
               bottom:        0,
-              left:          FRAME,
-              right:         FRAME,
-              height:        Math.round(FRAME * 1.75),
+              left:          MATTE,
+              right:         MATTE,
+              height:        MATTE,
               display:       'flex',
               alignItems:    'center',
               justifyContent:'center',
