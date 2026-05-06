@@ -46,7 +46,7 @@ function ParallaxImg({
   /* keep ref in sync without touching the scroll effect's deps */
   useEffect(() => { clampBottomRef.current = clampBottom }, [clampBottom])
 
-  /* reveal on scroll */
+  /* reveal on scroll — preload 300px before entering viewport */
   useEffect(() => {
     if (priority) return
     const el = wrapRef.current
@@ -55,7 +55,7 @@ function ParallaxImg({
     if (rect.top < window.innerHeight) { setVisible(true); return }
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.04, rootMargin: '0px 0px -30px 0px' }
+      { threshold: 0, rootMargin: '0px 0px 300px 0px' }
     )
     obs.observe(el)
     return () => obs.disconnect()

@@ -16,19 +16,18 @@ export const metadata: Metadata = {
   description: 'Photographer based between Copenhagen and London.',
 
   icons: {
-    // Primary: SVG for modern browsers
     icon: [
       {
         url: '/images/favicon.svg',
-        type: 'image/svg+xml',   // Important
-        sizes: 'any',            // Allows any size (SVG advantage)
+        type: 'image/svg+xml',
+        sizes: 'any',
       },
       {
         url: '/images/favicon.ico',
-        sizes: '32x32',          // or 'any'
+        sizes: '32x32',
       },
     ],
-    apple: '/images/apple-touch-icon.png', // if you have one
+    apple: '/images/apple-touch-icon.png',
   },
 
   openGraph: {
@@ -38,6 +37,14 @@ export const metadata: Metadata = {
     siteName: 'Gus McEwan Photography',
     locale: 'en_GB',
     type: 'website',
+    images: [
+      {
+        url: 'https://gusmcewan.com/images/gallery/PL00003.webp',
+        width: 3200,
+        height: 1800,
+        alt: 'Gus McEwan Photography',
+      },
+    ],
   },
 }
 
