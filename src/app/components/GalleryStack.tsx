@@ -147,14 +147,28 @@ function Lightbox({
   startIndex: number
   onClose: () => void
 }) {
-  const [index,   setIndex]   = useState(startIndex)
-  const [loaded,  setLoaded]  = useState(false)
-  const [visible, setVisible] = useState(false)
-  const [leaving, setLeaving] = useState(false)
+  const [index,    setIndex]    = useState(startIndex)
+  const [loaded,   setLoaded]   = useState(false)
+  const [visible,  setVisible]  = useState(false)
+  const [leaving,  setLeaving]  = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
 
   const current = images[index]
   const src     = fullSrc(current.src)
+
+  /* ── responsive breakpoint ── */
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  /* ── responsive matte & clearance ── */
+  const m          = isMobile ? 14  : MATTE   // matte on all sides
+  const outerGap   = isMobile ? 0   : 160     // horizontal px reserved for arrows
+  const outerVGap  = isMobile ? 56  : 80      // vertical px reserved for chrome
 
   /* ── mount / unmount animations ── */
   useEffect(() => {
@@ -192,19 +206,19 @@ function Lightbox({
   /* ── keyboard ── */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape')      close()
+      if (e.key === 'Escape')                                     close()
       if (e.key === 'ArrowLeft'  && index > 0)                    prev()
       if (e.key === 'ArrowRight' && index < images.length - 1)    next()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [close, prev, next])
+  }, [close, prev, next, index, images.length])
 
   /* ── prevent body scroll ── */
   useEffect(() => {
-    const prev = document.body.style.overflow
+    const saved = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    return () => { document.body.style.overflow = saved }
   }, [])
 
   /* ── touch swipe ── */
@@ -215,9 +229,9 @@ function Lightbox({
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return
     const dx = e.changedTouches[0].clientX - touchStartX.current
-    if (Math.abs(dx) > 50) {
+    if (Math.abs(dx) > 40) {
       if (dx < 0 && index < images.length - 1) next()
-      if (dx > 0 && index > 0) prev()
+      if (dx > 0 && index > 0)                 prev()
     }
     touchStartX.current = null
   }
@@ -233,19 +247,17 @@ function Lightbox({
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       style={{
-        position:        'fixed',
-        inset:           0,
-        zIndex:          9999,
-        background:      `rgba(0,0,0,${leaving ? 0 : visible ? 0.96 : 0})`,
-        transition:      'background 280ms ease',
-        display:         'flex',
-        flexDirection:   'column',
-        alignItems:      'center',
-        justifyContent:  'center',
-        userSelect:      'none',
-        WebkitUserSelect:'none',
+        position:         'fixed',
+        inset:            0,
+        zIndex:           9999,
+        background:       `rgba(0,0,0,${leaving ? 0 : visible ? 0.96 : 0})`,
+        transition:       'background 280ms ease',
+        display:          'flex',
+        alignItems:       'center',
+        justifyContent:   'center',
+        userSelect:       'none',
+        WebkitUserSelect: 'none',
       }}
-      /* click on the backdrop (not the frame) closes */
       onClick={e => { if (e.target === e.currentTarget) close() }}
     >
 
@@ -255,17 +267,23 @@ function Lightbox({
         aria-label="Close"
         style={{
           position:   'absolute',
-          top:        '1.25rem',
-          right:      '1.5rem',
+          top:        isMobile ? '0.6rem' : '1.25rem',
+          right:      isMobile ? '0.6rem' : '1.5rem',
           background: 'none',
           border:     'none',
           color:      'rgba(255,255,255,0.55)',
           cursor:     'pointer',
+          /* 44px minimum touch target */
+          minWidth:   '44px',
+          minHeight:  '44px',
+          display:    'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
           padding:    '0.5rem',
           lineHeight: 1,
           transition: 'color 180ms ease',
           fontFamily: 'var(--font-serif)',
-          fontSize:   '1.6rem',
+          fontSize:   isMobile ? '1.8rem' : '1.6rem',
           fontWeight: 300,
         }}
         onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
@@ -277,22 +295,22 @@ function Lightbox({
       {/* ── Counter ── */}
       <div
         style={{
-          position:    'absolute',
-          top:         '1.35rem',
-          left:        '1.75rem',
-          fontFamily:  'var(--font-serif)',
-          fontSize:    '0.78rem',
-          fontWeight:  300,
+          position:     'absolute',
+          top:          isMobile ? '0.85rem' : '1.35rem',
+          left:         isMobile ? '0.9rem'  : '1.75rem',
+          fontFamily:   'var(--font-serif)',
+          fontSize:     isMobile ? '0.65rem' : '0.78rem',
+          fontWeight:   300,
           letterSpacing:'0.18em',
-          color:       'rgba(255,255,255,0.38)',
-          userSelect:  'none',
+          color:        'rgba(255,255,255,0.38)',
+          userSelect:   'none',
         }}
       >
         {index + 1} / {images.length}
       </div>
 
-      {/* ── Prev arrow ── */}
-      {index > 0 && (
+      {/* ── Prev arrow — desktop only; mobile uses swipe ── */}
+      {!isMobile && index > 0 && (
         <button
           onClick={prev}
           aria-label="Previous image"
@@ -318,8 +336,8 @@ function Lightbox({
         </button>
       )}
 
-      {/* ── Next arrow ── */}
-      {index < images.length - 1 && (
+      {/* ── Next arrow — desktop only ── */}
+      {!isMobile && index < images.length - 1 && (
         <button
           onClick={next}
           aria-label="Next image"
@@ -351,17 +369,16 @@ function Lightbox({
           opacity:    overlayOpacity,
           transform:  visible && !leaving ? 'scale(1)' : 'scale(0.97)',
           transition: 'opacity 280ms ease, transform 280ms ease',
-          maxWidth:   'calc(100vw - 160px)',
-          maxHeight:  'calc(100vh - 80px)',
+          maxWidth:   `calc(100vw - ${outerGap}px)`,
+          maxHeight:  `calc(100vh - ${outerVGap}px)`,
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Frame — extra bottom padding seats the caption inside the matte */}
         <div
           style={{
             position:   'relative',
             background: '#fff',
-            padding:    `${MATTE}px`,
+            padding:    `${m}px`,
             boxShadow:  '0 32px 90px rgba(0,0,0,0.7)',
             lineHeight: 0,
           }}
@@ -371,9 +388,7 @@ function Lightbox({
             <div
               style={{
                 position:   'absolute',
-                top:        MATTE, right: MATTE,
-                bottom:     MATTE,
-                left:       MATTE,
+                top: m, right: m, bottom: m, left: m,
                 background: 'rgba(180,180,180,0.25)',
                 animation:  'lb-pulse 1.2s ease-in-out infinite',
               }}
@@ -390,40 +405,43 @@ function Lightbox({
             onContextMenu={e => e.preventDefault()}
             onDragStart={e => e.preventDefault()}
             style={{
-              display:         'block',
-              maxWidth:        `calc(100vw - 160px - ${MATTE * 2}px)`,
-              maxHeight:       `calc(100vh - 80px - ${MATTE * 2}px)`,
-              width:           'auto',
-              height:          'auto',
-              objectFit:       'contain',
-              opacity:         loaded ? 1 : 0,
-              transition:      'opacity 220ms ease',
-              userSelect:      'none',
-              WebkitUserSelect:'none',
-              pointerEvents:   'none',
+              display:          'block',
+              maxWidth:         `calc(100vw - ${outerGap}px - ${m * 2}px)`,
+              maxHeight:        `calc(100vh - ${outerVGap}px - ${m * 2}px)`,
+              width:            'auto',
+              height:           'auto',
+              objectFit:        'contain',
+              opacity:          loaded ? 1 : 0,
+              transition:       'opacity 220ms ease',
+              userSelect:       'none',
+              WebkitUserSelect: 'none',
+              pointerEvents:    'none',
             }}
           />
 
-          {/* Caption — lives in the lower matte strip */}
+          {/* Caption — sits in the lower matte strip */}
           <p
             style={{
-              position:      'absolute',
-              bottom:        0,
-              left:          MATTE,
-              right:         MATTE,
-              height:        MATTE,
-              display:       'flex',
-              alignItems:    'center',
-              justifyContent:'center',
-              margin:        0,
-              fontFamily:    'var(--font-serif)',
-              fontSize:      '0.8rem',
-              fontWeight:    300,
-              letterSpacing: '0.32em',
-              textTransform: 'uppercase',
-              color:         'rgba(0,0,0,0.45)',
-              lineHeight:    1,
-              userSelect:    'none',
+              position:       'absolute',
+              bottom:         0,
+              left:           m,
+              right:          m,
+              height:         m,
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'center',
+              margin:         0,
+              fontFamily:     'var(--font-serif)',
+              fontSize:       isMobile ? '0.6rem' : '0.8rem',
+              fontWeight:     300,
+              letterSpacing:  isMobile ? '0.18em' : '0.32em',
+              textTransform:  'uppercase',
+              color:          'rgba(0,0,0,0.45)',
+              lineHeight:     1,
+              userSelect:     'none',
+              whiteSpace:     'nowrap',
+              overflow:       'hidden',
+              textOverflow:   'ellipsis',
             }}
           >
             {current.alt.split(',')[0]}
