@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-interface Img { src: string; alt: string; w: number; h: number }
+interface Img { src: string; alt: string; w: number; h: number; fx?: number; fy?: number }
 
 export type GalleryItem =
   | ({ type: 'single' } & Img)
@@ -11,13 +11,14 @@ export type GalleryItem =
 
 interface Props { items: GalleryItem[] }
 
-/* For a row of N cells (each = 1/N of viewport width), the row's aspect-ratio
-   is N × geometric-mean of the cell aspect ratios. This makes both/all photos
-   in the row crop by roughly the same minimal amount under object-cover. */
 function rowAspect(images: Img[]): number {
   const ratios = images.map(i => i.w / i.h)
   const geo = Math.pow(ratios.reduce((a, b) => a * b, 1), 1 / ratios.length)
   return ratios.length * geo
+}
+
+function focalPos(fx?: number, fy?: number): string {
+  return `${fx ?? 50}% ${fy ?? 50}%`
 }
 
 /* ─── Parallax image ─────────────────────────────────────────────────────── */
@@ -25,19 +26,20 @@ function ParallaxImg({
   src, alt, sizes,
   priority = false,
   strength = 0.06,
+  objectPosition = '50% 50%',
 }: {
   src: string
   alt: string
   sizes: string
   priority?: boolean
   strength?: number
+  objectPosition?: string
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const imgRef  = useRef<HTMLImageElement>(null)
   const rafRef  = useRef<number | null>(null)
   const [visible, setVisible] = useState(priority)
 
-  /* reveal on scroll */
   useEffect(() => {
     if (priority) return
     const el = wrapRef.current
@@ -52,10 +54,6 @@ function ParallaxImg({
     return () => obs.disconnect()
   }, [priority])
 
-  /* parallax — translateY centred at 0 when element is centred in viewport.
-     Image is overscaled enough (1.10 = 5 % each side) to cover the maximum
-     shift (0.5 × strength × height). With strength 0.07 that's 3.5 % each
-     direction — well inside the 5 % buffer, so no edge ever shows the bg. */
   useEffect(() => {
     const wrap = wrapRef.current
     const img  = imgRef.current
@@ -101,9 +99,10 @@ function ParallaxImg({
         draggable={false}
         onContextMenu={e => e.preventDefault()}
         onDragStart={e => e.preventDefault()}
-        className="w-full h-full object-cover object-top block select-none pointer-events-none"
+        className="w-full h-full object-cover block select-none pointer-events-none"
         style={{
-          scale:           '1.10',
+          objectPosition,
+          scale:            '1.10',
           WebkitUserSelect: 'none',
           userSelect:       'none',
           willChange:       'transform',
@@ -129,6 +128,7 @@ export default function GalleryStack({ items }: Props) {
                 sizes="100vw"
                 priority={i === 0}
                 strength={0.08}
+                objectPosition={focalPos(item.fx, item.fy)}
               />
             </div>
           )
@@ -146,6 +146,7 @@ export default function GalleryStack({ items }: Props) {
                       src={img.src} alt={img.alt}
                       sizes={sizesAttr}
                       strength={0.06}
+                      objectPosition={focalPos(img.fx, img.fy)}
                     />
                   </div>
                 ))}
