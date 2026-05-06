@@ -219,7 +219,7 @@ export default function About() {
       </div>
 
       {/* ── Hero + gear gallery ────────────────────────────────────────── */}
-      <GalleryStack items={galleryItems} />
+      <GalleryStack items={galleryItems} enableLightbox={false}/>
 
       <GalleryFooter />
     </main>

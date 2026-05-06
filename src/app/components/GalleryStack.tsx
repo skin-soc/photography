@@ -10,7 +10,10 @@ export type GalleryItem =
   | { type: 'pair';   images: Img[] }
   | { type: 'triple'; images: Img[] }
 
-interface Props { items: GalleryItem[] }
+interface Props {
+  items: GalleryItem[]
+  enableLightbox?: boolean   // ← new; defaults to true
+}
 
 /** Insert "GM-" before the filename portion of any gallery path.
  *  /images/gallery/PL00001.webp → /images/gallery/GM-PL00001.webp */
@@ -95,7 +98,7 @@ function ParallaxImg({
       window.removeEventListener('scroll', onScroll)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [strength])
+  }, [strength, noParallax])
 
   return (
     <div
@@ -503,7 +506,7 @@ function Lightbox({
 }
 
 /* ─── Gallery stack ──────────────────────────────────────────────────────── */
-export default function GalleryStack({ items }: Props) {
+export default function GalleryStack({ items, enableLightbox = true }: Props) {
   const allImages = flattenImages(items)
 
   const indexOf = useCallback((img: Img) => {
@@ -550,7 +553,7 @@ export default function GalleryStack({ items }: Props) {
                   fx={item.fx}
                   fy={item.fy}
                   noParallax={item.noParallax}
-                  onClick={() => openAt(item)}
+                  onClick={enableLightbox ? () => openAt(item) : undefined}
                 />
               </div>
             )
@@ -571,7 +574,7 @@ export default function GalleryStack({ items }: Props) {
                         fx={img.fx}
                         fy={img.fy}
                         noParallax={img.noParallax}
-                        onClick={() => openAt(img)}
+                        onClick={enableLightbox ? () => openAt(img) : undefined}
                       />
                     </div>
                   ))}
@@ -584,7 +587,7 @@ export default function GalleryStack({ items }: Props) {
         })}
       </div>
 
-      {lightboxIndex !== null && (
+      {enableLightbox && lightboxIndex !== null && (
         <Lightbox
           images={allImages}
           startIndex={lightboxIndex}
