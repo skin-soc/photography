@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-interface Img { src: string; alt: string; w: number; h: number }
+interface Img { src: string; alt: string; w: number; h: number; fx?: number; fy?: number; noParallax?: boolean }
 
 export type GalleryItem =
   | ({ type: 'single' } & Img)
@@ -37,6 +37,9 @@ function ParallaxImg({
   src, alt, sizes,
   priority = false,
   strength = 0.06,
+  fx = 50,
+  fy = 50,
+  noParallax = false,
   onClick,
 }: {
   src: string
@@ -44,6 +47,9 @@ function ParallaxImg({
   sizes: string
   priority?: boolean
   strength?: number
+  fx?: number
+  fy?: number
+  noParallax?: boolean
   onClick?: () => void
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -68,7 +74,7 @@ function ParallaxImg({
   useEffect(() => {
     const wrap = wrapRef.current
     const img  = imgRef.current
-    if (!wrap || !img) return
+    if (!wrap || !img || noParallax) return
 
     const tick = () => {
       const rect = wrap.getBoundingClientRect()
@@ -112,8 +118,9 @@ function ParallaxImg({
         draggable={false}
         onContextMenu={e => e.preventDefault()}
         onDragStart={e => e.preventDefault()}
-        className="w-full h-full object-cover object-top block select-none pointer-events-none"
+        className="w-full h-full object-cover block select-none pointer-events-none"
         style={{
+          objectPosition:   `${fx}% ${fy}%`,
           scale:            '1.10',
           WebkitUserSelect: 'none',
           userSelect:       'none',
@@ -412,7 +419,7 @@ function Lightbox({
               fontFamily:    'var(--font-serif)',
               fontSize:      '0.8rem',
               fontWeight:    300,
-              letterSpacing: '0.16em',
+              letterSpacing: '0.32em',
               textTransform: 'uppercase',
               color:         'rgba(0,0,0,0.45)',
               lineHeight:    1,
@@ -468,6 +475,9 @@ export default function GalleryStack({ items }: Props) {
                   sizes="100vw"
                   priority={i === 0}
                   strength={0.08}
+                  fx={item.fx}
+                  fy={item.fy}
+                  noParallax={item.noParallax}
                   onClick={() => openAt(item)}
                 />
               </div>
@@ -486,6 +496,9 @@ export default function GalleryStack({ items }: Props) {
                         src={img.src} alt={img.alt}
                         sizes={sizesAttr}
                         strength={0.06}
+                        fx={img.fx}
+                        fy={img.fy}
+                        noParallax={img.noParallax}
                         onClick={() => openAt(img)}
                       />
                     </div>

@@ -10,40 +10,40 @@ const B = '/images'
 const gearItems: GalleryItem[] = [
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00018.jpg`, alt: 'Camera gear', w: 934,  h: 960,  fx: 50, fy: 50, noParallax: true },
-      { src: `${B}/gear.00017.jpg`, alt: 'Camera gear', w: 870,  h: 960,  fx: 50, fy: 50, noParallax: true },
-      { src: `${B}/gear.00016.jpg`, alt: 'Camera gear', w: 715,  h: 960,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00018.jpg`, alt: 'Camera gear', w: 934,  h: 960,  fx: 50, fy: 50 },
+      { src: `${B}/gear.00017.jpg`, alt: 'Camera gear', w: 870,  h: 960,  fx: 50, fy: 50 },
+      { src: `${B}/gear.00016.jpg`, alt: 'Camera gear', w: 715,  h: 960,  fx: 50, fy: 50 },
     ]
   },
   {
     type: 'pair', images: [
-      { src: `${B}/gear.00014.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
-      { src: `${B}/gear.00010.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00014.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50 },
+      { src: `${B}/gear.00010.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50 },
     ]
   },  {
     type: 'pair', images: [
-      { src: `${B}/gear.00002.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
-      { src: `${B}/gear.00012.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00002.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50 },
+      { src: `${B}/gear.00012.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50 },
     ]
   },
   {
     type: 'pair', images: [
-      { src: `${B}/gear.00005.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
-      { src: `${B}/gear.00004.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
+      { src: `${B}/gear.00005.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50 },
+      { src: `${B}/gear.00004.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50 },
     ]
   },
   {
     type: 'triple', images: [
-      { src: `${B}/gear.00009.jpg`, alt: 'Camera gear', w: 1200, h: 900,  fx: 50, fy: 50, noParallax: true },
-      { src: `${B}/gear.00008.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50, noParallax: true },
-      { src: `${B}/gear.00001.jpg`, alt: 'Camera gear', w: 1248,  h: 718, fx: 10, fy: 50, noParallax: true },
+      { src: `${B}/gear.00009.jpg`, alt: 'Camera gear', w: 1200, h: 900,  fx: 50, fy: 50 },
+      { src: `${B}/gear.00008.jpg`, alt: 'Camera gear', w: 960,  h: 720,  fx: 50, fy: 50 },
+      { src: `${B}/gear.00001.jpg`, alt: 'Camera gear', w: 1248,  h: 718, fx: 10, fy: 50 },
     ]
   },
 ]
 
 const galleryItems: GalleryItem[] = [
   // Hero — Gus in the Solomon Islands, subject left-of-centre
-  { type: 'single', src: `${B}/gus-travels.jpg`, alt: 'Gus McEwan on location', w: 3200, h: 2133, fx: 20, fy: 45 },
+  { type: 'single', src: `${B}/gus-travels.jpg`, alt: 'Gus McEwan on location', w: 3200, h: 2133, fx: 20, fy: 75 },
   ...gearItems,
 ]
 
