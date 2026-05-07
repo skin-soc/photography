@@ -12,6 +12,13 @@ body {
   overscroll-behavior: none;
 }
 
+/* Tight crossfade for locale-switch View Transitions. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+  animation-timing-function: ease;
+}
+
 .font-serif {
   font-family: var(--font-serif);
 }

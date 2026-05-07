@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useParams } from 'next/navigation'
 import GB from 'country-flag-icons/react/3x2/GB'
 import DK from 'country-flag-icons/react/3x2/DK'
 import SE from 'country-flag-icons/react/3x2/SE'
@@ -50,7 +49,6 @@ export default function LocaleSwitcher() {
   const locale = useLocale() as Locale
   const router = useRouter()
   const pathname = usePathname()
-  const params = useParams()
   const [isPending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -66,10 +64,45 @@ export default function LocaleSwitcher() {
   function pick(next: Locale) {
     setOpen(false)
     if (next === locale) return
-    startTransition(() => {
-      // @ts-expect-error — params shape varies by route, next-intl handles it
-      router.replace({ pathname, params }, { locale: next })
-    })
+    // Tell Nav to keep the mobile menu open across the locale-switch remount.
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 767px)').matches
+    ) {
+      sessionStorage.setItem('preserveMobileMenu', Date.now().toString())
+    }
+    // Capture scroll position so we can restore it through the
+    // remount — Next's `scroll: false` doesn't always survive when
+    // the layout segment unmounts.
+    const scrollY = window.scrollY
+    const restoreScroll = () => {
+      if (window.scrollY !== scrollY) window.scrollTo(0, scrollY)
+    }
+
+    const navigate = () =>
+      startTransition(() => {
+        router.replace(pathname, { locale: next, scroll: false })
+      })
+    // Use the View Transitions API to crossfade across the brief
+    // remount window. Falls back to a plain transition on browsers
+    // that don't support it.
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => Promise<void> | void) => unknown
+    }
+    if (typeof doc.startViewTransition === 'function') {
+      doc.startViewTransition(() => {
+        navigate()
+        return new Promise<void>((resolve) =>
+          setTimeout(() => {
+            restoreScroll()
+            resolve()
+          }, 80),
+        )
+      })
+    } else {
+      navigate()
+      requestAnimationFrame(restoreScroll)
+    }
   }
 
   const Current = FLAGS[locale]
@@ -83,17 +116,17 @@ export default function LocaleSwitcher() {
         aria-haspopup="listbox"
         aria-expanded={open}
         disabled={isPending}
-        className="inline-flex items-center justify-center transition-opacity hover:opacity-100 opacity-80 disabled:opacity-40"
-        style={{ padding: '2px 0' }}
+        className="inline-flex items-center justify-center transition-opacity hover:opacity-100 opacity-80 disabled:opacity-40 md:translate-y-[2px]"
+        style={{ padding: '2px 0', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }}
       >
-        <Current title={t(locale)} className="block w-[18px] h-auto" />
+        <Current title={t(locale)} className="block w-6 md:w-[17px] h-auto" />
       </button>
 
       {open && (
         <ul
           role="listbox"
           aria-label={t('label')}
-          className="absolute right-[-8px] top-full mt-3 z-50 flex flex-col items-center gap-1.5 rounded-sm py-2 px-2"
+          className="absolute top-full mt-3 z-50 flex flex-wrap gap-2 w-[184px] left-0 right-auto md:flex-col md:flex-nowrap md:items-center md:gap-1.5 md:w-auto md:left-auto md:right-[-8px] rounded-sm py-2 px-2"
           style={{ backgroundColor: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(4px)' }}
         >
           {routing.locales.map((l) => {
@@ -106,10 +139,10 @@ export default function LocaleSwitcher() {
                   aria-selected={l === locale}
                   onClick={() => pick(l)}
                   title={t(l)}
-                  className="flex items-center justify-center w-[18px] h-[14px] transition-opacity hover:opacity-100"
+                  className="flex items-center justify-center w-6 h-[18px] md:w-[17px] md:h-[11px] transition-opacity hover:opacity-100"
                   style={{ opacity: l === locale ? 1 : 0.5 }}
                 >
-                  <Flag title={t(l)} className="block w-[18px] h-auto" />
+                  <Flag title={t(l)} className="block w-6 md:w-[17px] h-auto" />
                 </button>
               </li>
             )
