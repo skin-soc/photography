@@ -30,22 +30,10 @@ function buildQueue(excludeIndex: number): number[] {
 
 export default function Home() {
   const t = useTranslations('footer')
-  // Persist the current image across locale-switch remounts so the gallery
-  // doesn't reset to index 0 (which causes a visible jump/flash).
-  const [bottom, setBottom] = useState(() => {
-    if (typeof window === 'undefined') return 0
-    const stored = sessionStorage.getItem('homeBottomImg')
-    if (!stored) return 0
-    const idx = parseInt(stored, 10)
-    return Number.isFinite(idx) && idx >= 0 && idx < ALL_PLACES.length ? idx : 0
-  })
+  const [bottom, setBottom] = useState(0)
   const [top, setTop]       = useState<number | null>(null)
   const [topVisible, setTopVisible] = useState(false)
   const queueRef = useRef<number[]>([])
-
-  useEffect(() => {
-    sessionStorage.setItem('homeBottomImg', String(bottom))
-  }, [bottom])
 
   function advance() {
     if (queueRef.current.length === 0) {
