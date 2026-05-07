@@ -28,8 +28,12 @@ const items: GalleryItem[] = [
     // Anders Malmgren: head covering face, centred in square frame
     { src: `${B}/PP00009.webp`, alt: 'Anders Malmgren', w: 3200, h: 3200, fx: 50, fy: 40 },
   ]},
-  // Young Solomon Islanders: group of children, faces spread upper-centre
-  { type: 'single', src: `${B}/PP00002.webp`, alt: 'Young Solomon Islanders', w: 3200, h: 2133, fx: 50, fy: 42 },
+  { type: 'pair', images: [
+    // Young Solomon Islanders: group of children, faces spread upper-centre
+    { src: `${B}/PP00002.webp`, alt: 'Young Solomon Islanders', w: 3200, h: 2133, fx: 50, fy: 42},
+    // Mother and Child, Exeter, England
+    { src: `${B}/PP00008.webp`, alt: 'English Roses (Mother and Child)', w: 3200, h: 2133, fx: 50, fy: 50 },
+  ]},
   // Danish Skater: full figure right-of-centre, head at ~30%
   { type: 'single', src: `${B}/PP00012.webp`, alt: 'Danish Skater', w: 3200, h: 2400, fx: 79, fy: 35 },
 ]
