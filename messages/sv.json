@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "Gus McEwan Photography",
+    "description": "Fotograf baserad mellan Köpenhamn och London."
+  },
+  "nav": {
+    "people": "Människor",
+    "places": "Platser",
+    "nature": "Natur",
+    "about": "Om",
+    "menu": "Meny"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Gus McEwan Photography"
+  },
+  "about": {
+    "bio1": "Gus McEwan är fotograf och bor mellan Köpenhamn och London.",
+    "bio2": "Hans arbete spänner över människor, platser och naturen — dragen till naturligt ljus, stillhet och rummet mellan ögonblicken.",
+    "bio3": "Genom hans lins bjuds du in att stanna upp, känna och minnas.",
+    "contactHeading": "Kontakt",
+    "contactIntro": "Låt oss skapa något tillsammans. Hör av dig. Ställ en fråga. Eller säg bara hej.",
+    "form": {
+      "name": "Namn",
+      "email": "E-post",
+      "message": "Meddelande",
+      "send": "Skicka",
+      "sending": "Skickar…",
+      "success": "Meddelande skickat.",
+      "error": "Något gick fel. Försök igen."
+    }
+  },
+  "languageSwitcher": {
+    "label": "Språk",
+    "en": "English",
+    "da": "Dansk",
+    "sv": "Svenska",
+    "nb": "Norsk",
+    "fi": "Suomi",
+    "de": "Deutsch",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano",
+    "pl": "Polski",
+    "ru": "Русский",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية"
+  }
+}

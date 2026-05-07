@@ -1,5 +1,6 @@
-import GalleryStack, { GalleryItem } from '../components/GalleryStack'
-import GalleryFooter from '../components/GalleryFooter'
+import { setRequestLocale } from 'next-intl/server'
+import GalleryStack, { GalleryItem } from '../../components/GalleryStack'
+import GalleryFooter from '../../components/GalleryFooter'
 
 const B = '/images/gallery'
 
@@ -25,7 +26,9 @@ const items: GalleryItem[] = [
   { type: 'single', src: `${B}/PL00015.webp`, alt: 'Notre Dame Cathedral, Paris', w: 3200, h: 1800, fx: 65, fy: 20 },
 ]
 
-export default function Places() {
+export default async function Places({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  setRequestLocale(locale)
   return (
     <main>
       <GalleryStack items={items} />

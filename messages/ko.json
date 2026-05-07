@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "Gus McEwan Photography",
+    "description": "코펜하겐과 런던을 오가며 활동하는 사진가."
+  },
+  "nav": {
+    "people": "인물",
+    "places": "장소",
+    "nature": "자연",
+    "about": "소개",
+    "menu": "메뉴"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Gus McEwan Photography"
+  },
+  "about": {
+    "bio1": "Gus McEwan은 코펜하겐과 런던을 오가며 활동하는 사진가입니다.",
+    "bio2": "그의 작업은 인물, 장소, 그리고 자연을 아우르며 — 자연광, 고요함, 그리고 순간과 순간 사이의 여백에 이끌립니다.",
+    "bio3": "그의 렌즈를 통해, 잠시 멈추고, 느끼고, 기억하기를 권합니다.",
+    "contactHeading": "연락처",
+    "contactIntro": "함께 무언가를 만들어 봐요. 메시지를 남겨 주세요. 질문을 해도 좋고, 그냥 인사를 건네셔도 좋아요.",
+    "form": {
+      "name": "이름",
+      "email": "이메일",
+      "message": "메시지",
+      "send": "보내기",
+      "sending": "보내는 중…",
+      "success": "메시지를 보냈습니다.",
+      "error": "문제가 발생했습니다. 다시 시도해 주세요."
+    }
+  },
+  "languageSwitcher": {
+    "label": "언어",
+    "en": "English",
+    "da": "Dansk",
+    "sv": "Svenska",
+    "nb": "Norsk",
+    "fi": "Suomi",
+    "de": "Deutsch",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano",
+    "pl": "Polski",
+    "ru": "Русский",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "Gus McEwan Photography",
+    "description": "Fotograaf tussen Kopenhagen en Londen."
+  },
+  "nav": {
+    "people": "Mensen",
+    "places": "Plaatsen",
+    "nature": "Natuur",
+    "about": "Over",
+    "menu": "Menu"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Gus McEwan Photography"
+  },
+  "about": {
+    "bio1": "Gus McEwan is fotograaf en woont tussen Kopenhagen en Londen.",
+    "bio2": "Zijn werk omvat mensen, plaatsen en de natuur — aangetrokken door natuurlijk licht, stilte en de ruimte tussen de momenten.",
+    "bio3": "Door zijn lens nodigt hij je uit om stil te staan, te voelen en je te herinneren.",
+    "contactHeading": "Contact",
+    "contactIntro": "Laten we samen iets maken. Stuur een berichtje. Stel een vraag. Of zeg gewoon hallo.",
+    "form": {
+      "name": "Naam",
+      "email": "E-mail",
+      "message": "Bericht",
+      "send": "Verzenden",
+      "sending": "Verzenden…",
+      "success": "Bericht verzonden.",
+      "error": "Er is iets misgegaan. Probeer het opnieuw."
+    }
+  },
+  "languageSwitcher": {
+    "label": "Taal",
+    "en": "English",
+    "da": "Dansk",
+    "sv": "Svenska",
+    "nb": "Norsk",
+    "fi": "Suomi",
+    "de": "Deutsch",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano",
+    "pl": "Polski",
+    "ru": "Русский",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية"
+  }
+}

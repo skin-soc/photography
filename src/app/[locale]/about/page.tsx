@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import GalleryStack, { GalleryItem } from '../components/GalleryStack'
-import GalleryFooter from '../components/GalleryFooter'
+import { useTranslations } from 'next-intl'
+import GalleryStack, { GalleryItem } from '../../components/GalleryStack'
+import GalleryFooter from '../../components/GalleryFooter'
 
 const B = '/images'
 
@@ -49,6 +50,7 @@ const galleryItems: GalleryItem[] = [
 
 /* ── Contact form ─────────────────────────────────────────────────────────── */
 function ContactForm() {
+  const t = useTranslations('about.form')
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
 
   const inputStyle: React.CSSProperties = {
@@ -110,16 +112,16 @@ function ContactForm() {
           color: 'rgba(255, 255, 255, 0.55)',
         }}
       >
-        Message sent.
+        {t('success')}
       </p>
     )
   }
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <input type="text" name="name" placeholder="Name" required style={inputStyle} />
-      <input type="email" name="email" placeholder="Email" required style={inputStyle} />
-      <textarea name="message" placeholder="Message" required style={textareaStyle} />
+      <input type="text" name="name" placeholder={t('name')} required style={inputStyle} />
+      <input type="email" name="email" placeholder={t('email')} required style={inputStyle} />
+      <textarea name="message" placeholder={t('message')} required style={textareaStyle} />
 
       <button
         type="submit"
@@ -140,7 +142,7 @@ function ContactForm() {
         onMouseEnter={e => { if (status !== 'sending') e.currentTarget.style.color = '#ffffff' }}
         onMouseLeave={e => { if (status !== 'sending') e.currentTarget.style.color = 'rgba(255, 255, 255, 0.55)' }}
       >
-        {status === 'sending' ? 'Sending…' : 'Send'}
+        {status === 'sending' ? t('sending') : t('send')}
       </button>
 
       {status === 'error' && (
@@ -154,7 +156,7 @@ function ContactForm() {
             margin: 0,
           }}
         >
-          Something went wrong. Please try again.
+          {t('error')}
         </p>
       )}
     </form>
@@ -163,6 +165,7 @@ function ContactForm() {
 
 /* ── Page ─────────────────────────────────────────────────────────────────── */
 export default function About() {
+  const t = useTranslations('about')
   return (
     <main className="pt-[72px]">
 
@@ -183,7 +186,7 @@ export default function About() {
               textAlign: 'right',
               pointerEvents: 'none'
             }}>
-            Gus McEwan is a photographer based between Copenhagen and London.
+            {t('bio1')}
           </p>
           <p className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
             style={{
@@ -191,7 +194,7 @@ export default function About() {
               textAlign: 'right',
               pointerEvents: 'none'
             }}>
-            His work spans people, places, and the natural world — drawn to natural light, stillness, and the space between moments.
+            {t('bio2')}
           </p>
           <p className="font-serif leading-[1.45] tracking-wide text-white font-light"
             style={{
@@ -199,7 +202,7 @@ export default function About() {
               textAlign: 'right',
               pointerEvents: 'none'
             }}>
-            Through his lens, he invites you to pause, feel, and remember.
+            {t('bio3')}
           </p>
         </div>
 
@@ -210,9 +213,9 @@ export default function About() {
           zIndex: 10,
           pointerEvents: 'auto'
         }}>
-          <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">Contact</p>
+          <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">{t('contactHeading')}</p>
           <p className="text-[13px] font-light tracking-[0.04em] text-white/70 mb-6">
-            Let&apos;s create something together. Drop me a line. Ask a question. Or just say hi.
+            {t('contactIntro')}
           </p>
           <ContactForm />
         </div>

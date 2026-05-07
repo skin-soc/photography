@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 const ALL_PLACES = [
   { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo',              fx: 50, fy: 5  },
@@ -28,6 +29,7 @@ function buildQueue(excludeIndex: number): number[] {
 }
 
 export default function Home() {
+  const t = useTranslations('footer')
   const [bottom, setBottom] = useState(0)
   const [top, setTop]       = useState<number | null>(null)
   const [topVisible, setTopVisible] = useState(false)
@@ -116,7 +118,7 @@ export default function Home() {
       {/* Centered copyright footer */}
       <div className="absolute bottom-0 left-0 right-0 py-4 text-center pointer-events-none select-none">
         <span className="text-[9px] font-light tracking-[0.2em] uppercase text-white/25">
-          Copyright © {new Date().getFullYear()} Gus McEwan Photography
+          {t('copyright', { year: new Date().getFullYear() })}
         </span>
       </div>
 
