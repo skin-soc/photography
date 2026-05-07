@@ -56,9 +56,9 @@ function ContactForm() {
   const inputStyle: React.CSSProperties = {
     display: 'block',
     width: '100%',
-    padding: '8px 0 10px 0',
-    minHeight: '48px',
-    height: '48px',
+    padding: '4px 0 6px 0',
+    minHeight: '36px',
+    height: '36px',
     boxSizing: 'border-box',
     backgroundColor: 'transparent',
     borderBottom: '1px solid rgba(255,255,255,0.2)',
@@ -119,7 +119,7 @@ function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <input type="text" name="name" placeholder={t('name')} required style={inputStyle} />
       <input type="email" name="email" placeholder={t('email')} required style={inputStyle} />
       <textarea name="message" placeholder={t('message')} required style={textareaStyle} />
@@ -171,7 +171,7 @@ export default function About() {
     <main className="pt-[72px]">
 
       {/* ── Bio + contact form ─────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0 max-w-[1480px] mx-auto w-full">
+      <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-10 md:pt-20 pb-28 gap-10 md:gap-0 max-w-[1480px] mx-auto w-full">
 
         {/* Bio */}
         <div className="md:w-[55%] md:pe-12" style={{
@@ -181,25 +181,28 @@ export default function About() {
           overflow: 'hidden',
           pointerEvents: 'none'
         }}>
-          <p className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
+          <p className="font-thin leading-[1.5] tracking-[0.02em] mb-5"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
+              color: 'rgba(255,255,255,0.78)',
               textAlign: 'end',
               pointerEvents: 'none'
             }}>
             {t('bio1')}
           </p>
-          <p className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
+          <p className="font-thin leading-[1.5] tracking-[0.02em] mb-5"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
+              color: 'rgba(255,255,255,0.78)',
               textAlign: 'end',
               pointerEvents: 'none'
             }}>
             {t('bio2')}
           </p>
-          <p className="font-serif leading-[1.45] tracking-wide text-white font-light"
+          <p className="font-thin leading-[1.5] tracking-[0.02em]"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
+              color: 'rgba(255,255,255,0.78)',
               textAlign: 'end',
               pointerEvents: 'none'
             }}>
