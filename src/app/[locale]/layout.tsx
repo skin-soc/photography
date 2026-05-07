@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Nav from '../components/Nav'
 import { routing } from '@/i18n/routing'
+import { SITE_URL } from '@/i18n/seo'
 import '../globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -52,6 +53,7 @@ export async function generateMetadata({
   const description = t('description')
 
   return {
+    metadataBase: new URL(SITE_URL),
     title,
     description,
     icons: {
