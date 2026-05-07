@@ -69,6 +69,7 @@ function ContactForm() {
     letterSpacing: '0.04em',
     outline: 'none',
     cursor: 'text',
+    textAlign: 'start',
   }
 
   const textareaStyle: React.CSSProperties = {
@@ -173,7 +174,7 @@ export default function About() {
       <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-20 pb-28 gap-10 md:gap-0 max-w-[1480px] mx-auto w-full">
 
         {/* Bio */}
-        <div className="md:w-[55%] md:pr-12" style={{
+        <div className="md:w-[55%] md:pe-12" style={{
           flex: '0 0 55%',
           position: 'relative',
           zIndex: 1,
@@ -183,7 +184,7 @@ export default function About() {
           <p className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
-              textAlign: 'right',
+              textAlign: 'end',
               pointerEvents: 'none'
             }}>
             {t('bio1')}
@@ -191,7 +192,7 @@ export default function About() {
           <p className="font-serif leading-[1.45] tracking-wide text-white font-light mb-5"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
-              textAlign: 'right',
+              textAlign: 'end',
               pointerEvents: 'none'
             }}>
             {t('bio2')}
@@ -199,7 +200,7 @@ export default function About() {
           <p className="font-serif leading-[1.45] tracking-wide text-white font-light"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
-              textAlign: 'right',
+              textAlign: 'end',
               pointerEvents: 'none'
             }}>
             {t('bio3')}
@@ -207,7 +208,7 @@ export default function About() {
         </div>
 
         {/* Contact */}
-        <div className="md:w-[45%] md:pl-12 md:border-l md:border-white/10" style={{
+        <div className="md:w-[45%] md:ps-12 md:border-s md:border-white/10" style={{
           flex: '0 0 45%',
           position: 'relative',
           zIndex: 10,

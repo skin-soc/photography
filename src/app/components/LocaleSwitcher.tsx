@@ -86,14 +86,14 @@ export default function LocaleSwitcher() {
         className="inline-flex items-center justify-center transition-opacity hover:opacity-100 opacity-80 disabled:opacity-40"
         style={{ padding: '2px 0' }}
       >
-        <Current title={t(locale)} className="block w-[18px] h-auto" />
+        <Current title={t(locale)} className="block w-6 md:w-[18px] h-auto" />
       </button>
 
       {open && (
         <ul
           role="listbox"
           aria-label={t('label')}
-          className="absolute right-[-8px] top-full mt-3 z-50 flex flex-col items-center gap-1.5 rounded-sm py-2 px-2"
+          className="absolute top-full mt-3 z-50 grid grid-cols-6 gap-2 left-0 right-auto md:flex md:flex-col md:items-center md:gap-1.5 md:left-auto md:right-[-8px] rounded-sm py-2 px-2"
           style={{ backgroundColor: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(4px)' }}
         >
           {routing.locales.map((l) => {
@@ -106,10 +106,10 @@ export default function LocaleSwitcher() {
                   aria-selected={l === locale}
                   onClick={() => pick(l)}
                   title={t(l)}
-                  className="flex items-center justify-center w-[18px] h-[14px] transition-opacity hover:opacity-100"
+                  className="flex items-center justify-center w-6 h-[18px] md:w-[18px] md:h-[14px] transition-opacity hover:opacity-100"
                   style={{ opacity: l === locale ? 1 : 0.5 }}
                 >
-                  <Flag title={t(l)} className="block w-[18px] h-auto" />
+                  <Flag title={t(l)} className="block w-6 md:w-[18px] h-auto" />
                 </button>
               </li>
             )
