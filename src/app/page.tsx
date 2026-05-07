@@ -11,7 +11,7 @@ const ALL_PLACES = [
   { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence',            fx: 50, fy: 0 },
   { src: '/images/gallery/PL00011.webp', alt: 'The Hand',                    fx: 60, fy: 55 },
   { src: '/images/gallery/PP00001.webp', alt: 'Jamie',                       fx: 25, fy: 10 },
-  { src: '/images/gallery/PP00005.webp', alt: 'Bryce Anderville Hixson Jr.', fx: 43, fy: 5 },
+  { src: '/images/gallery/PP00005.webp', alt: 'Bryce Anderville Hixson Jr.', fx: 43, fy: 50 },
   { src: '/images/gallery/PP00007.webp', alt: 'Lolly & Matt',                fx: 54, fy: 35 },
   { src: '/images/gallery/PP00006.webp', alt: 'Drag Queen',                  fx: 48, fy: 30 },
   { src: '/images/gallery/NT00002.webp', alt: 'Australian Gull',             fx: 51, fy: 30 },

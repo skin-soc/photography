@@ -13,7 +13,7 @@ const items: GalleryItem[] = [
     { src: `${B}/PP00010.webp`, alt: 'Alexander Frisch', w: 3200, h: 1800, fx: 40, fy: 42 },
   ]},
   // Bryce: face nearly fills frame, centred, shaved head — eyes at ~38%
-  { type: 'single', src: `${B}/PP00005.webp`, alt: 'Bryce Anderville Hixson Jr.', w: 3200, h: 1959, fx: 46, fy: 10 },
+  { type: 'single', src: `${B}/PP00005.webp`, alt: 'Bryce Anderville Hixson Jr.', w: 3200, h: 2133, fx: 46, fy: 50 },
   { type: 'pair', images: [
     // Lolly & Matt: two faces centred, upper portion
     { src: `${B}/PP00007.webp`, alt: 'Lolly & Matt', w: 3200, h: 1800, fx: 50, fy: 35 },
