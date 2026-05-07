@@ -60,7 +60,7 @@ export default function Home() {
 
   useEffect(() => {
     queueRef.current = buildQueue(0)
-    const interval = setInterval(advance, 6500)
+    const interval = setInterval(advance, 5000)
     return () => clearInterval(interval)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

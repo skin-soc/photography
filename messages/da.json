@@ -1,7 +1,7 @@
 {
   "site": {
     "title": "Gus McEwan Photography",
-    "description": "Fotograf med base mellem København og London."
+    "description": "Fotograf med base i København og London."
   },
   "nav": {
     "people": "Mennesker",
@@ -14,7 +14,7 @@
     "copyright": "Copyright © {year} Gus McEwan Photography"
   },
   "about": {
-    "bio1": "Gus McEwan er fotograf med base mellem København og London.",
+    "bio1": "Gus McEwan er fotograf med base i København og London.",
     "bio2": "Hans arbejde spænder over mennesker, steder og naturen — draget af naturligt lys, stilhed og rummet mellem øjeblikkene.",
     "bio3": "Gennem hans linse inviteres du til at standse op, mærke og huske.",
     "contactHeading": "Kontakt",
