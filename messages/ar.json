@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "Gus McEwan Photography",
+    "description": "مصوّر يقيم بين كوبنهاغن ولندن."
+  },
+  "nav": {
+    "people": "أشخاص",
+    "places": "أماكن",
+    "nature": "الطبيعة",
+    "about": "نبذة",
+    "menu": "القائمة"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Gus McEwan Photography"
+  },
+  "about": {
+    "bio1": "غاس ماكوين مصوّر يقيم بين كوبنهاغن ولندن.",
+    "bio2": "يمتدّ عمله ليشمل الأشخاص والأماكن والعالم الطبيعي — منجذبًا إلى الضوء الطبيعي والسكون والفراغ بين اللحظات.",
+    "bio3": "من خلال عدسته، يدعوك إلى التوقّف، والشعور، والتذكّر.",
+    "contactHeading": "تواصل",
+    "contactIntro": "لنبتكر شيئًا معًا. اترك رسالة. اطرح سؤالًا. أو ألقِ التحية فقط.",
+    "form": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "message": "الرسالة",
+      "send": "إرسال",
+      "sending": "جارٍ الإرسال…",
+      "success": "تم إرسال الرسالة.",
+      "error": "حدث خطأ ما. يُرجى المحاولة مرّة أخرى."
+    }
+  },
+  "languageSwitcher": {
+    "label": "اللغة",
+    "en": "English",
+    "da": "Dansk",
+    "sv": "Svenska",
+    "nb": "Norsk",
+    "fi": "Suomi",
+    "de": "Deutsch",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano",
+    "pl": "Polski",
+    "ru": "Русский",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية"
+  }
+}

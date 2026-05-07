@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "Gus McEwan Photography",
+    "description": "Valokuvaaja, joka asuu Kööpenhaminan ja Lontoon välillä."
+  },
+  "nav": {
+    "people": "Ihmiset",
+    "places": "Paikat",
+    "nature": "Luonto",
+    "about": "Tietoa",
+    "menu": "Valikko"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Gus McEwan Photography"
+  },
+  "about": {
+    "bio1": "Gus McEwan on valokuvaaja, jonka tukikohta on Kööpenhaminan ja Lontoon välillä.",
+    "bio2": "Hänen työnsä kattaa ihmiset, paikat ja luonnon — vetäytyen luonnonvaloon, hiljaisuuteen ja hetkien väliseen tilaan.",
+    "bio3": "Hänen linssinsä kautta sinut kutsutaan pysähtymään, tuntemaan ja muistamaan.",
+    "contactHeading": "Yhteystiedot",
+    "contactIntro": "Luodaan jotain yhdessä. Lähetä viesti. Esitä kysymys. Tai sano vain hei.",
+    "form": {
+      "name": "Nimi",
+      "email": "Sähköposti",
+      "message": "Viesti",
+      "send": "Lähetä",
+      "sending": "Lähetetään…",
+      "success": "Viesti lähetetty.",
+      "error": "Jokin meni pieleen. Yritä uudelleen."
+    }
+  },
+  "languageSwitcher": {
+    "label": "Kieli",
+    "en": "English",
+    "da": "Dansk",
+    "sv": "Svenska",
+    "nb": "Norsk",
+    "fi": "Suomi",
+    "de": "Deutsch",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano",
+    "pl": "Polski",
+    "ru": "Русский",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية"
+  }
+}

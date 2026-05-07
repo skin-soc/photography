@@ -1,5 +1,6 @@
-import GalleryStack, { GalleryItem } from '../components/GalleryStack'
-import GalleryFooter from '../components/GalleryFooter'
+import { setRequestLocale } from 'next-intl/server'
+import GalleryStack, { GalleryItem } from '../../components/GalleryStack'
+import GalleryFooter from '../../components/GalleryFooter'
 
 const B = '/images/gallery'
 
@@ -38,7 +39,9 @@ const items: GalleryItem[] = [
   { type: 'single', src: `${B}/PP00012.webp`, alt: 'Danish Skater', w: 3200, h: 2400, fx: 79, fy: 35 },
 ]
 
-export default function People() {
+export default async function People({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  setRequestLocale(locale)
   return (
     <main>
       <GalleryStack items={items} />

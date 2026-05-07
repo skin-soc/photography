@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "Gus McEwan Photography",
+    "description": "Photographer based between Copenhagen and London."
+  },
+  "nav": {
+    "people": "People",
+    "places": "Places",
+    "nature": "Nature",
+    "about": "About",
+    "menu": "Menu"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Gus McEwan Photography"
+  },
+  "about": {
+    "bio1": "Gus McEwan is a photographer based between Copenhagen and London.",
+    "bio2": "His work spans people, places, and the natural world — drawn to natural light, stillness, and the space between moments.",
+    "bio3": "Through his lens, he invites you to pause, feel, and remember.",
+    "contactHeading": "Contact",
+    "contactIntro": "Let's create something together. Drop me a line. Ask a question. Or just say hi.",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "send": "Send",
+      "sending": "Sending…",
+      "success": "Message sent.",
+      "error": "Something went wrong. Please try again."
+    }
+  },
+  "languageSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "da": "Dansk",
+    "sv": "Svenska",
+    "nb": "Norsk",
+    "fi": "Suomi",
+    "de": "Deutsch",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano",
+    "pl": "Polski",
+    "ru": "Русский",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية"
+  }
+}

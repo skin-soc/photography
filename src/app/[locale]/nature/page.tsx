@@ -1,5 +1,6 @@
-import GalleryStack, { GalleryItem } from '../components/GalleryStack'
-import GalleryFooter from '../components/GalleryFooter'
+import { setRequestLocale } from 'next-intl/server'
+import GalleryStack, { GalleryItem } from '../../components/GalleryStack'
+import GalleryFooter from '../../components/GalleryFooter'
 
 const B = '/images/gallery'
 
@@ -16,7 +17,9 @@ const items: GalleryItem[] = [
   { type: 'single', src: `${B}/NT00007.webp`, alt: 'Royal King Stag', w: 3200, h: 1800, fx: 45, fy: 57 },
 ]
 
-export default function Nature() {
+export default async function Nature({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  setRequestLocale(locale)
   return (
     <main>
       <GalleryStack items={items} />

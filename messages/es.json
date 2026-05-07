@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "Gus McEwan Photography",
+    "description": "Fotógrafo afincado entre Copenhague y Londres."
+  },
+  "nav": {
+    "people": "Personas",
+    "places": "Lugares",
+    "nature": "Naturaleza",
+    "about": "Acerca",
+    "menu": "Menú"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Gus McEwan Photography"
+  },
+  "about": {
+    "bio1": "Gus McEwan es fotógrafo, afincado entre Copenhague y Londres.",
+    "bio2": "Su obra abarca personas, lugares y el mundo natural — atraído por la luz natural, la quietud y el espacio entre los instantes.",
+    "bio3": "A través de su objetivo, le invita a detenerse, a sentir y a recordar.",
+    "contactHeading": "Contacto",
+    "contactIntro": "Creemos algo juntos. Escríbeme. Haz una pregunta. O simplemente saluda.",
+    "form": {
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "message": "Mensaje",
+      "send": "Enviar",
+      "sending": "Enviando…",
+      "success": "Mensaje enviado.",
+      "error": "Algo salió mal. Por favor, inténtalo de nuevo."
+    }
+  },
+  "languageSwitcher": {
+    "label": "Idioma",
+    "en": "English",
+    "da": "Dansk",
+    "sv": "Svenska",
+    "nb": "Norsk",
+    "fi": "Suomi",
+    "de": "Deutsch",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano",
+    "pl": "Polski",
+    "ru": "Русский",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية"
+  }
+}

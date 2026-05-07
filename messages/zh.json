@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "Gus McEwan Photography",
+    "description": "往返于哥本哈根与伦敦之间的摄影师。"
+  },
+  "nav": {
+    "people": "人物",
+    "places": "地点",
+    "nature": "自然",
+    "about": "关于",
+    "menu": "菜单"
+  },
+  "footer": {
+    "copyright": "Copyright © {year} Gus McEwan Photography"
+  },
+  "about": {
+    "bio1": "Gus McEwan 是一位往返于哥本哈根与伦敦之间的摄影师。",
+    "bio2": "他的作品涵盖人物、地点与自然——着迷于自然光、宁静,以及瞬间之间的留白。",
+    "bio3": "透过他的镜头,他邀请你驻足、感受、铭记。",
+    "contactHeading": "联系",
+    "contactIntro": "让我们一起创造点什么。来信问候。提个问题。或只是打声招呼。",
+    "form": {
+      "name": "姓名",
+      "email": "电子邮箱",
+      "message": "信息",
+      "send": "发送",
+      "sending": "发送中…",
+      "success": "信息已发送。",
+      "error": "出了点问题,请重试。"
+    }
+  },
+  "languageSwitcher": {
+    "label": "语言",
+    "en": "English",
+    "da": "Dansk",
+    "sv": "Svenska",
+    "nb": "Norsk",
+    "fi": "Suomi",
+    "de": "Deutsch",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português",
+    "it": "Italiano",
+    "pl": "Polski",
+    "ru": "Русский",
+    "zh": "中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية"
+  }
+}

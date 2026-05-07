@@ -1,25 +1,29 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Link, usePathname } from '@/i18n/navigation'
+import LocaleSwitcher from './LocaleSwitcher'
 
-const links = [
-  { href: '/people', label: 'People' },
-  { href: '/places', label: 'Places' },
-  { href: '/nature', label: 'Nature' },
-  { href: '/about',  label: 'About'  },
-]
+const linkHrefs = ['/people', '/places', '/nature', '/about'] as const
+type NavKey = 'people' | 'places' | 'nature' | 'about'
 
 export default function Nav() {
+  const t = useTranslations('nav')
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
 
+  const links = linkHrefs.map((href) => ({
+    href,
+    label: t(href.slice(1) as NavKey),
+  }))
+
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-start justify-between"
-        style={{ padding: '3vw 6vw' }}>
-
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 flex items-start justify-between"
+        style={{ padding: '3vw 6vw' }}
+      >
         <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
           <img
             src="/images/logo.svg"
@@ -28,13 +32,17 @@ export default function Nav() {
             style={{
               height: '64px',
               width: 'auto',
-              filter: 'brightness(0) saturate(100%) invert(12%) sepia(74%) saturate(2800%) hue-rotate(340deg) brightness(85%) contrast(110%)',
+              filter:
+                'brightness(0) saturate(100%) invert(12%) sepia(74%) saturate(2800%) hue-rotate(340deg) brightness(85%) contrast(110%)',
             }}
           />
         </Link>
 
         {/* Desktop links */}
-        <ul className="hidden md:flex items-center" style={{ gap: '52px', paddingTop: '16px' }}>
+        <ul
+          className="hidden md:flex items-center"
+          style={{ gap: '52px', paddingTop: '16px' }}
+        >
           {links.map(({ href, label }) => {
             const active = pathname === href || pathname.startsWith(href + '/')
             return (
@@ -52,14 +60,17 @@ export default function Nav() {
               </li>
             )
           })}
+          <li>
+            <LocaleSwitcher />
+          </li>
         </ul>
 
         {/* Mobile hamburger — two bars */}
         <button
           className="md:hidden flex flex-col justify-center gap-[7px] w-8 h-8 shrink-0"
           style={{ paddingTop: '24px' }}
-          onClick={() => setOpen(o => !o)}
-          aria-label="Menu"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={t('menu')}
         >
           <span
             className="block h-px bg-white transition-all duration-300 origin-center"
@@ -97,6 +108,9 @@ export default function Nav() {
                 </Link>
               </li>
             ))}
+            <li onClick={(e) => e.stopPropagation()}>
+              <LocaleSwitcher />
+            </li>
           </ul>
         </div>
       )}
