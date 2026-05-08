@@ -1,7 +1,29 @@
 {
   "site": {
-    "title": "Gus McEwan Photography",
-    "description": "Photographer based between Copenhagen and London."
+    "title": "Gus McEwan Photography — Photographer in Copenhagen & London",
+    "description": "Gus McEwan is a portrait, editorial and fine art photographer based between Copenhagen and London. Available for commissions across Denmark, the UK and worldwide."
+  },
+  "pages": {
+    "people": {
+      "title": "People",
+      "h1": "Portrait Photography by Gus McEwan",
+      "description": "Portrait photography by Gus McEwan — editorial portraits, weddings and personal commissions shot in Copenhagen, London and on location worldwide."
+    },
+    "places": {
+      "title": "Places",
+      "h1": "Architecture & Travel Photography",
+      "description": "Architecture and travel photography from Copenhagen, London, Paris, Scotland and beyond — by Copenhagen-based photographer Gus McEwan."
+    },
+    "nature": {
+      "title": "Nature",
+      "h1": "Wildlife & Nature Photography",
+      "description": "Wildlife and nature photography by Gus McEwan — landscapes, animals and quiet moments captured with a documentary eye."
+    },
+    "about": {
+      "title": "About & Contact",
+      "h1": "About Gus McEwan — Photographer",
+      "description": "About photographer Gus McEwan — based between Copenhagen and London. Get in touch to commission portraits, editorial, wedding or travel photography."
+    }
   },
   "nav": {
     "people": "People",

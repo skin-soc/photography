@@ -1,7 +1,29 @@
 {
   "site": {
-    "title": "Gus McEwan Photography",
-    "description": "Fotograf zwischen Kopenhagen und London."
+    "title": "Gus McEwan Photography — Fotograf in Kopenhagen & London",
+    "description": "Gus McEwan ist Porträt-, Editorial- und Kunstfotograf mit Sitz zwischen Kopenhagen und London. Buchbar für Aufträge in Dänemark, Großbritannien und weltweit."
+  },
+  "pages": {
+    "people": {
+      "title": "Menschen",
+      "h1": "Porträtfotografie von Gus McEwan",
+      "description": "Porträtfotografie — Editorial-Porträts, Hochzeiten und persönliche Aufträge in Kopenhagen, London und weltweit."
+    },
+    "places": {
+      "title": "Orte",
+      "h1": "Architektur- und Reisefotografie",
+      "description": "Architektur- und Reisefotografie aus Kopenhagen, London, Paris und Schottland — vom Fotografen Gus McEwan."
+    },
+    "nature": {
+      "title": "Natur",
+      "h1": "Natur- und Tierfotografie",
+      "description": "Natur- und Tierfotografie von Gus McEwan — Landschaften, Tiere und stille Momente."
+    },
+    "about": {
+      "title": "Über & Kontakt",
+      "h1": "Über Gus McEwan — Fotograf",
+      "description": "Über den Fotografen Gus McEwan — mit Sitz zwischen Kopenhagen und London. Kontakt für Porträt-, Hochzeits- oder Editorial-Aufträge."
+    }
   },
   "nav": {
     "people": "Menschen",

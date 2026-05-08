@@ -1,7 +1,29 @@
 {
   "site": {
-    "title": "Gus McEwan Photography",
-    "description": "Fotograf basert mellom København og London."
+    "title": "Gus McEwan Photography — Fotograf i København & London",
+    "description": "Gus McEwan er portrett-, redaksjons- og kunstfotograf basert mellom København og London. Tilgjengelig for oppdrag i Norden og verden over."
+  },
+  "pages": {
+    "people": {
+      "title": "Mennesker",
+      "h1": "Portrettfotografi av Gus McEwan",
+      "description": "Portrettfotografi — redaksjonelle portretter, bryllup og personlige oppdrag fotografert i København, London og på location."
+    },
+    "places": {
+      "title": "Steder",
+      "h1": "Arkitektur- og reisefotografi",
+      "description": "Arkitektur- og reisefotografi fra København, London, Paris og Skottland — av fotografen Gus McEwan."
+    },
+    "nature": {
+      "title": "Natur",
+      "h1": "Natur- og dyrefotografi",
+      "description": "Natur- og dyrefotografi av Gus McEwan — landskap, dyr og stille øyeblikk."
+    },
+    "about": {
+      "title": "Om & Kontakt",
+      "h1": "Om Gus McEwan — fotograf",
+      "description": "Om fotografen Gus McEwan — basert mellom København og London. Kontakt meg for portrett-, bryllups- eller redaksjonell fotografering."
+    }
   },
   "nav": {
     "people": "Mennesker",

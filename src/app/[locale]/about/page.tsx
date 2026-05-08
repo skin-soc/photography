@@ -167,8 +167,10 @@ function ContactForm() {
 /* ── Page ─────────────────────────────────────────────────────────────────── */
 export default function About() {
   const t = useTranslations('about')
+  const tp = useTranslations('pages.about')
   return (
     <main className="pt-[72px]">
+      <h1 className="sr-only">{tp('h1')}</h1>
 
       {/* ── Bio + contact form ─────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-start px-6 md:px-10 pt-10 md:pt-20 pb-28 gap-10 md:gap-0 max-w-[1480px] mx-auto w-full">

@@ -1,7 +1,29 @@
 {
   "site": {
-    "title": "Gus McEwan Photography",
-    "description": "Valokuvaaja, joka asuu Kööpenhaminan ja Lontoon välillä."
+    "title": "Gus McEwan Photography — Valokuvaaja Kööpenhamina & Lontoo",
+    "description": "Gus McEwan on muotokuva-, lehti- ja taidevalokuvaaja, jonka tukikohdat ovat Kööpenhamina ja Lontoo. Vastaanotan toimeksiantoja kaikkialta maailmasta."
+  },
+  "pages": {
+    "people": {
+      "title": "Ihmiset",
+      "h1": "Muotokuvavalokuvaus — Gus McEwan",
+      "description": "Muotokuvavalokuvaus — toimitukselliset muotokuvat, häät ja henkilökohtaiset toimeksiannot Kööpenhaminassa, Lontoossa ja muualla."
+    },
+    "places": {
+      "title": "Paikat",
+      "h1": "Arkkitehtuuri- ja matkavalokuvaus",
+      "description": "Arkkitehtuuri- ja matkavalokuvaus Kööpenhaminasta, Lontoosta, Pariisista ja Skotlannista — valokuvaaja Gus McEwan."
+    },
+    "nature": {
+      "title": "Luonto",
+      "h1": "Luonto- ja eläinvalokuvaus",
+      "description": "Luonto- ja eläinvalokuvaus — maisemat, eläimet ja hiljaiset hetket Gus McEwanin linssin läpi."
+    },
+    "about": {
+      "title": "Tietoja & Yhteys",
+      "h1": "Tietoja Gus McEwanista — valokuvaaja",
+      "description": "Valokuvaaja Gus McEwan — Kööpenhamina ja Lontoo. Ota yhteyttä muotokuva-, hää- tai toimituksellisia kuvauksia varten."
+    }
   },
   "nav": {
     "people": "Ihmiset",

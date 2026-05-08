@@ -1,7 +1,29 @@
 {
   "site": {
-    "title": "Gus McEwan Photography",
-    "description": "Fotograf baserad mellan Köpenhamn och London."
+    "title": "Gus McEwan Photography — Fotograf i Köpenhamn & London",
+    "description": "Gus McEwan är en porträtt-, redaktions- och konstfotograf baserad mellan Köpenhamn och London. Tillgänglig för uppdrag i Skandinavien och världen över."
+  },
+  "pages": {
+    "people": {
+      "title": "Människor",
+      "h1": "Porträttfotografi av Gus McEwan",
+      "description": "Porträttfotografi — redaktionella porträtt, bröllop och personliga uppdrag fotograferade i Köpenhamn, London och på plats."
+    },
+    "places": {
+      "title": "Platser",
+      "h1": "Arkitektur- och resefotografi",
+      "description": "Arkitektur- och resefotografi från Köpenhamn, London, Paris och Skottland — av fotografen Gus McEwan."
+    },
+    "nature": {
+      "title": "Natur",
+      "h1": "Natur- och djurfotografi",
+      "description": "Natur- och djurfotografi av Gus McEwan — landskap, djur och stillsamma ögonblick."
+    },
+    "about": {
+      "title": "Om & Kontakt",
+      "h1": "Om Gus McEwan — fotograf",
+      "description": "Om fotografen Gus McEwan — baserad mellan Köpenhamn och London. Kontakta mig för porträtt-, bröllops- eller redaktionell fotografering."
+    }
   },
   "nav": {
     "people": "Människor",
