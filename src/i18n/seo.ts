@@ -122,6 +122,7 @@ export function buildStructuredData(locale: string) {
       'https://x.com/gusmcewanphoto',
       'https://www.saatchiart.com/gusmcewan',
       'https://www.modelmanagement.com/member/gus-mcewan',
+      'https://www.modelmayhem.com/gusmcewan',
     ],
     address: [
       { '@type': 'PostalAddress', addressLocality: 'Copenhagen', addressCountry: 'DK' },
@@ -173,6 +174,7 @@ export function buildStructuredData(locale: string) {
       'https://x.com/gusmcewanphoto',
       'https://www.saatchiart.com/gusmcewan',
       'https://www.modelmanagement.com/member/gus-mcewan',
+      'https://www.modelmayhem.com/gusmcewan',
     ],
   }
 
