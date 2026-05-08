@@ -1,7 +1,29 @@
 {
   "site": {
-    "title": "Gus McEwan Photography",
-    "description": "往返于哥本哈根与伦敦之间的摄影师。"
+    "title": "Gus McEwan Photography — 哥本哈根与伦敦摄影师",
+    "description": "Gus McEwan 是一位常驻哥本哈根和伦敦的人像、编辑及艺术摄影师，承接全球范围的拍摄委托。"
+  },
+  "pages": {
+    "people": {
+      "title": "人物",
+      "h1": "Gus McEwan 人像摄影",
+      "description": "人像摄影 — 编辑人像、婚礼与个人委托作品，拍摄于哥本哈根、伦敦及世界各地。"
+    },
+    "places": {
+      "title": "地方",
+      "h1": "建筑与旅行摄影",
+      "description": "来自哥本哈根、伦敦、巴黎和苏格兰的建筑与旅行摄影 — 摄影师 Gus McEwan。"
+    },
+    "nature": {
+      "title": "自然",
+      "h1": "自然与野生动物摄影",
+      "description": "Gus McEwan 的自然与野生动物摄影 — 风景、动物与静谧瞬间。"
+    },
+    "about": {
+      "title": "关于与联系",
+      "h1": "关于 Gus McEwan — 摄影师",
+      "description": "摄影师 Gus McEwan — 常驻哥本哈根与伦敦。欢迎洽谈人像、婚礼、编辑及旅行摄影委托。"
+    }
   },
   "nav": {
     "people": "人物",

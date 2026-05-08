@@ -2,21 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 
 const ALL_PLACES = [
-  { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo',              fx: 50, fy: 5  },
-  { src: '/images/gallery/NT00012.webp', alt: 'COVID Fisherman',             fx: 50, fy: 99 },
-  { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies',                 fx: 80, fy: 90 },
-  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus',           fx: 49, fy: 10 },
-  { src: '/images/gallery/PL00007.webp', alt: 'ARC',                         fx: 40, fy: 50 },
-  { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence',            fx: 50, fy: 0 },
-  { src: '/images/gallery/PL00011.webp', alt: 'The Hand',                    fx: 60, fy: 55 },
-  { src: '/images/gallery/PP00001.webp', alt: 'Jamie',                       fx: 25, fy: 10 },
-  { src: '/images/gallery/PP00005.webp', alt: 'Bryce Anderville Hixson Jr.', fx: 43, fy: 50 },
-  { src: '/images/gallery/PP00007.webp', alt: 'Lolly & Matt',                fx: 54, fy: 35 },
-  { src: '/images/gallery/PP00006.webp', alt: 'Drag Queen',                  fx: 48, fy: 30 },
-  { src: '/images/gallery/NT00002.webp', alt: 'Australian Gull',             fx: 51, fy: 30 },
-  { src: '/images/gallery/NT00011.webp', alt: 'Persian Lynx',                fx: 35, fy: 50 },
+  { src: '/images/gallery/PL00003.webp', alt: 'Calderon Hondo, Fuerteventura — landscape photography by Gus McEwan',          fx: 50, fy: 5  },
+  { src: '/images/gallery/NT00012.webp', alt: 'COVID fisherman — documentary photography by Gus McEwan',                       fx: 50, fy: 99 },
+  { src: '/images/gallery/PL00006.webp', alt: 'The Kelpies, Scotland — travel photography by Gus McEwan',                      fx: 80, fy: 90 },
+  { src: '/images/gallery/PL00001.webp', alt: 'Københavns Domhus (Copenhagen Court House) — architecture by Gus McEwan',       fx: 49, fy: 10 },
+  { src: '/images/gallery/PL00007.webp', alt: 'ARC, Copenhagen — modern architecture by Gus McEwan',                           fx: 40, fy: 50 },
+  { src: '/images/gallery/PL00008.webp', alt: 'Gemini Residence, Copenhagen — architecture by Gus McEwan',                     fx: 50, fy: 0 },
+  { src: '/images/gallery/PL00011.webp', alt: 'The Hand, Brisbane — travel photography by Gus McEwan',                         fx: 60, fy: 55 },
+  { src: '/images/gallery/PP00001.webp', alt: 'Portrait of Jamie — by photographer Gus McEwan',                                fx: 25, fy: 10 },
+  { src: '/images/gallery/PP00005.webp', alt: 'Portrait of Bryce Anderville Hixson Jr. — by Gus McEwan',                       fx: 43, fy: 50 },
+  { src: '/images/gallery/PP00007.webp', alt: 'Lolly & Matt — couple portrait by Gus McEwan',                                  fx: 54, fy: 35 },
+  { src: '/images/gallery/PP00006.webp', alt: 'Simon Cravatte, drag performer — portrait by Gus McEwan',                       fx: 48, fy: 30 },
+  { src: '/images/gallery/NT00002.webp', alt: 'Australian gull — wildlife photography by Gus McEwan',                          fx: 51, fy: 30 },
+  { src: '/images/gallery/NT00011.webp', alt: 'Persian lynx (caracal) — wildlife photography by Gus McEwan',                   fx: 35, fy: 50 },
 ]
 
 function buildQueue(excludeIndex: number): number[] {
@@ -30,6 +31,8 @@ function buildQueue(excludeIndex: number): number[] {
 
 export default function Home() {
   const t = useTranslations('footer')
+  const tSite = useTranslations('site')
+  const tNav = useTranslations('nav')
   const [bottom, setBottom] = useState(0)
   const [top, setTop]       = useState<number | null>(null)
   const [topVisible, setTopVisible] = useState(false)
@@ -70,6 +73,19 @@ export default function Home() {
 
   return (
     <main className="fixed inset-0 bg-black overflow-hidden">
+
+      {/* SEO content — invisible to sighted users but indexable by search engines.
+          Gives Google a real H1, intro paragraph and crawlable internal links on / */}
+      <h1 className="sr-only">{tSite('title')}</h1>
+      <p className="sr-only">{tSite('description')}</p>
+      <nav className="sr-only" aria-label="Sections">
+        <ul>
+          <li><Link href="/people">{tNav('people')}</Link></li>
+          <li><Link href="/places">{tNav('places')}</Link></li>
+          <li><Link href="/nature">{tNav('nature')}</Link></li>
+          <li><Link href="/about">{tNav('about')}</Link></li>
+        </ul>
+      </nav>
 
       {/* Bottom layer */}
       <div className="absolute inset-0 select-none" onContextMenu={(e) => e.preventDefault()}>

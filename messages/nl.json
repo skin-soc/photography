@@ -1,7 +1,29 @@
 {
   "site": {
-    "title": "Gus McEwan Photography",
-    "description": "Fotograaf tussen Kopenhagen en Londen."
+    "title": "Gus McEwan Photography — Fotograaf in Kopenhagen & Londen",
+    "description": "Gus McEwan is portret-, redactie- en kunstfotograaf, gevestigd tussen Kopenhagen en Londen. Beschikbaar voor opdrachten in heel Europa en wereldwijd."
+  },
+  "pages": {
+    "people": {
+      "title": "Mensen",
+      "h1": "Portretfotografie door Gus McEwan",
+      "description": "Portretfotografie — redactionele portretten, bruiloften en persoonlijke opdrachten in Kopenhagen, Londen en op locatie."
+    },
+    "places": {
+      "title": "Plaatsen",
+      "h1": "Architectuur- en reisfotografie",
+      "description": "Architectuur- en reisfotografie uit Kopenhagen, Londen, Parijs en Schotland — door fotograaf Gus McEwan."
+    },
+    "nature": {
+      "title": "Natuur",
+      "h1": "Natuur- en wildlifefotografie",
+      "description": "Natuur- en wildlifefotografie door Gus McEwan — landschappen, dieren en stille momenten."
+    },
+    "about": {
+      "title": "Over & Contact",
+      "h1": "Over Gus McEwan — fotograaf",
+      "description": "Over fotograaf Gus McEwan — gevestigd tussen Kopenhagen en Londen. Neem contact op voor portret-, bruiloft- of redactionele fotografie."
+    }
   },
   "nav": {
     "people": "Mensen",

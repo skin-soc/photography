@@ -1,7 +1,29 @@
 {
   "site": {
-    "title": "Gus McEwan Photography",
-    "description": "Fotógrafo afincado entre Copenhague y Londres."
+    "title": "Gus McEwan Photography — Fotógrafo en Copenhague y Londres",
+    "description": "Gus McEwan es fotógrafo de retrato, editorial y bellas artes con base entre Copenhague y Londres. Disponible para encargos en Dinamarca, Reino Unido y todo el mundo."
+  },
+  "pages": {
+    "people": {
+      "title": "Personas",
+      "h1": "Fotografía de retrato por Gus McEwan",
+      "description": "Fotografía de retrato — retratos editoriales, bodas y encargos personales en Copenhague, Londres y otros lugares."
+    },
+    "places": {
+      "title": "Lugares",
+      "h1": "Fotografía de arquitectura y viajes",
+      "description": "Fotografía de arquitectura y viajes de Copenhague, Londres, París y Escocia — por el fotógrafo Gus McEwan."
+    },
+    "nature": {
+      "title": "Naturaleza",
+      "h1": "Fotografía de naturaleza y vida salvaje",
+      "description": "Fotografía de naturaleza y vida salvaje por Gus McEwan — paisajes, animales e instantes silenciosos."
+    },
+    "about": {
+      "title": "Sobre mí y Contacto",
+      "h1": "Sobre Gus McEwan — fotógrafo",
+      "description": "Sobre el fotógrafo Gus McEwan — entre Copenhague y Londres. Contacta para retratos, bodas, editorial o viajes."
+    }
   },
   "nav": {
     "people": "Personas",

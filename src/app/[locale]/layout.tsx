@@ -5,7 +5,15 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Nav from '../components/Nav'
 import { routing } from '@/i18n/routing'
-import { SITE_URL } from '@/i18n/seo'
+import {
+  SITE_URL,
+  PHOTOGRAPHER_NAME,
+  BUSINESS_NAME,
+  OG_LOCALE_MAP,
+  buildLanguagesMap,
+  buildStructuredData,
+  getKeywords,
+} from '@/i18n/seo'
 import '../globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -20,26 +28,6 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
 }
 
-const ogLocaleMap: Record<string, string> = {
-  en: 'en_GB',
-  da: 'da_DK',
-  sv: 'sv_SE',
-  nb: 'nb_NO',
-  fi: 'fi_FI',
-  de: 'de_DE',
-  nl: 'nl_NL',
-  fr: 'fr_FR',
-  es: 'es_ES',
-  pt: 'pt_PT',
-  it: 'it_IT',
-  pl: 'pl_PL',
-  ru: 'ru_RU',
-  zh: 'zh_CN',
-  ja: 'ja_JP',
-  ko: 'ko_KR',
-  ar: 'ar_AE',
-}
-
 const RTL_LOCALES = new Set(['ar'])
 
 export async function generateMetadata({
@@ -51,11 +39,31 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'site' })
   const title = t('title')
   const description = t('description')
+  const canonical =
+    locale === routing.defaultLocale ? SITE_URL : `${SITE_URL}/${locale}`
+  const heroImage = `${SITE_URL}/images/gallery/PL00003.webp`
+
+  const alternateLocales = Object.entries(OG_LOCALE_MAP)
+    .filter(([l]) => l !== locale)
+    .map(([, og]) => og)
 
   return {
     metadataBase: new URL(SITE_URL),
-    title,
+    title: {
+      default: title,
+      template: `%s | ${BUSINESS_NAME}`,
+    },
     description,
+    keywords: getKeywords(locale),
+    authors: [{ name: PHOTOGRAPHER_NAME, url: SITE_URL }],
+    creator: PHOTOGRAPHER_NAME,
+    publisher: BUSINESS_NAME,
+    applicationName: BUSINESS_NAME,
+    category: 'photography',
+    alternates: {
+      canonical,
+      languages: buildLanguagesMap('/'),
+    },
     icons: {
       icon: [
         { url: '/images/favicon.svg', type: 'image/svg+xml', sizes: 'any' },
@@ -66,19 +74,39 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: 'https://gusmcewan.com',
-      siteName: 'Gus McEwan Photography',
-      locale: ogLocaleMap[locale] ?? 'en_GB',
+      url: canonical,
+      siteName: BUSINESS_NAME,
+      locale: OG_LOCALE_MAP[locale] ?? 'en_GB',
+      alternateLocale: alternateLocales,
       type: 'website',
       images: [
         {
-          url: 'https://gusmcewan.com/images/gallery/PL00003.webp',
+          url: heroImage,
           width: 3200,
           height: 1800,
-          alt: 'Gus McEwan Photography',
+          alt: `${PHOTOGRAPHER_NAME} — Photographer in Copenhagen & London`,
         },
       ],
     },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [heroImage],
+      creator: '@gusmcewan',
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
+    formatDetection: { telephone: false, address: false, email: false },
   }
 }
 
@@ -95,9 +123,16 @@ export default async function RootLayout({
   }
   setRequestLocale(locale)
 
+  const jsonLd = buildStructuredData(locale)
+
   return (
     <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={cormorant.variable}>
       <body className="bg-black text-white antialiased">
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <NextIntlClientProvider>
           <Nav />
           {children}
