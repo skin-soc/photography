@@ -117,7 +117,12 @@ export function buildStructuredData(locale: string) {
     jobTitle: 'Photographer',
     description:
       'Photographer based between Copenhagen and London. Portrait, editorial, and fine art photography.',
-    sameAs: [SITE_URL],
+    sameAs: [
+      SITE_URL,
+      'https://x.com/gusmcewanphoto',
+      'https://www.saatchiart.com/gusmcewan',
+      'https://www.modelmanagement.com/member/gus-mcewan',
+    ],
     address: [
       { '@type': 'PostalAddress', addressLocality: 'Copenhagen', addressCountry: 'DK' },
       { '@type': 'PostalAddress', addressLocality: 'London', addressCountry: 'GB' },
@@ -163,7 +168,12 @@ export function buildStructuredData(locale: string) {
       'Nature photography',
       'Fine art photography',
     ],
-    sameAs: [SITE_URL],
+    sameAs: [
+      SITE_URL,
+      'https://x.com/gusmcewanphoto',
+      'https://www.saatchiart.com/gusmcewan',
+      'https://www.modelmanagement.com/member/gus-mcewan',
+    ],
   }
 
   const website = {
