@@ -282,8 +282,8 @@ app.get('/catalog.json', async (_req, res) => {
 const GMP_PATH      = new URL('./gmp.png',  import.meta.url).pathname
 const LOGO_SVG_PATH = new URL('./logo.svg', import.meta.url).pathname
 
-/** Logo longest edge in pixels. Tune via env if needed. */
-const LOGO_SIZE   = Number(process.env.LOGO_SIZE   ?? 25)
+/** Logo size as a fraction of the image height. */
+const LOGO_HEIGHT_FRACTION = Number(process.env.LOGO_HEIGHT_FRACTION ?? 0.12)
 /** Gap between logo and image edge in pixels. */
 const LOGO_MARGIN = Number(process.env.LOGO_MARGIN ?? 14)
 
@@ -295,46 +295,33 @@ async function getLogoSvg() {
 }
 
 /**
- * Build composite entries for the logo watermark: a hard-edged drop-shadow
- * (sunlight style — no blur, 2 px offset) then the fully-opaque logo on top,
- * both anchored to the bottom-right corner.
- *
- * Shadow technique: rasterise the logo → zero out all RGB channels via recomb
- * (makes every pixel black while preserving alpha) → composite 2 px right and
- * 2 px down. No blur — sharp shadow that never extends beyond 2 px.
+ * Build the logo composite for the watermark — 100% opacity, no shadow,
+ * sized to LOGO_HEIGHT_FRACTION of the image height, bottom-right corner.
  */
 async function buildWatermarkComposites(imgW, imgH) {
   const logoSvgRaw = await getLogoSvg()
 
-  // Rasterise the SVG at LOGO_SIZE × LOGO_SIZE, fully opaque.
-  // Render at 2× then resize — sharper anti-aliasing at small sizes.
-  const render = LOGO_SIZE * 2
+  // Size the logo to 12% of the image height.
+  const logoSize = Math.max(8, Math.round(imgH * LOGO_HEIGHT_FRACTION))
+
+  // Rasterise at 2× then resize — sharper anti-aliasing.
+  const render = logoSize * 2
   const svg = logoSvgRaw
     .replace('width="20000"',  `width="${render}"`)
     .replace('height="20000"', `height="${render}"`)
 
   const logoBuf = await sharp(Buffer.from(svg))
-    .resize(LOGO_SIZE, LOGO_SIZE, { fit: 'inside', kernel: 'lanczos3' })
+    .resize(logoSize, logoSize, { fit: 'inside', kernel: 'lanczos3' })
     .png()
     .toBuffer()
   const { width: lw, height: lh } = await sharp(logoBuf).metadata()
 
-  // Hard shadow: black silhouette (recomb zeros R/G/B), no blur.
-  const shadowBuf = await sharp(logoBuf)
-    .recomb([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-    .png()
-    .toBuffer()
-
   // Bottom-right corner with margin.
-  const logoLeft   = imgW - lw - LOGO_MARGIN
-  const logoTop    = imgH - lh - LOGO_MARGIN
-  // Shadow: 1 px right, 1 px down — 45° SE, never exceeds 1 px spread.
-  const shadowLeft = logoLeft + 1
-  const shadowTop  = logoTop  + 1
+  const logoLeft = imgW - lw - LOGO_MARGIN
+  const logoTop  = imgH - lh - LOGO_MARGIN
 
   return [
-    { input: shadowBuf, left: shadowLeft, top: shadowTop, blend: 'over' },
-    { input: logoBuf,   left: logoLeft,   top: logoTop,   blend: 'over' },
+    { input: logoBuf, left: logoLeft, top: logoTop, blend: 'over' },
   ]
 }
 
