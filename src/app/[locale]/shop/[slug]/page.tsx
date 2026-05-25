@@ -153,14 +153,16 @@ export default async function ShopItem({
       ) : (
         <Link
           href="/shop"
-          className="text-[11px] font-light tracking-[0.22em] uppercase text-white/55 hover:text-white transition-colors"
+          className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35 hover:text-white/70 transition-colors"
         >
           ← {t('backToShop')}
         </Link>
       )}
 
-      <div className="mt-8 flex flex-col md:flex-row gap-8 items-start">
-        <div className="bg-white/5 select-none shrink-0" style={{ maxWidth: previewW, width: '100%' }}>
+      <div className="mt-10 flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
+
+        {/* Photo — 1px brand-colour frame so dark edges don't bleed into the page */}
+        <div className="select-none shrink-0 border border-accent" style={{ maxWidth: previewW, width: '100%' }}>
           <img
             src={`${photo.previewUrl}?max=800`}
             srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
@@ -173,14 +175,29 @@ export default async function ShopItem({
           />
         </div>
 
+        {/* Info column */}
         <div className="min-w-0 flex-1">
-          <h1 className="text-4xl md:text-5xl font-light leading-tight">
-            {photo.title}
-          </h1>
-          <p className="text-[11px] tracking-[0.2em] uppercase text-white/45 mt-2">
+
+          {/* Location label — accent colour, set the place before the title */}
+          <p className="text-[10px] tracking-[0.3em] uppercase text-accent/80">
             {photo.location}
           </p>
-          <p className="mt-5 text-white/65 leading-relaxed">{photo.caption}</p>
+
+          {/* Title — Cormorant Garamond for a fine-art premium feel */}
+          <h1 className="mt-2 font-serif text-5xl md:text-6xl font-light leading-[1.1]">
+            {photo.title}
+          </h1>
+
+          {/* Thin rule */}
+          <div className="mt-6 h-px bg-white/[0.10]" />
+
+          {/* Caption — editorial, italic */}
+          <p className="mt-6 text-[15px] font-light italic text-white/50 leading-relaxed">
+            {photo.caption}
+          </p>
+
+          {/* Separator before product picker */}
+          <div className="mt-8 h-px bg-white/[0.06]" />
 
           <ShopProductPicker
             products={pickerProducts}
