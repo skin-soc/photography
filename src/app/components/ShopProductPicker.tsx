@@ -186,7 +186,7 @@ export default function ShopProductPicker({
   })).filter((g) => g.items.length > 0)
 
   return (
-    <div className="mt-10">
+    <div className="mt-7">
       {rawModalOpen && (
         <RawRequestModal photoTitle={photoTitle} onClose={() => setRawModalOpen(false)} />
       )}
