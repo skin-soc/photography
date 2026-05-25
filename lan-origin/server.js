@@ -211,7 +211,59 @@ app.get('/catalog.json', async (_req, res) => {
   }
 })
 
-const WATERMARK_PATH = new URL('./gmp.png', import.meta.url).pathname
+const LOGO_SVG_PATH = new URL('./logo.svg', import.meta.url).pathname
+
+/** Number of logo copies scattered over each preview. */
+const WATERMARK_COUNT = Number(process.env.WATERMARK_COUNT ?? 8)
+/** Logo width as a fraction of the image's short edge (0–1). */
+const WATERMARK_SIZE_RATIO = Number(process.env.WATERMARK_SIZE_RATIO ?? 0.22)
+
+/** Cache the raw SVG string so we only hit disk once. */
+let _logoSvgRaw = null
+async function getLogoSvg() {
+  if (!_logoSvgRaw) _logoSvgRaw = await readFile(LOGO_SVG_PATH, 'utf8')
+  return _logoSvgRaw
+}
+
+/**
+ * Build an array of Sharp composite entries — each is the site logo rasterised
+ * at a randomised size, rotated to a random angle, and placed at a random
+ * position (centres may land outside the image so logos can bleed off edges).
+ */
+async function buildWatermarkComposites(imgW, imgH) {
+  const logoSvgRaw = await getLogoSvg()
+  const shortEdge = Math.min(imgW, imgH)
+  const logoSize = Math.max(40, Math.round(shortEdge * WATERMARK_SIZE_RATIO))
+
+  const composites = []
+  for (let i = 0; i < WATERMARK_COUNT; i++) {
+    const angle   = Math.floor(Math.random() * 360)
+    const opacity = (0.25 + Math.random() * 0.25).toFixed(2) // 0.25–0.50
+
+    // Resize the SVG by rewriting its root width/height attributes, then inject
+    // an opacity attribute — all before librsvg ever sees it, so no font needed.
+    const svg = logoSvgRaw
+      .replace('width="20000"',  `width="${logoSize}"`)
+      .replace('height="20000"', `height="${logoSize}"`)
+      .replace('<svg',           `<svg opacity="${opacity}"`)
+
+    // Rasterise at target size, then rotate (adds transparent padding corners).
+    const rotated = await sharp(Buffer.from(svg))
+      .rotate(angle, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toBuffer()
+
+    const { width: rw, height: rh } = await sharp(rotated).metadata()
+
+    // Allow the logo centre to fall anywhere inside the image; Sharp clips the
+    // parts that stray outside, so logos naturally bleed off all four edges.
+    const left = Math.floor(Math.random() * (imgW + rw)) - Math.floor(rw / 2)
+    const top  = Math.floor(Math.random() * (imgH + rh)) - Math.floor(rh / 2)
+
+    composites.push({ input: rotated, left, top, blend: 'over' })
+  }
+  return composites
+}
 
 app.get('/preview/:id', async (req, res) => {
   const { id } = req.params
@@ -241,12 +293,14 @@ app.get('/preview/:id', async (req, res) => {
       return res.status(404).json({ error: 'not found' })
     }
 
-    const { data: resizedBuf } = await sharp(src)
+    const { data: resizedBuf, info: resizeInfo } = await sharp(src)
       .resize(max, max, { fit: 'inside', withoutEnlargement: true })
       .toBuffer({ resolveWithObject: true })
 
+    const composites = await buildWatermarkComposites(resizeInfo.width, resizeInfo.height)
+
     await sharp(resizedBuf)
-      .composite([{ input: WATERMARK_PATH, tile: true, blend: 'over' }])
+      .composite(composites)
       .jpeg({ quality: 82, mozjpeg: true })
       .toFile(cached)
 
