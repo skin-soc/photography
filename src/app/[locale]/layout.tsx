@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond } from 'next/font/google'
+import { Cormorant_Garamond, IBM_Plex_Mono, Space_Mono } from 'next/font/google'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
@@ -21,6 +21,20 @@ const cormorant = Cormorant_Garamond({
   weight: ['300', '400'],
   style: ['normal', 'italic'],
   variable: '--font-serif',
+  display: 'swap',
+})
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['200', '300', '400'],
+  variable: '--font-mono-ibm',
+  display: 'swap',
+})
+
+const spaceMono = Space_Mono({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-mono-space',
   display: 'swap',
 })
 
@@ -126,7 +140,7 @@ export default async function RootLayout({
   const jsonLd = buildStructuredData(locale)
 
   return (
-    <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={cormorant.variable}>
+    <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={`${cormorant.variable} ${ibmPlexMono.variable} ${spaceMono.variable}`}>
       <body className="bg-black text-white antialiased">
         <script
           type="application/ld+json"

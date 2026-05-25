@@ -14,6 +14,8 @@ export interface PickerProduct {
   priceText: string
   approxText: string
   format?: 'jpeg' | 'tiff'
+  /** GMP-XXXXXXX token — customer-facing filename reference for digital downloads. */
+  downloadToken?: string
 }
 
 const TYPE_ORDER: ProductType[] = ['print', 'fine-art', 'digital']
@@ -241,6 +243,11 @@ export default function ShopProductPicker({
                       </span>
                       {p.spec && (
                         <span className="mt-1 block text-[12px] font-light tracking-wide text-white/60">{p.spec}</span>
+                      )}
+                      {p.downloadToken && (
+                        <span className="mt-1 block font-mono-ibm text-[11px] tracking-wide text-white/30">
+                          {p.downloadToken}.{p.format === 'tiff' ? 'tiff' : 'jpg'}
+                        </span>
                       )}
                     </span>
 

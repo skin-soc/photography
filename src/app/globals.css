@@ -4,6 +4,8 @@
 
 :root {
   --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-mono-ibm: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-mono-space: 'Space Mono', ui-monospace, monospace;
 }
 
 /* Brand default font — matches the About page. This is the site-wide
@@ -25,6 +27,14 @@ body {
 
 .font-serif {
   font-family: var(--font-serif);
+}
+
+.font-mono-ibm {
+  font-family: var(--font-mono-ibm);
+}
+
+.font-mono-space {
+  font-family: var(--font-mono-space);
 }
 
 input::placeholder, textarea::placeholder {
