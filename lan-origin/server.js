@@ -211,21 +211,34 @@ app.get('/catalog.json', async (_req, res) => {
   }
 })
 
-/** A diagonal repeating watermark sized to the preview. */
-function watermarkSvg(width, height) {
-  const text = 'Gus McEwan'
-  return Buffer.from(
-    `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <pattern id="wm" width="320" height="220" patternUnits="userSpaceOnUse"
-                 patternTransform="rotate(-30)">
-          <text x="0" y="110" font-family="Georgia, serif" font-size="34"
-                fill="rgba(255,255,255,0.22)">${text}</text>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#wm)"/>
-    </svg>`,
-  )
+/**
+ * Build a tiled watermark overlay using sharp's native text input (libvips /
+ * Pango), which never goes through librsvg and therefore never needs a system
+ * SVG renderer. The text is rendered once into a small RGBA buffer, then tiled
+ * across the full preview dimensions via sharp's `tile` composite option.
+ *
+ * Requires fonts-liberation (or equivalent) to be installed in the container
+ * so that Pango has at least one font family to resolve. See Dockerfile.
+ */
+async function buildWatermarkInput(width, height) {
+  // Render one tile of the watermark text as an RGBA PNG.
+  // sharp's text input uses Pango markup — font, size, colour are set here.
+  const tilePng = await sharp({
+    text: {
+      text: '<span foreground="#ffffff" alpha="72%">gusmcewan.com</span>',
+      font: 'Liberation Sans',   // from fonts-liberation; falls back to sans
+      fontfile: undefined,
+      width: 340,
+      height: 60,
+      rgba: true,
+      spacing: 4,
+    },
+  })
+    .rotate(-30, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer()
+
+  return tilePng
 }
 
 app.get('/preview/:id', async (req, res) => {
@@ -256,13 +269,16 @@ app.get('/preview/:id', async (req, res) => {
       return res.status(404).json({ error: 'not found' })
     }
 
-    // Resize first to get real output dimensions, then composite watermark to match
-    const { data: resizedBuf, info } = await sharp(src)
+    // Resize, then tile the watermark across the full image.
+    // buildWatermarkInput renders text via Pango (no librsvg / no SVG font lookup).
+    const { data: resizedBuf } = await sharp(src)
       .resize(max, max, { fit: 'inside', withoutEnlargement: true })
       .toBuffer({ resolveWithObject: true })
 
+    const wmTile = await buildWatermarkInput()
+
     await sharp(resizedBuf)
-      .composite([{ input: watermarkSvg(info.width, info.height) }])
+      .composite([{ input: wmTile, tile: true, blend: 'over' }])
       .jpeg({ quality: 82, mozjpeg: true })
       .toFile(cached)
 
