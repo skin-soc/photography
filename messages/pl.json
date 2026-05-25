@@ -90,6 +90,11 @@
     "fineArt": "Wydruki artystyczne",
     "digital": "Pliki cyfrowe",
     "priceNote": "Ceny w koronach duńskich, z VAT.",
-    "rawOnRequest": "Plik RAW — dostępny na życzenie"
+    "rawOnRequest": "Plik RAW — dostępny na życzenie",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }

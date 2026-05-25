@@ -90,6 +90,11 @@
     "fineArt": "Tirages d'art",
     "digital": "Téléchargements",
     "priceNote": "Prix en couronnes danoises, TVA comprise.",
-    "rawOnRequest": "Fichier RAW — disponible sur demande"
+    "rawOnRequest": "Fichier RAW — disponible sur demande",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }

@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Link } from '@/i18n/navigation'
-import { getPhoto, productSpec, type ProductType } from '@/lib/shop'
+import { getPhoto, productSpec } from '@/lib/shop'
+import type { ProductType } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '../../../components/ShopProductPicker'
-import { SITE_URL, BUSINESS_NAME, CONTACT_EMAIL, OG_LOCALE_MAP } from '@/i18n/seo'
+import { SITE_URL, BUSINESS_NAME, OG_LOCALE_MAP } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
 
 type Params = Promise<{ locale: string; slug: string }>
@@ -104,6 +105,7 @@ export default async function ShopItem({
     price: p.price,
     priceText: formatDKK(p.price),
     approxText: approxLine(p.price, rates),
+    format: p.format,
   }))
 
   const schemaTypeName: Record<ProductType, string> = {
@@ -183,9 +185,7 @@ export default async function ShopItem({
           <ShopProductPicker
             products={pickerProducts}
             rawAvailable={photo.rawAvailable ?? false}
-            rawRequestHref={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
-              `RAW file request — ${photo.title}`,
-            )}`}
+            photoTitle={photo.title}
           />
         </div>
       </div>

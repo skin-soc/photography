@@ -27,6 +27,8 @@ export interface ShopProduct {
   dimensions?: { w: number; h: number }
   /** Physical paper size in centimetres — print / fine-art only. */
   printSize?: { w: number; h: number }
+  /** File format for digital downloads. Absent on print/fine-art products. */
+  format?: 'jpeg' | 'tiff'
 }
 
 export interface ShopPhoto {
@@ -65,70 +67,86 @@ const PRINT_TEMPLATE: Omit<ShopProduct, 'sku'>[] = [
   { type: 'fine-art', label: 'A2 — archival', printSize: { w: 42, h: 59.4 }, price: 149500, currency: 'DKK' },
 ]
 
-/** Fixed-size digital tiers — capped on the long edge. A given pixel size is
- *  the same product whatever camera shot it, so these are flat-priced. A tier
- *  is offered only when the original is genuinely larger (never upscaled). */
-interface SizedTier {
-  key: string
-  label: string
-  longEdge: number
-  price: number
-}
-const DIGITAL_SIZED_TIERS: SizedTier[] = [
-  { key: 'std', label: 'Standard', longEdge: 1600, price: 9900  },
-  { key: 'med', label: 'Medium',   longEdge: 3200, price: 29500 },
-]
 /** A sized tier is only offered when the original is at least this much
  *  larger than the tier — otherwise it is barely distinct from the Master. */
 const TIER_MARGIN = 1.15
 
-/** "Master" is the true full-resolution original. Its price scales with the
- *  file's megapixels, so a medium-format master commands a real premium.
- *  First bracket whose `maxMP` the file is within sets the price. */
+/** "Master" (JPEG) price — scales with megapixels.
+ *  First bracket whose `maxMP` the file falls within sets the price. */
 interface MasterBracket {
   maxMP: number
   price: number
 }
 const MASTER_BRACKETS: MasterBracket[] = [
-  { maxMP: 25, price: 150000 },
-  { maxMP: 50, price: 250000 },
-  { maxMP: Infinity, price: 400000 },
+  { maxMP: 25, price: 150000 },   // 1,500 DKK
+  { maxMP: 50, price: 250000 },   // 2,500 DKK
+  { maxMP: Infinity, price: 400000 }, // 4,000 DKK
 ]
 
-function masterPrice(w: number, h: number): number {
+/** "Original" (16-bit TIFF) price — approx 2× the JPEG Master bracket. */
+const TIFF_MASTER_BRACKETS: MasterBracket[] = [
+  { maxMP: 25, price: 300000 },   // 3,000 DKK
+  { maxMP: 50, price: 500000 },   // 5,000 DKK
+  { maxMP: Infinity, price: 800000 }, // 8,000 DKK
+]
+
+function bracketPrice(w: number, h: number, brackets: MasterBracket[]): number {
   const mp = (w * h) / 1_000_000
-  for (const b of MASTER_BRACKETS) {
+  for (const b of brackets) {
     if (mp <= b.maxMP) return b.price
   }
-  return MASTER_BRACKETS[MASTER_BRACKETS.length - 1].price
+  return brackets[brackets.length - 1].price
 }
 
-/** Build the digital-download products for a photo of (w × h) px: the sized
- *  tiers it is big enough for, plus the full-resolution Master. */
-export function digitalProducts(id: string, w: number, h: number): ShopProduct[] {
+/**
+ * Build the digital-download products for a photo of (w × h) px.
+ *
+ * JPEG tiers: Standard (1600px) → Medium (3200px) → Master (full-res).
+ * TIFF tiers (only when rawAvailable): Pro (3200px) after Medium, Original
+ * (full-res) after Master.
+ *
+ * Product order in the picker: Standard · Medium · Pro · Master · Original.
+ */
+export function digitalProducts(id: string, w: number, h: number, rawAvailable = false): ShopProduct[] {
   const long = Math.max(w, h)
   const out: ShopProduct[] = []
-  for (const tier of DIGITAL_SIZED_TIERS) {
-    if (long < tier.longEdge * TIER_MARGIN) continue // can't upscale / too close
-    const scale = tier.longEdge / long
+
+  // Standard — JPEG 1600px
+  if (long >= 1600 * TIER_MARGIN) {
+    const scale = 1600 / long
     out.push({
-      sku: `${id}-d-${tier.key}`,
-      type: 'digital',
-      label: tier.label,
-      price: tier.price,
-      currency: 'DKK',
+      sku: `${id}-d-std`, type: 'digital', label: 'Standard',
+      price: 9900, currency: 'DKK', format: 'jpeg',
       dimensions: { w: Math.round(w * scale), h: Math.round(h * scale) },
     })
   }
-  // Master — always offered: the true original at the megapixel-bracket price.
+
+  // Medium — JPEG 3200px; Pro — 16-bit TIFF same dimensions
+  if (long >= 3200 * TIER_MARGIN) {
+    const scale = 3200 / long
+    const dims = { w: Math.round(w * scale), h: Math.round(h * scale) }
+    out.push({ sku: `${id}-d-med`, type: 'digital', label: 'Medium', price: 29500, currency: 'DKK', format: 'jpeg', dimensions: dims })
+    if (rawAvailable) {
+      out.push({ sku: `${id}-d-pro`, type: 'digital', label: 'Pro', price: 59500, currency: 'DKK', format: 'tiff', dimensions: dims })
+    }
+  }
+
+  // Master — JPEG full-res (always offered)
   out.push({
-    sku: `${id}-d-master`,
-    type: 'digital',
-    label: 'Master',
-    price: masterPrice(w, h),
-    currency: 'DKK',
+    sku: `${id}-d-master`, type: 'digital', label: 'Master',
+    price: bracketPrice(w, h, MASTER_BRACKETS), currency: 'DKK', format: 'jpeg',
     dimensions: { w, h },
   })
+
+  // Original — 16-bit TIFF full-res (only when rawAvailable)
+  if (rawAvailable) {
+    out.push({
+      sku: `${id}-d-original`, type: 'digital', label: 'Original',
+      price: bracketPrice(w, h, TIFF_MASTER_BRACKETS), currency: 'DKK', format: 'tiff',
+      dimensions: { w, h },
+    })
+  }
+
   return out
 }
 
@@ -147,7 +165,7 @@ function mock(
   const products: ShopProduct[] = PRINT_TEMPLATE.filter((p) => offers.includes(p.type)).map(
     (p, i) => ({ sku: `${id}-p-${i + 1}`, ...p }),
   )
-  if (offers.includes('digital')) products.push(...digitalProducts(id, w, h))
+  if (offers.includes('digital')) products.push(...digitalProducts(id, w, h, rawAvailable))
   return {
     id,
     slug,
@@ -276,10 +294,11 @@ export function fromPrice(photo: ShopPhoto): ShopProduct {
 }
 
 /** Spec line for a product — digital pixel size or physical paper size.
- *  e.g. "3600 × 2400 px · JPEG" or "29.7 × 42 cm". Null if none applies. */
+ *  e.g. "3600 × 2400 px · JPEG", "3600 × 2400 px · 16-bit TIFF", or "29.7 × 42 cm". */
 export function productSpec(product: ShopProduct): string | null {
   if (product.dimensions) {
-    return `${product.dimensions.w} × ${product.dimensions.h} px · JPEG`
+    const fmt = product.format === 'tiff' ? '16-bit TIFF' : 'JPEG'
+    return `${product.dimensions.w} × ${product.dimensions.h} px · ${fmt}`
   }
   if (product.printSize) {
     return `${product.printSize.w} × ${product.printSize.h} cm`

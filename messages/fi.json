@@ -90,6 +90,11 @@
     "fineArt": "Taidevedokset",
     "digital": "Digitaaliset lataukset",
     "priceNote": "Hinnat Tanskan kruunuina, sis. alv.",
-    "rawOnRequest": "RAW-tiedosto — saatavilla pyynnöstä"
+    "rawOnRequest": "RAW-tiedosto — saatavilla pyynnöstä",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }

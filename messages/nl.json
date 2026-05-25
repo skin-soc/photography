@@ -90,6 +90,11 @@
     "fineArt": "Kunstprints",
     "digital": "Digitale downloads",
     "priceNote": "Prijzen in Deense kronen, incl. btw.",
-    "rawOnRequest": "RAW-bestand — op aanvraag beschikbaar"
+    "rawOnRequest": "RAW-bestand — op aanvraag beschikbaar",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }

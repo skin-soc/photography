@@ -90,6 +90,11 @@
     "fineArt": "Konsttryck",
     "digital": "Digitala nedladdningar",
     "priceNote": "Priser i danska kronor, inkl. moms.",
-    "rawOnRequest": "RAW-fil — tillgänglig på begäran"
+    "rawOnRequest": "RAW-fil — tillgänglig på begäran",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }
