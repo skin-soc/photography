@@ -150,14 +150,14 @@ export default async function ShopItem({
       )}
 
       <div className="mt-8 grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
-        <div className="bg-white/5 select-none">
+        <div className="bg-white/5 select-none w-fit max-w-[480px]">
           <img
-            src={photo.previewUrl}
+            src={`${photo.previewUrl}?max=480`}
             alt={`${photo.title} — ${photo.location}`}
             width={photo.width}
             height={photo.height}
             draggable={false}
-            className="w-full h-auto pointer-events-none"
+            className="block max-w-full h-auto pointer-events-none"
           />
         </div>
 
