@@ -213,10 +213,10 @@ app.get('/catalog.json', async (_req, res) => {
 
 const LOGO_SVG_PATH = new URL('./logo.svg', import.meta.url).pathname
 
-/** Number of logo copies scattered over each preview. */
-const WATERMARK_COUNT = Number(process.env.WATERMARK_COUNT ?? 8)
-/** Logo width as a fraction of the image's short edge (0–1). */
-const WATERMARK_SIZE_RATIO = Number(process.env.WATERMARK_SIZE_RATIO ?? 0.22)
+/** Logo longest edge in pixels. Tune via env if needed. */
+const LOGO_SIZE   = Number(process.env.LOGO_SIZE   ?? 80)
+/** Gap between logo and image edge in pixels. */
+const LOGO_MARGIN = Number(process.env.LOGO_MARGIN ?? 14)
 
 /** Cache the raw SVG string so we only hit disk once. */
 let _logoSvgRaw = null
@@ -226,43 +226,43 @@ async function getLogoSvg() {
 }
 
 /**
- * Build an array of Sharp composite entries — each is the site logo rasterised
- * at a randomised size, rotated to a random angle, and placed at a random
- * position (centres may land outside the image so logos can bleed off edges).
+ * Build composite entries for the logo watermark: a soft drop-shadow first,
+ * then the 95%-opaque logo on top, both anchored to the bottom-right corner.
+ *
+ * Shadow technique: rasterise the logo → zero out all RGB channels via recomb
+ * (makes every pixel black while preserving alpha) → Gaussian blur → composite
+ * slightly offset below and to the right of the logo position.
  */
 async function buildWatermarkComposites(imgW, imgH) {
   const logoSvgRaw = await getLogoSvg()
-  const shortEdge = Math.min(imgW, imgH)
-  const logoSize = Math.max(40, Math.round(shortEdge * WATERMARK_SIZE_RATIO))
 
-  const composites = []
-  for (let i = 0; i < WATERMARK_COUNT; i++) {
-    const angle   = Math.floor(Math.random() * 360)
-    const opacity = (0.25 + Math.random() * 0.25).toFixed(2) // 0.25–0.50
+  // Rasterise the SVG at LOGO_SIZE × LOGO_SIZE, 95% opacity.
+  const svg = logoSvgRaw
+    .replace('width="20000"',  `width="${LOGO_SIZE}"`)
+    .replace('height="20000"', `height="${LOGO_SIZE}"`)
+    .replace('<svg',           '<svg opacity="0.95"')
 
-    // Resize the SVG by rewriting its root width/height attributes, then inject
-    // an opacity attribute — all before librsvg ever sees it, so no font needed.
-    const svg = logoSvgRaw
-      .replace('width="20000"',  `width="${logoSize}"`)
-      .replace('height="20000"', `height="${logoSize}"`)
-      .replace('<svg',           `<svg opacity="${opacity}"`)
+  const logoBuf = await sharp(Buffer.from(svg)).png().toBuffer()
+  const { width: lw, height: lh } = await sharp(logoBuf).metadata()
 
-    // Rasterise at target size, then rotate (adds transparent padding corners).
-    const rotated = await sharp(Buffer.from(svg))
-      .rotate(angle, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
-      .png()
-      .toBuffer()
+  // Drop-shadow: black silhouette (recomb zeros R/G/B, alpha unchanged) → blur.
+  const shadowBuf = await sharp(logoBuf)
+    .recomb([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    .blur(4)
+    .png()
+    .toBuffer()
 
-    const { width: rw, height: rh } = await sharp(rotated).metadata()
+  // Bottom-right corner with margin.
+  const logoLeft   = imgW - lw - LOGO_MARGIN
+  const logoTop    = imgH - lh - LOGO_MARGIN
+  // Shadow sits 3 px right and 4 px down from the logo.
+  const shadowLeft = logoLeft + 3
+  const shadowTop  = logoTop  + 4
 
-    // Allow the logo centre to fall anywhere inside the image; Sharp clips the
-    // parts that stray outside, so logos naturally bleed off all four edges.
-    const left = Math.floor(Math.random() * (imgW + rw)) - Math.floor(rw / 2)
-    const top  = Math.floor(Math.random() * (imgH + rh)) - Math.floor(rh / 2)
-
-    composites.push({ input: rotated, left, top, blend: 'over' })
-  }
-  return composites
+  return [
+    { input: shadowBuf, left: shadowLeft, top: shadowTop, blend: 'over' },
+    { input: logoBuf,   left: logoLeft,   top: logoTop,   blend: 'over' },
+  ]
 }
 
 app.get('/preview/:id', async (req, res) => {
