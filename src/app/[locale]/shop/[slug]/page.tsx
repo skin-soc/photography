@@ -162,8 +162,8 @@ export default async function ShopItem({
 
       <div className="mt-10 flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
 
-        {/* Photo — 1px brand-colour frame so dark edges don't bleed into the page */}
-        <div className="select-none shrink-0 border border-accent" style={{ maxWidth: previewW, width: '100%' }}>
+        {/* Photo — 5px white frame */}
+        <div className="select-none shrink-0 border-[5px] border-white" style={{ maxWidth: previewW, width: '100%' }}>
           <img
             src={`${photo.previewUrl}?max=800`}
             srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
@@ -185,7 +185,7 @@ export default async function ShopItem({
           </p>
 
           {/* Title — Cormorant Garamond for a fine-art premium feel */}
-          <h1 className="mt-2 font-serif text-5xl md:text-6xl font-light leading-[1.1]">
+          <h1 className="mt-2 text-5xl md:text-6xl font-light leading-[1.1]">
             {photo.title}
           </h1>
 
