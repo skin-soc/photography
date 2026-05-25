@@ -185,18 +185,10 @@ export default async function ShopItem({
             {photo.location}
           </p>
 
-          {/* Title — FONT PROTOTYPE: two options shown for comparison.
-              Pick one, remove the other + the prototype label. */}
-          <h1 className="mt-2 text-5xl md:text-6xl font-mono-space font-normal leading-[1.05] tracking-tight">
+          {/* Title — IBM Plex Mono, ultra-light, accent colour */}
+          <h1 className="mt-2 text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
             {photo.title}
           </h1>
-          {/* ── PROTOTYPE COMPARISON ── IBM Plex Mono at light weight */}
-          <p className="mt-3 text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-white/30 pointer-events-none select-none">
-            {photo.title}
-          </p>
-          <p className="mt-1 text-[9px] tracking-[0.2em] uppercase text-white/20 select-none">
-            ↑ Space Mono (top) · IBM Plex Mono 200 (bottom) — remove this block once chosen
-          </p>
 
           {/* Thin rule */}
           <div className="mt-6 h-px bg-white/[0.10]" />
