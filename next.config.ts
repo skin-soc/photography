@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   // Images served from /public/images — no next/image optimisation needed.
   // We use plain <picture>/<img> with WebP source for full control and protection.
   images: {
