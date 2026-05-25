@@ -283,7 +283,7 @@ const GMP_PATH      = new URL('./gmp.png',  import.meta.url).pathname
 const LOGO_SVG_PATH = new URL('./logo.svg', import.meta.url).pathname
 
 /** Logo size as a fraction of the image height. */
-const LOGO_HEIGHT_FRACTION = Number(process.env.LOGO_HEIGHT_FRACTION ?? 0.12)
+const LOGO_HEIGHT_FRACTION = Number(process.env.LOGO_HEIGHT_FRACTION ?? 0.06)
 /** Gap between logo and image edge in pixels. */
 const LOGO_MARGIN = Number(process.env.LOGO_MARGIN ?? 14)
 
