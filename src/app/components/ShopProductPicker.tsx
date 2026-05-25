@@ -91,7 +91,7 @@ export default function ShopProductPicker({
                         {p.label}
                       </span>
                       {p.spec && (
-                        <span className="mt-0.5 block text-[11px] text-white/35">{p.spec}</span>
+                        <span className="mt-1 block text-[12px] font-light tracking-wide text-white/60">{p.spec}</span>
                       )}
                     </span>
 
