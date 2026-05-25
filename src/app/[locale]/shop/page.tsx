@@ -41,8 +41,16 @@ export async function generateMetadata({
   }
 }
 
-export default async function Shop({ params }: { params: Promise<{ locale: string }> }) {
+export default async function Shop({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ cat?: string }>
+}) {
   const { locale } = await params
+  const { cat } = await searchParams
+  const initialCategoryPath = cat ? decodeURIComponent(cat).split('|') : []
   setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: 'pages.shop' })
   const tShop = await getTranslations({ locale, namespace: 'shop' })
@@ -76,7 +84,7 @@ export default async function Shop({ params }: { params: Promise<{ locale: strin
       </header>
 
       {photos.length > 0 ? (
-        <ShopGrid photos={photos} categoryTree={categoryTree} />
+        <ShopGrid photos={photos} categoryTree={categoryTree} initialCategoryPath={initialCategoryPath} />
       ) : (
         <p className="text-white/40">{tShop('checkoutSoon')}</p>
       )}

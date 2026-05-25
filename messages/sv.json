@@ -23,12 +23,19 @@
       "title": "Om & Kontakt",
       "h1": "Om Gus McEwan — fotograf",
       "description": "Om fotografen Gus McEwan — baserad mellan Köpenhamn och London. Kontakta mig för porträtt-, bröllops- eller redaktionell fotografering."
+    },
+    "shop": {
+      "title": "Butik",
+      "h1": "Konsttryck och fotobutik",
+      "description": "Köp konsttryck och digitala nedladdningar av Gus McEwan — ett urval av porträtt-, landskaps- och resefotografi från Köpenhamn, London och vidare."
     }
   },
   "nav": {
+    "portfolio": "Portfolio",
     "people": "Människor",
     "places": "Platser",
     "nature": "Natur",
+    "shop": "Butik",
     "about": "Om",
     "menu": "Meny"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "Ett urval fotografier, tillgängliga som tryck, konstutgåvor och digitala nedladdningar.",
+    "filterAll": "Alla",
+    "from": "Från",
+    "availableAs": "Tillgänglig som",
+    "addToCart": "Lägg i varukorg",
+    "checkoutSoon": "Onlinebetalning kommer snart — kom gärna tillbaka.",
+    "backToShop": "Tillbaka till butiken",
+    "prints": "Tryck",
+    "fineArt": "Konsttryck",
+    "digital": "Digitala nedladdningar",
+    "priceNote": "Priser i danska kronor, inkl. moms.",
+    "rawOnRequest": "RAW-fil — tillgänglig på begäran"
   }
 }

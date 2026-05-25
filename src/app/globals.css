@@ -6,10 +6,14 @@
   --font-serif: 'Cormorant Garamond', Georgia, serif;
 }
 
+/* Brand default font — matches the About page. This is the site-wide
+   default; every page inherits it. Do not override per-page. */
 body {
   background: #000;
   color: #fff;
   overscroll-behavior: none;
+  font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 /* Tight crossfade for locale-switch View Transitions. */

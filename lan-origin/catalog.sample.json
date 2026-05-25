@@ -1,0 +1,25 @@
+{
+  "generated": "2026-05-20T09:00:00Z",
+  "photos": [
+    {
+      "id": "GM-PL00006",
+      "slug": "the-kelpies",
+      "title": "The Kelpies",
+      "caption": "Thirty metres of steel horse against an evening sky.",
+      "location": "Falkirk, Scotland",
+      "offers": ["print", "fine-art", "digital"],
+      "width": 3200,
+      "height": 1792
+    },
+    {
+      "id": "GM-PP00001",
+      "slug": "jamie",
+      "title": "Jamie",
+      "caption": "An editorial portrait in available light.",
+      "location": "London, United Kingdom",
+      "offers": ["digital"],
+      "width": 3200,
+      "height": 4000
+    }
+  ]
+}

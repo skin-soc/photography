@@ -23,12 +23,19 @@
       "title": "关于与联系",
       "h1": "关于 Gus McEwan — 摄影师",
       "description": "摄影师 Gus McEwan — 常驻哥本哈根与伦敦。欢迎洽谈人像、婚礼、编辑及旅行摄影委托。"
+    },
+    "shop": {
+      "title": "商店",
+      "h1": "艺术微喷与摄影商店",
+      "description": "购买 Gus McEwan 的艺术微喷作品与数字下载——精选来自哥本哈根、伦敦及其他地方的人像、风光与旅行摄影作品。"
     }
   },
   "nav": {
+    "portfolio": "作品集",
     "people": "人物",
     "places": "地点",
     "nature": "自然",
+    "shop": "商店",
     "about": "关于",
     "menu": "菜单"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "精选摄影作品，提供冲印、艺术微喷与数字下载。",
+    "filterAll": "全部",
+    "from": "起价",
+    "availableAs": "可选规格",
+    "addToCart": "加入购物车",
+    "checkoutSoon": "在线结账即将上线，敬请期待。",
+    "backToShop": "返回商店",
+    "prints": "冲印",
+    "fineArt": "艺术微喷",
+    "digital": "数字下载",
+    "priceNote": "价格以丹麦克朗计价，含增值税。",
+    "rawOnRequest": "RAW 原始文件 — 可应要求提供"
   }
 }

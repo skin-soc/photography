@@ -126,7 +126,7 @@ export default function LocaleSwitcher() {
         <ul
           role="listbox"
           aria-label={t('label')}
-          className="absolute top-full mt-3 z-50 flex flex-wrap gap-2 w-[184px] left-0 right-auto md:flex-col md:flex-nowrap md:items-center md:gap-1.5 md:w-auto md:left-auto md:right-[-8px] rounded-sm py-2 px-2"
+          className="absolute top-full mt-3 z-50 grid grid-cols-[repeat(7,1.5rem)] justify-start gap-2 left-0 right-auto md:flex md:flex-col md:flex-nowrap md:items-center md:gap-1.5 md:left-auto md:right-[-8px] rounded-sm py-2 px-2"
           style={{ backgroundColor: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(4px)' }}
         >
           {routing.locales.map((l) => {

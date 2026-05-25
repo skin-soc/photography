@@ -6,7 +6,7 @@ export const BUSINESS_NAME = 'Gus McEwan Photography'
 export const CONTACT_EMAIL = 'hello@gusmcewan.com'
 
 // All routes that exist under [locale]/ — keep in sync with the app dir.
-export const ROUTES = ['/', '/about', '/people', '/places', '/nature'] as const
+export const ROUTES = ['/', '/about', '/people', '/places', '/nature', '/shop'] as const
 export type Route = (typeof ROUTES)[number]
 
 export function localizedUrl(locale: Locale, path: Route): string {
