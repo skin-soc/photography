@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Link } from '@/i18n/navigation'
-import { getPhoto, productSpec } from '@/lib/shop'
+import { getPhoto, productSpec, displayTitle } from '@/lib/shop'
 import type { ProductType } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '../../../components/ShopProductPicker'
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const photo = await getPhoto(slug)
   if (!photo) return {}
 
-  const title = `${photo.title} — ${photo.location}`
+  const title = `${displayTitle(photo)} — ${photo.location}`
   const description = `${photo.caption} Available as prints, fine art editions and digital downloads by ${BUSINESS_NAME}.`
   const canonical = localizedShopUrl(locale, slug)
   const languages: Record<string, string> = {}
@@ -118,7 +118,7 @@ export default async function ShopItem({
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `${photo.title} — ${photo.location}`,
+    name: `${displayTitle(photo)} — ${photo.location}`,
     description: photo.caption,
     image: photo.previewUrl.startsWith('http')
       ? photo.previewUrl
@@ -151,7 +151,7 @@ export default async function ShopItem({
       />
 
       {fromPath.length > 0 ? (
-        <ProductBreadcrumb path={fromPath} title={photo.title} />
+        <ProductBreadcrumb path={fromPath} title={displayTitle(photo)} />
       ) : (
         <Link
           href="/shop"
@@ -169,7 +169,7 @@ export default async function ShopItem({
             src={`${photo.previewUrl}?max=800`}
             srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
             sizes={`${previewW}px`}
-            alt={`${photo.title} — ${photo.location}`}
+            alt={`${displayTitle(photo)} — ${photo.location}`}
             width={previewW}
             height={previewH}
             draggable={false}
@@ -187,7 +187,7 @@ export default async function ShopItem({
 
           {/* Title — IBM Plex Mono, ultra-light, accent colour */}
           <h1 className="mt-2 text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
-            {photo.title}
+            {displayTitle(photo)}
           </h1>
 
           {/* Thin rule */}
@@ -204,7 +204,7 @@ export default async function ShopItem({
           <ShopProductPicker
             products={pickerProducts}
             rawAvailable={photo.rawAvailable ?? false}
-            photoTitle={photo.title}
+            photoTitle={displayTitle(photo)}
           />
         </div>
       </div>

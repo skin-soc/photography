@@ -23,6 +23,32 @@ function mockToken(sku: string): string {
   return 'GMP-' + createHmac('sha256', 'dev').update(sku).digest('hex').slice(0, 7).toUpperCase()
 }
 
+/**
+ * Customer-facing photo reference — GMP-XXXXXXX derived from the photo ID.
+ * Shown in place of a raw camera filename when no Lightroom title is set.
+ * SERVER-SIDE ONLY — uses node:crypto.
+ */
+function photoRef(id: string, secret: string): string {
+  return 'GMP-' + createHmac('sha256', secret || 'dev').update(id).digest('hex').slice(0, 7).toUpperCase()
+}
+
+/**
+ * True when the Lightroom plugin wrote the camera filename as the title
+ * (its fallback: title = title or remoteId).
+ */
+function titleIsFilename(photo: ShopPhoto): boolean {
+  return photo.title.toLowerCase() === photo.id.toLowerCase()
+}
+
+/**
+ * Display title for a photo — the Lightroom title when set, otherwise a
+ * professional GMP reference derived from the photo ID.
+ * SERVER-SIDE ONLY — call only from server components / route handlers.
+ */
+export function displayTitle(photo: ShopPhoto): string {
+  return titleIsFilename(photo) ? photoRef(photo.id, ORIGIN_SECRET) : photo.title
+}
+
 export interface ShopProduct {
   sku: string
   type: ProductType
@@ -251,6 +277,14 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
       // and all preview fetches go through the Worker which adds the secret.
       previewUrl: `/api/preview/${p.id}`,
     }))
+    // Replace camera-filename slugs with GMP-based slugs so URLs are clean.
+    // The Lightroom plugin writes slug = slugify(title) or remoteId:lower(),
+    // so when no title is set the slug equals the camera filename / photo ID.
+    for (const p of photos) {
+      if (p.slug.toLowerCase() === p.id.toLowerCase()) {
+        p.slug = photoRef(p.id, ORIGIN_SECRET).toLowerCase()  // "gmp-xxxxxxx"
+      }
+    }
     // Deduplicate slugs — appends the photo id when two photos share a slug.
     const seen = new Map<string, number>()
     for (const p of photos) seen.set(p.slug, (seen.get(p.slug) ?? 0) + 1)

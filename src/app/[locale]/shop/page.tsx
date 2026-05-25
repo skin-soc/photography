@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import ShopGrid, { GridPhoto } from '../../components/ShopGrid'
-import { getCatalog, fromPrice, photoTypes, buildCategoryTree } from '@/lib/shop'
+import { getCatalog, fromPrice, photoTypes, buildCategoryTree, displayTitle } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import { SITE_URL, OG_LOCALE_MAP, buildLanguagesMap, getKeywords } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
@@ -63,7 +63,7 @@ export default async function Shop({
     return {
       id: p.id,
       slug: p.slug,
-      title: p.title,
+      title: displayTitle(p),
       location: p.location,
       types: photoTypes(p),
       previewUrl: p.previewUrl,
