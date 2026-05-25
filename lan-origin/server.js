@@ -269,24 +269,23 @@ async function getLogoSvg() {
 }
 
 /**
- * Build composite entries for the logo watermark: a soft drop-shadow first,
- * then the 95%-opaque logo on top, both anchored to the bottom-right corner.
+ * Build composite entries for the logo watermark: a hard-edged drop-shadow
+ * (sunlight style — no blur, 2 px offset) then the fully-opaque logo on top,
+ * both anchored to the bottom-right corner.
  *
  * Shadow technique: rasterise the logo → zero out all RGB channels via recomb
- * (makes every pixel black while preserving alpha) → Gaussian blur → composite
- * slightly offset below and to the right of the logo position.
+ * (makes every pixel black while preserving alpha) → composite 2 px right and
+ * 2 px down. No blur — sharp shadow that never extends beyond 2 px.
  */
 async function buildWatermarkComposites(imgW, imgH) {
   const logoSvgRaw = await getLogoSvg()
 
-  // Rasterise the SVG at LOGO_SIZE × LOGO_SIZE, 95% opacity.
-  // Rasterise at 2× then resize to target — gives much sharper anti-aliasing
-  // than rendering directly at the small target size (librsvg at 72 DPI).
+  // Rasterise the SVG at LOGO_SIZE × LOGO_SIZE, fully opaque.
+  // Render at 2× then resize — sharper anti-aliasing at small sizes.
   const render = LOGO_SIZE * 2
   const svg = logoSvgRaw
     .replace('width="20000"',  `width="${render}"`)
     .replace('height="20000"', `height="${render}"`)
-    .replace('<svg',           '<svg opacity="0.95"')
 
   const logoBuf = await sharp(Buffer.from(svg))
     .resize(LOGO_SIZE, LOGO_SIZE, { fit: 'inside', kernel: 'lanczos3' })
@@ -294,19 +293,18 @@ async function buildWatermarkComposites(imgW, imgH) {
     .toBuffer()
   const { width: lw, height: lh } = await sharp(logoBuf).metadata()
 
-  // Drop-shadow: black silhouette (recomb zeros R/G/B, alpha unchanged) → blur.
+  // Hard shadow: black silhouette (recomb zeros R/G/B), no blur.
   const shadowBuf = await sharp(logoBuf)
     .recomb([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-    .blur(4)
     .png()
     .toBuffer()
 
   // Bottom-right corner with margin.
   const logoLeft   = imgW - lw - LOGO_MARGIN
   const logoTop    = imgH - lh - LOGO_MARGIN
-  // Shadow sits 3 px right and 4 px down from the logo.
-  const shadowLeft = logoLeft + 3
-  const shadowTop  = logoTop  + 4
+  // Shadow sits exactly 2 px right and 2 px down — hard sunlight offset.
+  const shadowLeft = logoLeft + 2
+  const shadowTop  = logoTop  + 2
 
   return [
     { input: shadowBuf, left: shadowLeft, top: shadowTop, blend: 'over' },
