@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
 
-COPY server.js gmp.png ./
+COPY server.js logo.svg ./
 
 ENV PORT=8787
 EXPOSE 8787
