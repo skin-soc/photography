@@ -41,7 +41,7 @@ function shuffle<T>(arr: T[]): T[] {
 function keyPhotosForFolder(photos: GridPhoto[], folderPath: string[]): string[] {
   return photos
     .filter((p) => p.key && matchesCategory(p, folderPath))
-    .map((p) => `${p.previewUrl}?max=640`)
+    .map((p) => `${p.previewUrl}?max=480`)
 }
 
 function RotatingImage({ srcs }: { srcs: string[] }) {

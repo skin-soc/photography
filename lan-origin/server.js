@@ -46,7 +46,7 @@ const PREVIEWS_DIR = resolve(process.env.PREVIEWS_DIR ?? join(DATA_DIR, 'preview
 const CACHE_DIR = resolve(process.env.CACHE_DIR ?? join(DATA_DIR, 'preview-cache'))
 const PRODUCTS_PATH = resolve(process.env.PRODUCTS_PATH ?? join(DATA_DIR, 'products.json'))
 const PUBLIC_URL = (process.env.PUBLIC_URL ?? '').replace(/\/$/, '')
-const PREVIEW_MAX = Number(process.env.PREVIEW_MAX ?? 640)
+const PREVIEW_MAX = Number(process.env.PREVIEW_MAX ?? 480)
 const SHARED_SECRET = process.env.SHARED_SECRET ?? ''
 
 // Pricing — prices in øre (DKK minor units): 19500 øre = 195 kr.
