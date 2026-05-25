@@ -211,35 +211,7 @@ app.get('/catalog.json', async (_req, res) => {
   }
 })
 
-/**
- * Build a tiled watermark overlay using sharp's native text input (libvips /
- * Pango), which never goes through librsvg and therefore never needs a system
- * SVG renderer. The text is rendered once into a small RGBA buffer, then tiled
- * across the full preview dimensions via sharp's `tile` composite option.
- *
- * Requires fonts-liberation (or equivalent) to be installed in the container
- * so that Pango has at least one font family to resolve. See Dockerfile.
- */
-async function buildWatermarkInput(width, height) {
-  // Render one tile of the watermark text as an RGBA PNG.
-  // sharp's text input uses Pango markup — font, size, colour are set here.
-  const tilePng = await sharp({
-    text: {
-      text: '<span foreground="#ffffff" alpha="72%">gusmcewan.com</span>',
-      font: 'Liberation Sans',   // from fonts-liberation; falls back to sans
-      fontfile: undefined,
-      width: 340,
-      height: 60,
-      rgba: true,
-      spacing: 4,
-    },
-  })
-    .rotate(-30, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .png()
-    .toBuffer()
-
-  return tilePng
-}
+const WATERMARK_PATH = new URL('./gmp.png', import.meta.url).pathname
 
 app.get('/preview/:id', async (req, res) => {
   const { id } = req.params
@@ -269,16 +241,12 @@ app.get('/preview/:id', async (req, res) => {
       return res.status(404).json({ error: 'not found' })
     }
 
-    // Resize, then tile the watermark across the full image.
-    // buildWatermarkInput renders text via Pango (no librsvg / no SVG font lookup).
     const { data: resizedBuf } = await sharp(src)
       .resize(max, max, { fit: 'inside', withoutEnlargement: true })
       .toBuffer({ resolveWithObject: true })
 
-    const wmTile = await buildWatermarkInput()
-
     await sharp(resizedBuf)
-      .composite([{ input: wmTile, tile: true, blend: 'over' }])
+      .composite([{ input: WATERMARK_PATH, tile: true, blend: 'over' }])
       .jpeg({ quality: 82, mozjpeg: true })
       .toFile(cached)
 
