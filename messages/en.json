@@ -23,12 +23,19 @@
       "title": "About & Contact",
       "h1": "About Gus McEwan — Photographer",
       "description": "About photographer Gus McEwan — based between Copenhagen and London. Get in touch to commission portraits, editorial, wedding or travel photography."
+    },
+    "shop": {
+      "title": "Shop",
+      "h1": "Fine Art Prints & Photography Shop",
+      "description": "Buy fine art prints and digital downloads by Gus McEwan — a selected collection of portrait, landscape and travel photography from Copenhagen, London and beyond."
     }
   },
   "nav": {
+    "portfolio": "Portfolio",
     "people": "People",
     "places": "Places",
     "nature": "Nature",
+    "shop": "Shop",
     "about": "About",
     "menu": "Menu"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "A selected collection of photographs, available as prints, fine art editions and digital downloads.",
+    "filterAll": "All",
+    "from": "From",
+    "availableAs": "Available as",
+    "addToCart": "Add to cart",
+    "checkoutSoon": "Online checkout is coming soon — please check back.",
+    "backToShop": "Back to shop",
+    "prints": "Prints",
+    "fineArt": "Fine Art",
+    "digital": "Digital Downloads",
+    "priceNote": "Prices in Danish kroner, VAT included.",
+    "rawOnRequest": "RAW file — available on request"
   }
 }

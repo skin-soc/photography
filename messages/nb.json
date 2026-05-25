@@ -23,12 +23,19 @@
       "title": "Om & Kontakt",
       "h1": "Om Gus McEwan — fotograf",
       "description": "Om fotografen Gus McEwan — basert mellom København og London. Kontakt meg for portrett-, bryllups- eller redaksjonell fotografering."
+    },
+    "shop": {
+      "title": "Shop",
+      "h1": "Kunsttrykk og fotobutikk",
+      "description": "Kjøp kunsttrykk og digitale nedlastinger av Gus McEwan — et utvalg av portrett-, landskaps- og reisefotografi fra København, London og videre."
     }
   },
   "nav": {
+    "portfolio": "Portfolio",
     "people": "Mennesker",
     "places": "Steder",
     "nature": "Natur",
+    "shop": "Shop",
     "about": "Om",
     "menu": "Meny"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "Et utvalg fotografier, tilgjengelig som trykk, kunsttrykk og digitale nedlastinger.",
+    "filterAll": "Alle",
+    "from": "Fra",
+    "availableAs": "Tilgjengelig som",
+    "addToCart": "Legg i kurv",
+    "checkoutSoon": "Nettbetaling kommer snart — kom gjerne tilbake.",
+    "backToShop": "Tilbake til shop",
+    "prints": "Trykk",
+    "fineArt": "Kunsttrykk",
+    "digital": "Digitale nedlastinger",
+    "priceNote": "Priser i danske kroner, inkl. mva.",
+    "rawOnRequest": "RAW-fil — tilgjengelig på forespørsel"
   }
 }

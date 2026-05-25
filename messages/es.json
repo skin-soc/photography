@@ -23,12 +23,19 @@
       "title": "Sobre mí y Contacto",
       "h1": "Sobre Gus McEwan — fotógrafo",
       "description": "Sobre el fotógrafo Gus McEwan — entre Copenhague y Londres. Contacta para retratos, bodas, editorial o viajes."
+    },
+    "shop": {
+      "title": "Tienda",
+      "h1": "Tienda de impresiones artísticas y fotografía",
+      "description": "Compra impresiones artísticas y descargas digitales de Gus McEwan — una colección seleccionada de fotografía de retrato, paisaje y viajes desde Copenhague, Londres y más allá."
     }
   },
   "nav": {
+    "portfolio": "Portafolio",
     "people": "Personas",
     "places": "Lugares",
     "nature": "Naturaleza",
+    "shop": "Tienda",
     "about": "Acerca",
     "menu": "Menú"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "Una colección seleccionada de fotografías, disponibles como impresiones, ediciones artísticas y descargas digitales.",
+    "filterAll": "Todo",
+    "from": "Desde",
+    "availableAs": "Disponible como",
+    "addToCart": "Añadir al carrito",
+    "checkoutSoon": "El pago en línea estará disponible pronto — vuelve a visitarnos.",
+    "backToShop": "Volver a la tienda",
+    "prints": "Impresiones",
+    "fineArt": "Arte",
+    "digital": "Descargas digitales",
+    "priceNote": "Precios en coronas danesas, IVA incluido.",
+    "rawOnRequest": "Archivo RAW — disponible bajo petición"
   }
 }

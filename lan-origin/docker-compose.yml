@@ -1,0 +1,24 @@
+# TrueNAS Scale — paste into Apps → Discover → Custom App.
+# cloudflared runs as a separate TrueNAS app and routes to localhost:8787.
+# SHARED_SECRET protects the endpoint; do not expose port 8787 beyond the LAN.
+
+services:
+  origin:
+    build: /mnt/chicago/photography/Shop/shop-origin
+    restart: unless-stopped
+    environment:
+      PORT: 8787
+      DATA_DIR: /data
+      CATALOG_PATH: /data/catalog.json
+      PREVIEWS_DIR: /data/previews
+      CACHE_DIR: /data/cache
+      PRODUCTS_PATH: /data/products.json
+      PUBLIC_URL: https://valhalla.gusmcewan.com
+      PREVIEW_MAX: 1200
+      SHARED_SECRET: 72CI7xmvrcXqgapT1tISjvc8Kopd95PsGcQM4az9w27faLHhAeVObnZuqzSdN3Su4qIjWJSvM2iUszyUxQOujLHvMDLLVZxEN2bx
+    ports:
+      - "8787:8787"
+    volumes:
+      - /mnt/chicago/photography/Shop:/data
+      # Fulfilment phase only — full-res originals, mounted READ ONLY.
+      # - /mnt/chicago/photography/originals:/data/originals:ro

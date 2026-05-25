@@ -23,12 +23,19 @@
       "title": "À propos & Contact",
       "h1": "À propos de Gus McEwan — photographe",
       "description": "À propos du photographe Gus McEwan — basé entre Copenhague et Londres. Contact pour portraits, mariages, éditorial et voyage."
+    },
+    "shop": {
+      "title": "Boutique",
+      "h1": "Boutique de tirages d'art et de photographie",
+      "description": "Achetez des tirages d'art et des téléchargements numériques de Gus McEwan — une sélection de photographies de portrait, de paysage et de voyage de Copenhague, Londres et au-delà."
     }
   },
   "nav": {
+    "portfolio": "Portfolio",
     "people": "Personnes",
     "places": "Lieux",
     "nature": "Nature",
+    "shop": "Boutique",
     "about": "À propos",
     "menu": "Menu"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "Une sélection de photographies, disponibles en tirages, éditions d'art et téléchargements numériques.",
+    "filterAll": "Tout",
+    "from": "À partir de",
+    "availableAs": "Disponible en",
+    "addToCart": "Ajouter au panier",
+    "checkoutSoon": "Le paiement en ligne arrive bientôt — revenez nous voir.",
+    "backToShop": "Retour à la boutique",
+    "prints": "Tirages",
+    "fineArt": "Tirages d'art",
+    "digital": "Téléchargements",
+    "priceNote": "Prix en couronnes danoises, TVA comprise.",
+    "rawOnRequest": "Fichier RAW — disponible sur demande"
   }
 }

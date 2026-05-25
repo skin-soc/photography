@@ -17,5 +17,16 @@
   "observability": {
     "enabled": true
   },
+  "env": {
+    "preview": {
+      "name": "photography-preview",
+      "vars": {
+        "SHOP_ORIGIN_URL": "https://valhalla.gusmcewan.com"
+      },
+      "images": {
+        "binding": "IMAGES"
+      }
+    }
+  },
   "upload_source_maps": true
 }

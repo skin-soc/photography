@@ -23,12 +23,19 @@
       "title": "Über & Kontakt",
       "h1": "Über Gus McEwan — Fotograf",
       "description": "Über den Fotografen Gus McEwan — mit Sitz zwischen Kopenhagen und London. Kontakt für Porträt-, Hochzeits- oder Editorial-Aufträge."
+    },
+    "shop": {
+      "title": "Shop",
+      "h1": "Kunstdrucke & Fotografie-Shop",
+      "description": "Kaufen Sie Kunstdrucke und digitale Downloads von Gus McEwan — eine ausgewählte Sammlung von Porträt-, Landschafts- und Reisefotografie aus Kopenhagen, London und darüber hinaus."
     }
   },
   "nav": {
+    "portfolio": "Portfolio",
     "people": "Menschen",
     "places": "Orte",
     "nature": "Natur",
+    "shop": "Shop",
     "about": "Über",
     "menu": "Menü"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "Eine ausgewählte Sammlung von Fotografien, erhältlich als Drucke, Kunstdrucke und digitale Downloads.",
+    "filterAll": "Alle",
+    "from": "Ab",
+    "availableAs": "Erhältlich als",
+    "addToCart": "In den Warenkorb",
+    "checkoutSoon": "Der Online-Checkout kommt bald — schauen Sie bald wieder vorbei.",
+    "backToShop": "Zurück zum Shop",
+    "prints": "Drucke",
+    "fineArt": "Kunstdrucke",
+    "digital": "Digitale Downloads",
+    "priceNote": "Preise in dänischen Kronen, inkl. MwSt.",
+    "rawOnRequest": "RAW-Datei — auf Anfrage erhältlich"
   }
 }

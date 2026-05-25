@@ -23,12 +23,19 @@
       "title": "O mnie & Kontakt",
       "h1": "O Gusie McEwanie — fotograf",
       "description": "O fotografie Gusie McEwanie — między Kopenhagą a Londynem. Kontakt w sprawie portretów, ślubów, edytoriali i podróży."
+    },
+    "shop": {
+      "title": "Sklep",
+      "h1": "Sklep z wydrukami artystycznymi i fotografią",
+      "description": "Kup wydruki artystyczne i pliki cyfrowe Gusa McEwana — wybrana kolekcja fotografii portretowej, krajobrazowej i podróżniczej z Kopenhagi, Londynu i nie tylko."
     }
   },
   "nav": {
+    "portfolio": "Portfolio",
     "people": "Ludzie",
     "places": "Miejsca",
     "nature": "Natura",
+    "shop": "Sklep",
     "about": "O mnie",
     "menu": "Menu"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "Wybrana kolekcja fotografii, dostępna jako wydruki, edycje artystyczne i pliki cyfrowe.",
+    "filterAll": "Wszystkie",
+    "from": "Od",
+    "availableAs": "Dostępne jako",
+    "addToCart": "Dodaj do koszyka",
+    "checkoutSoon": "Płatność online już wkrótce — zajrzyj ponownie.",
+    "backToShop": "Powrót do sklepu",
+    "prints": "Wydruki",
+    "fineArt": "Wydruki artystyczne",
+    "digital": "Pliki cyfrowe",
+    "priceNote": "Ceny w koronach duńskich, z VAT.",
+    "rawOnRequest": "Plik RAW — dostępny na życzenie"
   }
 }

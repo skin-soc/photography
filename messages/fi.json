@@ -23,12 +23,19 @@
       "title": "Tietoja & Yhteys",
       "h1": "Tietoja Gus McEwanista — valokuvaaja",
       "description": "Valokuvaaja Gus McEwan — Kööpenhamina ja Lontoo. Ota yhteyttä muotokuva-, hää- tai toimituksellisia kuvauksia varten."
+    },
+    "shop": {
+      "title": "Kauppa",
+      "h1": "Taidevedokset ja valokuvakauppa",
+      "description": "Osta taidevedoksia ja digitaalisia latauksia Gus McEwanilta — valikoima muotokuva-, maisema- ja matkavalokuvausta Kööpenhaminasta, Lontoosta ja muualta."
     }
   },
   "nav": {
+    "portfolio": "Portfolio",
     "people": "Ihmiset",
     "places": "Paikat",
     "nature": "Luonto",
+    "shop": "Kauppa",
     "about": "Tietoa",
     "menu": "Valikko"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "Valikoima valokuvia, saatavana vedoksina, taide-editioina ja digitaalisina latauksina.",
+    "filterAll": "Kaikki",
+    "from": "Alkaen",
+    "availableAs": "Saatavana",
+    "addToCart": "Lisää koriin",
+    "checkoutSoon": "Verkkomaksu tulee pian — käythän uudelleen.",
+    "backToShop": "Takaisin kauppaan",
+    "prints": "Vedokset",
+    "fineArt": "Taidevedokset",
+    "digital": "Digitaaliset lataukset",
+    "priceNote": "Hinnat Tanskan kruunuina, sis. alv.",
+    "rawOnRequest": "RAW-tiedosto — saatavilla pyynnöstä"
   }
 }

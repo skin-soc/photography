@@ -110,26 +110,36 @@ function Breadcrumb({
   onNavigate: (path: string[]) => void
 }) {
   if (path.length === 0) return null
+  const parentPath = path.slice(0, -1)
+  const parentLabel = parentPath.length === 0 ? 'Browse' : parentPath[parentPath.length - 1]
   return (
-    <nav className="flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-white/40 mb-8">
-      <button onClick={() => onNavigate([])} className="hover:text-white transition-colors">
-        Browse
+    <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
+      <div className="flex items-center gap-2 text-white/40">
+        <button onClick={() => onNavigate([])} className="hover:text-white transition-colors">
+          Browse
+        </button>
+        {path.map((seg, i) => (
+          <span key={i} className="flex items-center gap-2">
+            <span>/</span>
+            <button
+              onClick={() => onNavigate(path.slice(0, i + 1))}
+              className={
+                i === path.length - 1
+                  ? 'text-white'
+                  : 'hover:text-white transition-colors'
+              }
+            >
+              {seg}
+            </button>
+          </span>
+        ))}
+      </div>
+      <button
+        onClick={() => onNavigate(parentPath)}
+        className="text-[#931020] hover:text-[#b01226] transition-colors shrink-0"
+      >
+        ← {parentLabel}
       </button>
-      {path.map((seg, i) => (
-        <span key={i} className="flex items-center gap-2">
-          <span>/</span>
-          <button
-            onClick={() => onNavigate(path.slice(0, i + 1))}
-            className={
-              i === path.length - 1
-                ? 'text-white'
-                : 'hover:text-white transition-colors'
-            }
-          >
-            {seg}
-          </button>
-        </span>
-      ))}
     </nav>
   )
 }
@@ -137,12 +147,14 @@ function Breadcrumb({
 export default function ShopGrid({
   photos,
   categoryTree,
+  initialCategoryPath = [],
 }: {
   photos: GridPhoto[]
   categoryTree: CategoryNode[]
+  initialCategoryPath?: string[]
 }) {
   const t = useTranslations('shop')
-  const [categoryPath, setCategoryPath] = useState<string[]>([])
+  const [categoryPath, setCategoryPath] = useState<string[]>(initialCategoryPath)
   const [typeFilter, setTypeFilter] = useState<ProductType | null>('digital')
 
   const currentNode: CategoryNode | null = (() => {
@@ -219,23 +231,28 @@ export default function ShopGrid({
           <p className="text-white/40">{t('checkoutSoon')}</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {shown.map((p) => (
-              <Link
-                key={p.id}
-                href={`/shop/${p.slug}`}
-                className="group block select-none"
-                onContextMenu={(e) => e.preventDefault()}
-              >
-                <div className="relative overflow-hidden bg-white/5 aspect-square">
-                  <LazyImage
-                    src={`${p.previewUrl}?max=400`}
-                    alt={`${p.title} — ${p.location}`}
-                  />
-                </div>
-                <p className="mt-1.5 text-[12px] font-light leading-tight text-white/70 truncate">{p.title}</p>
-                <p className="text-[10px] tracking-[0.15em] uppercase text-white/35 truncate">{p.location}</p>
-              </Link>
-            ))}
+            {shown.map((p) => {
+              const from = categoryPath.length > 0
+                ? `?from=${encodeURIComponent(categoryPath.join('|'))}`
+                : ''
+              return (
+                <Link
+                  key={p.id}
+                  href={`/shop/${p.slug}${from}`}
+                  className="group block select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <div className="relative overflow-hidden bg-white/5 aspect-square">
+                    <LazyImage
+                      src={`${p.previewUrl}?max=400`}
+                      alt={`${p.title} — ${p.location}`}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-[12px] font-light leading-tight text-white/70 truncate">{p.title}</p>
+                  <p className="text-[10px] tracking-[0.15em] uppercase text-white/35 truncate">{p.location}</p>
+                </Link>
+              )
+            })}
           </div>
         )
       )}

@@ -9,6 +9,42 @@ import { SITE_URL, BUSINESS_NAME, CONTACT_EMAIL, OG_LOCALE_MAP } from '@/i18n/se
 import { routing } from '@/i18n/routing'
 
 type Params = Promise<{ locale: string; slug: string }>
+type SearchParams = Promise<{ from?: string }>
+
+function ProductBreadcrumb({ path, title }: { path: string[]; title: string }) {
+  const parentPath = path.slice(0, -1)
+  const parentLabel = parentPath.length === 0 ? 'Browse' : parentPath[parentPath.length - 1]
+  const parentHref = parentPath.length === 0
+    ? '/shop'
+    : `/shop?cat=${encodeURIComponent(parentPath.join('|'))}`
+
+  return (
+    <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
+      <div className="flex items-center gap-2 text-white/40 min-w-0">
+        <Link href="/shop" className="hover:text-white transition-colors shrink-0">Browse</Link>
+        {path.map((seg, i) => {
+          const segHref = `/shop?cat=${encodeURIComponent(path.slice(0, i + 1).join('|'))}`
+          return (
+            <span key={i} className="flex items-center gap-2 min-w-0">
+              <span className="shrink-0">/</span>
+              <Link href={segHref} className="hover:text-white transition-colors truncate">{seg}</Link>
+            </span>
+          )
+        })}
+        <span className="flex items-center gap-2 min-w-0">
+          <span className="shrink-0">/</span>
+          <span className="text-white truncate">{title}</span>
+        </span>
+      </div>
+      <Link
+        href={parentHref}
+        className="text-[#931020] hover:text-[#b01226] transition-colors shrink-0 ml-4"
+      >
+        ← {parentLabel}
+      </Link>
+    </nav>
+  )
+}
 
 function localizedShopUrl(locale: string, slug: string): string {
   const prefix = locale === routing.defaultLocale ? '' : `/${locale}`
@@ -43,8 +79,16 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   }
 }
 
-export default async function ShopItem({ params }: { params: Params }) {
+export default async function ShopItem({
+  params,
+  searchParams,
+}: {
+  params: Params
+  searchParams: SearchParams
+}) {
   const { locale, slug } = await params
+  const { from } = await searchParams
+  const fromPath: string[] = from ? decodeURIComponent(from).split('|') : []
   setRequestLocale(locale)
   const photo = await getPhoto(slug)
   if (!photo) notFound()
@@ -94,12 +138,16 @@ export default async function ShopItem({ params }: { params: Params }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
-      <Link
-        href="/shop"
-        className="text-[11px] font-light tracking-[0.22em] uppercase text-white/55 hover:text-white transition-colors"
-      >
-        ← {t('backToShop')}
-      </Link>
+      {fromPath.length > 0 ? (
+        <ProductBreadcrumb path={fromPath} title={photo.title} />
+      ) : (
+        <Link
+          href="/shop"
+          className="text-[11px] font-light tracking-[0.22em] uppercase text-white/55 hover:text-white transition-colors"
+        >
+          ← {t('backToShop')}
+        </Link>
+      )}
 
       <div className="mt-8 grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
         <div className="bg-white/5 select-none">

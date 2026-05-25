@@ -23,12 +23,19 @@
       "title": "Over & Contact",
       "h1": "Over Gus McEwan — fotograaf",
       "description": "Over fotograaf Gus McEwan — gevestigd tussen Kopenhagen en Londen. Neem contact op voor portret-, bruiloft- of redactionele fotografie."
+    },
+    "shop": {
+      "title": "Shop",
+      "h1": "Kunstprints & fotografieshop",
+      "description": "Koop kunstprints en digitale downloads van Gus McEwan — een geselecteerde collectie portret-, landschaps- en reisfotografie uit Kopenhagen, Londen en daarbuiten."
     }
   },
   "nav": {
+    "portfolio": "Portfolio",
     "people": "Mensen",
     "places": "Plaatsen",
     "nature": "Natuur",
+    "shop": "Shop",
     "about": "Over",
     "menu": "Menu"
   },
@@ -70,5 +77,19 @@
     "ja": "日本語",
     "ko": "한국어",
     "ar": "العربية"
+  },
+  "shop": {
+    "intro": "Een geselecteerde collectie foto's, verkrijgbaar als prints, kunsteditie en digitale downloads.",
+    "filterAll": "Alle",
+    "from": "Vanaf",
+    "availableAs": "Verkrijgbaar als",
+    "addToCart": "In winkelwagen",
+    "checkoutSoon": "Online afrekenen komt binnenkort — kom snel terug.",
+    "backToShop": "Terug naar shop",
+    "prints": "Prints",
+    "fineArt": "Kunstprints",
+    "digital": "Digitale downloads",
+    "priceNote": "Prijzen in Deense kronen, incl. btw.",
+    "rawOnRequest": "RAW-bestand — op aanvraag beschikbaar"
   }
 }

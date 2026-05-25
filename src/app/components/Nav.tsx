@@ -5,8 +5,13 @@ import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import LocaleSwitcher from './LocaleSwitcher'
 
-const linkHrefs = ['/people', '/places', '/nature', '/about'] as const
-type NavKey = 'people' | 'places' | 'nature' | 'about'
+const portfolioHrefs = ['/people', '/places', '/nature'] as const
+const topHrefs = ['/shop', '/about'] as const
+type NavKey = 'people' | 'places' | 'nature' | 'shop' | 'about'
+
+const TEXT_SHADOW = {
+  textShadow: '0 1px 0 rgba(0,0,0,1), 0 1px 1px rgba(0,0,0,0.95), 0 2px 2px rgba(0,0,0,0.75)',
+}
 
 export default function Nav() {
   const t = useTranslations('nav')
@@ -25,10 +30,14 @@ export default function Nav() {
     return false
   })
 
-  const links = linkHrefs.map((href) => ({
-    href,
-    label: t(href.slice(1) as NavKey),
-  }))
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  const portfolioActive = portfolioHrefs.some(isActive)
+
+  /** Underlined desktop link style, shared by top-level links and the trigger. */
+  const deskLink = (active: boolean) =>
+    `relative text-[11px] font-light tracking-[0.22em] uppercase text-white pb-[6px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
+      active ? 'after:bg-[#931020]' : 'after:bg-transparent hover:after:bg-[#931020]'
+    }`
 
   return (
     <>
@@ -51,31 +60,54 @@ export default function Nav() {
         </Link>
 
         {/* Desktop links */}
-        <ul
-          className="hidden md:flex items-center"
-          style={{ gap: '52px' }}
-        >
-          {links.map(({ href, label }) => {
-            const active = pathname === href || pathname.startsWith(href + '/')
-            return (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className={`relative text-[11px] font-light tracking-[0.22em] uppercase text-white pb-[6px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
-                    active
-                      ? 'after:bg-[#931020]'
-                      : 'after:bg-transparent hover:after:bg-[#931020]'
-                  }`}
-                  style={{
-                    textShadow:
-                      '0 1px 0 rgba(0,0,0,1), 0 1px 1px rgba(0,0,0,0.95), 0 2px 2px rgba(0,0,0,0.75)',
-                  }}
-                >
-                  {label}
-                </Link>
-              </li>
-            )
-          })}
+        <ul className="hidden md:flex items-center" style={{ gap: '52px' }}>
+          {/* Portfolio — dropdown parent */}
+          <li className="relative group">
+            <span
+              className={deskLink(portfolioActive)}
+              style={TEXT_SHADOW}
+              role="button"
+              tabIndex={0}
+              aria-haspopup="true"
+            >
+              {t('portfolio')}
+            </span>
+
+            {/* Bridge padding keeps hover alive between trigger and panel. */}
+            <div
+              className="absolute left-0 top-full pt-4 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:visible group-focus-within:translate-y-0"
+            >
+              <ul className="flex flex-col items-start gap-2.5">
+                {portfolioHrefs.map((href) => {
+                  const active = isActive(href)
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        style={TEXT_SHADOW}
+                        className={`relative inline-block text-[11px] font-light tracking-[0.22em] uppercase pb-[5px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
+                          active
+                            ? 'text-white after:bg-[#931020]'
+                            : 'text-white/60 hover:text-white after:bg-transparent hover:after:bg-[#931020]'
+                        }`}
+                      >
+                        {t(href.slice(1) as NavKey)}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          </li>
+
+          {topHrefs.map((href) => (
+            <li key={href}>
+              <Link href={href} className={deskLink(isActive(href))} style={TEXT_SHADOW}>
+                {t(href.slice(1) as NavKey)}
+              </Link>
+            </li>
+          ))}
+
           <li>
             <LocaleSwitcher />
           </li>
@@ -111,25 +143,51 @@ export default function Nav() {
           style={{ backgroundColor: 'rgba(0,0,0,0.92)', paddingLeft: '60px' }}
           onClick={() => setOpen(false)}
         >
-          <ul className="flex flex-col gap-8">
-            {links.map(({ href, label }) => {
-              const active = pathname === href || pathname.startsWith(href + '/')
+          <ul className="flex flex-col gap-6">
+            {/* Portfolio — group heading + nested links */}
+            <li>
+              <span className="block font-light text-white text-3xl tracking-[0.22em] uppercase mb-4">
+                {t('portfolio')}
+              </span>
+              <ul className="flex flex-col gap-4 ps-6">
+                {portfolioHrefs.map((href) => {
+                  const active = isActive(href)
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        className={`relative inline-block font-light text-3xl tracking-[0.22em] uppercase pb-[8px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
+                          active
+                            ? 'text-white after:bg-[#931020]'
+                            : 'text-white/65 hover:text-white after:bg-transparent hover:after:bg-[#931020]'
+                        }`}
+                        onClick={() => setOpen(false)}
+                      >
+                        {t(href.slice(1) as NavKey)}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </li>
+
+            {topHrefs.map((href) => {
+              const active = isActive(href)
               return (
                 <li key={href}>
                   <Link
                     href={href}
-                    className={`relative inline-block font-light text-white text-4xl tracking-[0.22em] uppercase pb-[10px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
-                      active
-                        ? 'after:bg-[#931020]'
-                        : 'after:bg-transparent hover:after:bg-[#931020]'
+                    className={`relative inline-block font-light text-white text-3xl tracking-[0.22em] uppercase pb-[8px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
+                      active ? 'after:bg-[#931020]' : 'after:bg-transparent hover:after:bg-[#931020]'
                     }`}
                     onClick={() => setOpen(false)}
                   >
-                    {label}
+                    {t(href.slice(1) as NavKey)}
                   </Link>
                 </li>
               )
             })}
+
             <li onClick={(e) => e.stopPropagation()}>
               <LocaleSwitcher />
             </li>

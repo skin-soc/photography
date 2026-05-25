@@ -1,0 +1,18 @@
+{
+  "_comment": "Optional. Copy to products.json in the shop-data folder to override the built-in pricing. Prices are in minor units (øre) — 19500 = 195 DKK. printProducts are fixed paper sizes (printSize in cm). digitalTiers are capped on the long edge, flat-priced (same product whatever camera shot it). masterBrackets price the full-resolution Master by the file's megapixels — so a medium-format master commands a premium. First bracket whose maxMP the file is within sets the price.",
+  "printProducts": [
+    { "type": "print", "label": "A4", "printSize": { "w": 21, "h": 29.7 }, "price": 39500, "currency": "DKK" },
+    { "type": "print", "label": "A3", "printSize": { "w": 29.7, "h": 42 }, "price": 59500, "currency": "DKK" },
+    { "type": "fine-art", "label": "A2 — archival", "printSize": { "w": 42, "h": 59.4 }, "price": 149500, "currency": "DKK" }
+  ],
+  "digitalTiers": [
+    { "key": "std", "label": "Standard", "longEdge": 2048, "price": 14500 },
+    { "key": "med", "label": "Medium", "longEdge": 4096, "price": 24500 },
+    { "key": "lrg", "label": "Large", "longEdge": 6144, "price": 39500 }
+  ],
+  "masterBrackets": [
+    { "maxMP": 40, "price": 120000 },
+    { "maxMP": 80, "price": 240000 },
+    { "maxMP": 1e308, "price": 450000 }
+  ]
+}
