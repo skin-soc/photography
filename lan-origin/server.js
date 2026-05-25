@@ -122,10 +122,9 @@ await mkdir(CACHE_DIR, { recursive: true })
 const app = express()
 app.disable('x-powered-by')
 
-/** Optional shared-secret gate — the Worker is the only intended caller. */
+/** Shared-secret gate — every route except /healthz requires the header. */
 app.use((req, res, next) => {
   if (req.path === '/healthz') return next()
-  if (req.path.startsWith('/preview/')) return next()
   if (SHARED_SECRET && req.get('x-shop-secret') !== SHARED_SECRET) {
     return res.status(401).json({ error: 'unauthorized' })
   }

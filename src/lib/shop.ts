@@ -199,7 +199,14 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
     })
     if (!res.ok) throw new Error(`origin responded ${res.status}`)
     const data = (await res.json()) as RawCatalog
-    const photos = data.photos.map((p) => ({ ...p, category: p.category ?? [], key: p.key ?? false }))
+    const photos = data.photos.map((p) => ({
+      ...p,
+      category: p.category ?? [],
+      key: p.key ?? false,
+      // Rewrite to a local proxy route — the browser never sees the origin URL,
+      // and all preview fetches go through the Worker which adds the secret.
+      previewUrl: `/api/preview/${p.id}`,
+    }))
     // Deduplicate slugs — appends the photo id when two photos share a slug.
     const seen = new Map<string, number>()
     for (const p of photos) seen.set(p.slug, (seen.get(p.slug) ?? 0) + 1)
