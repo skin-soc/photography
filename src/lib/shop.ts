@@ -54,6 +54,12 @@ export interface ShopPhoto {
   rawAvailable?: boolean
   /** Green-labelled in Lightroom — used as rotating hero on folder cards. */
   key?: boolean
+  /**
+   * Capture date from EXIF — seconds since Lightroom epoch (Jan 1, 2001 UTC),
+   * as written by the publish plugin. Used to sort photos chronologically.
+   * Absent on legacy catalog entries; treat 0 / undefined as unknown.
+   */
+  captureDate?: number
 }
 
 const ORIGIN = process.env.SHOP_ORIGIN_URL

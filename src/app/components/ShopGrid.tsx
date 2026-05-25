@@ -16,6 +16,8 @@ export interface GridPhoto {
   fromApprox: string
   category: string[][]
   key?: boolean
+  /** Seconds since Lightroom epoch (Jan 1 2001 UTC) — used for chronological sort. */
+  captureDate?: number
 }
 
 const TYPE_FILTERS: { key: ProductType; label: string }[] = [
@@ -172,6 +174,10 @@ export default function ShopGrid({
   const shown = photos
     .filter((p) => matchesCategory(p, categoryPath))
     .filter((p) => typeFilter === null || p.types.includes(typeFilter))
+    // Sort chronologically within a leaf collection. The plugin now writes
+    // catalog.json in capture-date order, but we sort here too as a fallback
+    // (covers mock data and any catalog written before this fix was deployed).
+    .sort((a, b) => (a.captureDate ?? 0) - (b.captureDate ?? 0))
 
   return (
     <>
