@@ -90,6 +90,11 @@
     "fineArt": "مطبوعات فنية",
     "digital": "تنزيلات رقمية",
     "priceNote": "الأسعار بالكرونة الدنماركية، شاملة ضريبة القيمة المضافة.",
-    "rawOnRequest": "ملف RAW — متوفر عند الطلب"
+    "rawOnRequest": "ملف RAW — متوفر عند الطلب",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }

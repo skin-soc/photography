@@ -90,6 +90,11 @@
     "fineArt": "Stampe d'arte",
     "digital": "Download digitali",
     "priceNote": "Prezzi in corone danesi, IVA inclusa.",
-    "rawOnRequest": "File RAW — disponibile su richiesta"
+    "rawOnRequest": "File RAW — disponibile su richiesta",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }

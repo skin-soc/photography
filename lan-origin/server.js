@@ -68,19 +68,27 @@ const DEFAULT_DIGITAL_TIERS = [
   { key: 'med', label: 'Medium',   longEdge: 3200, price: 29500 },
 ]
 
-/** Master — the true full-resolution original. Its price scales with the
- *  file's megapixels, so a medium-format master commands a real premium.
- *  First bracket whose maxMP the file is within sets the price. */
+/** Master (JPEG) price brackets — scales with megapixels. */
 const DEFAULT_MASTER_BRACKETS = [
-  { maxMP: 25, price: 150000 },
-  { maxMP: 50, price: 250000 },
-  { maxMP: Infinity, price: 400000 },
+  { maxMP: 25, price: 150000 },       // 1,500 DKK
+  { maxMP: 50, price: 250000 },       // 2,500 DKK
+  { maxMP: Infinity, price: 400000 }, // 4,000 DKK
 ]
+
+/** Original (16-bit TIFF) price brackets — approx 2× the JPEG Master. */
+const DEFAULT_TIFF_MASTER_BRACKETS = [
+  { maxMP: 25, price: 300000 },       // 3,000 DKK
+  { maxMP: 50, price: 500000 },       // 5,000 DKK
+  { maxMP: Infinity, price: 800000 }, // 8,000 DKK
+]
+
+/** Pro TIFF (3200px) flat price. */
+const TIFF_PRO_PRICE = 59500 // 595 DKK
 
 /** A sized tier is offered only when the original is this much larger. */
 const TIER_MARGIN = 1.15
 
-function masterPrice(w, h, brackets) {
+function bracketPrice(w, h, brackets) {
   const mp = (w * h) / 1_000_000
   for (const b of brackets) {
     if (mp <= b.maxMP) return b.price
@@ -88,31 +96,62 @@ function masterPrice(w, h, brackets) {
   return brackets[brackets.length - 1].price
 }
 
-/** Build the digital products a photo of (w × h) px can support: the sized
- *  tiers it is big enough for, plus the full-resolution Master. */
-function digitalProducts(id, w, h, tiers, brackets) {
+/**
+ * Build digital products for a photo of (w × h) px.
+ * JPEG: Standard (1600) → Medium (3200) → Master (full-res).
+ * TIFF (rawAvailable only): Pro (3200, after Medium) → Original (full-res, after Master).
+ */
+function digitalProducts(id, w, h, tiers, masterBrackets, tiffMasterBrackets, rawAvailable) {
   const long = Math.max(w, h)
   const out = []
   for (const tier of tiers) {
     if (long < tier.longEdge * TIER_MARGIN) continue
     const scale = tier.longEdge / long
+    const dims = { w: Math.round(w * scale), h: Math.round(h * scale) }
     out.push({
       sku: `${id}-d-${tier.key}`,
       type: 'digital',
       label: tier.label,
       price: tier.price,
       currency: 'DKK',
-      dimensions: { w: Math.round(w * scale), h: Math.round(h * scale) },
+      format: 'jpeg',
+      dimensions: dims,
     })
+    // Pro TIFF immediately after Medium (3200px tier)
+    if (rawAvailable && tier.key === 'med') {
+      out.push({
+        sku: `${id}-d-pro`,
+        type: 'digital',
+        label: 'Pro',
+        price: TIFF_PRO_PRICE,
+        currency: 'DKK',
+        format: 'tiff',
+        dimensions: dims,
+      })
+    }
   }
+  // Master JPEG — always offered
   out.push({
     sku: `${id}-d-master`,
     type: 'digital',
     label: 'Master',
-    price: masterPrice(w, h, brackets),
+    price: bracketPrice(w, h, masterBrackets),
     currency: 'DKK',
+    format: 'jpeg',
     dimensions: { w, h },
   })
+  // Original TIFF — only when rawAvailable
+  if (rawAvailable) {
+    out.push({
+      sku: `${id}-d-original`,
+      type: 'digital',
+      label: 'Original',
+      price: bracketPrice(w, h, tiffMasterBrackets),
+      currency: 'DKK',
+      format: 'tiff',
+      dimensions: { w, h },
+    })
+  }
   return out
 }
 
@@ -138,6 +177,7 @@ async function loadPricing() {
     printProducts: DEFAULT_PRINT_PRODUCTS,
     digitalTiers: DEFAULT_DIGITAL_TIERS,
     masterBrackets: DEFAULT_MASTER_BRACKETS,
+    tiffMasterBrackets: DEFAULT_TIFF_MASTER_BRACKETS,
   }
   try {
     const raw = JSON.parse(await readFile(PRODUCTS_PATH, 'utf8'))
@@ -154,6 +194,10 @@ async function loadPricing() {
         Array.isArray(raw.masterBrackets) && raw.masterBrackets.length > 0
           ? raw.masterBrackets
           : DEFAULT_MASTER_BRACKETS,
+      tiffMasterBrackets:
+        Array.isArray(raw.tiffMasterBrackets) && raw.tiffMasterBrackets.length > 0
+          ? raw.tiffMasterBrackets
+          : DEFAULT_TIFF_MASTER_BRACKETS,
     }
   } catch {
     return fallback
@@ -171,7 +215,7 @@ async function loadPricing() {
  */
 async function loadCatalog() {
   const raw = JSON.parse(await readFile(CATALOG_PATH, 'utf8'))
-  const { printProducts, digitalTiers, masterBrackets } = await loadPricing()
+  const { printProducts, digitalTiers, masterBrackets, tiffMasterBrackets } = await loadPricing()
 
   const photos = (raw.photos ?? []).map((p) => {
     const { offers, ...rest } = p
@@ -189,7 +233,7 @@ async function loadCatalog() {
       }))
 
     if (allowed.includes('digital')) {
-      products.push(...digitalProducts(p.id, p.width ?? 0, p.height ?? 0, digitalTiers, masterBrackets))
+      products.push(...digitalProducts(p.id, p.width ?? 0, p.height ?? 0, digitalTiers, masterBrackets, tiffMasterBrackets, p.rawAvailable ?? false))
     }
 
     return { ...rest, previewUrl: `${PUBLIC_URL}/preview/${p.id}`, products }

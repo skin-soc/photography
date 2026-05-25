@@ -90,6 +90,11 @@
     "fineArt": "Fine Art",
     "digital": "Digital Downloads",
     "priceNote": "Prices in Danish kroner, VAT included.",
-    "rawOnRequest": "RAW file — available on request"
+    "rawOnRequest": "RAW file — request original",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }

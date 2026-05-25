@@ -90,6 +90,11 @@
     "fineArt": "Kunstdrucke",
     "digital": "Digitale Downloads",
     "priceNote": "Preise in dänischen Kronen, inkl. MwSt.",
-    "rawOnRequest": "RAW-Datei — auf Anfrage erhältlich"
+    "rawOnRequest": "RAW-Datei — auf Anfrage erhältlich",
+    "rawRequestTitle": "Request RAW file",
+    "rawRequestSend": "Send request",
+    "rawRequestSending": "Sending…",
+    "rawRequestSuccess": "Request sent — I'll be in touch shortly.",
+    "rawRequestError": "Something went wrong. Please try again."
   }
 }
