@@ -150,9 +150,9 @@ export default async function ShopItem({
       )}
 
       <div className="mt-8 grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
-        <div className="bg-white/5 select-none w-fit max-w-[480px]">
+        <div className="bg-white/5 select-none w-fit max-w-[800px]">
           <img
-            src={`${photo.previewUrl}?max=480`}
+            src={`${photo.previewUrl}?max=800`}
             alt={`${photo.title} — ${photo.location}`}
             width={photo.width}
             height={photo.height}

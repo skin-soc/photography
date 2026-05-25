@@ -46,7 +46,7 @@ const PREVIEWS_DIR = resolve(process.env.PREVIEWS_DIR ?? join(DATA_DIR, 'preview
 const CACHE_DIR = resolve(process.env.CACHE_DIR ?? join(DATA_DIR, 'preview-cache'))
 const PRODUCTS_PATH = resolve(process.env.PRODUCTS_PATH ?? join(DATA_DIR, 'products.json'))
 const PUBLIC_URL = (process.env.PUBLIC_URL ?? '').replace(/\/$/, '')
-const PREVIEW_MAX = Number(process.env.PREVIEW_MAX ?? 480)
+const PREVIEW_MAX = Number(process.env.PREVIEW_MAX ?? 800)
 const SHARED_SECRET = process.env.SHARED_SECRET ?? ''
 
 // Pricing — prices in øre (DKK minor units): 19500 øre = 195 kr.
@@ -211,10 +211,11 @@ app.get('/catalog.json', async (_req, res) => {
   }
 })
 
+const GMP_PATH      = new URL('./gmp.png',  import.meta.url).pathname
 const LOGO_SVG_PATH = new URL('./logo.svg', import.meta.url).pathname
 
 /** Logo longest edge in pixels. Tune via env if needed. */
-const LOGO_SIZE   = Number(process.env.LOGO_SIZE   ?? 50)
+const LOGO_SIZE   = Number(process.env.LOGO_SIZE   ?? 25)
 /** Gap between logo and image edge in pixels. */
 const LOGO_MARGIN = Number(process.env.LOGO_MARGIN ?? 14)
 
@@ -303,10 +304,13 @@ app.get('/preview/:id', async (req, res) => {
       .resize(max, max, { fit: 'inside', withoutEnlargement: true })
       .toBuffer({ resolveWithObject: true })
 
-    const composites = await buildWatermarkComposites(resizeInfo.width, resizeInfo.height)
+    const logoComposites = await buildWatermarkComposites(resizeInfo.width, resizeInfo.height)
 
     await sharp(resizedBuf)
-      .composite(composites)
+      .composite([
+        { input: GMP_PATH, tile: true, blend: 'over' },  // mesh layer
+        ...logoComposites,                                 // shadow + logo on top
+      ])
       .jpeg({ quality: 82, mozjpeg: true })
       .toFile(cached)
 
