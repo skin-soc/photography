@@ -64,18 +64,17 @@ const DEFAULT_PRINT_PRODUCTS = [
  *  camera shot it, so flat-priced. A tier is only offered when the original
  *  is genuinely larger (never upscaled). */
 const DEFAULT_DIGITAL_TIERS = [
-  { key: 'std', label: 'Standard', longEdge: 2048, price: 14500 },
-  { key: 'med', label: 'Medium', longEdge: 4096, price: 24500 },
-  { key: 'lrg', label: 'Large', longEdge: 6144, price: 39500 },
+  { key: 'std', label: 'Standard', longEdge: 1600, price: 9900  },
+  { key: 'med', label: 'Medium',   longEdge: 3200, price: 29500 },
 ]
 
 /** Master — the true full-resolution original. Its price scales with the
  *  file's megapixels, so a medium-format master commands a real premium.
  *  First bracket whose maxMP the file is within sets the price. */
 const DEFAULT_MASTER_BRACKETS = [
-  { maxMP: 40, price: 120000 },
-  { maxMP: 80, price: 240000 },
-  { maxMP: Infinity, price: 450000 },
+  { maxMP: 25, price: 150000 },
+  { maxMP: 50, price: 250000 },
+  { maxMP: Infinity, price: 400000 },
 ]
 
 /** A sized tier is offered only when the original is this much larger. */

@@ -157,8 +157,8 @@ export default async function ShopItem({
         </Link>
       )}
 
-      <div className="mt-8 grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
-        <div className="bg-white/5 select-none w-fit" style={{ maxWidth: previewW }}>
+      <div className="mt-8 flex flex-col md:flex-row gap-8 items-start">
+        <div className="bg-white/5 select-none shrink-0" style={{ maxWidth: previewW, width: '100%' }}>
           <img
             src={`${photo.previewUrl}?max=800`}
             srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
@@ -171,7 +171,7 @@ export default async function ShopItem({
           />
         </div>
 
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-4xl md:text-5xl font-light leading-tight">
             {photo.title}
           </h1>

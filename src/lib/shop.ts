@@ -75,9 +75,8 @@ interface SizedTier {
   price: number
 }
 const DIGITAL_SIZED_TIERS: SizedTier[] = [
-  { key: 'std', label: 'Standard', longEdge: 2048, price: 14500 },
-  { key: 'med', label: 'Medium', longEdge: 4096, price: 24500 },
-  { key: 'lrg', label: 'Large', longEdge: 6144, price: 39500 },
+  { key: 'std', label: 'Standard', longEdge: 1600, price: 9900  },
+  { key: 'med', label: 'Medium',   longEdge: 3200, price: 29500 },
 ]
 /** A sized tier is only offered when the original is at least this much
  *  larger than the tier — otherwise it is barely distinct from the Master. */
@@ -91,9 +90,9 @@ interface MasterBracket {
   price: number
 }
 const MASTER_BRACKETS: MasterBracket[] = [
-  { maxMP: 40, price: 120000 },
-  { maxMP: 80, price: 240000 },
-  { maxMP: Infinity, price: 450000 },
+  { maxMP: 25, price: 150000 },
+  { maxMP: 50, price: 250000 },
+  { maxMP: Infinity, price: 400000 },
 ]
 
 function masterPrice(w: number, h: number): number {
