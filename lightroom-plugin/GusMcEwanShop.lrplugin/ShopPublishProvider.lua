@@ -219,6 +219,10 @@ local function writeCatalog(publishService, dataDir)
             -- names like "Green" or "green" both work.
             local labelText = (photo:getFormattedMetadata('label') or ''):lower()
             entry.key = (labelText == 'green')
+            -- Capture date as seconds since LrDate epoch (Jan 1, 2001 UTC).
+            -- Used by the shop frontend to sort photos chronologically within
+            -- a collection. Falls back to 0 if EXIF data is absent.
+            entry.captureDate = photo:getRawMetadata('dateTimeOriginal') or 0
             entry._filled = true
             if not isRaw then entry._metaFromJpeg = true end
           end
@@ -257,6 +261,12 @@ local function writeCatalog(publishService, dataDir)
       entry.slug = entry.slug .. '-' .. idSlug
     end
   end
+
+  -- Sort all photos by capture date so collections display chronologically
+  -- regardless of how Lightroom's internal collection order is set.
+  table.sort(order, function(a, b)
+    return (byId[a].captureDate or 0) < (byId[b].captureDate or 0)
+  end)
 
   local photos = {}
   for _, id in ipairs(order) do

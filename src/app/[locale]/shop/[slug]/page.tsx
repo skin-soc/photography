@@ -13,11 +13,12 @@ type Params = Promise<{ locale: string; slug: string }>
 type SearchParams = Promise<{ from?: string }>
 
 function ProductBreadcrumb({ path, title }: { path: string[]; title: string }) {
-  const parentPath = path.slice(0, -1)
-  const parentLabel = parentPath.length === 0 ? 'Browse' : parentPath[parentPath.length - 1]
-  const parentHref = parentPath.length === 0
+  // The back button returns to exactly where the user came from — the leaf
+  // collection they were browsing. The breadcrumb links cover parent navigation.
+  const backHref = path.length === 0
     ? '/shop'
-    : `/shop?cat=${encodeURIComponent(parentPath.join('|'))}`
+    : `/shop?cat=${encodeURIComponent(path.join('|'))}`
+  const backLabel = path.length === 0 ? 'Browse' : path[path.length - 1]
 
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
@@ -38,10 +39,10 @@ function ProductBreadcrumb({ path, title }: { path: string[]; title: string }) {
         </span>
       </div>
       <Link
-        href={parentHref}
+        href={backHref}
         className="text-[#931020] hover:text-[#b01226] transition-colors shrink-0 ml-4"
       >
-        ← {parentLabel}
+        ← {backLabel}
       </Link>
     </nav>
   )
