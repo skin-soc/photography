@@ -214,7 +214,7 @@ app.get('/catalog.json', async (_req, res) => {
 const LOGO_SVG_PATH = new URL('./logo.svg', import.meta.url).pathname
 
 /** Logo longest edge in pixels. Tune via env if needed. */
-const LOGO_SIZE   = Number(process.env.LOGO_SIZE   ?? 80)
+const LOGO_SIZE   = Number(process.env.LOGO_SIZE   ?? 50)
 /** Gap between logo and image edge in pixels. */
 const LOGO_MARGIN = Number(process.env.LOGO_MARGIN ?? 14)
 
@@ -237,12 +237,18 @@ async function buildWatermarkComposites(imgW, imgH) {
   const logoSvgRaw = await getLogoSvg()
 
   // Rasterise the SVG at LOGO_SIZE × LOGO_SIZE, 95% opacity.
+  // Rasterise at 2× then resize to target — gives much sharper anti-aliasing
+  // than rendering directly at the small target size (librsvg at 72 DPI).
+  const render = LOGO_SIZE * 2
   const svg = logoSvgRaw
-    .replace('width="20000"',  `width="${LOGO_SIZE}"`)
-    .replace('height="20000"', `height="${LOGO_SIZE}"`)
+    .replace('width="20000"',  `width="${render}"`)
+    .replace('height="20000"', `height="${render}"`)
     .replace('<svg',           '<svg opacity="0.95"')
 
-  const logoBuf = await sharp(Buffer.from(svg)).png().toBuffer()
+  const logoBuf = await sharp(Buffer.from(svg))
+    .resize(LOGO_SIZE, LOGO_SIZE, { fit: 'inside', kernel: 'lanczos3' })
+    .png()
+    .toBuffer()
   const { width: lw, height: lh } = await sharp(logoBuf).metadata()
 
   // Drop-shadow: black silhouette (recomb zeros R/G/B, alpha unchanged) → blur.
