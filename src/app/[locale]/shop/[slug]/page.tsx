@@ -130,6 +130,17 @@ export default async function ShopItem({
     })),
   }
 
+  // Calculate actual preview dimensions (longest edge capped at 800px).
+  // width/height on <img> must match CSS display size so the browser
+  // reserves the correct layout space before the image loads.
+  const PMAX = 800
+  const scale = Math.min(PMAX / photo.width, PMAX / photo.height, 1)
+  const previewW = Math.round(photo.width  * scale)
+  const previewH = Math.round(photo.height * scale)
+  // Display at half pixel count → 2× density on Retina, 1× on standard.
+  const displayW = Math.round(previewW / 2)
+  const displayH = Math.round(previewH / 2)
+
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
       <script
@@ -150,14 +161,15 @@ export default async function ShopItem({
       )}
 
       <div className="mt-8 grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
-        <div className="bg-white/5 select-none w-fit max-w-[800px]">
+        <div className="bg-white/5 select-none w-fit" style={{ maxWidth: displayW }}>
           <img
-            src={`${photo.previewUrl}?max=800`}
+            src={`${photo.previewUrl}?max=400`}
+            srcSet={`${photo.previewUrl}?max=400 1x, ${photo.previewUrl}?max=800 2x`}
             alt={`${photo.title} — ${photo.location}`}
-            width={photo.width}
-            height={photo.height}
+            width={displayW}
+            height={displayH}
             draggable={false}
-            className="block max-w-full h-auto pointer-events-none"
+            className="block w-full h-auto pointer-events-none"
           />
         </div>
 
