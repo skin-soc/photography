@@ -162,8 +162,8 @@ export default async function ShopItem({
 
       <div className="mt-10 flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
 
-        {/* Photo — 5px white frame */}
-        <div className="select-none shrink-0 border-[5px] border-white" style={{ maxWidth: previewW, width: '100%' }}>
+        {/* Photo — 21px white frame */}
+        <div className="select-none shrink-0 border-[21px] border-white" style={{ maxWidth: previewW, width: '100%' }}>
           <img
             src={`${photo.previewUrl}?max=800`}
             srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}

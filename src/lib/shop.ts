@@ -14,7 +14,14 @@
  * offered when the original is genuinely larger than it (never upscaled).
  */
 
+import { createHmac } from 'node:crypto'
+
 export type ProductType = 'digital' | 'print' | 'fine-art'
+
+/** Mirror of server.js productToken — same algorithm, 'dev' key for mock data. */
+function mockToken(sku: string): string {
+  return 'GMP-' + createHmac('sha256', 'dev').update(sku).digest('hex').slice(0, 7).toUpperCase()
+}
 
 export interface ShopProduct {
   sku: string
@@ -29,6 +36,12 @@ export interface ShopProduct {
   printSize?: { w: number; h: number }
   /** File format for digital downloads. Absent on print/fine-art products. */
   format?: 'jpeg' | 'tiff'
+  /**
+   * HMAC-SHA256 download token — format GMP-XXXXXXX (7 uppercase hex chars).
+   * Set on digital products by the LAN origin. Used as the customer-facing
+   * filename (GMP-XXXXXXX.jpg / .tiff) and verified stateless at download time.
+   */
+  downloadToken?: string
 }
 
 export interface ShopPhoto {
@@ -119,11 +132,13 @@ export function digitalProducts(id: string, w: number, h: number, rawAvailable =
 
   // Standard — JPEG 1600px
   if (long >= 1600 * TIER_MARGIN) {
+    const sku = `${id}-d-std`
     const scale = 1600 / long
     out.push({
-      sku: `${id}-d-std`, type: 'digital', label: 'Standard',
+      sku, type: 'digital', label: 'Standard',
       price: 9900, currency: 'DKK', format: 'jpeg',
       dimensions: { w: Math.round(w * scale), h: Math.round(h * scale) },
+      downloadToken: mockToken(sku),
     })
   }
 
@@ -131,25 +146,31 @@ export function digitalProducts(id: string, w: number, h: number, rawAvailable =
   if (long >= 3200 * TIER_MARGIN) {
     const scale = 3200 / long
     const dims = { w: Math.round(w * scale), h: Math.round(h * scale) }
-    out.push({ sku: `${id}-d-med`, type: 'digital', label: 'Medium', price: 29500, currency: 'DKK', format: 'jpeg', dimensions: dims })
+    const medSku = `${id}-d-med`
+    out.push({ sku: medSku, type: 'digital', label: 'Medium', price: 29500, currency: 'DKK', format: 'jpeg', dimensions: dims, downloadToken: mockToken(medSku) })
     if (rawAvailable) {
-      out.push({ sku: `${id}-d-pro`, type: 'digital', label: 'Pro', price: 59500, currency: 'DKK', format: 'tiff', dimensions: dims })
+      const proSku = `${id}-d-pro`
+      out.push({ sku: proSku, type: 'digital', label: 'Pro', price: 59500, currency: 'DKK', format: 'tiff', dimensions: dims, downloadToken: mockToken(proSku) })
     }
   }
 
   // Master — JPEG full-res (always offered)
+  const masterSku = `${id}-d-master`
   out.push({
-    sku: `${id}-d-master`, type: 'digital', label: 'Master',
+    sku: masterSku, type: 'digital', label: 'Master',
     price: bracketPrice(w, h, MASTER_BRACKETS), currency: 'DKK', format: 'jpeg',
     dimensions: { w, h },
+    downloadToken: mockToken(masterSku),
   })
 
   // Original — 16-bit TIFF full-res (only when rawAvailable)
   if (rawAvailable) {
+    const origSku = `${id}-d-original`
     out.push({
-      sku: `${id}-d-original`, type: 'digital', label: 'Original',
+      sku: origSku, type: 'digital', label: 'Original',
       price: bracketPrice(w, h, TIFF_MASTER_BRACKETS), currency: 'DKK', format: 'tiff',
       dimensions: { w, h },
+      downloadToken: mockToken(origSku),
     })
   }
 

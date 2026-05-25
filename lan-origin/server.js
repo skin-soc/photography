@@ -35,6 +35,7 @@
 
 import express from 'express'
 import sharp from 'sharp'
+import { createHmac } from 'node:crypto'
 import { readFile, mkdir, stat } from 'node:fs/promises'
 import { createReadStream } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -48,6 +49,23 @@ const PRODUCTS_PATH = resolve(process.env.PRODUCTS_PATH ?? join(DATA_DIR, 'produ
 const PUBLIC_URL = (process.env.PUBLIC_URL ?? '').replace(/\/$/, '')
 const PREVIEW_MAX = Number(process.env.PREVIEW_MAX ?? 800)
 const SHARED_SECRET = process.env.SHARED_SECRET ?? ''
+
+/**
+ * Derive a stable, customer-facing download token for a digital product SKU.
+ * Format: GMP-XXXXXXX  (7 uppercase hex chars from HMAC-SHA256).
+ *
+ * Stateless — the server recomputes this at download-request time and
+ * compares; no database entry is needed to verify authenticity.
+ * Falls back to a plain SHA-256 in dev when SHARED_SECRET is unset.
+ */
+function productToken(sku) {
+  const key = SHARED_SECRET || 'dev'
+  return 'GMP-' + createHmac('sha256', key)
+    .update(sku)
+    .digest('hex')
+    .slice(0, 7)
+    .toUpperCase()
+}
 
 // Pricing — prices in øre (DKK minor units): 19500 øre = 195 kr.
 // <DATA_DIR>/products.json may override printProducts / digitalTiers / masterBrackets.
@@ -108,48 +126,56 @@ function digitalProducts(id, w, h, tiers, masterBrackets, tiffMasterBrackets, ra
     if (long < tier.longEdge * TIER_MARGIN) continue
     const scale = tier.longEdge / long
     const dims = { w: Math.round(w * scale), h: Math.round(h * scale) }
+    const sku = `${id}-d-${tier.key}`
     out.push({
-      sku: `${id}-d-${tier.key}`,
+      sku,
       type: 'digital',
       label: tier.label,
       price: tier.price,
       currency: 'DKK',
       format: 'jpeg',
       dimensions: dims,
+      downloadToken: productToken(sku),
     })
     // Pro TIFF immediately after Medium (3200px tier)
     if (rawAvailable && tier.key === 'med') {
+      const proSku = `${id}-d-pro`
       out.push({
-        sku: `${id}-d-pro`,
+        sku: proSku,
         type: 'digital',
         label: 'Pro',
         price: TIFF_PRO_PRICE,
         currency: 'DKK',
         format: 'tiff',
         dimensions: dims,
+        downloadToken: productToken(proSku),
       })
     }
   }
   // Master JPEG — always offered
+  const masterSku = `${id}-d-master`
   out.push({
-    sku: `${id}-d-master`,
+    sku: masterSku,
     type: 'digital',
     label: 'Master',
     price: bracketPrice(w, h, masterBrackets),
     currency: 'DKK',
     format: 'jpeg',
     dimensions: { w, h },
+    downloadToken: productToken(masterSku),
   })
   // Original TIFF — only when rawAvailable
   if (rawAvailable) {
+    const origSku = `${id}-d-original`
     out.push({
-      sku: `${id}-d-original`,
+      sku: origSku,
       type: 'digital',
       label: 'Original',
       price: bracketPrice(w, h, tiffMasterBrackets),
       currency: 'DKK',
       format: 'tiff',
       dimensions: { w, h },
+      downloadToken: productToken(origSku),
     })
   }
   return out
@@ -302,9 +328,9 @@ async function buildWatermarkComposites(imgW, imgH) {
   // Bottom-right corner with margin.
   const logoLeft   = imgW - lw - LOGO_MARGIN
   const logoTop    = imgH - lh - LOGO_MARGIN
-  // Shadow sits exactly 2 px right and 2 px down — hard sunlight offset.
-  const shadowLeft = logoLeft + 2
-  const shadowTop  = logoTop  + 2
+  // Shadow: 1 px right, 1 px down — 45° SE, never exceeds 1 px spread.
+  const shadowLeft = logoLeft + 1
+  const shadowTop  = logoTop  + 1
 
   return [
     { input: shadowBuf, left: shadowLeft, top: shadowTop, blend: 'over' },
