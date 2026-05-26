@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Link } from '@/i18n/navigation'
-import { getPhoto, productSpec } from '@/lib/shop'
+import { getPhoto, productSpec, displayTitle, productLicense } from '@/lib/shop'
 import type { ProductType } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '../../../components/ShopProductPicker'
+import LicensingLink from '../../../components/LicensingLink'
 import { SITE_URL, BUSINESS_NAME, OG_LOCALE_MAP } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
 
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const photo = await getPhoto(slug)
   if (!photo) return {}
 
-  const title = `${photo.title} — ${photo.location}`
+  const title = `${displayTitle(photo)} — ${photo.location}`
   const description = `${photo.caption} Available as prints, fine art editions and digital downloads by ${BUSINESS_NAME}.`
   const canonical = localizedShopUrl(locale, slug)
   const languages: Record<string, string> = {}
@@ -98,6 +99,16 @@ export default async function ShopItem({
   const t = await getTranslations({ locale, namespace: 'shop' })
   const rates = await getRates()
 
+  // Derive the public-event name from the category path, e.g.
+  // ["Events","Denmark","Copenhagen","Pride 2013"] → "Copenhagen Pride 2013"
+  // Only shown when the photo is categorised under Events.
+  const eventPath = photo.category.find((path) => path[0] === 'Events')
+  const eventName = eventPath && eventPath.length >= 2
+    ? eventPath.length >= 4
+      ? `${eventPath[eventPath.length - 2]} ${eventPath[eventPath.length - 1]}`
+      : eventPath[eventPath.length - 1]
+    : null
+
   const pickerProducts: PickerProduct[] = photo.products.map((p) => ({
     sku: p.sku,
     type: p.type,
@@ -107,6 +118,8 @@ export default async function ShopItem({
     priceText: formatDKK(p.price),
     approxText: approxLine(p.price, rates),
     format: p.format,
+    downloadToken: p.downloadToken,
+    license: productLicense(p),
   }))
 
   const schemaTypeName: Record<ProductType, string> = {
@@ -117,7 +130,7 @@ export default async function ShopItem({
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `${photo.title} — ${photo.location}`,
+    name: `${displayTitle(photo)} — ${photo.location}`,
     description: photo.caption,
     image: photo.previewUrl.startsWith('http')
       ? photo.previewUrl
@@ -150,7 +163,7 @@ export default async function ShopItem({
       />
 
       {fromPath.length > 0 ? (
-        <ProductBreadcrumb path={fromPath} title={photo.title} />
+        <ProductBreadcrumb path={fromPath} title={displayTitle(photo)} />
       ) : (
         <Link
           href="/shop"
@@ -162,13 +175,13 @@ export default async function ShopItem({
 
       <div className="mt-10 flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
 
-        {/* Photo — 5px white frame */}
-        <div className="select-none shrink-0 border-[5px] border-white" style={{ maxWidth: previewW, width: '100%' }}>
+        {/* Photo — 21px white frame */}
+        <div className="select-none shrink-0 border-[21px] border-white" style={{ maxWidth: previewW, width: '100%' }}>
           <img
             src={`${photo.previewUrl}?max=800`}
             srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
             sizes={`${previewW}px`}
-            alt={`${photo.title} — ${photo.location}`}
+            alt={`${displayTitle(photo)} — ${photo.location}`}
             width={previewW}
             height={previewH}
             draggable={false}
@@ -184,9 +197,9 @@ export default async function ShopItem({
             {photo.location}
           </p>
 
-          {/* Title — Cormorant Garamond for a fine-art premium feel */}
-          <h1 className="mt-2 text-5xl md:text-6xl font-light leading-[1.1]">
-            {photo.title}
+          {/* Title — IBM Plex Mono, ultra-light, accent colour */}
+          <h1 className="mt-2 text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
+            {displayTitle(photo)}
           </h1>
 
           {/* Thin rule */}
@@ -200,10 +213,25 @@ export default async function ShopItem({
           {/* Separator before product picker */}
           <div className="mt-8 h-px bg-white/[0.06]" />
 
+          {/* Public-event licensing context note */}
+          {eventName && (
+            <p className="mt-5 pl-3 border-l border-white/[0.08] text-[11px] font-light leading-relaxed text-white/30">
+              {t.rich('licensingNotePublicEvent', {
+                event: eventName,
+                // TODO: replace href with /shop/licensing once that page exists
+                link: (chunks) => (
+                  <LicensingLink>
+                    {chunks}
+                  </LicensingLink>
+                ),
+              })}
+            </p>
+          )}
+
           <ShopProductPicker
             products={pickerProducts}
             rawAvailable={photo.rawAvailable ?? false}
-            photoTitle={photo.title}
+            photoTitle={displayTitle(photo)}
           />
         </div>
       </div>
