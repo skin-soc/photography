@@ -163,10 +163,16 @@ export default function ShopProductPicker({
   products,
   rawAvailable = false,
   photoTitle = '',
+  location,
+  caption,
+  licenseNote,
 }: {
   products: PickerProduct[]
   rawAvailable?: boolean
   photoTitle?: string
+  location?: string
+  caption?: string
+  licenseNote?: React.ReactNode
 }) {
   const t = useTranslations('shop')
 
@@ -216,15 +222,36 @@ export default function ShopProductPicker({
   })).filter((g) => g.items.length > 0)
 
   return (
-    <div className="mt-7">
+    <div className="mt-[9px]">
       {rawModalOpen && (
         <RawRequestModal photoTitle={photoTitle} onClose={() => setRawModalOpen(false)} />
       )}
 
       <div className="space-y-4">
-        {groups.map((g) => (
+        {groups.map((g, groupIndex) => (
           <div key={g.type} className="overflow-hidden rounded-[20px] border border-white/10">
-            {/* Shaded header */}
+
+            {/* Title section — rendered inside the first card only */}
+            {groupIndex === 0 && (
+              <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
+                {location && (
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-accent/80 mb-1.5">
+                    {location}
+                  </p>
+                )}
+                <h1 className="mt-[9px] text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
+                  {photoTitle}
+                </h1>
+                {caption && (
+                  <p className="mt-4 text-[15px] font-light italic text-white/50 leading-relaxed">
+                    {caption}
+                  </p>
+                )}
+                {licenseNote}
+              </div>
+            )}
+
+            {/* Shaded type header */}
             <div className="bg-white/[0.07] px-5 py-2.5">
               <h2 className="text-[12px] font-light tracking-[0.2em] uppercase text-accent">
                 {typeLabel[g.type]}
@@ -252,11 +279,11 @@ export default function ShopProductPicker({
                     {/* Radio indicator */}
                     <span className="flex h-[22px] shrink-0 items-center">
                       <span
-                        className={`grid h-3.5 w-3.5 place-items-center rounded-full border transition-colors ${
+                        className={`grid h-3.5 w-3.5 place-items-center rounded-[3px] border transition-colors ${
                           on ? 'border-accent bg-accent' : 'border-white/35'
                         }`}
                       >
-                        {on && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                        {on && <span className="h-1.5 w-1.5 rounded-[1px] bg-white" />}
                       </span>
                     </span>
 

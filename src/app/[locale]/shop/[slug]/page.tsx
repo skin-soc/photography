@@ -189,45 +189,22 @@ export default async function ShopItem({
           />
         </div>
 
-        {/* Info column */}
-        <div className="min-w-0 flex-1 flex flex-col">
-
-          {/* Title — IBM Plex Mono, ultra-light, accent colour.
-               mt-[9px] compensates for the font's ascender overflow above the line box
-               so the visual cap line lands flush with the top of the photo frame. */}
-          <h1 className="mt-[9px] text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
-            {displayTitle(photo)}
-          </h1>
-
-          {/* Location label — accent colour, editorial subtitle under the title */}
-          <p className="mt-2 text-[10px] tracking-[0.3em] uppercase text-accent/80">
-            {photo.location}
-          </p>
-
-          {/* Caption — editorial, italic */}
-          <p className="mt-6 text-[15px] font-light italic text-white/50 leading-relaxed">
-            {photo.caption}
-          </p>
-
-          {/* Public-event licensing context note */}
-          {eventName && (
-            <p className="mt-5 text-[11px] font-light leading-relaxed text-white/30">
-              {t.rich('licensingNotePublicEvent', {
-                event: eventName,
-                // TODO: replace href with /shop/licensing once that page exists
-                link: (chunks) => (
-                  <LicensingLink>
-                    {chunks}
-                  </LicensingLink>
-                ),
-              })}
-            </p>
-          )}
-
+        {/* Info column — title/caption/license now live inside the first picker card */}
+        <div className="min-w-0 flex-1">
           <ShopProductPicker
             products={pickerProducts}
             rawAvailable={photo.rawAvailable ?? false}
             photoTitle={displayTitle(photo)}
+            location={photo.location}
+            caption={photo.caption}
+            licenseNote={eventName ? (
+              <p className="mt-4 text-[11px] font-light leading-relaxed text-white/30">
+                {t.rich('licensingNotePublicEvent', {
+                  event: eventName,
+                  link: (chunks) => <LicensingLink>{chunks}</LicensingLink>,
+                })}
+              </p>
+            ) : undefined}
           />
         </div>
       </div>
