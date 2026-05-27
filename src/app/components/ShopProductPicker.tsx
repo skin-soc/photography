@@ -239,7 +239,7 @@ export default function ShopProductPicker({
                     {location}
                   </p>
                 )}
-                <h1 className="mt-[9px] text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
+                <h1 className="mt-[9px] text-4xl sm:text-5xl lg:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
                   {photoTitle}
                 </h1>
                 {caption && (
@@ -306,7 +306,7 @@ export default function ShopProductPicker({
 
                       {/* Download token */}
                       {p.downloadToken && (
-                        <span className="mt-1 block font-mono-ibm text-[11px] tracking-wide text-white/30">
+                        <span className="mt-1 block truncate font-mono-ibm text-[11px] tracking-wide text-white/30">
                           {p.downloadToken}.{p.format === 'tiff' ? 'tiff' : 'jpg'}
                         </span>
                       )}

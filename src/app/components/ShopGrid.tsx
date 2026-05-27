@@ -116,7 +116,7 @@ function Breadcrumb({
   const parentLabel = parentPath.length === 0 ? 'Browse' : parentPath[parentPath.length - 1]
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
-      <div className="flex items-center gap-2 text-white/40">
+      <div className="hidden sm:flex items-center gap-2 text-white/40">
         <button onClick={() => onNavigate([])} className="hover:text-white transition-colors">
           Browse
         </button>

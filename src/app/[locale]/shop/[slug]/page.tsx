@@ -23,7 +23,7 @@ function ProductBreadcrumb({ path, title }: { path: string[]; title: string }) {
 
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
-      <div className="flex items-center gap-2 text-white/40 min-w-0">
+      <div className="hidden sm:flex items-center gap-2 text-white/40 min-w-0">
         <Link href="/shop" className="hover:text-white transition-colors shrink-0">Browse</Link>
         {path.map((seg, i) => {
           const segHref = `/shop?cat=${encodeURIComponent(path.slice(0, i + 1).join('|'))}`

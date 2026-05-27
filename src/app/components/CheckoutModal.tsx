@@ -11,9 +11,9 @@ import { useState } from 'react'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
-const STRIPE_APPEARANCE: Parameters<typeof Elements>[0]['options'] = {
+const STRIPE_APPEARANCE = {
   appearance: {
-    theme: 'night',
+    theme: 'night' as const,
     variables: {
       colorPrimary: '#931020',
       colorBackground: '#111111',
@@ -139,13 +139,13 @@ export default function CheckoutModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       style={{ backgroundColor: 'rgba(0,0,0,0.82)' }}
       onClick={onClose}
     >
       <div
-        className="relative w-full rounded-[20px] border border-white/10"
-        style={{ maxWidth: '440px', margin: '0 16px', backgroundColor: '#0c0c0c', padding: '28px 28px 24px' }}
+        className="relative w-full sm:max-w-[440px] sm:mx-4 rounded-t-[24px] sm:rounded-[20px] border border-white/10"
+        style={{ backgroundColor: '#0c0c0c', padding: '28px 28px 24px', maxHeight: '90dvh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
