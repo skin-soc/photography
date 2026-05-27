@@ -168,8 +168,9 @@ export default function ShopGrid({
     return node
   })()
 
-  const subCategories: CategoryNode[] =
+  const subCategories: CategoryNode[] = (
     categoryPath.length === 0 ? categoryTree : (currentNode?.children ?? [])
+  ).slice().sort((a, b) => a.name.localeCompare(b.name))
 
   const shown = photos
     .filter((p) => matchesCategory(p, categoryPath))

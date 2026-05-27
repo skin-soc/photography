@@ -4,6 +4,8 @@
 
 :root {
   --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-mono-ibm: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-mono-space: 'Space Mono', ui-monospace, monospace;
 }
 
 /* Brand default font — matches the About page. This is the site-wide
@@ -25,6 +27,57 @@ body {
 
 .font-serif {
   font-family: var(--font-serif);
+}
+
+.font-mono-ibm {
+  font-family: var(--font-mono-ibm);
+}
+
+.font-mono-space {
+  font-family: var(--font-mono-space);
+}
+
+/* ── Shop loading spinner ─────────────────────────────────────────────────── */
+.shop-spinner {
+  transform: rotateZ(45deg);
+  perspective: 1000px;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  position: relative;
+}
+.shop-spinner::before,
+.shop-spinner::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: inherit;
+  height: inherit;
+  border-radius: 50%;
+  animation: shop-spin 1s linear infinite;
+}
+.shop-spinner::before {
+  transform: rotateX(70deg);
+  color: #fff;
+}
+.shop-spinner::after {
+  color: #931020;
+  transform: rotateY(70deg);
+  animation-delay: 0.4s;
+}
+@keyframes shop-spin {
+  0%,
+  100% { box-shadow: .2em 0px 0 0px currentcolor; }
+  12%  { box-shadow: .2em .2em 0 0 currentcolor; }
+  25%  { box-shadow: 0 .2em 0 0px currentcolor; }
+  37%  { box-shadow: -.2em .2em 0 0 currentcolor; }
+  50%  { box-shadow: -.2em 0 0 0 currentcolor; }
+  62%  { box-shadow: -.2em -.2em 0 0 currentcolor; }
+  75%  { box-shadow: 0px -.2em 0 0 currentcolor; }
+  87%  { box-shadow: .2em -.2em 0 0 currentcolor; }
 }
 
 input::placeholder, textarea::placeholder {

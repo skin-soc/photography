@@ -192,30 +192,26 @@ export default async function ShopItem({
         {/* Info column */}
         <div className="min-w-0 flex-1">
 
-          {/* Location label — accent colour, set the place before the title */}
-          <p className="text-[10px] tracking-[0.3em] uppercase text-accent/80">
-            {photo.location}
-          </p>
-
-          {/* Title — IBM Plex Mono, ultra-light, accent colour */}
-          <h1 className="mt-2 text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
+          {/* Title — IBM Plex Mono, ultra-light, accent colour.
+               mt-[9px] compensates for the font's ascender overflow above the line box
+               so the visual cap line lands flush with the top of the photo frame. */}
+          <h1 className="mt-[9px] text-5xl md:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
             {displayTitle(photo)}
           </h1>
 
-          {/* Thin rule */}
-          <div className="mt-6 h-px bg-white/[0.10]" />
+          {/* Location label — accent colour, editorial subtitle under the title */}
+          <p className="mt-2 text-[10px] tracking-[0.3em] uppercase text-accent/80">
+            {photo.location}
+          </p>
 
           {/* Caption — editorial, italic */}
           <p className="mt-6 text-[15px] font-light italic text-white/50 leading-relaxed">
             {photo.caption}
           </p>
 
-          {/* Separator before product picker */}
-          <div className="mt-8 h-px bg-white/[0.06]" />
-
           {/* Public-event licensing context note */}
           {eventName && (
-            <p className="mt-5 pl-3 border-l border-white/[0.08] text-[11px] font-light leading-relaxed text-white/30">
+            <p className="mt-5 text-[11px] font-light leading-relaxed text-white/30">
               {t.rich('licensingNotePublicEvent', {
                 event: eventName,
                 // TODO: replace href with /shop/licensing once that page exists
