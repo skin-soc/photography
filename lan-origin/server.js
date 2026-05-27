@@ -35,6 +35,7 @@
 
 import express from 'express'
 import sharp from 'sharp'
+import { createHmac } from 'node:crypto'
 import { readFile, mkdir, stat } from 'node:fs/promises'
 import { createReadStream } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -48,6 +49,23 @@ const PRODUCTS_PATH = resolve(process.env.PRODUCTS_PATH ?? join(DATA_DIR, 'produ
 const PUBLIC_URL = (process.env.PUBLIC_URL ?? '').replace(/\/$/, '')
 const PREVIEW_MAX = Number(process.env.PREVIEW_MAX ?? 800)
 const SHARED_SECRET = process.env.SHARED_SECRET ?? ''
+
+/**
+ * Derive a stable, customer-facing download token for a digital product SKU.
+ * Format: GMP-XXXXXXX  (7 uppercase hex chars from HMAC-SHA256).
+ *
+ * Stateless — the server recomputes this at download-request time and
+ * compares; no database entry is needed to verify authenticity.
+ * Falls back to a plain SHA-256 in dev when SHARED_SECRET is unset.
+ */
+function productToken(sku) {
+  const key = SHARED_SECRET || 'dev'
+  return 'GMP-' + createHmac('sha256', key)
+    .update(sku)
+    .digest('hex')
+    .slice(0, 7)
+    .toUpperCase()
+}
 
 // Pricing — prices in øre (DKK minor units): 19500 øre = 195 kr.
 // <DATA_DIR>/products.json may override printProducts / digitalTiers / masterBrackets.
@@ -108,48 +126,56 @@ function digitalProducts(id, w, h, tiers, masterBrackets, tiffMasterBrackets, ra
     if (long < tier.longEdge * TIER_MARGIN) continue
     const scale = tier.longEdge / long
     const dims = { w: Math.round(w * scale), h: Math.round(h * scale) }
+    const sku = `${id}-d-${tier.key}`
     out.push({
-      sku: `${id}-d-${tier.key}`,
+      sku,
       type: 'digital',
       label: tier.label,
       price: tier.price,
       currency: 'DKK',
       format: 'jpeg',
       dimensions: dims,
+      downloadToken: productToken(sku),
     })
     // Pro TIFF immediately after Medium (3200px tier)
     if (rawAvailable && tier.key === 'med') {
+      const proSku = `${id}-d-pro`
       out.push({
-        sku: `${id}-d-pro`,
+        sku: proSku,
         type: 'digital',
         label: 'Pro',
         price: TIFF_PRO_PRICE,
         currency: 'DKK',
         format: 'tiff',
         dimensions: dims,
+        downloadToken: productToken(proSku),
       })
     }
   }
   // Master JPEG — always offered
+  const masterSku = `${id}-d-master`
   out.push({
-    sku: `${id}-d-master`,
+    sku: masterSku,
     type: 'digital',
     label: 'Master',
     price: bracketPrice(w, h, masterBrackets),
     currency: 'DKK',
     format: 'jpeg',
     dimensions: { w, h },
+    downloadToken: productToken(masterSku),
   })
   // Original TIFF — only when rawAvailable
   if (rawAvailable) {
+    const origSku = `${id}-d-original`
     out.push({
-      sku: `${id}-d-original`,
+      sku: origSku,
       type: 'digital',
       label: 'Original',
       price: bracketPrice(w, h, tiffMasterBrackets),
       currency: 'DKK',
       format: 'tiff',
       dimensions: { w, h },
+      downloadToken: productToken(origSku),
     })
   }
   return out
@@ -256,8 +282,8 @@ app.get('/catalog.json', async (_req, res) => {
 const GMP_PATH      = new URL('./gmp.png',  import.meta.url).pathname
 const LOGO_SVG_PATH = new URL('./logo.svg', import.meta.url).pathname
 
-/** Logo longest edge in pixels. Tune via env if needed. */
-const LOGO_SIZE   = Number(process.env.LOGO_SIZE   ?? 25)
+/** Logo size as a fraction of the image height. */
+const LOGO_HEIGHT_FRACTION = Number(process.env.LOGO_HEIGHT_FRACTION ?? 0.06)
 /** Gap between logo and image edge in pixels. */
 const LOGO_MARGIN = Number(process.env.LOGO_MARGIN ?? 14)
 
@@ -269,46 +295,33 @@ async function getLogoSvg() {
 }
 
 /**
- * Build composite entries for the logo watermark: a hard-edged drop-shadow
- * (sunlight style — no blur, 2 px offset) then the fully-opaque logo on top,
- * both anchored to the bottom-right corner.
- *
- * Shadow technique: rasterise the logo → zero out all RGB channels via recomb
- * (makes every pixel black while preserving alpha) → composite 2 px right and
- * 2 px down. No blur — sharp shadow that never extends beyond 2 px.
+ * Build the logo composite for the watermark — 100% opacity, no shadow,
+ * sized to LOGO_HEIGHT_FRACTION of the image height, bottom-right corner.
  */
 async function buildWatermarkComposites(imgW, imgH) {
   const logoSvgRaw = await getLogoSvg()
 
-  // Rasterise the SVG at LOGO_SIZE × LOGO_SIZE, fully opaque.
-  // Render at 2× then resize — sharper anti-aliasing at small sizes.
-  const render = LOGO_SIZE * 2
+  // Size the logo to 12% of the image height.
+  const logoSize = Math.max(8, Math.round(imgH * LOGO_HEIGHT_FRACTION))
+
+  // Rasterise at 2× then resize — sharper anti-aliasing.
+  const render = logoSize * 2
   const svg = logoSvgRaw
     .replace('width="20000"',  `width="${render}"`)
     .replace('height="20000"', `height="${render}"`)
 
   const logoBuf = await sharp(Buffer.from(svg))
-    .resize(LOGO_SIZE, LOGO_SIZE, { fit: 'inside', kernel: 'lanczos3' })
+    .resize(logoSize, logoSize, { fit: 'inside', kernel: 'lanczos3' })
     .png()
     .toBuffer()
   const { width: lw, height: lh } = await sharp(logoBuf).metadata()
 
-  // Hard shadow: black silhouette (recomb zeros R/G/B), no blur.
-  const shadowBuf = await sharp(logoBuf)
-    .recomb([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-    .png()
-    .toBuffer()
-
   // Bottom-right corner with margin.
-  const logoLeft   = imgW - lw - LOGO_MARGIN
-  const logoTop    = imgH - lh - LOGO_MARGIN
-  // Shadow sits exactly 2 px right and 2 px down — hard sunlight offset.
-  const shadowLeft = logoLeft + 2
-  const shadowTop  = logoTop  + 2
+  const logoLeft = imgW - lw - LOGO_MARGIN
+  const logoTop  = imgH - lh - LOGO_MARGIN
 
   return [
-    { input: shadowBuf, left: shadowLeft, top: shadowTop, blend: 'over' },
-    { input: logoBuf,   left: logoLeft,   top: logoTop,   blend: 'over' },
+    { input: logoBuf, left: logoLeft, top: logoTop, blend: 'over' },
   ]
 }
 

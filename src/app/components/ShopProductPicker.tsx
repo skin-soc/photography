@@ -2,8 +2,11 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
+import dynamic from 'next/dynamic'
 import type { ProductType, LicenseTier } from '@/lib/shop'
-import LicensingModal from './LicensingModal'
+
+const CheckoutModal = dynamic(() => import('./CheckoutModal'), { ssr: false })
 
 export interface PickerProduct {
   sku: string
@@ -177,30 +180,45 @@ export default function ShopProductPicker({
   const [selectedSku, setSelectedSku] = useState(cheapest.sku)
   const selected = products.find((p) => p.sku === selectedSku) ?? cheapest
 
+  const locale = useLocale()
   const [rawModalOpen, setRawModalOpen] = useState(false)
-  const [licensingModalOpen, setLicensingModalOpen] = useState(false)
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
-  // Which product row has its license description expanded (null = none)
   const [expandedSku, setExpandedSku] = useState<string | null>(null)
+
+  // Stripe checkout state
+  const [checkoutState, setCheckoutState] = useState<'idle' | 'loading' | 'open' | 'error'>('idle')
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+
+  async function handleBuy() {
+    if (selected.type !== 'digital' || checkoutState === 'loading') return
+    setCheckoutState('loading')
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sku: selected.sku, locale }),
+      })
+      if (!res.ok) throw new Error('checkout request failed')
+      const { clientSecret: secret } = await res.json() as { clientSecret: string }
+      setClientSecret(secret)
+      setCheckoutState('open')
+    } catch {
+      setCheckoutState('error')
+    }
+  }
+
+  const returnUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/${locale}/shop/order-complete`
+    : `/${locale}/shop/order-complete`
 
   const groups = TYPE_ORDER.map((type) => ({
     type,
     items: products.filter((p) => p.type === type),
   })).filter((g) => g.items.length > 0)
 
-  const tl = useTranslations('licensing')
-
   return (
     <div className="mt-7">
       {rawModalOpen && (
         <RawRequestModal photoTitle={photoTitle} onClose={() => setRawModalOpen(false)} />
-      )}
-      {licensingModalOpen && (
-        <LicensingModal
-          mode="agree"
-          onAgree={() => setAgreedToTerms(true)}
-          onClose={() => setLicensingModalOpen(false)}
-        />
       )}
 
       <div className="space-y-4">
@@ -318,28 +336,49 @@ export default function ShopProductPicker({
         ))}
       </div>
 
-      <button
-        type="button"
-        disabled
-        className="mt-7 w-full cursor-not-allowed rounded-[20px] bg-accent/80 py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white"
-      >
-        {t('addToCart')} — {selected.priceText}
-      </button>
-      <div className="mt-3 flex items-baseline justify-between gap-4 flex-wrap">
-        <p className="text-[13px] text-white/40">
-          {t('priceNote')} {t('checkoutSoon')}
-        </p>
+      {checkoutState === 'open' && clientSecret && (
+        <CheckoutModal
+          clientSecret={clientSecret}
+          returnUrl={returnUrl}
+          onClose={() => { setCheckoutState('idle'); setClientSecret(null) }}
+          priceText={selected.priceText}
+          photoTitle={photoTitle}
+          productLabel={selected.label}
+        />
+      )}
+
+      {selected.type === 'digital' ? (
         <button
           type="button"
-          onClick={() => setLicensingModalOpen(true)}
-          className="shrink-0 text-[10px] font-light tracking-[0.18em] uppercase transition-colors"
-          style={{ color: agreedToTerms ? 'rgba(147,16,32,0.7)' : 'rgba(255,255,255,0.25)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-          onMouseEnter={e => (e.currentTarget.style.color = agreedToTerms ? '#931020' : 'rgba(255,255,255,0.55)')}
-          onMouseLeave={e => (e.currentTarget.style.color = agreedToTerms ? 'rgba(147,16,32,0.7)' : 'rgba(255,255,255,0.25)')}
+          onClick={handleBuy}
+          disabled={checkoutState === 'loading'}
+          className={`mt-7 w-full rounded-[20px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
+            checkoutState === 'loading'
+              ? 'bg-accent/40 cursor-default'
+              : 'bg-accent/80 hover:bg-accent cursor-pointer'
+          }`}
         >
-          {agreedToTerms ? '✓ ' : ''}{tl('viewTerms')}
+          {checkoutState === 'loading' ? 'Preparing checkout…' : `${t('addToCart')} — ${selected.priceText}`}
         </button>
-      </div>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className="mt-7 w-full cursor-not-allowed rounded-[20px] bg-accent/80 py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white opacity-50"
+        >
+          {t('addToCart')} — {selected.priceText}
+        </button>
+      )}
+
+      <p className="mt-3 text-[13px] text-white/40">
+        {t('priceNote')}
+        {selected.type !== 'digital' && <> {t('checkoutSoon')}</>}
+      </p>
+      {checkoutState === 'error' && (
+        <p className="mt-2 text-[12px] text-red-400/70">
+          Could not start checkout — please try again.
+        </p>
+      )}
     </div>
   )
 }

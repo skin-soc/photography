@@ -14,7 +14,54 @@
  * offered when the original is genuinely larger than it (never upscaled).
  */
 
+import { createHmac } from 'node:crypto'
+
 export type ProductType = 'digital' | 'print' | 'fine-art'
+
+/**
+ * Usage-rights tier bundled with a digital product.
+ * Tiers are cumulative — commercial includes editorial which includes personal.
+ */
+export type LicenseTier = 'personal' | 'editorial' | 'commercial' | 'full-commercial'
+
+/** Derive the license tier from product label. */
+export function productLicense(product: ShopProduct): LicenseTier {
+  if (product.label === 'Pro')      return 'editorial'
+  if (product.label === 'Master')   return 'commercial'
+  if (product.label === 'Original') return 'full-commercial'
+  return 'personal' // Standard, Medium
+}
+
+/** Mirror of server.js productToken — same algorithm, 'dev' key for mock data. */
+function mockToken(sku: string): string {
+  return 'GMP-' + createHmac('sha256', 'dev').update(sku).digest('hex').slice(0, 7).toUpperCase()
+}
+
+/**
+ * Customer-facing photo reference — GMP-XXXXXXX derived from the photo ID.
+ * Shown in place of a raw camera filename when no Lightroom title is set.
+ * SERVER-SIDE ONLY — uses node:crypto.
+ */
+function photoRef(id: string, secret: string): string {
+  return 'GMP-' + createHmac('sha256', secret || 'dev').update(id).digest('hex').slice(0, 7).toUpperCase()
+}
+
+/**
+ * True when the Lightroom plugin wrote the camera filename as the title
+ * (its fallback: title = title or remoteId).
+ */
+function titleIsFilename(photo: ShopPhoto): boolean {
+  return photo.title.toLowerCase() === photo.id.toLowerCase()
+}
+
+/**
+ * Display title for a photo — the Lightroom title when set, otherwise a
+ * professional GMP reference derived from the photo ID.
+ * SERVER-SIDE ONLY — call only from server components / route handlers.
+ */
+export function displayTitle(photo: ShopPhoto): string {
+  return titleIsFilename(photo) ? photoRef(photo.id, ORIGIN_SECRET) : photo.title
+}
 
 export interface ShopProduct {
   sku: string
@@ -29,6 +76,12 @@ export interface ShopProduct {
   printSize?: { w: number; h: number }
   /** File format for digital downloads. Absent on print/fine-art products. */
   format?: 'jpeg' | 'tiff'
+  /**
+   * HMAC-SHA256 download token — format GMP-XXXXXXX (7 uppercase hex chars).
+   * Set on digital products by the LAN origin. Used as the customer-facing
+   * filename (GMP-XXXXXXX.jpg / .tiff) and verified stateless at download time.
+   */
+  downloadToken?: string
 }
 
 export interface ShopPhoto {
@@ -119,11 +172,13 @@ export function digitalProducts(id: string, w: number, h: number, rawAvailable =
 
   // Standard — JPEG 1600px
   if (long >= 1600 * TIER_MARGIN) {
+    const sku = `${id}-d-std`
     const scale = 1600 / long
     out.push({
-      sku: `${id}-d-std`, type: 'digital', label: 'Standard',
+      sku, type: 'digital', label: 'Standard',
       price: 9900, currency: 'DKK', format: 'jpeg',
       dimensions: { w: Math.round(w * scale), h: Math.round(h * scale) },
+      downloadToken: mockToken(sku),
     })
   }
 
@@ -131,25 +186,31 @@ export function digitalProducts(id: string, w: number, h: number, rawAvailable =
   if (long >= 3200 * TIER_MARGIN) {
     const scale = 3200 / long
     const dims = { w: Math.round(w * scale), h: Math.round(h * scale) }
-    out.push({ sku: `${id}-d-med`, type: 'digital', label: 'Medium', price: 29500, currency: 'DKK', format: 'jpeg', dimensions: dims })
+    const medSku = `${id}-d-med`
+    out.push({ sku: medSku, type: 'digital', label: 'Medium', price: 29500, currency: 'DKK', format: 'jpeg', dimensions: dims, downloadToken: mockToken(medSku) })
     if (rawAvailable) {
-      out.push({ sku: `${id}-d-pro`, type: 'digital', label: 'Pro', price: 59500, currency: 'DKK', format: 'tiff', dimensions: dims })
+      const proSku = `${id}-d-pro`
+      out.push({ sku: proSku, type: 'digital', label: 'Pro', price: 59500, currency: 'DKK', format: 'tiff', dimensions: dims, downloadToken: mockToken(proSku) })
     }
   }
 
   // Master — JPEG full-res (always offered)
+  const masterSku = `${id}-d-master`
   out.push({
-    sku: `${id}-d-master`, type: 'digital', label: 'Master',
+    sku: masterSku, type: 'digital', label: 'Master',
     price: bracketPrice(w, h, MASTER_BRACKETS), currency: 'DKK', format: 'jpeg',
     dimensions: { w, h },
+    downloadToken: mockToken(masterSku),
   })
 
   // Original — 16-bit TIFF full-res (only when rawAvailable)
   if (rawAvailable) {
+    const origSku = `${id}-d-original`
     out.push({
-      sku: `${id}-d-original`, type: 'digital', label: 'Original',
+      sku: origSku, type: 'digital', label: 'Original',
       price: bracketPrice(w, h, TIFF_MASTER_BRACKETS), currency: 'DKK', format: 'tiff',
       dimensions: { w, h },
+      downloadToken: mockToken(origSku),
     })
   }
 
@@ -230,6 +291,14 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
       // and all preview fetches go through the Worker which adds the secret.
       previewUrl: `/api/preview/${p.id}`,
     }))
+    // Replace camera-filename slugs with GMP-based slugs so URLs are clean.
+    // The Lightroom plugin writes slug = slugify(title) or remoteId:lower(),
+    // so when no title is set the slug equals the camera filename / photo ID.
+    for (const p of photos) {
+      if (p.slug.toLowerCase() === p.id.toLowerCase()) {
+        p.slug = photoRef(p.id, ORIGIN_SECRET).toLowerCase()  // "gmp-xxxxxxx"
+      }
+    }
     // Deduplicate slugs — appends the photo id when two photos share a slug.
     const seen = new Map<string, number>()
     for (const p of photos) seen.set(p.slug, (seen.get(p.slug) ?? 0) + 1)
