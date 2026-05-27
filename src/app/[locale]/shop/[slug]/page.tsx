@@ -190,7 +190,7 @@ export default async function ShopItem({
         </div>
 
         {/* Info column */}
-        <div className="min-w-0 flex-1 flex flex-col items-start">
+        <div className="min-w-0 flex-1 flex flex-col">
 
           {/* Title — IBM Plex Mono, ultra-light, accent colour.
                mt-[9px] compensates for the font's ascender overflow above the line box
