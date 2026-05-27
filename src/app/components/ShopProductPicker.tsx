@@ -245,7 +245,7 @@ export default function ShopProductPicker({
                     role="radio"
                     aria-checked={on}
                     onClick={() => setSelectedSku(p.sku)}
-                    className={`flex w-full items-start gap-3 px-5 py-3 text-left transition-colors cursor-pointer select-none ${
+                    className={`flex w-full items-start gap-3 px-5 py-4 text-left transition-colors cursor-pointer select-none ${
                       on ? 'bg-accent/[0.14]' : 'hover:bg-white/[0.03]'
                     }`}
                   >
@@ -325,7 +325,7 @@ export default function ShopProductPicker({
                 <button
                   type="button"
                   onClick={() => setRawModalOpen(true)}
-                  className="flex w-full items-center gap-3 px-5 py-3 transition-colors hover:bg-white/[0.03]"
+                  className="flex w-full items-center gap-3 px-5 py-4 transition-colors hover:bg-white/[0.03]"
                 >
                   <span className="flex-1 text-left text-[13px] text-white/55">{t('rawOnRequest')}</span>
                   <span className="text-[13px] text-accent">→</span>
