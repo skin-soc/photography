@@ -142,11 +142,17 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={`${cormorant.variable} ${ibmPlexMono.variable} ${spaceMono.variable}`}>
       <body className="bg-black text-white antialiased">
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        {/* Render each JSON-LD object as a separate script — Next.js 15's
+            deduplication logic calls parsed["@context"].toLowerCase() and
+            crashes if the body is an array rather than a plain object. */}
+        {jsonLd.map((schema, i) => (
+          <script
+            key={i}
+            type="application/ld+json"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          />
+        ))}
         <NextIntlClientProvider>
           <Nav />
           {children}
