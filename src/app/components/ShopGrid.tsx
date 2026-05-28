@@ -223,7 +223,7 @@ export default function ShopGrid({
                 <div className="absolute bottom-0 left-0 p-6 z-10">
                   <p className="text-xl font-light text-white">{node.name}</p>
                   {count > 0 && (
-                    <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-white/45">
+                    <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-accent/70">
                       {count} {count === 1 ? 'photo' : 'photos'}
                     </p>
                   )}
