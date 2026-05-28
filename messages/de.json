@@ -133,7 +133,11 @@
     "successPhysical": "Zahlung erhalten. Eine Bestätigungs-E-Mail ist unterwegs.",
     "fileReferences": "Dateireferenzen",
     "physicalConfirm": "Ihre Druckbestellung wird vorbereitet. Sie erhalten eine Versandbestätigung sobald sie versendet wurde.",
-    "continueShopping": "Weiter einkaufen"
+    "continueShopping": "Weiter einkaufen",
+    "billingCountry": "Rechnungsland",
+    "vatNote": "+ MwSt. wird beim Checkout berechnet",
+    "subtotal": "Zwischensumme",
+    "vat": "MwSt."
   },
   "licensing": {
     "title": "Lizenzbedingungen und Nutzungsrechte",

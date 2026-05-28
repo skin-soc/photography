@@ -133,7 +133,11 @@
     "successPhysical": "Płatność otrzymana. E-mail z potwierdzeniem jest w drodze.",
     "fileReferences": "Odwołania do pliku",
     "physicalConfirm": "Twoje zamówienie wydruku jest przygotowywane. Otrzymasz potwierdzenie wysyłki po nadaniu.",
-    "continueShopping": "Kontynuuj zakupy"
+    "continueShopping": "Kontynuuj zakupy",
+    "billingCountry": "Kraj rozliczenia",
+    "vatNote": "+ VAT naliczany przy kasie",
+    "subtotal": "Suma częściowa",
+    "vat": "VAT"
   },
   "licensing": {
     "title": "Warunki licencji i prawa użytkowania",

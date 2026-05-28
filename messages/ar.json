@@ -133,7 +133,11 @@
     "successPhysical": "تم استلام الدفع. بريد تأكيد في الطريق.",
     "fileReferences": "مراجع الملفات",
     "physicalConfirm": "طلب الطباعة قيد التحضير. ستتلقى تأكيد الشحن بعد الإرسال.",
-    "continueShopping": "مواصلة التسوق"
+    "continueShopping": "مواصلة التسوق",
+    "billingCountry": "Billing country",
+    "vatNote": "+ VAT calculated at checkout",
+    "subtotal": "Subtotal",
+    "vat": "VAT"
   },
   "licensing": {
     "title": "شروط الترخيص وحقوق الاستخدام",

@@ -133,7 +133,11 @@
     "successPhysical": "お支払いが完了しました。確認メールをお送りしました。",
     "fileReferences": "ファイル参照番号",
     "physicalConfirm": "ご注文の印刷物を準備中です。発送後に配送確認をお送りします。",
-    "continueShopping": "買い物を続ける"
+    "continueShopping": "買い物を続ける",
+    "billingCountry": "Billing country",
+    "vatNote": "+ VAT calculated at checkout",
+    "subtotal": "Subtotal",
+    "vat": "VAT"
   },
   "licensing": {
     "title": "ライセンス条件と使用権",

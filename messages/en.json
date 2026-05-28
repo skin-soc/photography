@@ -133,7 +133,11 @@
     "successPhysical": "Payment received. A confirmation email is on its way.",
     "fileReferences": "File references",
     "physicalConfirm": "Your print order is being prepared. You'll receive a shipping confirmation once dispatched.",
-    "continueShopping": "Continue shopping"
+    "continueShopping": "Continue shopping",
+    "billingCountry": "Billing country",
+    "vatNote": "+ VAT calculated at checkout",
+    "subtotal": "Subtotal",
+    "vat": "VAT"
   },
   "licensing": {
     "title": "Licensing Terms & Usage Rights",

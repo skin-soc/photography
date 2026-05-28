@@ -133,7 +133,11 @@
     "successPhysical": "Оплата получена. Письмо с подтверждением уже в пути.",
     "fileReferences": "Файловые ссылки",
     "physicalConfirm": "Ваш заказ на печать готовится. Вы получите уведомление об отправке после отгрузки.",
-    "continueShopping": "Продолжить покупки"
+    "continueShopping": "Продолжить покупки",
+    "billingCountry": "Billing country",
+    "vatNote": "+ VAT calculated at checkout",
+    "subtotal": "Subtotal",
+    "vat": "VAT"
   },
   "licensing": {
     "title": "Условия лицензии и права использования",

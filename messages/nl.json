@@ -133,7 +133,11 @@
     "successPhysical": "Betaling ontvangen. Er is een bevestigingsmail onderweg.",
     "fileReferences": "Bestandsreferenties",
     "physicalConfirm": "Uw printbestelling wordt voorbereid. U ontvangt een verzendbevestiging zodra deze is verzonden.",
-    "continueShopping": "Verder winkelen"
+    "continueShopping": "Verder winkelen",
+    "billingCountry": "Factuurland",
+    "vatNote": "+ BTW berekend bij afrekenen",
+    "subtotal": "Subtotaal",
+    "vat": "BTW"
   },
   "licensing": {
     "title": "Licentievoorwaarden en gebruiksrechten",

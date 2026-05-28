@@ -133,7 +133,11 @@
     "successPhysical": "Betalning mottagen. Ett bekräftelsemail är på väg.",
     "fileReferences": "Filreferenser",
     "physicalConfirm": "Din beställning förbereds. Du får en leveransbekräftelse när den har skickats.",
-    "continueShopping": "Fortsätt handla"
+    "continueShopping": "Fortsätt handla",
+    "billingCountry": "Faktureringsland",
+    "vatNote": "+ moms beräknas vid checkout",
+    "subtotal": "Delsumma",
+    "vat": "Moms"
   },
   "licensing": {
     "title": "Licensvillkor och användningsrättigheter",

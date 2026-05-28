@@ -10,7 +10,7 @@ import {
 } from '@stripe/react-stripe-js'
 import type { StripeElementsOptions } from '@stripe/stripe-js'
 import { stripePromise } from '@/lib/stripe-client'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import type { CartItem } from '@/store/cart'
 
 export interface DownloadItem {
@@ -24,6 +24,9 @@ interface CheckoutPaneProps {
   clientSecret: string
   items: CartItem[]
   hasPhysical: boolean
+  subtotal: number
+  taxAmount: number
+  currency: string
   totalText: string
   onBack: () => void
   onSuccess: (downloads: DownloadItem[], hasPhysical: boolean) => void
@@ -72,11 +75,19 @@ const appearance: StripeElementsOptions['appearance'] = {
 // ── Inner form — must be inside <Elements> ────────────────────────────────────
 function PaymentForm({
   hasPhysical,
+  subtotal,
+  taxAmount,
+  currency,
   totalText,
   onBack,
   onSuccess,
 }: Omit<CheckoutPaneProps, 'clientSecret'>) {
   const t = useTranslations('cart')
+  const locale = useLocale()
+  const fmt = (minor: number) =>
+    new Intl.NumberFormat(locale === 'en' ? 'en-GB' : locale, {
+      style: 'currency', currency,
+    }).format(minor / 100)
   const stripe = useStripe()
   const elements = useElements()
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle')
@@ -160,12 +171,24 @@ function PaymentForm({
         />
       </div>
 
-      {/* Order summary line */}
-      <div className="flex items-baseline justify-between border-t border-white/[0.07] pt-4">
-        <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">
-          {t('total')}
-        </p>
-        <p className="text-[16px] font-light text-white">{totalText}</p>
+      {/* Order summary */}
+      <div className="border-t border-white/[0.07] pt-4 space-y-1.5">
+        {taxAmount > 0 && (
+          <>
+            <div className="flex items-baseline justify-between">
+              <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('subtotal')}</p>
+              <p className="text-[12px] font-light text-white/45">{fmt(subtotal)}</p>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('vat')}</p>
+              <p className="text-[12px] font-light text-white/45">{fmt(taxAmount)}</p>
+            </div>
+          </>
+        )}
+        <div className="flex items-baseline justify-between">
+          <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('total')}</p>
+          <p className="text-[16px] font-light text-white">{totalText}</p>
+        </div>
       </div>
 
       {errorMsg && (
@@ -209,6 +232,9 @@ export default function CheckoutPane(props: CheckoutPaneProps) {
       <PaymentForm
         items={props.items}
         hasPhysical={props.hasPhysical}
+        subtotal={props.subtotal}
+        taxAmount={props.taxAmount}
+        currency={props.currency}
         totalText={props.totalText}
         onBack={props.onBack}
         onSuccess={props.onSuccess}

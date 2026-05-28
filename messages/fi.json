@@ -133,7 +133,11 @@
     "successPhysical": "Maksu vastaanotettu. Vahvistussähköposti on matkalla.",
     "fileReferences": "Tiedostoviitteet",
     "physicalConfirm": "Tulostustilaustasi valmistellaan. Saat toimitusvahvistuksen, kun se on lähetetty.",
-    "continueShopping": "Jatka ostoksia"
+    "continueShopping": "Jatka ostoksia",
+    "billingCountry": "Laskutusmaa",
+    "vatNote": "+ ALV lasketaan kassalla",
+    "subtotal": "Välisumma",
+    "vat": "ALV"
   },
   "licensing": {
     "title": "Lisenssiehdot ja käyttöoikeudet",

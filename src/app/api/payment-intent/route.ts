@@ -3,12 +3,16 @@ import { getCatalog } from '@/lib/shop'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
+// Stripe tax code for digital images / art
+const TAX_CODE_DIGITAL = 'txcd_10103001'
+
 interface RequestItem { sku: string }
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json() as { items: RequestItem[]; locale?: string }
+    const body = await req.json() as { items: RequestItem[]; locale?: string; country?: string }
     const locale = body.locale ?? 'en'
+    const country = body.country ?? null
     const skus = body.items.map((i) => i.sku)
 
     if (skus.length === 0) {
@@ -39,10 +43,42 @@ export async function POST(req: Request) {
     const items = resolved as NonNullable<typeof resolved[number]>[]
 
     const hasPhysical = items.some((i) => i.product.type !== 'digital')
-
-    // All items must share the same currency (enforced by catalog design).
     const currency = items[0].product.currency.toLowerCase()
-    const amount = items.reduce((sum, i) => sum + i.product.price, 0)
+    const subtotal = items.reduce((sum, i) => sum + i.product.price, 0)
+
+    // ── Tax calculation ────────────────────────────────────────────────────────
+    // Stripe Tax via the Tax Calculations API (automatic_tax is not available on
+    // raw PaymentIntents — only on Checkout Sessions / Invoices / Quotes).
+    let amount = subtotal
+    let taxAmount = 0
+    let calculationId: string | null = null
+
+    if (country) {
+      try {
+        const calculation = await (stripe.tax.calculations as unknown as {
+          create(params: object): Promise<{ id: string; amount_total: number; tax_amount_exclusive: number }>
+        }).create({
+          currency,
+          line_items: items.map((i) => ({
+            amount: i.product.price,
+            reference: i.product.sku,
+            tax_behavior: 'exclusive',
+            ...(i.product.type === 'digital' ? { tax_code: TAX_CODE_DIGITAL } : {}),
+          })),
+          customer_details: {
+            address: { country },
+            address_source: hasPhysical ? 'shipping' : 'billing',
+          },
+        })
+        amount = calculation.amount_total
+        taxAmount = calculation.tax_amount_exclusive
+        calculationId = calculation.id
+        console.log(`[payment-intent] tax calculated for ${country}: ${taxAmount} ${currency} (calc ${calculationId})`)
+      } catch (taxErr) {
+        // Non-fatal — fall through with base amount so checkout isn't blocked
+        console.warn('[payment-intent] tax calculation failed, proceeding without tax:', taxErr)
+      }
+    }
 
     const downloadItems = items
       .filter((i) => i.product.downloadToken)
@@ -53,23 +89,27 @@ export async function POST(req: Request) {
         slug: i.photo.slug,
       }))
 
-    const params: Stripe.PaymentIntentCreateParams = {
+    const metadata: Record<string, string> = {
+      locale,
+      skus: skus.join(','),
+      hasPhysical: String(hasPhysical),
+      downloadItems: JSON.stringify(downloadItems),
+    }
+    if (calculationId) metadata.taxCalculationId = calculationId
+    if (country) metadata.billingCountry = country
+
+    const intent = await stripe.paymentIntents.create({
       amount,
       currency,
       automatic_payment_methods: { enabled: true },
-      metadata: {
-        locale,
-        skus: skus.join(','),
-        hasPhysical: String(hasPhysical),
-        downloadItems: JSON.stringify(downloadItems),
-      },
-    }
-
-    const intent = await stripe.paymentIntents.create(params)
+      metadata,
+    })
 
     return Response.json({
       clientSecret: intent.client_secret,
       amount,
+      subtotal,
+      taxAmount,
       currency,
       downloadItems,
       hasPhysical,

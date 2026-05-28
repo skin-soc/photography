@@ -133,7 +133,11 @@
     "successPhysical": "Paiement reçu. Un e-mail de confirmation est en route.",
     "fileReferences": "Références de fichiers",
     "physicalConfirm": "Votre commande d'impression est en cours de préparation. Vous recevrez une confirmation d'expédition une fois envoyée.",
-    "continueShopping": "Continuer les achats"
+    "continueShopping": "Continuer les achats",
+    "billingCountry": "Pays de facturation",
+    "vatNote": "+ TVA calculée au paiement",
+    "subtotal": "Sous-total",
+    "vat": "TVA"
   },
   "licensing": {
     "title": "Conditions de licence et droits d'utilisation",

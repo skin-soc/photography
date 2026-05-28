@@ -133,7 +133,11 @@
     "successPhysical": "已收到付款。确认邮件已发送。",
     "fileReferences": "文件参考号",
     "physicalConfirm": "您的印刷订单正在准备中。发货后您将收到配送确认。",
-    "continueShopping": "继续购物"
+    "continueShopping": "继续购物",
+    "billingCountry": "Billing country",
+    "vatNote": "+ VAT calculated at checkout",
+    "subtotal": "Subtotal",
+    "vat": "VAT"
   },
   "licensing": {
     "title": "许可条款与使用权利",

@@ -133,7 +133,11 @@
     "successPhysical": "Betaling mottatt. En bekreftelsese-post er på vei.",
     "fileReferences": "Filreferanser",
     "physicalConfirm": "Bestillingen din forberedes. Du mottar en forsendelsesbekreftelse når den er sendt.",
-    "continueShopping": "Fortsett å handle"
+    "continueShopping": "Fortsett å handle",
+    "billingCountry": "Faktureringsland",
+    "vatNote": "+ mva beregnes ved kassen",
+    "subtotal": "Delsum",
+    "vat": "MVA"
   },
   "licensing": {
     "title": "Lisensvilkår og bruksrettigheter",

@@ -133,7 +133,11 @@
     "successPhysical": "Betaling modtaget. En bekræftelsesmail er på vej.",
     "fileReferences": "Filreferencer",
     "physicalConfirm": "Din printordre er ved at blive klargjort. Du modtager en forsendelsesbekræftelse, når den er afsendt.",
-    "continueShopping": "Fortsæt med at handle"
+    "continueShopping": "Fortsæt med at handle",
+    "billingCountry": "Faktureringsland",
+    "vatNote": "+ moms beregnes ved checkout",
+    "subtotal": "Subtotal",
+    "vat": "Moms"
   },
   "licensing": {
     "title": "Licensbetingelser og brugsrettigheder",
