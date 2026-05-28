@@ -4,6 +4,7 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Nav from '../components/Nav'
+import NavigationOverlay from '../components/NavigationOverlay'
 import { routing } from '@/i18n/routing'
 import {
   SITE_URL,
@@ -154,8 +155,10 @@ export default async function RootLayout({
           />
         ))}
         <NextIntlClientProvider>
-          <Nav />
-          {children}
+          <NavigationOverlay>
+            <Nav />
+            {children}
+          </NavigationOverlay>
         </NextIntlClientProvider>
       </body>
     </html>
