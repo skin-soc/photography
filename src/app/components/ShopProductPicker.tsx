@@ -3,10 +3,9 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
-import dynamic from 'next/dynamic'
 import type { ProductType, LicenseTier } from '@/lib/shop'
-
-const CheckoutModal = dynamic(() => import('./CheckoutModal'), { ssr: false })
+import { useCartStore } from '@/store/cart'
+import type { CartItemType } from '@/store/cart'
 
 export interface PickerProduct {
   sku: string
@@ -15,6 +14,7 @@ export interface PickerProduct {
   /** Spec line — pixel size (digital) or paper size in cm (print/fine-art). */
   spec: string | null
   price: number
+  currency: string
   priceText: string
   approxText: string
   format?: 'jpeg' | 'tiff'
@@ -161,6 +161,7 @@ function RawRequestModal({
 
 export default function ShopProductPicker({
   products,
+  photoSlug,
   rawAvailable = false,
   photoTitle = '',
   location,
@@ -168,6 +169,7 @@ export default function ShopProductPicker({
   licenseNote,
 }: {
   products: PickerProduct[]
+  photoSlug: string
   rawAvailable?: boolean
   photoTitle?: string
   location?: string
@@ -175,6 +177,8 @@ export default function ShopProductPicker({
   licenseNote?: React.ReactNode
 }) {
   const t = useTranslations('shop')
+  const addItem = useCartStore((s) => s.addItem)
+  const cartItems = useCartStore((s) => s.items)
 
   const typeLabel: Record<ProductType, string> = {
     print: t('prints'),
@@ -190,31 +194,44 @@ export default function ShopProductPicker({
   const [rawModalOpen, setRawModalOpen] = useState(false)
   const [expandedSku, setExpandedSku] = useState<string | null>(null)
 
-  // Stripe checkout state
-  const [checkoutState, setCheckoutState] = useState<'idle' | 'loading' | 'open' | 'error'>('idle')
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [buyNowState, setBuyNowState] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [cartAdded, setCartAdded] = useState(false)
 
-  async function handleBuy() {
-    if (selected.type !== 'digital' || checkoutState === 'loading') return
-    setCheckoutState('loading')
+  const alreadyInCart = cartItems.some((i) => i.sku === selected.sku)
+
+  async function handleBuyNow() {
+    if (buyNowState === 'loading') return
+    setBuyNowState('loading')
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sku: selected.sku, locale }),
       })
-      if (!res.ok) throw new Error('checkout request failed')
-      const { clientSecret: secret } = await res.json() as { clientSecret: string }
-      setClientSecret(secret)
-      setCheckoutState('open')
+      if (!res.ok) throw new Error('checkout failed')
+      const { url } = await res.json() as { url: string }
+      window.location.href = url
     } catch {
-      setCheckoutState('error')
+      setBuyNowState('error')
     }
   }
 
-  const returnUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/${locale}/shop/order-complete`
-    : `/${locale}/shop/order-complete`
+  function handleAddToCart() {
+    addItem({
+      sku: selected.sku,
+      photoSlug,
+      photoTitle,
+      productLabel: selected.label,
+      price: selected.price,
+      currency: selected.currency,
+      priceText: selected.priceText,
+      type: selected.type as CartItemType,
+      downloadToken: selected.downloadToken,
+      format: selected.format,
+    })
+    setCartAdded(true)
+    setTimeout(() => setCartAdded(false), 2500)
+  }
 
   const groups = TYPE_ORDER.map((type) => ({
     type,
@@ -266,7 +283,6 @@ export default function ShopProductPicker({
                 const infoOpen = expandedSku === p.sku
 
                 return (
-                  // div instead of button to allow nested button (info toggle)
                   <div
                     key={p.sku}
                     role="radio"
@@ -363,45 +379,37 @@ export default function ShopProductPicker({
         ))}
       </div>
 
-      {checkoutState === 'open' && clientSecret && (
-        <CheckoutModal
-          clientSecret={clientSecret}
-          returnUrl={returnUrl}
-          onClose={() => { setCheckoutState('idle'); setClientSecret(null) }}
-          priceText={selected.priceText}
-          photoTitle={photoTitle}
-          productLabel={selected.label}
-        />
-      )}
+      {/* Buy Now — primary CTA */}
+      <button
+        type="button"
+        onClick={handleBuyNow}
+        disabled={buyNowState === 'loading'}
+        className={`mt-7 w-full rounded-[20px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
+          buyNowState === 'loading'
+            ? 'bg-accent/40 cursor-default'
+            : 'bg-accent/80 hover:bg-accent cursor-pointer'
+        }`}
+      >
+        {buyNowState === 'loading' ? 'Preparing…' : `Buy Now — ${selected.priceText}`}
+      </button>
 
-      {selected.type === 'digital' ? (
-        <button
-          type="button"
-          onClick={handleBuy}
-          disabled={checkoutState === 'loading'}
-          className={`mt-7 w-full rounded-[20px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
-            checkoutState === 'loading'
-              ? 'bg-accent/40 cursor-default'
-              : 'bg-accent/80 hover:bg-accent cursor-pointer'
-          }`}
-        >
-          {checkoutState === 'loading' ? 'Preparing checkout…' : `${t('addToCart')} — ${selected.priceText}`}
-        </button>
-      ) : (
-        <button
-          type="button"
-          disabled
-          className="mt-7 w-full cursor-not-allowed rounded-[20px] bg-accent/80 py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white opacity-50"
-        >
-          {t('addToCart')} — {selected.priceText}
-        </button>
-      )}
+      {/* Add to Cart — secondary */}
+      <button
+        type="button"
+        onClick={handleAddToCart}
+        disabled={alreadyInCart}
+        className={`mt-2 w-full rounded-[20px] border py-3 text-[11px] font-light tracking-[0.22em] uppercase transition-colors ${
+          alreadyInCart
+            ? 'border-white/15 text-white/30 cursor-default'
+            : 'border-white/20 text-white/55 hover:border-white/40 hover:text-white/80 cursor-pointer'
+        }`}
+      >
+        {alreadyInCart ? (cartAdded ? 'Added ✓' : 'In Cart') : 'Add to Cart'}
+      </button>
 
-      <p className="mt-3 text-[13px] text-white/40">
-        {t('priceNote')}
-        {selected.type !== 'digital' && <> {t('checkoutSoon')}</>}
-      </p>
-      {checkoutState === 'error' && (
+      <p className="mt-3 text-[13px] text-white/40">{t('priceNote')}</p>
+
+      {buyNowState === 'error' && (
         <p className="mt-2 text-[12px] text-red-400/70">
           Could not start checkout — please try again.
         </p>

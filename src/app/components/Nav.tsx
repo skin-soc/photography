@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import LocaleSwitcher from './LocaleSwitcher'
+import CartIcon from './CartIcon'
+import dynamic from 'next/dynamic'
+
+const CartDrawer = dynamic(() => import('./CartDrawer'), { ssr: false })
 
 const portfolioHrefs = ['/people', '/places', '/nature'] as const
 const topHrefs = ['/shop', '/about'] as const
@@ -16,6 +20,7 @@ const TEXT_SHADOW = {
 export default function Nav() {
   const t = useTranslations('nav')
   const pathname = usePathname()
+  const [cartOpen, setCartOpen] = useState(false)
   // Restore mobile-menu state across locale-switch remounts. LocaleSwitcher
   // writes a timestamp to sessionStorage right before it triggers a router
   // transition; if we mount within 2s of that, the menu opens on first paint
@@ -41,6 +46,7 @@ export default function Nav() {
 
   return (
     <>
+      {cartOpen && <CartDrawer onClose={() => setCartOpen(false)} />}
       <nav
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
         style={{ padding: '3vw 6vw' }}
@@ -109,31 +115,37 @@ export default function Nav() {
           ))}
 
           <li>
+            <CartIcon onClick={() => setCartOpen(true)} />
+          </li>
+          <li>
             <LocaleSwitcher />
           </li>
         </ul>
 
-        {/* Mobile hamburger — two bars */}
-        <button
-          className="md:hidden flex flex-col justify-center gap-[7px] w-8 h-8 shrink-0"
-          onClick={() => setOpen((o) => !o)}
-          aria-label={t('menu')}
-        >
-          <span
-            className="block h-px bg-white transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
-            style={{
-              transform: open ? 'translateY(3.5px) rotate(45deg)' : 'none',
-              opacity: open ? 1 : 0.7,
-            }}
-          />
-          <span
-            className="block h-px bg-white transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
-            style={{
-              transform: open ? 'translateY(-3.5px) rotate(-45deg)' : 'none',
-              opacity: open ? 1 : 0.7,
-            }}
-          />
-        </button>
+        {/* Mobile cart + hamburger */}
+        <div className="md:hidden flex items-center gap-4">
+          <CartIcon onClick={() => setCartOpen(true)} />
+          <button
+            className="flex flex-col justify-center gap-[7px] w-8 h-8 shrink-0"
+            onClick={() => setOpen((o) => !o)}
+            aria-label={t('menu')}
+          >
+            <span
+              className="block h-px bg-white transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+              style={{
+                transform: open ? 'translateY(3.5px) rotate(45deg)' : 'none',
+                opacity: open ? 1 : 0.7,
+              }}
+            />
+            <span
+              className="block h-px bg-white transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+              style={{
+                transform: open ? 'translateY(-3.5px) rotate(-45deg)' : 'none',
+                opacity: open ? 1 : 0.7,
+              }}
+            />
+          </button>
+        </div>
       </nav>
 
       {/* Mobile menu overlay */}

@@ -115,6 +115,7 @@ export default async function ShopItem({
     label: p.label,
     spec: productSpec(p),
     price: p.price,
+    currency: p.currency,
     priceText: formatDKK(p.price),
     approxText: approxLine(p.price, rates),
     format: p.format,
@@ -193,6 +194,7 @@ export default async function ShopItem({
         <div className="min-w-0 flex-1">
           <ShopProductPicker
             products={pickerProducts}
+            photoSlug={slug}
             rawAvailable={photo.rawAvailable ?? false}
             photoTitle={displayTitle(photo)}
             location={photo.location}
