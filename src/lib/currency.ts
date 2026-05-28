@@ -62,12 +62,12 @@ export function formatDKK(ore: number): string {
   return (kr % 1 === 0 ? dkkWhole : dkkFractional).format(kr)
 }
 
-/** Approximate reference figure, e.g. "€26 · $28 · £22" (rounded). */
+/** Approximate reference figure, e.g. "£22 · €26 · $28" (rounded). */
 export function approxLine(ore: number, rates: Rates): string {
   const kr = ore / 100
   return [
+    `£${Math.round(kr * rates.GBP)}`,
     `€${Math.round(kr * rates.EUR)}`,
     `$${Math.round(kr * rates.USD)}`,
-    `£${Math.round(kr * rates.GBP)}`,
   ].join(' · ')
 }
