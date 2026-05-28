@@ -207,7 +207,7 @@ export default function ShopGrid({
 
       {subCategories.length > 0 ? (
         /* Has sub-categories: always show folder cards, never the photo grid */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[3px] bg-white/5">
           {subCategories.map((node) => {
             const nodePath = [...categoryPath, node.name]
             const count = countInCategory(photos, nodePath, typeFilter)
@@ -223,7 +223,7 @@ export default function ShopGrid({
                 <div className="absolute bottom-0 left-0 p-6 z-10">
                   <p className="text-xl font-light text-white">{node.name}</p>
                   {count > 0 && (
-                    <p className="mt-[3px] text-[11px] tracking-[0.18em] uppercase text-accent/70">
+                    <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-accent/70">
                       {count} {count === 1 ? 'photo' : 'photos'}
                     </p>
                   )}
