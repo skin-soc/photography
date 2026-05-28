@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react'
 import { useCartStore } from '@/store/cart'
 import { useTranslations } from 'next-intl'
 
-// textShadow only works on text nodes, not SVG paths — use filter:drop-shadow()
-// to reproduce the same visual depth as the nav text items.
+// textShadow only works on text nodes, not SVG paths.
+// Exact 1:1 translation of Nav's TEXT_SHADOW into filter:drop-shadow():
+//   layer 1 — 0px blur (crisp "sunlight" edge), matches nav text behaviour
+//   layer 2 — 1px blur
+//   layer 3 — 2px blur
 const ICON_SHADOW = {
-  filter: 'drop-shadow(0 1px 1px rgba(0,0,0,1)) drop-shadow(0 2px 2px rgba(0,0,0,0.75))',
+  filter: 'drop-shadow(0 1px 0px rgba(0,0,0,1)) drop-shadow(0 1px 1px rgba(0,0,0,0.95)) drop-shadow(0 2px 2px rgba(0,0,0,0.75))',
 }
 
 export default function CartIcon() {
