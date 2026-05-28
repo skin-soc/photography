@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { useCartStore } from '@/store/cart'
 import { useTranslations } from 'next-intl'
 
-const TEXT_SHADOW = {
-  textShadow: '0 1px 0 rgba(0,0,0,1), 0 1px 1px rgba(0,0,0,0.95), 0 2px 2px rgba(0,0,0,0.75)',
+// textShadow only works on text nodes, not SVG paths — use filter:drop-shadow()
+// to reproduce the same visual depth as the nav text items.
+const ICON_SHADOW = {
+  filter: 'drop-shadow(0 1px 1px rgba(0,0,0,1)) drop-shadow(0 2px 2px rgba(0,0,0,0.75))',
 }
 
 export default function CartIcon() {
@@ -25,10 +27,10 @@ export default function CartIcon() {
       onClick={openCart}
       aria-label={label}
       className="relative flex items-center justify-center text-white/70 hover:text-white transition-colors"
-      style={{ ...TEXT_SHADOW, width: 20, height: 20 }}
+      style={{ width: 20, height: 20 }}
     >
       {/* Bag — same weight/scale as nav text */}
-      <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={ICON_SHADOW}>
         <path d="M1 5h12l-1.2 10H2.2L1 5Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
         <path d="M4.5 5V4a2.5 2.5 0 0 1 5 0v1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
       </svg>
