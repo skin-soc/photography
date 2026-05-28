@@ -94,11 +94,16 @@ export default function CartDrawer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: itemsToCharge.map((i) => ({ sku: i.sku })), locale }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string }
+        console.error('[cart] payment-intent failed:', res.status, body)
+        throw new Error(body.error ?? `HTTP ${res.status}`)
+      }
       const data = await res.json() as PaymentData
       setPaymentData(data)
       setStep('payment')
-    } catch {
+    } catch (err) {
+      console.error('[cart] startPayment error:', err)
       setIntentError(true)
     } finally {
       setIntentLoading(false)
