@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "Kaikki oikeudet, mukaan lukien jälleenmyyntiin tarkoitettu merchandise, rajoittamattomat painokset ja white-label-käyttö.",
     "licensingNotePublicEvent": "Lisenssit myönnetään ilmoitetulle käyttötarkoitukselle ja kopiointirajoituksille. Tämä kuva on otettu tapahtumassa {event}, joka on julkinen tapahtuma julkisella paikalla. Täydelliset lisenssiehdot <link>täällä</link>."
   },
+  "cart": {
+    "title": "Ostoskori",
+    "open": "Avaa ostoskori",
+    "openWithCount": "Avaa ostoskori ({count} {count, plural, one {tuote} other {tuotetta}})",
+    "close": "Sulje ostoskori",
+    "empty": "Ostoskorisi on tyhjä.",
+    "remove": "Poista",
+    "total": "Yhteensä",
+    "checkout": "Kassalle",
+    "preparing": "Valmistellaan…",
+    "error": "Kassalle siirtyminen epäonnistui — yritä uudelleen.",
+    "shipping": "Toimitusosoite kerätään kassalla."
+  },
   "licensing": {
     "title": "Lisenssiehdot ja käyttöoikeudet",
     "byline": "Digitaalisen kuvan lisenssisopimus",

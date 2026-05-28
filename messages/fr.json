@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "Tous droits, y compris merchandise destiné à la revente, tirages illimités et usage en marque blanche.",
     "licensingNotePublicEvent": "Les licences sont accordées pour l'utilisation spécifique et les limites de copies indiquées. Cette image a été prise lors de {event}, un événement public dans un espace public. Conditions de licence complètes <link>ici</link>."
   },
+  "cart": {
+    "title": "Panier",
+    "open": "Ouvrir le panier",
+    "openWithCount": "Ouvrir le panier ({count} {count, plural, one {article} other {articles}})",
+    "close": "Fermer le panier",
+    "empty": "Votre panier est vide.",
+    "remove": "Supprimer",
+    "total": "Total",
+    "checkout": "Commander",
+    "preparing": "Préparation…",
+    "error": "Impossible de lancer le paiement — veuillez réessayer.",
+    "shipping": "Adresse de livraison collectée lors du paiement."
+  },
   "licensing": {
     "title": "Conditions de licence et droits d'utilisation",
     "byline": "Contrat de licence pour images numériques",

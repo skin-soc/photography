@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "Alle rettigheter, inkludert merchandise for videresalg, ubegrensede opplag og white-label-bruk.",
     "licensingNotePublicEvent": "Lisenser gis for det spesifikke bruket og kopieringsgrensene som er angitt. Dette bildet ble tatt ved {event}, et offentlig arrangement på et offentlig sted. Fullstendige lisensbetingelser <link>her</link>."
   },
+  "cart": {
+    "title": "Handlekurv",
+    "open": "Åpne handlekurven",
+    "openWithCount": "Åpne handlekurven ({count} {count, plural, one {vare} other {varer}})",
+    "close": "Lukk handlekurven",
+    "empty": "Handlekurven din er tom.",
+    "remove": "Fjern",
+    "total": "Total",
+    "checkout": "Betal",
+    "preparing": "Forbereder…",
+    "error": "Kunne ikke starte betaling — prøv igjen.",
+    "shipping": "Leveringsadresse oppgis ved betaling."
+  },
   "licensing": {
     "title": "Lisensvilkår og bruksrettigheter",
     "byline": "Lisensavtale for digitale bilder",

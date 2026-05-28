@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "販売目的の商品、無制限印刷、ホワイトラベル使用を含むすべての権利。",
     "licensingNotePublicEvent": "ライセンスは記載された特定の用途および複製制限に対して付与されます。この画像は公共の場所で開催されたパブリックイベント「{event}」で撮影されました。完全なライセンス条件は<link>こちら</link>。"
   },
+  "cart": {
+    "title": "カート",
+    "open": "カートを開く",
+    "openWithCount": "カートを開く（{count}点）",
+    "close": "カートを閉じる",
+    "empty": "カートは空です。",
+    "remove": "削除",
+    "total": "合計",
+    "checkout": "購入手続き",
+    "preparing": "準備中…",
+    "error": "チェックアウトを開始できませんでした — もう一度お試しください。",
+    "shipping": "配送先住所はお支払い時に収集されます。"
+  },
   "licensing": {
     "title": "ライセンス条件と使用権",
     "byline": "デジタル画像ライセンス契約",

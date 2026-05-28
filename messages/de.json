@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "Alle Rechte, einschließlich Merchandise zum Weiterverkauf, unbegrenzte Auflagen und White-Label-Nutzung.",
     "licensingNotePublicEvent": "Lizenzen werden für die angegebene Nutzung und die genannten Kopierbeschränkungen erteilt. Dieses Bild wurde bei {event}, einer öffentlichen Veranstaltung an einem öffentlichen Ort, aufgenommen. Vollständige Lizenzbedingungen <link>hier</link>."
   },
+  "cart": {
+    "title": "Warenkorb",
+    "open": "Warenkorb öffnen",
+    "openWithCount": "Warenkorb öffnen ({count} {count, plural, one {Artikel} other {Artikel}})",
+    "close": "Warenkorb schließen",
+    "empty": "Ihr Warenkorb ist leer.",
+    "remove": "Entfernen",
+    "total": "Gesamt",
+    "checkout": "Zur Kasse",
+    "preparing": "Wird vorbereitet…",
+    "error": "Checkout konnte nicht gestartet werden — bitte erneut versuchen.",
+    "shipping": "Lieferadresse wird beim Checkout abgefragt."
+  },
   "licensing": {
     "title": "Lizenzbedingungen und Nutzungsrechte",
     "byline": "Lizenzvereinbarung für digitale Bilder",

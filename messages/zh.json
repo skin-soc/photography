@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "所有权利，包括用于转售的商品、无限制印刷及白标使用。",
     "licensingNotePublicEvent": "许可证按所述的具体用途和复制限制授予。此图像摄于公开活动{event}，该活动在公共场所举办。完整许可条款<link>请见此处</link>。"
   },
+  "cart": {
+    "title": "购物车",
+    "open": "打开购物车",
+    "openWithCount": "打开购物车（{count} 件商品）",
+    "close": "关闭购物车",
+    "empty": "购物车为空。",
+    "remove": "删除",
+    "total": "合计",
+    "checkout": "结账",
+    "preparing": "准备中…",
+    "error": "无法启动结账 — 请重试。",
+    "shipping": "结账时将收集配送地址。"
+  },
   "licensing": {
     "title": "许可条款与使用权利",
     "byline": "数字图像许可协议",

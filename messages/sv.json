@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "Alla rättigheter, inklusive merchandise för vidareförsäljning, obegränsade upplagor och white-label-användning.",
     "licensingNotePublicEvent": "Licenser beviljas för det specifika bruk och de kopieringsgränser som anges. Denna bild togs vid {event}, ett offentligt evenemang på offentlig plats. Fullständiga licensvillkor <link>här</link>."
   },
+  "cart": {
+    "title": "Varukorg",
+    "open": "Öppna varukorgen",
+    "openWithCount": "Öppna varukorgen ({count} {count, plural, one {vara} other {varor}})",
+    "close": "Stäng varukorgen",
+    "empty": "Din varukorg är tom.",
+    "remove": "Ta bort",
+    "total": "Totalt",
+    "checkout": "Betala",
+    "preparing": "Förbereder…",
+    "error": "Kunde inte starta kassan — försök igen.",
+    "shipping": "Leveransadress anges vid kassan."
+  },
   "licensing": {
     "title": "Licensvillkor och användningsrättigheter",
     "byline": "Licensavtal för digitala bilder",

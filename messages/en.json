@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "All rights, including merchandise for resale, unlimited print runs and white-label use.",
     "licensingNotePublicEvent": "Licenses are granted for the specific use and copy limits stated. This image was captured at {event}, a public event in a public space. Full licensing terms available <link>here</link>."
   },
+  "cart": {
+    "title": "Cart",
+    "open": "Open cart",
+    "openWithCount": "Open cart ({count} {count, plural, one {item} other {items}})",
+    "close": "Close cart",
+    "empty": "Your cart is empty.",
+    "remove": "Remove",
+    "total": "Total",
+    "checkout": "Checkout",
+    "preparing": "Preparing…",
+    "error": "Could not start checkout — please try again.",
+    "shipping": "Shipping address collected at checkout."
+  },
   "licensing": {
     "title": "Licensing Terms & Usage Rights",
     "byline": "Digital Image License Agreement",

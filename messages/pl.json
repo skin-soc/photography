@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "Wszelkie prawa, w tym merchandise do odsprzedaży, nieograniczone nakłady i użytek white-label.",
     "licensingNotePublicEvent": "Licencje udzielane są na konkretne zastosowanie i określone limity kopii. To zdjęcie zostało wykonane podczas {event}, publicznego wydarzenia w miejscu publicznym. Pełne warunki licencji <link>tutaj</link>."
   },
+  "cart": {
+    "title": "Koszyk",
+    "open": "Otwórz koszyk",
+    "openWithCount": "Otwórz koszyk ({count} {count, plural, one {produkt} few {produkty} other {produktów}})",
+    "close": "Zamknij koszyk",
+    "empty": "Twój koszyk jest pusty.",
+    "remove": "Usuń",
+    "total": "Razem",
+    "checkout": "Do kasy",
+    "preparing": "Przygotowywanie…",
+    "error": "Nie można rozpocząć płatności — spróbuj ponownie.",
+    "shipping": "Adres dostawy zostanie podany przy kasie."
+  },
   "licensing": {
     "title": "Warunki licencji i prawa użytkowania",
     "byline": "Umowa licencyjna na obrazy cyfrowe",

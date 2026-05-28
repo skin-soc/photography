@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Nav from '../components/Nav'
 import NavigationOverlay from '../components/NavigationOverlay'
+import CartDrawerPortal from '../components/CartDrawerPortal'
 import { routing } from '@/i18n/routing'
 import {
   SITE_URL,
@@ -159,6 +160,7 @@ export default async function RootLayout({
             <Nav />
             {children}
           </NavigationOverlay>
+          <CartDrawerPortal />
         </NextIntlClientProvider>
       </body>
     </html>

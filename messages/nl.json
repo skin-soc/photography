@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "Alle rechten, inclusief merchandise voor doorverkoop, onbeperkte oplagen en white-label gebruik.",
     "licensingNotePublicEvent": "Licenties worden verleend voor het opgegeven gebruik en de genoemde kopielimieten. Dit beeld is vastgelegd bij {event}, een openbaar evenement op een openbare locatie. Volledige licentievoorwaarden <link>hier</link>."
   },
+  "cart": {
+    "title": "Winkelwagen",
+    "open": "Winkelwagen openen",
+    "openWithCount": "Winkelwagen openen ({count} {count, plural, one {artikel} other {artikelen}})",
+    "close": "Winkelwagen sluiten",
+    "empty": "Uw winkelwagen is leeg.",
+    "remove": "Verwijderen",
+    "total": "Totaal",
+    "checkout": "Afrekenen",
+    "preparing": "Bezig met voorbereiden…",
+    "error": "Afrekenen mislukt — probeer het opnieuw.",
+    "shipping": "Bezorgadres wordt opgegeven bij het afrekenen."
+  },
   "licensing": {
     "title": "Licentievoorwaarden en gebruiksrechten",
     "byline": "Licentieovereenkomst voor digitale afbeeldingen",

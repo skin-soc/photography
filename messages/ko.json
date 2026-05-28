@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "재판매용 상품, 무제한 인쇄, 화이트라벨 사용을 포함한 모든 권리.",
     "licensingNotePublicEvent": "라이선스는 명시된 특정 용도 및 복사 한도에 대해 부여됩니다. 이 이미지는 공공 장소에서 열린 공개 행사인 {event}에서 촬영되었습니다. 전체 라이선스 조건은 <link>여기</link>를 참조하세요."
   },
+  "cart": {
+    "title": "장바구니",
+    "open": "장바구니 열기",
+    "openWithCount": "장바구니 열기（{count}개 상품）",
+    "close": "장바구니 닫기",
+    "empty": "장바구니가 비어 있습니다.",
+    "remove": "삭제",
+    "total": "합계",
+    "checkout": "결제",
+    "preparing": "준비 중…",
+    "error": "결제를 시작할 수 없습니다 — 다시 시도해 주세요.",
+    "shipping": "배송 주소는 결제 시 수집됩니다."
+  },
   "licensing": {
     "title": "라이선스 약관 및 사용 권리",
     "byline": "디지털 이미지 라이선스 계약",

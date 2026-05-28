@@ -108,6 +108,19 @@
     "licenseFullCommercialDesc": "Todos los derechos, incluido merchandise para reventa, tiradas ilimitadas y uso de marca blanca.",
     "licensingNotePublicEvent": "Las licencias se otorgan para el uso específico y los límites de copias indicados. Esta imagen fue tomada en {event}, un evento público en un espacio público. Términos de licencia completos <link>aquí</link>."
   },
+  "cart": {
+    "title": "Carrito",
+    "open": "Abrir carrito",
+    "openWithCount": "Abrir carrito ({count} {count, plural, one {artículo} other {artículos}})",
+    "close": "Cerrar carrito",
+    "empty": "Tu carrito está vacío.",
+    "remove": "Eliminar",
+    "total": "Total",
+    "checkout": "Pagar",
+    "preparing": "Preparando…",
+    "error": "No se pudo iniciar el pago — inténtalo de nuevo.",
+    "shipping": "Dirección de envío recopilada al pagar."
+  },
   "licensing": {
     "title": "Términos de licencia y derechos de uso",
     "byline": "Contrato de licencia para imágenes digitales",
