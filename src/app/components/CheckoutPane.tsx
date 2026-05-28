@@ -71,7 +71,6 @@ const appearance: StripeElementsOptions['appearance'] = {
 
 // ── Inner form — must be inside <Elements> ────────────────────────────────────
 function PaymentForm({
-  items,
   hasPhysical,
   totalText,
   onBack,
@@ -90,6 +89,7 @@ function PaymentForm({
     setErrorMsg('')
 
     // Collect address if physical items
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let shippingData: { name?: string; address?: object } | undefined
     if (hasPhysical) {
       const addressEl = elements.getElement('address')
