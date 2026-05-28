@@ -412,7 +412,6 @@ export default function ShopProductPicker({
         </button>
       </div>
 
-      <p className="mt-3 text-[13px] text-white/40">{t('priceNote')}</p>
 
     </div>
   )
