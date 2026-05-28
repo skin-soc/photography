@@ -46,7 +46,7 @@ function keyPhotosForFolder(photos: GridPhoto[], folderPath: string[]): string[]
     .map((p) => `${p.previewUrl}?max=800`)
 }
 
-function RotatingImage({ srcs }: { srcs: string[] }) {
+function RotatingImage({ srcs, delay = 0 }: { srcs: string[]; delay?: number }) {
   const [order, setOrder] = useState<string[]>(srcs)
   const [idx, setIdx] = useState(0)
 
@@ -57,9 +57,12 @@ function RotatingImage({ srcs }: { srcs: string[] }) {
 
   useEffect(() => {
     if (order.length <= 1) return
-    const t = setInterval(() => setIdx((i) => (i + 1) % order.length), 4000)
-    return () => clearInterval(t)
-  }, [order.length])
+    let interval: ReturnType<typeof setInterval>
+    const timeout = setTimeout(() => {
+      interval = setInterval(() => setIdx((i) => (i + 1) % order.length), 4000)
+    }, delay)
+    return () => { clearTimeout(timeout); clearInterval(interval) }
+  }, [order.length, delay])
 
   if (order.length === 0) return null
 
@@ -208,7 +211,7 @@ export default function ShopGrid({
       {subCategories.length > 0 ? (
         /* Has sub-categories: always show folder cards, never the photo grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-white/5">
-          {subCategories.map((node) => {
+          {subCategories.map((node, nodeIdx) => {
             const nodePath = [...categoryPath, node.name]
             const count = countInCategory(photos, nodePath, typeFilter)
             const keyUrls = keyPhotosForFolder(photos, nodePath)
@@ -218,7 +221,7 @@ export default function ShopGrid({
                 onClick={() => setCategoryPath(nodePath)}
                 className="group relative overflow-hidden aspect-[4/3] bg-black text-left"
               >
-                <RotatingImage srcs={keyUrls} />
+                <RotatingImage srcs={keyUrls} delay={nodeIdx * 700} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/65 transition-all duration-500" />
                 <div className="absolute bottom-0 left-0 p-6 z-10">
                   <p className="text-xl font-light text-white">{node.name}</p>
