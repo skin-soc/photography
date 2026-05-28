@@ -277,10 +277,13 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
   if (!ORIGIN) return MOCK_CATALOG
 
   try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 8000)
     const res = await fetch(`${ORIGIN}/catalog.json`, {
       next: { revalidate: 300 },
       headers: { 'x-shop-secret': ORIGIN_SECRET },
-    })
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timer))
     if (!res.ok) throw new Error(`origin responded ${res.status}`)
     const data = (await res.json()) as RawCatalog
     const photos = data.photos.map((p) => ({

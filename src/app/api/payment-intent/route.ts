@@ -53,17 +53,10 @@ export async function POST(req: Request) {
         slug: i.photo.slug,
       }))
 
-    // automatic_tax is a valid Stripe API field; extend the type locally as the
-    // SDK's TS definitions lag behind the REST API surface.
-    type PIParams = Stripe.PaymentIntentCreateParams & {
-      automatic_tax?: { enabled: boolean }
-    }
-
-    const params: PIParams = {
+    const params: Stripe.PaymentIntentCreateParams = {
       amount,
       currency,
       automatic_payment_methods: { enabled: true },
-      automatic_tax: { enabled: true },
       metadata: {
         locale,
         skus: skus.join(','),
