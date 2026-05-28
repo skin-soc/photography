@@ -119,7 +119,21 @@
     "checkout": "Betal",
     "preparing": "Forbereder…",
     "error": "Kunne ikke starte betaling — prøv igjen.",
-    "shipping": "Leveringsadresse oppgis ved betaling."
+    "shipping": "Leveringsadresse oppgis ved betaling.",
+    "payment": "Betaling",
+    "paymentDetails": "Betalingsdetaljer",
+    "shippingAddress": "Leveringsadresse",
+    "pay": "Betal",
+    "processing": "Behandler…",
+    "paymentFailed": "Betaling mislyktes — prøv igjen.",
+    "backToCart": "Tilbake til handlekurven",
+    "orderConfirmed": "Ordre bekreftet",
+    "thankYou": "Takk.",
+    "successDigital": "Betaling mottatt. Filreferansene dine er nedenfor — en bekreftelsese-post er på vei.",
+    "successPhysical": "Betaling mottatt. En bekreftelsese-post er på vei.",
+    "fileReferences": "Filreferanser",
+    "physicalConfirm": "Bestillingen din forberedes. Du mottar en forsendelsesbekreftelse når den er sendt.",
+    "continueShopping": "Fortsett å handle"
   },
   "licensing": {
     "title": "Lisensvilkår og bruksrettigheter",

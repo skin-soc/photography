@@ -119,7 +119,21 @@
     "checkout": "Acquista",
     "preparing": "Preparazione…",
     "error": "Impossibile avviare il pagamento — riprova.",
-    "shipping": "Indirizzo di spedizione raccolto al momento del pagamento."
+    "shipping": "Indirizzo di spedizione raccolto al momento del pagamento.",
+    "payment": "Pagamento",
+    "paymentDetails": "Dettagli del pagamento",
+    "shippingAddress": "Indirizzo di spedizione",
+    "pay": "Paga",
+    "processing": "Elaborazione…",
+    "paymentFailed": "Pagamento fallito — riprova.",
+    "backToCart": "Torna al carrello",
+    "orderConfirmed": "Ordine confermato",
+    "thankYou": "Grazie.",
+    "successDigital": "Pagamento ricevuto. I riferimenti dei file sono qui sotto — è in arrivo un'email di conferma.",
+    "successPhysical": "Pagamento ricevuto. È in arrivo un'email di conferma.",
+    "fileReferences": "Riferimenti file",
+    "physicalConfirm": "Il tuo ordine di stampa è in fase di preparazione. Riceverai una conferma di spedizione una volta inviato.",
+    "continueShopping": "Continua gli acquisti"
   },
   "licensing": {
     "title": "Termini di licenza e diritti d'uso",

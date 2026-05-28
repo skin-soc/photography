@@ -119,7 +119,21 @@
     "checkout": "Zur Kasse",
     "preparing": "Wird vorbereitet…",
     "error": "Checkout konnte nicht gestartet werden — bitte erneut versuchen.",
-    "shipping": "Lieferadresse wird beim Checkout abgefragt."
+    "shipping": "Lieferadresse wird beim Checkout abgefragt.",
+    "payment": "Zahlung",
+    "paymentDetails": "Zahlungsdetails",
+    "shippingAddress": "Lieferadresse",
+    "pay": "Bezahlen",
+    "processing": "Wird verarbeitet…",
+    "paymentFailed": "Zahlung fehlgeschlagen — bitte erneut versuchen.",
+    "backToCart": "Zurück zum Warenkorb",
+    "orderConfirmed": "Bestellung bestätigt",
+    "thankYou": "Vielen Dank.",
+    "successDigital": "Zahlung erhalten. Ihre Dateireferenzen sind unten — eine Bestätigungs-E-Mail ist unterwegs.",
+    "successPhysical": "Zahlung erhalten. Eine Bestätigungs-E-Mail ist unterwegs.",
+    "fileReferences": "Dateireferenzen",
+    "physicalConfirm": "Ihre Druckbestellung wird vorbereitet. Sie erhalten eine Versandbestätigung sobald sie versendet wurde.",
+    "continueShopping": "Weiter einkaufen"
   },
   "licensing": {
     "title": "Lizenzbedingungen und Nutzungsrechte",

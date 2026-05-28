@@ -119,7 +119,21 @@
     "checkout": "購入手続き",
     "preparing": "準備中…",
     "error": "チェックアウトを開始できませんでした — もう一度お試しください。",
-    "shipping": "配送先住所はお支払い時に収集されます。"
+    "shipping": "配送先住所はお支払い時に収集されます。",
+    "payment": "お支払い",
+    "paymentDetails": "お支払い詳細",
+    "shippingAddress": "配送先住所",
+    "pay": "支払う",
+    "processing": "処理中…",
+    "paymentFailed": "支払いに失敗しました — もう一度お試しください。",
+    "backToCart": "カートに戻る",
+    "orderConfirmed": "ご注文確定",
+    "thankYou": "ありがとうございます。",
+    "successDigital": "お支払いが完了しました。ファイル参照番号は下記の通りです — 確認メールをお送りしました。",
+    "successPhysical": "お支払いが完了しました。確認メールをお送りしました。",
+    "fileReferences": "ファイル参照番号",
+    "physicalConfirm": "ご注文の印刷物を準備中です。発送後に配送確認をお送りします。",
+    "continueShopping": "買い物を続ける"
   },
   "licensing": {
     "title": "ライセンス条件と使用権",

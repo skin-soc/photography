@@ -119,7 +119,21 @@
     "checkout": "Do kasy",
     "preparing": "Przygotowywanie…",
     "error": "Nie można rozpocząć płatności — spróbuj ponownie.",
-    "shipping": "Adres dostawy zostanie podany przy kasie."
+    "shipping": "Adres dostawy zostanie podany przy kasie.",
+    "payment": "Płatność",
+    "paymentDetails": "Szczegóły płatności",
+    "shippingAddress": "Adres dostawy",
+    "pay": "Zapłać",
+    "processing": "Przetwarzanie…",
+    "paymentFailed": "Płatność nie powiodła się — spróbuj ponownie.",
+    "backToCart": "Wróć do koszyka",
+    "orderConfirmed": "Zamówienie potwierdzone",
+    "thankYou": "Dziękujemy.",
+    "successDigital": "Płatność otrzymana. Twoje odwołania do plików są poniżej — e-mail z potwierdzeniem jest w drodze.",
+    "successPhysical": "Płatność otrzymana. E-mail z potwierdzeniem jest w drodze.",
+    "fileReferences": "Odwołania do pliku",
+    "physicalConfirm": "Twoje zamówienie wydruku jest przygotowywane. Otrzymasz potwierdzenie wysyłki po nadaniu.",
+    "continueShopping": "Kontynuuj zakupy"
   },
   "licensing": {
     "title": "Warunki licencji i prawa użytkowania",

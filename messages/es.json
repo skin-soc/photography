@@ -119,7 +119,21 @@
     "checkout": "Pagar",
     "preparing": "Preparando…",
     "error": "No se pudo iniciar el pago — inténtalo de nuevo.",
-    "shipping": "Dirección de envío recopilada al pagar."
+    "shipping": "Dirección de envío recopilada al pagar.",
+    "payment": "Pago",
+    "paymentDetails": "Detalles del pago",
+    "shippingAddress": "Dirección de envío",
+    "pay": "Pagar",
+    "processing": "Procesando…",
+    "paymentFailed": "Pago fallido — inténtalo de nuevo.",
+    "backToCart": "Volver al carrito",
+    "orderConfirmed": "Pedido confirmado",
+    "thankYou": "Gracias.",
+    "successDigital": "Pago recibido. Tus referencias de archivo están abajo — un correo de confirmación está en camino.",
+    "successPhysical": "Pago recibido. Un correo de confirmación está en camino.",
+    "fileReferences": "Referencias de archivo",
+    "physicalConfirm": "Tu pedido de impresión está siendo preparado. Recibirás una confirmación de envío una vez despachado.",
+    "continueShopping": "Seguir comprando"
   },
   "licensing": {
     "title": "Términos de licencia y derechos de uso",

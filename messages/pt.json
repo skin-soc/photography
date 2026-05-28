@@ -119,7 +119,21 @@
     "checkout": "Finalizar",
     "preparing": "A preparar…",
     "error": "Não foi possível iniciar o pagamento — tente novamente.",
-    "shipping": "Endereço de entrega recolhido no pagamento."
+    "shipping": "Endereço de entrega recolhido no pagamento.",
+    "payment": "Pagamento",
+    "paymentDetails": "Detalhes do pagamento",
+    "shippingAddress": "Endereço de entrega",
+    "pay": "Pagar",
+    "processing": "A processar…",
+    "paymentFailed": "Pagamento falhou — tente novamente.",
+    "backToCart": "Voltar ao carrinho",
+    "orderConfirmed": "Pedido confirmado",
+    "thankYou": "Obrigado.",
+    "successDigital": "Pagamento recebido. As suas referências de ficheiro estão abaixo — um e-mail de confirmação está a caminho.",
+    "successPhysical": "Pagamento recebido. Um e-mail de confirmação está a caminho.",
+    "fileReferences": "Referências de ficheiro",
+    "physicalConfirm": "O seu pedido de impressão está a ser preparado. Receberá uma confirmação de envio assim que for despachado.",
+    "continueShopping": "Continuar a comprar"
   },
   "licensing": {
     "title": "Termos de licença e direitos de uso",

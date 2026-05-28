@@ -119,7 +119,21 @@
     "checkout": "Betal",
     "preparing": "Klargør…",
     "error": "Kunne ikke starte betaling — prøv igen.",
-    "shipping": "Leveringsadresse opgives ved betaling."
+    "shipping": "Leveringsadresse opgives ved betaling.",
+    "payment": "Betaling",
+    "paymentDetails": "Betalingsoplysninger",
+    "shippingAddress": "Leveringsadresse",
+    "pay": "Betal",
+    "processing": "Behandler…",
+    "paymentFailed": "Betaling mislykkedes — prøv igen.",
+    "backToCart": "Tilbage til kurv",
+    "orderConfirmed": "Ordre bekræftet",
+    "thankYou": "Tak.",
+    "successDigital": "Betaling modtaget. Dine filreferencer er nedenfor — en bekræftelsesmail er på vej.",
+    "successPhysical": "Betaling modtaget. En bekræftelsesmail er på vej.",
+    "fileReferences": "Filreferencer",
+    "physicalConfirm": "Din printordre er ved at blive klargjort. Du modtager en forsendelsesbekræftelse, når den er afsendt.",
+    "continueShopping": "Fortsæt med at handle"
   },
   "licensing": {
     "title": "Licensbetingelser og brugsrettigheder",

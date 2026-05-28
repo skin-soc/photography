@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useLocale } from 'next-intl'
 import type { ProductType, LicenseTier } from '@/lib/shop'
 import { useCartStore } from '@/store/cart'
 import type { CartItemType } from '@/store/cart'
@@ -167,6 +166,7 @@ export default function ShopProductPicker({
   location,
   caption,
   licenseNote,
+  previewUrl,
 }: {
   products: PickerProduct[]
   photoSlug: string
@@ -175,9 +175,11 @@ export default function ShopProductPicker({
   location?: string
   caption?: string
   licenseNote?: React.ReactNode
+  previewUrl?: string
 }) {
   const t = useTranslations('shop')
   const addItem = useCartStore((s) => s.addItem)
+  const buyNow = useCartStore((s) => s.buyNow)
   const cartItems = useCartStore((s) => s.items)
 
   const typeLabel: Record<ProductType, string> = {
@@ -190,34 +192,15 @@ export default function ShopProductPicker({
   const [selectedSku, setSelectedSku] = useState(cheapest.sku)
   const selected = products.find((p) => p.sku === selectedSku) ?? cheapest
 
-  const locale = useLocale()
   const [rawModalOpen, setRawModalOpen] = useState(false)
   const [expandedSku, setExpandedSku] = useState<string | null>(null)
 
-  const [buyNowState, setBuyNowState] = useState<'idle' | 'loading' | 'error'>('idle')
   const [cartAdded, setCartAdded] = useState(false)
 
   const alreadyInCart = cartItems.some((i) => i.sku === selected.sku)
 
-  async function handleBuyNow() {
-    if (buyNowState === 'loading') return
-    setBuyNowState('loading')
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sku: selected.sku, locale }),
-      })
-      if (!res.ok) throw new Error('checkout failed')
-      const { url } = await res.json() as { url: string }
-      window.location.href = url
-    } catch {
-      setBuyNowState('error')
-    }
-  }
-
-  function handleAddToCart() {
-    addItem({
+  function buildCartItem() {
+    return {
       sku: selected.sku,
       photoSlug,
       photoTitle,
@@ -226,9 +209,18 @@ export default function ShopProductPicker({
       currency: selected.currency,
       priceText: selected.priceText,
       type: selected.type as CartItemType,
+      thumbnailUrl: previewUrl,
       downloadToken: selected.downloadToken,
       format: selected.format,
-    })
+    }
+  }
+
+  function handleBuyNow() {
+    buyNow(buildCartItem())
+  }
+
+  function handleAddToCart() {
+    addItem(buildCartItem())
     setCartAdded(true)
     setTimeout(() => setCartAdded(false), 2500)
   }
@@ -385,24 +377,13 @@ export default function ShopProductPicker({
         <button
           type="button"
           onClick={handleBuyNow}
-          disabled={buyNowState === 'loading'}
           aria-label={`Buy Now — ${selected.priceText}`}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-[20px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
-            buyNowState === 'loading'
-              ? 'bg-accent/40 cursor-default'
-              : 'bg-accent/80 hover:bg-accent cursor-pointer'
-          }`}
+          className="flex flex-1 items-center justify-center gap-2 rounded-[20px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors bg-accent/80 hover:bg-accent cursor-pointer"
         >
-          {buyNowState === 'loading' ? (
-            'Preparing…'
-          ) : (
-            <>
-              <svg width="11" height="16" viewBox="0 0 11 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M6.5 1L1 9h4.5L4.5 15 10 7H5.5L6.5 1Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
-              </svg>
-              Buy Now — {selected.priceText}
-            </>
-          )}
+          <svg width="11" height="16" viewBox="0 0 11 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6.5 1L1 9h4.5L4.5 15 10 7H5.5L6.5 1Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+          </svg>
+          Buy Now — {selected.priceText}
         </button>
 
         {/* Add to Cart — secondary */}
@@ -433,11 +414,6 @@ export default function ShopProductPicker({
 
       <p className="mt-3 text-[13px] text-white/40">{t('priceNote')}</p>
 
-      {buyNowState === 'error' && (
-        <p className="mt-2 text-[12px] text-red-400/70">
-          Could not start checkout — please try again.
-        </p>
-      )}
     </div>
   )
 }

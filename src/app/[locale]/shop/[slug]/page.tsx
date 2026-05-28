@@ -199,6 +199,7 @@ export default async function ShopItem({
             photoTitle={displayTitle(photo)}
             location={photo.location}
             caption={photo.caption}
+            previewUrl={photo.previewUrl}
             licenseNote={eventName ? (
               <p className="mt-4 text-[11px] font-light leading-relaxed text-white/30">
                 {t.rich('licensingNotePublicEvent', {

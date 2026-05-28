@@ -119,7 +119,21 @@
     "checkout": "Betala",
     "preparing": "Förbereder…",
     "error": "Kunde inte starta kassan — försök igen.",
-    "shipping": "Leveransadress anges vid kassan."
+    "shipping": "Leveransadress anges vid kassan.",
+    "payment": "Betalning",
+    "paymentDetails": "Betalningsuppgifter",
+    "shippingAddress": "Leveransadress",
+    "pay": "Betala",
+    "processing": "Behandlar…",
+    "paymentFailed": "Betalningen misslyckades — försök igen.",
+    "backToCart": "Tillbaka till varukorgen",
+    "orderConfirmed": "Order bekräftad",
+    "thankYou": "Tack.",
+    "successDigital": "Betalning mottagen. Dina filreferenser finns nedan — ett bekräftelsemail är på väg.",
+    "successPhysical": "Betalning mottagen. Ett bekräftelsemail är på väg.",
+    "fileReferences": "Filreferenser",
+    "physicalConfirm": "Din beställning förbereds. Du får en leveransbekräftelse när den har skickats.",
+    "continueShopping": "Fortsätt handla"
   },
   "licensing": {
     "title": "Licensvillkor och användningsrättigheter",

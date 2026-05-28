@@ -119,7 +119,21 @@
     "checkout": "Commander",
     "preparing": "Préparation…",
     "error": "Impossible de lancer le paiement — veuillez réessayer.",
-    "shipping": "Adresse de livraison collectée lors du paiement."
+    "shipping": "Adresse de livraison collectée lors du paiement.",
+    "payment": "Paiement",
+    "paymentDetails": "Détails du paiement",
+    "shippingAddress": "Adresse de livraison",
+    "pay": "Payer",
+    "processing": "Traitement…",
+    "paymentFailed": "Paiement échoué — veuillez réessayer.",
+    "backToCart": "Retour au panier",
+    "orderConfirmed": "Commande confirmée",
+    "thankYou": "Merci.",
+    "successDigital": "Paiement reçu. Vos références de fichiers sont ci-dessous — un e-mail de confirmation est en route.",
+    "successPhysical": "Paiement reçu. Un e-mail de confirmation est en route.",
+    "fileReferences": "Références de fichiers",
+    "physicalConfirm": "Votre commande d'impression est en cours de préparation. Vous recevrez une confirmation d'expédition une fois envoyée.",
+    "continueShopping": "Continuer les achats"
   },
   "licensing": {
     "title": "Conditions de licence et droits d'utilisation",

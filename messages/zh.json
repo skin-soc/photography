@@ -119,7 +119,21 @@
     "checkout": "结账",
     "preparing": "准备中…",
     "error": "无法启动结账 — 请重试。",
-    "shipping": "结账时将收集配送地址。"
+    "shipping": "结账时将收集配送地址。",
+    "payment": "付款",
+    "paymentDetails": "付款详情",
+    "shippingAddress": "配送地址",
+    "pay": "立即付款",
+    "processing": "处理中…",
+    "paymentFailed": "付款失败 — 请重试。",
+    "backToCart": "返回购物车",
+    "orderConfirmed": "订单已确认",
+    "thankYou": "感谢您。",
+    "successDigital": "已收到付款。您的文件参考号在下方 — 确认邮件已发送。",
+    "successPhysical": "已收到付款。确认邮件已发送。",
+    "fileReferences": "文件参考号",
+    "physicalConfirm": "您的印刷订单正在准备中。发货后您将收到配送确认。",
+    "continueShopping": "继续购物"
   },
   "licensing": {
     "title": "许可条款与使用权利",

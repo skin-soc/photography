@@ -119,7 +119,21 @@
     "checkout": "Kassalle",
     "preparing": "Valmistellaan…",
     "error": "Kassalle siirtyminen epäonnistui — yritä uudelleen.",
-    "shipping": "Toimitusosoite kerätään kassalla."
+    "shipping": "Toimitusosoite kerätään kassalla.",
+    "payment": "Maksu",
+    "paymentDetails": "Maksutiedot",
+    "shippingAddress": "Toimitusosoite",
+    "pay": "Maksa",
+    "processing": "Käsitellään…",
+    "paymentFailed": "Maksu epäonnistui — yritä uudelleen.",
+    "backToCart": "Takaisin ostoskoriin",
+    "orderConfirmed": "Tilaus vahvistettu",
+    "thankYou": "Kiitos.",
+    "successDigital": "Maksu vastaanotettu. Tiedostoviitteesi ovat alla — vahvistussähköposti on matkalla.",
+    "successPhysical": "Maksu vastaanotettu. Vahvistussähköposti on matkalla.",
+    "fileReferences": "Tiedostoviitteet",
+    "physicalConfirm": "Tulostustilaustasi valmistellaan. Saat toimitusvahvistuksen, kun se on lähetetty.",
+    "continueShopping": "Jatka ostoksia"
   },
   "licensing": {
     "title": "Lisenssiehdot ja käyttöoikeudet",

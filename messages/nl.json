@@ -119,7 +119,21 @@
     "checkout": "Afrekenen",
     "preparing": "Bezig met voorbereiden…",
     "error": "Afrekenen mislukt — probeer het opnieuw.",
-    "shipping": "Bezorgadres wordt opgegeven bij het afrekenen."
+    "shipping": "Bezorgadres wordt opgegeven bij het afrekenen.",
+    "payment": "Betaling",
+    "paymentDetails": "Betalingsgegevens",
+    "shippingAddress": "Bezorgadres",
+    "pay": "Betalen",
+    "processing": "Verwerken…",
+    "paymentFailed": "Betaling mislukt — probeer het opnieuw.",
+    "backToCart": "Terug naar winkelwagen",
+    "orderConfirmed": "Bestelling bevestigd",
+    "thankYou": "Dank u.",
+    "successDigital": "Betaling ontvangen. Uw bestandsreferenties staan hieronder — er is een bevestigingsmail onderweg.",
+    "successPhysical": "Betaling ontvangen. Er is een bevestigingsmail onderweg.",
+    "fileReferences": "Bestandsreferenties",
+    "physicalConfirm": "Uw printbestelling wordt voorbereid. U ontvangt een verzendbevestiging zodra deze is verzonden.",
+    "continueShopping": "Verder winkelen"
   },
   "licensing": {
     "title": "Licentievoorwaarden en gebruiksrechten",

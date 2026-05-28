@@ -119,7 +119,21 @@
     "checkout": "Checkout",
     "preparing": "Preparing…",
     "error": "Could not start checkout — please try again.",
-    "shipping": "Shipping address collected at checkout."
+    "shipping": "Shipping address collected at checkout.",
+    "payment": "Payment",
+    "paymentDetails": "Payment details",
+    "shippingAddress": "Shipping address",
+    "pay": "Pay",
+    "processing": "Processing…",
+    "paymentFailed": "Payment failed — please try again.",
+    "backToCart": "Back to cart",
+    "orderConfirmed": "Order confirmed",
+    "thankYou": "Thank you.",
+    "successDigital": "Payment received. Your file references are below — a confirmation email is on its way.",
+    "successPhysical": "Payment received. A confirmation email is on its way.",
+    "fileReferences": "File references",
+    "physicalConfirm": "Your print order is being prepared. You'll receive a shipping confirmation once dispatched.",
+    "continueShopping": "Continue shopping"
   },
   "licensing": {
     "title": "Licensing Terms & Usage Rights",
