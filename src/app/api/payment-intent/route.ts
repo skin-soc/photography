@@ -10,9 +10,11 @@ interface RequestItem { sku: string }
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json() as { items: RequestItem[]; locale?: string; country?: string }
+    const body = await req.json() as { items: RequestItem[]; locale?: string }
     const locale = body.locale ?? 'en'
-    const country = body.country ?? null
+    // Detect country from Cloudflare's IP geolocation header (populated in Workers;
+    // falls back to null in local dev where the header is absent).
+    const country = req.headers.get('cf-ipcountry') ?? null
     const skus = body.items.map((i) => i.sku)
 
     if (skus.length === 0) {

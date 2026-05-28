@@ -21,22 +21,6 @@ interface PaymentData {
   currency: string
 }
 
-// EU member states + common non-EU countries, ordered for a compact selector
-const BILLING_COUNTRIES: [string, string][] = [
-  ['DK', 'Denmark'],
-  ['—', '──────────'],
-  ['AT', 'Austria'], ['BE', 'Belgium'], ['BG', 'Bulgaria'], ['HR', 'Croatia'],
-  ['CY', 'Cyprus'], ['CZ', 'Czech Republic'], ['EE', 'Estonia'], ['FI', 'Finland'],
-  ['FR', 'France'], ['DE', 'Germany'], ['GR', 'Greece'], ['HU', 'Hungary'],
-  ['IE', 'Ireland'], ['IT', 'Italy'], ['LV', 'Latvia'], ['LT', 'Lithuania'],
-  ['LU', 'Luxembourg'], ['MT', 'Malta'], ['NL', 'Netherlands'], ['PL', 'Poland'],
-  ['PT', 'Portugal'], ['RO', 'Romania'], ['SK', 'Slovakia'], ['SI', 'Slovenia'],
-  ['ES', 'Spain'], ['SE', 'Sweden'],
-  ['—', '──────────'],
-  ['AU', 'Australia'], ['CA', 'Canada'], ['IS', 'Iceland'], ['JP', 'Japan'],
-  ['NZ', 'New Zealand'], ['NO', 'Norway'], ['SG', 'Singapore'], ['CH', 'Switzerland'],
-  ['GB', 'United Kingdom'], ['US', 'United States'],
-]
 
 export default function CartDrawer() {
   const locale = useLocale()
@@ -52,7 +36,6 @@ export default function CartDrawer() {
   const [successData, setSuccessData] = useState<{ downloads: DownloadItem[]; hasPhysical: boolean } | null>(null)
   const [intentLoading, setIntentLoading] = useState(false)
   const [intentError, setIntentError] = useState(false)
-  const [billingCountry, setBillingCountry] = useState('DK')
 
   // Items being checked out — cart items or the buy-now single item
   const checkoutItems = buyNowItem ? [buyNowItem] : items
@@ -114,7 +97,7 @@ export default function CartDrawer() {
       const res = await fetch('/api/payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: itemsToCharge.map((i) => ({ sku: i.sku })), locale, country: billingCountry }),
+        body: JSON.stringify({ items: itemsToCharge.map((i) => ({ sku: i.sku })), locale }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { error?: string }
@@ -291,32 +274,10 @@ export default function CartDrawer() {
       {/* Footer — only on cart step when items present */}
       {step === 'cart' && items.length > 0 && (
         <div className="border-t border-white/[0.07] px-5 py-5 space-y-3.5 shrink-0">
-
-          {/* Billing country */}
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35 shrink-0">
-              {t('billingCountry')}
-            </p>
-            <select
-              value={billingCountry}
-              onChange={(e) => setBillingCountry(e.target.value)}
-              className="min-w-0 flex-1 text-right text-[12px] font-light text-white/70 bg-transparent border-0 outline-none cursor-pointer appearance-none"
-              style={{ direction: 'rtl' }}
-            >
-              {BILLING_COUNTRIES.map(([code, name]) =>
-                code === '—'
-                  ? <option key={name} value="" disabled>──────────</option>
-                  : <option key={code} value={code}>{name}</option>
-              )}
-            </select>
-          </div>
-
-          {/* Total */}
           <div className="flex items-baseline justify-between">
             <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('total')}</p>
             <p className="text-[17px] font-light text-white">{totalText}</p>
           </div>
-          <p className="text-[10px] font-light text-white/25 -mt-1">{t('vatNote')}</p>
 
           {intentError && (
             <p className="text-[11px] text-red-400/70">{t('error')}</p>
