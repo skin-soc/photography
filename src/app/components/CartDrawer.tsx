@@ -157,7 +157,7 @@ export default function CartDrawer() {
                 {items.map((item) => (
                   <li
                     key={item.sku}
-                    className="flex items-start gap-3 rounded-[14px] border border-white/[0.07] bg-white/[0.025] overflow-hidden"
+                    className="flex items-start gap-3 border border-white/[0.07] bg-white/[0.025] overflow-hidden"
                   >
                     {/* Thumbnail */}
                     {item.thumbnailUrl ? (
@@ -181,15 +181,18 @@ export default function CartDrawer() {
                         <p className="truncate text-[12px] font-light text-white/80 leading-snug">{item.photoTitle}</p>
                         <p className="mt-0.5 text-[11px] font-light tracking-wide text-white/35">{item.productLabel}</p>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-[12px] text-white/65">{item.priceText}</p>
+                      <div className="shrink-0 flex flex-col items-end justify-between gap-2">
                         <button
                           type="button"
                           onClick={() => removeItem(item.sku)}
-                          className="mt-1 text-[10px] font-light tracking-wide text-white/20 hover:text-white/55 transition-colors"
+                          aria-label={t('remove')}
+                          className="text-white/30 hover:text-white/70 transition-colors leading-none"
                         >
-                          {t('remove')}
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          </svg>
                         </button>
+                        <p className="text-[12px] text-white/65">{item.priceText}</p>
                       </div>
                     </div>
                   </li>
