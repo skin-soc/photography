@@ -185,7 +185,7 @@ export default async function ShopItem({
             width={previewW}
             height={previewH}
             draggable={false}
-            className="block w-full h-auto pointer-events-none ring-1 ring-gray-500/60"
+            className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
           />
         </div>
 
