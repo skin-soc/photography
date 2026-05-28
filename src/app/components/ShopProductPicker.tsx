@@ -222,7 +222,7 @@ export default function ShopProductPicker({
   })).filter((g) => g.items.length > 0)
 
   return (
-    <div className="mt-[9px]">
+    <div className="mt-[9px] xl:mt-0">
       {rawModalOpen && (
         <RawRequestModal photoTitle={photoTitle} onClose={() => setRawModalOpen(false)} />
       )}
