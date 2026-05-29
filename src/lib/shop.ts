@@ -330,6 +330,94 @@ export function photoTypes(photo: ShopPhoto): ProductType[] {
   return ALL.filter((t) => photo.products.some((p) => p.type === t))
 }
 
+export interface ReferenceLookup {
+  /** Original camera filename without extension — the photo `id`. */
+  filename: string
+  /** Friendly title (Lightroom title, or the GMP ref when none is set). */
+  displayTitle: string
+  /** Public shop slug, so the admin can jump to the live product page. */
+  slug: string
+  /** Lightroom collection paths the photo is published under. */
+  category: string[][]
+  /** Watermarked-preview proxy path for this photo. */
+  previewUrl: string
+  width: number
+  height: number
+  /** How the typed code resolved. */
+  matchedBy: 'photo' | 'product'
+  /** Set when the code was a per-product download token. */
+  product?: {
+    sku: string
+    label: string
+    type: ProductType
+    format?: 'jpeg' | 'tiff'
+    downloadToken: string
+    /** Customer-facing download filename, e.g. GMP-F192DAA.jpg. */
+    customerFilename: string
+  }
+}
+
+/**
+ * Reverse-resolve a typed GMP code to its photo. Accepts either a photo-level
+ * reference (GMP-XXXXXXX, equals the slug for untitled photos) or a per-product
+ * download token (GMP-XXXXXXX.jpg / .tiff). Case- and extension-insensitive.
+ *
+ * SERVER-SIDE ONLY — recomputes HMACs with the origin secret.
+ */
+export async function lookupByReference(input: string): Promise<ReferenceLookup | null> {
+  const code = input
+    .trim()
+    .replace(/\.(jpe?g|tiff?)$/i, '')
+    .toUpperCase()
+  if (!code) return null
+
+  const catalog = await getCatalog()
+
+  // Per-product download token first — it's the more specific match.
+  for (const photo of catalog) {
+    const product = photo.products.find((p) => p.downloadToken?.toUpperCase() === code)
+    if (product) {
+      const ext = product.format === 'tiff' ? 'tiff' : 'jpg'
+      return {
+        filename: photo.id,
+        displayTitle: displayTitle(photo),
+        slug: photo.slug,
+        category: photo.category,
+        previewUrl: photo.previewUrl,
+        width: photo.width,
+        height: photo.height,
+        matchedBy: 'product',
+        product: {
+          sku: product.sku,
+          label: product.label,
+          type: product.type,
+          format: product.format,
+          downloadToken: product.downloadToken!,
+          customerFilename: `${product.downloadToken}.${ext}`,
+        },
+      }
+    }
+  }
+
+  // Photo-level reference (the GMP ref derived from the photo id).
+  for (const photo of catalog) {
+    if (photoRef(photo.id, ORIGIN_SECRET) === code) {
+      return {
+        filename: photo.id,
+        displayTitle: displayTitle(photo),
+        slug: photo.slug,
+        category: photo.category,
+        previewUrl: photo.previewUrl,
+        width: photo.width,
+        height: photo.height,
+        matchedBy: 'photo',
+      }
+    }
+  }
+
+  return null
+}
+
 /** The distinct product types offered anywhere in the catalog, in canonical
  *  order. Used to render only the type filters that actually have stock — a
  *  category with no products (e.g. nothing published as Fine Art) is omitted. */

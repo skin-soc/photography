@@ -3,9 +3,9 @@ import { Cormorant_Garamond, IBM_Plex_Mono, Space_Mono } from 'next/font/google'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
-import Nav from '../components/Nav'
-import NavigationOverlay from '../components/NavigationOverlay'
-import CartDrawerPortal from '../components/CartDrawerPortal'
+import Nav from '@/app/components/Nav'
+import NavigationOverlay from '@/app/components/NavigationOverlay'
+import CartDrawerPortal from '@/app/components/CartDrawerPortal'
 import { routing } from '@/i18n/routing'
 import {
   SITE_URL,
@@ -16,7 +16,7 @@ import {
   buildStructuredData,
   getKeywords,
 } from '@/i18n/seo'
-import '../globals.css'
+import '@/app/globals.css'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],

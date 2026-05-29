@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import GalleryStack, { GalleryItem } from '../../components/GalleryStack'
-import GalleryFooter from '../../components/GalleryFooter'
+import GalleryStack, { GalleryItem } from '@/app/components/GalleryStack'
+import GalleryFooter from '@/app/components/GalleryFooter'
 import { SITE_URL, OG_LOCALE_MAP, buildLanguagesMap, getKeywords } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
 

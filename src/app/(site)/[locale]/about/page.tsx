@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import GalleryStack, { GalleryItem } from '../../components/GalleryStack'
-import GalleryFooter from '../../components/GalleryFooter'
+import GalleryStack, { GalleryItem } from '@/app/components/GalleryStack'
+import GalleryFooter from '@/app/components/GalleryFooter'
 
 const B = '/images'
 

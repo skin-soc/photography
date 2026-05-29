@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import ShopGrid, { GridPhoto } from '../../components/ShopGrid'
+import ShopGrid, { GridPhoto } from '@/app/components/ShopGrid'
 import { getCatalog, fromPrice, photoTypes, availableTypes, buildCategoryTree, displayTitle } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import { SITE_URL, OG_LOCALE_MAP, buildLanguagesMap, getKeywords } from '@/i18n/seo'

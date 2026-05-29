@@ -1,0 +1,11 @@
+# Local Worker vars for `opennextjs-cloudflare preview`. Copy to `.dev.vars`
+# (gitignored) and fill in. In production these are set as Worker secrets via
+# `wrangler secret put <NAME>` (optionally `--env preview`).
+
+# Password for the /admin lookup tool.
+ADMIN_PASSWORD=changeme
+
+# LAN origin (TrueNAS) reached via Cloudflare Tunnel — leave unset for the
+# mock catalog in local dev.
+# SHOP_ORIGIN_URL=https://valhalla.gusmcewan.com
+# SHOP_ORIGIN_SECRET=
