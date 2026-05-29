@@ -330,6 +330,13 @@ export function photoTypes(photo: ShopPhoto): ProductType[] {
   return ALL.filter((t) => photo.products.some((p) => p.type === t))
 }
 
+/** The distinct product types offered anywhere in the catalog, in canonical
+ *  order. Used to render only the type filters that actually have stock — a
+ *  category with no products (e.g. nothing published as Fine Art) is omitted. */
+export function availableTypes(photos: ShopPhoto[]): ProductType[] {
+  return ALL.filter((t) => photos.some((photo) => photo.products.some((p) => p.type === t)))
+}
+
 export interface CategoryNode {
   name: string
   children: CategoryNode[]

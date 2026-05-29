@@ -26,6 +26,10 @@ const TYPE_FILTERS: { key: ProductType; label: string }[] = [
   { key: 'digital', label: 'digital' },
 ]
 
+// Canonical priority for picking a sensible default filter when the catalog
+// doesn't offer every type.
+const TYPE_PRIORITY: ProductType[] = ['digital', 'print', 'fine-art']
+
 function matchesCategory(photo: GridPhoto, path: string[]): boolean {
   if (path.length === 0) return true
   return photo.category.some((c) => path.every((seg, i) => c[i] === seg))
@@ -152,15 +156,20 @@ function Breadcrumb({
 export default function ShopGrid({
   photos,
   categoryTree,
+  availableTypes,
   initialCategoryPath = [],
 }: {
   photos: GridPhoto[]
   categoryTree: CategoryNode[]
+  availableTypes: ProductType[]
   initialCategoryPath?: string[]
 }) {
   const t = useTranslations('shop')
+  // Only show filters for types the catalog actually offers, in canonical order.
+  const typeFilters = TYPE_FILTERS.filter((f) => availableTypes.includes(f.key))
+  const defaultType = TYPE_PRIORITY.find((tp) => availableTypes.includes(tp)) ?? null
   const [categoryPath, setCategoryPath] = useState<string[]>(initialCategoryPath)
-  const [typeFilter, setTypeFilter] = useState<ProductType | null>('digital')
+  const [typeFilter, setTypeFilter] = useState<ProductType | null>(defaultType)
 
   const currentNode: CategoryNode | null = (() => {
     if (categoryPath.length === 0) return null
@@ -185,9 +194,10 @@ export default function ShopGrid({
 
   return (
     <>
-      {/* Product type filter */}
+      {/* Product type filter — only when the catalog offers more than one type */}
+      {typeFilters.length > 1 && (
       <div className="flex flex-wrap gap-x-7 gap-y-2 mb-10">
-        {TYPE_FILTERS.map(({ key, label }) => {
+        {typeFilters.map(({ key, label }) => {
           const active = typeFilter === key
           return (
             <button
@@ -204,6 +214,7 @@ export default function ShopGrid({
           )
         })}
       </div>
+      )}
 
       {/* Breadcrumb */}
       <Breadcrumb path={categoryPath} onNavigate={setCategoryPath} />

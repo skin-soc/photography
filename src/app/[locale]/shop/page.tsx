@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import ShopGrid, { GridPhoto } from '../../components/ShopGrid'
-import { getCatalog, fromPrice, photoTypes, buildCategoryTree, displayTitle } from '@/lib/shop'
+import { getCatalog, fromPrice, photoTypes, availableTypes, buildCategoryTree, displayTitle } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import { SITE_URL, OG_LOCALE_MAP, buildLanguagesMap, getKeywords } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
@@ -58,6 +58,7 @@ export default async function Shop({
   const catalog = await getCatalog()
   const rates = await getRates()
   const categoryTree = buildCategoryTree(catalog)
+  const types = availableTypes(catalog)
   const photos: GridPhoto[] = catalog.map((p) => {
     const lo = fromPrice(p)
     return {
@@ -85,7 +86,7 @@ export default async function Shop({
       </header>
 
       {photos.length > 0 ? (
-        <ShopGrid photos={photos} categoryTree={categoryTree} initialCategoryPath={initialCategoryPath} />
+        <ShopGrid photos={photos} categoryTree={categoryTree} availableTypes={types} initialCategoryPath={initialCategoryPath} />
       ) : (
         <p className="text-white/40">{tShop('checkoutSoon')}</p>
       )}
