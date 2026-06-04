@@ -75,6 +75,11 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     const anchor = (e.target as HTMLElement).closest('a')
     if (!anchor) return
+    // Never intercept downloads, new-tab links, or non-page routes — these are
+    // not SPA navigations. Hijacking an `<a download>` would break the download
+    // and spin the overlay forever (the route never renders a page).
+    if (anchor.hasAttribute('download')) return
+    if (anchor.target && anchor.target !== '_self') return
     let url: URL
     try {
       url = new URL(anchor.href)
@@ -82,6 +87,7 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
       return
     }
     if (url.origin !== window.location.origin) return
+    if (url.pathname.startsWith('/api/')) return
     if (url.pathname === window.location.pathname && url.search === window.location.search) return
 
     e.preventDefault()

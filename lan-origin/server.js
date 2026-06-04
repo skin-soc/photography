@@ -95,6 +95,27 @@ function productToken(sku) {
     .toUpperCase()
 }
 
+/**
+ * Sign / verify a short-lived DIRECT-download URL. The shop Worker mints these
+ * after it has authorised the buyer (valid passcode cookie), so the browser can
+ * stream the file straight from this origin — bypassing the Worker, whose CPU
+ * budget can't absorb large files. The signature + expiry stand in for the
+ * x-shop-secret header on this one route.
+ */
+function fileSig(orderId, sku, exp) {
+  const key = SHARED_SECRET || 'dev'
+  return createHmac('sha256', key).update(`${orderId}:${sku}:${exp}`).digest('hex')
+}
+function verifyFileSig(orderId, sku, exp, sig) {
+  if (!exp || !sig) return false
+  const expNum = Number(exp)
+  if (!Number.isFinite(expNum) || Date.now() > expNum) return false
+  const expected = fileSig(orderId, sku, String(exp))
+  const a = Buffer.from(String(sig), 'hex')
+  const b = Buffer.from(expected, 'hex')
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
 /** Customer-facing PHOTO reference — GMP-XXXXXXX from the photo id. The Lightroom
  *  plugin names master files by this, so the deliverable store carries the shop
  *  reference rather than raw camera filenames. */
@@ -231,6 +252,16 @@ app.disable('x-powered-by')
 /** Shared-secret gate — every route except /healthz requires the header. */
 app.use((req, res, next) => {
   if (req.path === '/healthz') return next()
+  // Signed, time-limited direct-download URLs bypass the header gate so the
+  // browser streams the file straight from here (never through the Worker,
+  // which would exhaust its CPU budget on large files).
+  const m = req.path.match(/^\/orders\/([^/]+)\/file\/([^/]+)$/)
+  if (
+    m &&
+    verifyFileSig(decodeURIComponent(m[1]), decodeURIComponent(m[2]), req.query.exp, req.query.sig)
+  ) {
+    return next()
+  }
   if (SHARED_SECRET && req.get('x-shop-secret') !== SHARED_SECRET) {
     return res.status(401).json({ error: 'unauthorized' })
   }

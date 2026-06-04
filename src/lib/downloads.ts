@@ -94,13 +94,26 @@ export async function verifyPasscode(orderId: string, passcode: string): Promise
   return res.ok
 }
 
-/** Stream a purchased file from the origin (the route pipes the body through). */
-export async function fetchOrderFile(orderId: string, sku: string): Promise<Response> {
-  if (!ORIGIN) return new Response(null, { status: 404 })
-  return fetch(
+/**
+ * Mint a short-lived, signed DIRECT-download URL on the origin.
+ *
+ * The buyer's browser is redirected here so the file streams browser ↔ origin
+ * directly — never proxied through the Worker, whose CPU budget can't absorb
+ * large (tens–hundreds of MB) image files. The HMAC signature + expiry let the
+ * origin accept this one URL without the x-shop-secret header.
+ */
+export function signedFileUrl(orderId: string, sku: string, ttlMs = 5 * 60_000): string | null {
+  if (!ORIGIN) return null
+  const exp = Date.now() + ttlMs
+  const sig = createHmac('sha256', ORIGIN_SECRET)
+    .update(`${orderId}:${sku}:${exp}`)
+    .digest('hex')
+  const u = new URL(
     `${ORIGIN}/orders/${encodeURIComponent(orderId)}/file/${encodeURIComponent(sku)}`,
-    { headers: originHeaders(), cache: 'no-store' },
   )
+  u.searchParams.set('exp', String(exp))
+  u.searchParams.set('sig', sig)
+  return u.toString()
 }
 
 // ── Admin order management (proxied to the origin) ────────────────────────────
