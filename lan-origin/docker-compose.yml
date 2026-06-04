@@ -5,6 +5,9 @@
 services:
   origin:
     build: /mnt/chicago/photography/Shop/shop-origin
+    # Pin the image name so `docker compose up --no-build` always uses the
+    # image rebuild.sh just built (not a stale auto-named one).
+    image: ix-photography-shop-origin:latest
     restart: unless-stopped
     environment:
       PORT: 8787
