@@ -25,13 +25,17 @@ export async function GET(
     return new NextResponse(null, { status: upstream.status || 502 })
   }
 
-  return new NextResponse(upstream.body, {
-    status: 200,
-    headers: {
-      'Content-Type': upstream.headers.get('Content-Type') ?? 'application/octet-stream',
-      'Content-Disposition':
-        upstream.headers.get('Content-Disposition') ?? `attachment; filename="${sku}"`,
-      'Cache-Control': 'private, no-store',
-    },
-  })
+  const headers: Record<string, string> = {
+    'Content-Type': upstream.headers.get('Content-Type') ?? 'application/octet-stream',
+    'Content-Disposition':
+      upstream.headers.get('Content-Disposition') ?? `attachment; filename="${sku}"`,
+    'Cache-Control': 'private, no-store',
+  }
+  // Forward the exact byte length so the browser knows when the download is
+  // complete and closes the connection cleanly (otherwise the tab spinner
+  // hangs after the last byte and errors with "couldn't connect").
+  const len = upstream.headers.get('Content-Length')
+  if (len) headers['Content-Length'] = len
+
+  return new NextResponse(upstream.body, { status: 200, headers })
 }

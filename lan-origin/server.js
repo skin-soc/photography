@@ -719,9 +719,20 @@ app.get('/orders/:orderId/file/:sku', async (req, res) => {
   grant.counts[sku] = (grant.counts[sku] ?? 0) + 1
   await writeFile(orderPath(orderId), JSON.stringify(grant, null, 2)).catch(() => {})
 
+  // Send an exact Content-Length so the client knows precisely when the
+  // transfer is complete and can close the connection — without it the
+  // response is chunked and the browser's connection/spinner hangs after the
+  // last byte and eventually errors ("couldn't connect").
+  let size = 0
+  try {
+    size = (await stat(result.path)).size
+  } catch {
+    /* fall back to chunked if the stat fails */
+  }
   res.set('Content-Type', result.contentType)
   res.set('Content-Disposition', `attachment; filename="${result.filename}"`)
   res.set('Cache-Control', 'private, no-store')
+  if (size > 0) res.set('Content-Length', String(size))
   createReadStream(result.path).pipe(res)
 })
 
