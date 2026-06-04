@@ -90,6 +90,7 @@
     "fineArt": "Konsttryck",
     "digital": "Digitala nedladdningar",
     "priceNote": "Priser i danska kronor.",
+    "priceExclVat": "Priser exkl. moms — beräknas i kassan",
     "rawOnRequest": "RAW-fil tillgänglig — begär offert",
     "rawRequestTitle": "Request RAW file",
     "rawRequestSend": "Send request",

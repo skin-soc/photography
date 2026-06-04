@@ -1,30 +1,76 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
 type NavState = 'idle' | 'loading' | 'error'
 
-// Time to wait before declaring the navigation failed
-const TIMEOUT_MS = 12_000
+// Don't flash the spinner for near-instant navigations.
+const SPINNER_DELAY_MS = 200
+// How long to wait before the first connectivity check. The server's upstream
+// (NAS) fetch is bounded at ~8s, so a healthy navigation — even with a slow
+// NAS — should resolve within ~10s. We only start probing after that.
+const PROBE_AFTER_MS = 10_000
+// How often to re-check connectivity while a navigation is still pending.
+const PROBE_INTERVAL_MS = 4_000
+// Abort an individual probe if it doesn't answer in time.
+const PROBE_TIMEOUT_MS = 5_000
+// Absolute ceiling. If the server keeps answering health checks but the page
+// still hasn't rendered after this long, something is genuinely wrong — surface
+// the error rather than spinning forever.
+const MAX_WAIT_MS = 45_000
 
 export default function NavigationOverlay({ children }: { children: React.ReactNode }) {
   const [navState, setNavState] = useState<NavState>('idle')
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
 
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const startedAtRef = useRef(0)
+
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current = []
+  }, [])
+
+  // Navigation completed — the route actually changed. Tear everything down.
   useEffect(() => {
     if (pathname !== prevPathname.current) {
       prevPathname.current = pathname
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-        timeoutRef.current = null
-      }
+      clearTimers()
       setNavState('idle')
     }
-  }, [pathname])
+  }, [pathname, clearTimers])
+
+  // Clean up on unmount.
+  useEffect(() => clearTimers, [clearTimers])
+
+  // Probe our own origin to distinguish "slow but alive" from "down". As long
+  // as the server answers, the navigation is simply slow, so we keep the
+  // spinner up and check again shortly. We only show the error when the server
+  // is unreachable (or the overall wait blows past the ceiling).
+  const probe = useCallback(async () => {
+    if (Date.now() - startedAtRef.current > MAX_WAIT_MS) {
+      setNavState('error')
+      return
+    }
+    try {
+      const ctrl = new AbortController()
+      const t = setTimeout(() => ctrl.abort(), PROBE_TIMEOUT_MS)
+      const res = await fetch('/api/health', { cache: 'no-store', signal: ctrl.signal })
+      clearTimeout(t)
+      if (res.ok) {
+        // Server is alive — navigation is just slow. Keep waiting, re-check.
+        timersRef.current.push(setTimeout(probe, PROBE_INTERVAL_MS))
+      } else {
+        setNavState('error')
+      }
+    } catch {
+      // Network failure / timeout → server genuinely unreachable.
+      setNavState('error')
+    }
+  }, [])
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     const anchor = (e.target as HTMLElement).closest('a')
@@ -39,19 +85,18 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
     if (url.pathname === window.location.pathname && url.search === window.location.search) return
 
     e.preventDefault()
-    setNavState('loading')
+    clearTimers()
+    startedAtRef.current = Date.now()
     router.push(anchor.href)
 
-    timeoutRef.current = setTimeout(() => {
-      setNavState('error')
-    }, TIMEOUT_MS)
+    // Delay the overlay so quick navigations never flash a spinner.
+    timersRef.current.push(setTimeout(() => setNavState('loading'), SPINNER_DELAY_MS))
+    // Begin connectivity checks only once the wait is genuinely long.
+    timersRef.current.push(setTimeout(probe, PROBE_AFTER_MS))
   }
 
   function dismiss() {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
-    }
+    clearTimers()
     setNavState('idle')
   }
 

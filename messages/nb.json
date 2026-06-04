@@ -90,6 +90,7 @@
     "fineArt": "Kunsttrykk",
     "digital": "Digitale nedlastinger",
     "priceNote": "Priser i danske kroner.",
+    "priceExclVat": "Priser eks. mva. — beregnes i kassen",
     "rawOnRequest": "RAW-fil tilgjengelig — be om tilbud",
     "rawRequestTitle": "Request RAW file",
     "rawRequestSend": "Send request",

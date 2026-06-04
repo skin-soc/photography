@@ -90,6 +90,7 @@
     "fineArt": "Fine Art",
     "digital": "Digital Downloads",
     "priceNote": "Prices in Danish kroner.",
+    "priceExclVat": "Prices exclude VAT — calculated at checkout",
     "rawOnRequest": "RAW file available — request a quote",
     "rawRequestTitle": "Request RAW file",
     "rawRequestSend": "Send request",

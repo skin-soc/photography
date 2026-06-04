@@ -412,6 +412,10 @@ export default function ShopProductPicker({
         </button>
       </div>
 
+      {/* Tax disclosure — prices are exclusive of VAT, applied at checkout */}
+      <p className="mt-3 text-center text-[10px] font-light tracking-[0.16em] uppercase text-white/30">
+        {t('priceExclVat')}
+      </p>
 
     </div>
   )

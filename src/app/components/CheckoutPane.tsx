@@ -29,7 +29,7 @@ interface CheckoutPaneProps {
   currency: string
   totalText: string
   onBack: () => void
-  onSuccess: (downloads: DownloadItem[], hasPhysical: boolean) => void
+  onSuccess: (downloads: DownloadItem[], hasPhysical: boolean, orderId: string) => void
 }
 
 // ── Stripe appearance — matches site dark palette ─────────────────────────────
@@ -137,7 +137,7 @@ function PaymentForm({
       if (meta?.downloadItems) {
         try { downloads = JSON.parse(meta.downloadItems) } catch { /* ignore */ }
       }
-      onSuccess(downloads, hasPhysical)
+      onSuccess(downloads, hasPhysical, result.paymentIntent.id)
     }
   }
 

@@ -9,3 +9,10 @@ ADMIN_PASSWORD=changeme
 # mock catalog in local dev.
 # SHOP_ORIGIN_URL=https://valhalla.gusmcewan.com
 # SHOP_ORIGIN_SECRET=
+
+# Secret used to sign the proof-of-passcode cookie on the download page.
+# Any long random string; rotating it invalidates all unlocked sessions.
+DOWNLOAD_LINK_SECRET=changeme-long-random
+
+# Public site origin (used in places that need an absolute URL).
+# SITE_URL=https://gusmcewan.com

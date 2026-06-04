@@ -265,7 +265,7 @@ export default function ShopGrid({
                 >
                   <div className="relative overflow-hidden bg-white/5 aspect-square">
                     <LazyImage
-                      src={`${p.previewUrl}?max=400`}
+                      src={`${p.previewUrl}?max=800`}
                       alt={`${p.title} — ${p.location}`}
                     />
                   </div>

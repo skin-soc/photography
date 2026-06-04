@@ -14,11 +14,29 @@ services:
       CACHE_DIR: /data/cache
       PRODUCTS_PATH: /data/products.json
       PUBLIC_URL: https://valhalla.gusmcewan.com
-      PREVIEW_MAX: 1200
+      PREVIEW_MAX: 800   # never serve a preview larger than the plugin's 800px preview
       SHARED_SECRET: 72CI7xmvrcXqgapT1tISjvc8Kopd95PsGcQM4az9w27faLHhAeVObnZuqzSdN3Su4qIjWJSvM2iUszyUxQOujLHvMDLLVZxEN2bx
+      # ── Fulfilment (Phase 2) ──────────────────────────────────────────────
+      # Heavy fulfilment files live on the /fulfil mount (bulk storage), keeping
+      # the fast SSD (/data) for the web-facing catalog + previews. The masters
+      # are the single deliverable source — RAW originals are never read here.
+      MASTERS_DIR: /fulfil/masters          # Lightroom-exported edited masters
+      FULFIL_CACHE_DIR: /fulfil/cache       # generated, copyright-embedded files (Standard…Master)
+      ORDERS_DIR: /fulfil/orders            # download grant records
+      SITE_URL: https://gusmcewan.com       # public site, for the email link
+      LINK_TTL_DAYS: 30
+      # iCloud SMTP — use an app-specific password; MAIL_FROM must be your iCloud
+      # address or an iCloud Custom-Domain alias.
+      SMTP_HOST: smtp.mail.me.com
+      SMTP_PORT: 587
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      MAIL_FROM: ""
     ports:
       - "8787:8787"
     volumes:
+      # Fast SSD — catalog.json + previews + watermarked preview cache.
       - /mnt/chicago/photography/Shop:/data
-      # Fulfilment phase only — full-res originals, mounted READ ONLY.
-      # - /mnt/chicago/photography/originals:/data/originals:ro
+      # Bulk storage — masters + generated deliverables + grants. The Lightroom
+      # plugin writes masters/ here; the container reads them and writes cache/.
+      - /mnt/sydney/shop:/fulfil

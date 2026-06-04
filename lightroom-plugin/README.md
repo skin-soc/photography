@@ -7,17 +7,23 @@ collection, hit **Publish**, and it appears in the shop.
 ## What it does
 
 On Publish, Lightroom renders each photo in the collection (JPEG, sRGB, long
-edge 2560px). The plugin then:
+edge 800px — previews never exceed 800px). The plugin then:
 
 1. Copies each rendered file to `<shop-data>/previews/<id>.jpg`.
-2. Rebuilds `<shop-data>/catalog.json` from **every** Shop collection.
+2. Renders a full-resolution **edited master** to `<shop-data>/masters/<id>.jpg`
+   (and a 16-bit TIFF `<id>.tif` for RAW shots). These are the fulfilment
+   source — the origin makes the purchased download from them, so the delivered
+   file matches the preview the customer saw.
+3. Rebuilds `<shop-data>/catalog.json` from **every** Shop collection.
 
 `<id>` is the original filename without its extension. Which **product types**
 a photo is sold in is decided by which collections it lives in (see below).
 
 The LAN origin app reads `catalog.json` + `previews/` and serves the shop. It
 does the final downsizing and watermarking, so the previews written here stay
-clean.
+clean. The `masters/` are full-resolution and never served directly — only
+generated, copyright-embedded derivatives leave the NAS, gated by a verified
+payment.
 
 ## Install
 

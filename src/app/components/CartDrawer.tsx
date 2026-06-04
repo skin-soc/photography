@@ -33,9 +33,13 @@ export default function CartDrawer() {
   const { items, removeItem, clearCart } = useCartStore()
   const [step, setStep] = useState<Step>('cart')
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
-  const [successData, setSuccessData] = useState<{ downloads: DownloadItem[]; hasPhysical: boolean } | null>(null)
+  const [successData, setSuccessData] = useState<{ downloads: DownloadItem[]; hasPhysical: boolean; orderId: string } | null>(null)
   const [intentLoading, setIntentLoading] = useState(false)
   const [intentError, setIntentError] = useState(false)
+  // Download grant issuing — 'issuing' while we create it, 'ready' once the
+  // downloads page is usable, 'error' if it couldn't be issued.
+  const [issueState, setIssueState] = useState<'idle' | 'issuing' | 'ready' | 'error'>('idle')
+  const [issuedPasscode, setIssuedPasscode] = useState<string | null>(null)
 
   // Items being checked out — cart items or the buy-now single item
   const checkoutItems = buyNowItem ? [buyNowItem] : items
@@ -55,6 +59,8 @@ export default function CartDrawer() {
       setPaymentData(null)
       setSuccessData(null)
       setIntentError(false)
+      setIssueState('idle')
+      setIssuedPasscode(null)
     }
   }, [isOpen])
 
@@ -115,10 +121,37 @@ export default function CartDrawer() {
     }
   }
 
-  function handleSuccess(downloads: DownloadItem[], hasPhysical: boolean) {
+  async function handleSuccess(downloads: DownloadItem[], hasPhysical: boolean, orderId: string) {
     if (!buyNowItem) clearCart()
-    setSuccessData({ downloads, hasPhysical })
+    // Prefer the digital items from the payment-intent API response (reliable);
+    // the client-side PaymentIntent metadata isn't always populated by Stripe.js.
+    const dl = (paymentData?.downloadItems && paymentData.downloadItems.length > 0)
+      ? paymentData.downloadItems
+      : downloads
+    setSuccessData({ downloads: dl, hasPhysical, orderId })
     setStep('success')
+
+    // Issue the download grant now (the webhook is the backup) and auto-unlock
+    // this browser, so the buyer can download immediately — no email required.
+    if (dl.length > 0) {
+      setIssueState('issuing')
+      try {
+        const res = await fetch('/api/downloads/issue', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ paymentIntentId: orderId, clientSecret: paymentData?.clientSecret }),
+        })
+        if (res.ok) {
+          const data = (await res.json()) as { passcode?: string | null }
+          setIssuedPasscode(data.passcode ?? null)
+          setIssueState('ready')
+        } else {
+          setIssueState('error')
+        }
+      } catch {
+        setIssueState('error')
+      }
+    }
   }
 
   function handleClose() {
@@ -231,7 +264,9 @@ export default function CartDrawer() {
               <p className="text-[9px] font-light tracking-[0.22em] uppercase text-[#931020] mb-2">{t('orderConfirmed')}</p>
               <p className="text-[22px] font-light text-white leading-tight">{t('thankYou')}</p>
               <p className="mt-2 text-[12px] font-light text-white/40 leading-relaxed">
-                {successData.downloads.length > 0 ? t('successDigital') : t('successPhysical')}
+                {successData.downloads.length > 0
+                  ? 'Your files are ready to download below. If you entered an email, the link and passcode were sent there too.'
+                  : t('successPhysical')}
               </p>
             </div>
 
@@ -251,6 +286,46 @@ export default function CartDrawer() {
                     </p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {successData.downloads.length > 0 && (
+              <div className="space-y-2">
+                <a
+                  href={`/${locale}/shop/downloads/${successData.orderId}`}
+                  onClick={(e) => { if (issueState === 'issuing') e.preventDefault() }}
+                  aria-disabled={issueState === 'issuing'}
+                  className={`block w-full text-center rounded-[14px] py-3 text-[11px] font-light tracking-[0.22em] uppercase transition-colors ${
+                    issueState === 'issuing'
+                      ? 'bg-[#931020]/30 text-white/40 cursor-default'
+                      : 'bg-[#931020]/80 hover:bg-[#931020] text-white'
+                  }`}
+                >
+                  {issueState === 'issuing' ? 'Preparing your downloads…' : 'Go to your downloads →'}
+                </a>
+                <p className="text-[10px] font-light text-white/30 leading-relaxed text-center">
+                  {issueState === 'error'
+                    ? 'If the page doesn’t open, contact us with your order reference.'
+                    : 'Opens unlocked on this device — download right away. If you entered an email, the link + passcode were sent there too.'}
+                </p>
+              </div>
+            )}
+
+            {successData.downloads.length > 0 && issuedPasscode && (
+              <div className="rounded-[12px] border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 space-y-1.5">
+                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30">Save your access</p>
+                <p className="text-[10px] font-light text-white/40 leading-relaxed">
+                  Keep these to download again later or on another device:
+                </p>
+                <p className="font-[family-name:var(--font-mono-ibm)] text-[11px] text-white/60 break-all">
+                  /{locale}/shop/downloads/{successData.orderId}
+                </p>
+                <p className="text-[11px] text-white/50">
+                  Passcode:{' '}
+                  <span className="font-[family-name:var(--font-mono-ibm)] text-[#e0566a] tracking-[0.2em]">
+                    {issuedPasscode}
+                  </span>
+                </p>
               </div>
             )}
 

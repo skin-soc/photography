@@ -90,6 +90,7 @@
     "fineArt": "Stampe d'arte",
     "digital": "Download digitali",
     "priceNote": "Prezzi in corone danesi.",
+    "priceExclVat": "Prezzi IVA esclusa — calcolata al checkout",
     "rawOnRequest": "File RAW disponibile — richiedi un preventivo",
     "rawRequestTitle": "Request RAW file",
     "rawRequestSend": "Send request",

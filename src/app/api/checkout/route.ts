@@ -1,7 +1,5 @@
-import Stripe from 'stripe'
 import { getCatalog } from '@/lib/shop'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+import { stripe } from '@/lib/stripe-server'
 
 interface RequestItem { sku: string }
 
@@ -58,6 +56,7 @@ export async function POST(req: Request) {
   const downloadItems = items
     .filter((i) => i.product.downloadToken)
     .map((i) => ({
+      sku: i.product.sku,
       token: i.product.downloadToken!,
       format: i.product.format ?? 'jpeg',
       label: i.product.label,

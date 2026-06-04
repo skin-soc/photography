@@ -90,6 +90,7 @@
     "fineArt": "Wydruki artystyczne",
     "digital": "Pliki cyfrowe",
     "priceNote": "Ceny w koronach duńskich.",
+    "priceExclVat": "Ceny bez VAT — naliczany przy kasie",
     "rawOnRequest": "Plik RAW dostępny — zapytaj o wycenę",
     "rawRequestTitle": "Request RAW file",
     "rawRequestSend": "Send request",

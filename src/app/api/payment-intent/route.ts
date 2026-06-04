@@ -1,7 +1,6 @@
 import Stripe from 'stripe'
 import { getCatalog } from '@/lib/shop'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+import { stripe } from '@/lib/stripe-server'
 
 // Stripe tax code for digital images / art
 const TAX_CODE_DIGITAL = 'txcd_10103001'
@@ -14,7 +13,12 @@ export async function POST(req: Request) {
     const locale = body.locale ?? 'en'
     // Detect country from Cloudflare's IP geolocation header (populated in Workers;
     // falls back to null in local dev where the header is absent).
-    const country = req.headers.get('cf-ipcountry') ?? null
+    // In local dev there is no cf-ipcountry header, so tax would always be
+    // skipped. Default to Germany there so the VAT/OSS logic is exercisable
+    // locally. This branch never runs in production (NODE_ENV !== 'development').
+    const country =
+      req.headers.get('cf-ipcountry') ??
+      (process.env.NODE_ENV === 'development' ? 'DE' : null)
     const skus = body.items.map((i) => i.sku)
 
     if (skus.length === 0) {
@@ -85,6 +89,7 @@ export async function POST(req: Request) {
     const downloadItems = items
       .filter((i) => i.product.downloadToken)
       .map((i) => ({
+        sku: i.product.sku,
         token: i.product.downloadToken!,
         format: i.product.format ?? 'jpeg',
         label: i.product.label,
@@ -105,7 +110,12 @@ export async function POST(req: Request) {
       currency,
       automatic_payment_methods: { enabled: true },
       metadata,
-    })
+      // Link the tax calculation so Stripe records the tax transaction on
+      // payment, reverses it on refund, and includes tax on the receipt.
+      ...(calculationId
+        ? { hooks: { inputs: { tax: { calculation: calculationId } } } }
+        : {}),
+    } as Stripe.PaymentIntentCreateParams)
 
     return Response.json({
       clientSecret: intent.client_secret,

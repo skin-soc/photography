@@ -90,6 +90,7 @@
     "fineArt": "مطبوعات فنية",
     "digital": "تنزيلات رقمية",
     "priceNote": "الأسعار بالكرون الدنماركي.",
+    "priceExclVat": "الأسعار لا تشمل ضريبة القيمة المضافة — تُحتسب عند الدفع",
     "rawOnRequest": "ملف RAW متاح — اطلب عرض سعر",
     "rawRequestTitle": "Request RAW file",
     "rawRequestSend": "Send request",

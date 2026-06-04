@@ -90,6 +90,7 @@
     "fineArt": "Kunstdrucke",
     "digital": "Digitale Downloads",
     "priceNote": "Preise in dänischen Kronen.",
+    "priceExclVat": "Preise exkl. MwSt. — wird an der Kasse berechnet",
     "rawOnRequest": "RAW-Datei verfügbar — Angebot anfordern",
     "rawRequestTitle": "Request RAW file",
     "rawRequestSend": "Send request",

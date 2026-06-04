@@ -90,6 +90,7 @@
     "fineArt": "Арт-принты",
     "digital": "Цифровые файлы",
     "priceNote": "Цены в датских кронах.",
+    "priceExclVat": "Цены без НДС — рассчитывается при оформлении",
     "rawOnRequest": "RAW-файл доступен — запросить коммерческое предложение",
     "rawRequestTitle": "Request RAW file",
     "rawRequestSend": "Send request",

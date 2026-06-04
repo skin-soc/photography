@@ -1,12 +1,16 @@
 --[[
   Gus McEwan Shop — publish service provider.
 
-  On Publish, Lightroom renders each photo in the collection (JPEG, sRGB,
-  long edge 2560px). This provider copies each rendered file into
-  <shopDataDir>/previews/<id>.jpg and then rebuilds <shopDataDir>/catalog.json
-  from every Shop published collection.
+  On Publish, Lightroom renders each photo as an 800px sRGB JPEG and this
+  provider writes it to <shopDataDir>/previews/<id>.jpg (fast SSD), then rebuilds
+  <shopDataDir>/catalog.json from every Shop published collection.
 
-  The LAN origin app reads catalog.json + previews/ and serves the shop.
+  Full-resolution download MASTERS are produced separately by the "Export
+  masters" button (a Publish can't drive a second render): masters/<id>.jpg for
+  every photo, plus masters/<id>.tif (16-bit) for RAW shots, written to the bulk
+  fulfilment store. The LAN origin serves previews from previews/ and builds the
+  paid downloads from masters/.
+
   Photo id = the original filename without extension. Category = the name of
   the published collection the photo lives in (use People / Places / Nature).
 ]]
@@ -18,6 +22,11 @@ local LrView = import 'LrView'
 local LrDate = import 'LrDate'
 local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
+local LrExportSession = import 'LrExportSession'
+local LrFunctionContext = import 'LrFunctionContext'
+
+-- Pure-Lua HMAC-SHA256 → the GMP reference the origin/Worker use.
+local Sha256 = require 'Sha256'
 
 --==================================================================--
 -- Helpers
@@ -96,6 +105,91 @@ local function composeLocation(photo)
     return ''
   end
   return table.concat(parts, ', ')
+end
+
+--==================================================================--
+-- Full-resolution master export (fulfilment source)
+--==================================================================--
+
+-- Masters are the FULFILMENT source the LAN origin reads (separate from the
+-- 800px previews Publish writes to the SSD):
+--   masters/<id>.jpg  — full-res EDITED JPEG, for every photo (JPEG tiers).
+--   masters/<id>.tif  — full-res EDITED 16-bit TIFF, RAW shots only (TIFF tiers).
+-- Both are produced by the "Export masters" button (Lightroom won't render an
+-- export from inside a Publish, and can't mix formats in one pass).
+
+--- The masters folder for a settings table: <mastersDir-or-shopData>/masters.
+local function mastersDirFor(settings)
+  local root = (settings.mastersDir and settings.mastersDir ~= '')
+    and settings.mastersDir or settings.shopDataDir
+  return LrPathUtils.child(root, 'masters')
+end
+
+--- Delete a master's files (both formats) by base name (the GMP reference).
+local function deleteMasters(mastersDir, baseName)
+  for _, ext in ipairs({ '.jpg', '.tif' }) do
+    local p = LrPathUtils.child(mastersDir, baseName .. ext)
+    if LrFileUtils.exists(p) then LrFileUtils.delete(p) end
+  end
+end
+
+--- Export settings for a full-res master written into the masters folder.
+--- isJpeg → max-quality sRGB JPEG; else 16-bit AdobeRGB TIFF.
+local function masterExportSettings(isJpeg, destFolder)
+  local s = {
+    LR_export_destinationType = 'specificFolder',
+    LR_export_destinationPathPrefix = destFolder,
+    LR_export_useSubfolder = false,
+    LR_collisionHandling = 'overwrite',
+    LR_renamingTokensOn = false,        -- keep the original base filename
+    LR_size_doConstrain = false,        -- full resolution
+    LR_outputSharpeningOn = false,
+    LR_removeLocationMetadata = false,  -- origin re-embeds rights regardless
+    LR_reimportExportedPhoto = false,
+    LR_embeddedMetadataOption = 'all',
+  }
+  if isJpeg then
+    s.LR_format = 'JPEG'
+    s.LR_jpeg_quality = 1.0
+    s.LR_jpeg_useLimitSize = false
+    s.LR_export_colorSpace = 'sRGB'
+  else
+    s.LR_format = 'TIFF'
+    s.LR_export_bitDepth = 16
+    s.LR_tiff_compressionMethod = 'compressionMethod_ZIP'
+    s.LR_export_colorSpace = 'AdobeRGB'
+  end
+  return s
+end
+
+--- Render masters for the given photos into <mastersDir>, named by the GMP
+--- reference: masters/<gmpRef(id)>.<ext> (the customer reference, not the camera
+--- filename). Returns the count written. MUST run inside an async task (it
+--- yields) — and must NOT be wrapped in pcall (Lua can't yield across pcall).
+local function renderMasters(photos, isJpeg, mastersDir, secret)
+  if #photos == 0 then return 0 end
+  LrFileUtils.createAllDirectories(mastersDir)
+  local ext = isJpeg and '.jpg' or '.tif'
+  local session = LrExportSession({
+    photosToExport = photos,
+    exportSettings = masterExportSettings(isJpeg, mastersDir),
+  })
+  local written = 0
+  for _, rendition in session:renditions() do
+    local ok, pathOrMessage = rendition:waitForRender()
+    if ok then
+      local id = idFromFilename(rendition.photo:getFormattedMetadata('fileName') or '')
+      local dest = LrPathUtils.child(mastersDir, Sha256.gmpRef(id, secret) .. ext)
+      if LrFileUtils.exists(dest) then LrFileUtils.delete(dest) end
+      if LrFileUtils.copy(pathOrMessage, dest) ~= false then
+        LrFileUtils.delete(pathOrMessage)
+      else
+        LrFileUtils.delete(pathOrMessage)
+      end
+      written = written + 1
+    end
+  end
+  return written
 end
 
 --==================================================================--
@@ -294,13 +388,59 @@ local function writeCatalog(publishService, dataDir)
   return #photos
 end
 
+--- Published photos needing a master, deduped by id, into (jpegPhotos,
+--- tiffPhotos, skippedJpeg, skippedTiff). JPEG master for all; 16-bit TIFF only
+--- for RAW. Skips any whose master file already exists (incremental). Defined
+--- here so it can see gatherTypedCollections above.
+local function gatherMasterPhotos(publishService, mastersDir, secret)
+  local typed = gatherTypedCollections(publishService)
+  local jpegById, jpegIsRaw, tiffById = {}, {}, {}
+  LrApplication.activeCatalog():withReadAccessDo(function()
+    for _, tc in ipairs(typed) do
+      for _, pubPhoto in ipairs(tc.collection:getPublishedPhotos()) do
+        local id = pubPhoto:getRemoteId()
+        local photo = pubPhoto:getPhoto()
+        if id and not photo:getRawMetadata('isVideo') then
+          local fmt = photo:getRawMetadata('fileFormat')
+          local isRaw = (fmt == 'RAW' or fmt == 'DNG')
+          if jpegById[id] == nil or (jpegIsRaw[id] and not isRaw) then
+            jpegById[id] = photo
+            jpegIsRaw[id] = isRaw
+          end
+          if isRaw and tiffById[id] == nil then tiffById[id] = photo end
+        end
+      end
+    end
+  end)
+  -- Skip ids whose master already exists. Existence is keyed by the GMP ref
+  -- (the master's filename) — computed here, outside the read-access block.
+  local jpegPhotos, tiffPhotos = {}, {}
+  local skippedJpeg, skippedTiff = 0, 0
+  for id, p in pairs(jpegById) do
+    local ref = Sha256.gmpRef(id, secret)
+    if LrFileUtils.exists(LrPathUtils.child(mastersDir, ref .. '.jpg')) then
+      skippedJpeg = skippedJpeg + 1
+    else
+      jpegPhotos[#jpegPhotos + 1] = p
+    end
+  end
+  for id, p in pairs(tiffById) do
+    local ref = Sha256.gmpRef(id, secret)
+    if LrFileUtils.exists(LrPathUtils.child(mastersDir, ref .. '.tif')) then
+      skippedTiff = skippedTiff + 1
+    else
+      tiffPhotos[#tiffPhotos + 1] = p
+    end
+  end
+  return jpegPhotos, tiffPhotos, skippedJpeg, skippedTiff
+end
+
 --==================================================================--
 -- Publish service provider
 --==================================================================--
 
--- Cached publish service reference — set on first publish run, used by
--- the "Refresh catalog only" button so it can rewrite catalog.json without
--- re-exporting any photos.
+-- Cached publish service reference — set on first publish run, used by the
+-- "Refresh catalog only" and "Export RAW TIFFs" buttons.
 local cachedPublishService = nil
 
 local provider = {}
@@ -311,26 +451,31 @@ provider.small_icon = nil
 provider.supportsCustomSortOrder = false
 provider.disableRenamePublishedCollection = false
 
--- We control render settings; hide the export panels that don't apply.
+-- Hide the export panels we control. The native "Image Sizing" panel is LEFT
+-- VISIBLE so the preview size is adjustable there (defaults to 800px long edge;
+-- keep it ≤800 — the origin also caps served previews at 800).
 provider.hideSections = {
-  'exportLocation', 'fileNaming', 'fileSettings', 'imageSizing',
+  'exportLocation', 'fileNaming', 'fileSettings',
   'outputSharpening', 'metadata', 'watermarking', 'video',
 }
 provider.allowFileFormats = { 'JPEG' }
 provider.allowColorSpaces = { 'sRGB' }
 provider.canExportVideo = true  -- we filter videos ourselves to avoid LR's own error dialog
 
--- Fixed render: sRGB JPEG, long edge 2560px. The LAN origin app downsizes
--- further and applies the watermark, so previews here stay clean.
+-- Publish renders the web PREVIEW: sRGB JPEG, long edge 800px (Image Sizing
+-- panel), written to <shopDataDir>/previews/<id>.jpg on the fast SSD. The
+-- full-res masters (for downloads) are produced separately by the button.
 provider.exportPresetFields = {
   { key = 'shopDataDir', default = '' },
+  { key = 'mastersDir', default = '' },
+  { key = 'sharedSecret', default = '' },
   { key = 'LR_format', default = 'JPEG' },
   { key = 'LR_jpeg_quality', default = 0.85 },
   { key = 'LR_jpeg_useLimitSize', default = false },
   { key = 'LR_export_colorSpace', default = 'sRGB' },
   { key = 'LR_size_doConstrain', default = true },
-  { key = 'LR_size_maxWidth', default = 2560 },
-  { key = 'LR_size_maxHeight', default = 2560 },
+  { key = 'LR_size_maxWidth', default = 800 },
+  { key = 'LR_size_maxHeight', default = 800 },
   { key = 'LR_size_units', default = 'pixels' },
   { key = 'LR_size_resolution', default = 240 },
   { key = 'LR_outputSharpeningOn', default = false },
@@ -376,7 +521,7 @@ function provider.sectionsForTopOfDialog(f, propertyTable)
           value = LrView.bind('shopDataDir'),
           immediate = true,
           width_in_chars = 36,
-          tooltip = 'catalog.json and previews/ are written here.',
+          tooltip = 'catalog.json is written here (the LAN origin reads it).',
         },
         f:push_button {
           title = 'Choose…',
@@ -395,7 +540,63 @@ function provider.sectionsForTopOfDialog(f, propertyTable)
       },
       f:static_text {
         title = 'Point this at the shop-data folder the LAN origin app reads.\n'
-          .. 'Publishing writes catalog.json and previews/ into it.',
+          .. 'Publishing writes catalog.json into it (fast SSD).',
+        height_in_lines = 2,
+        text_color = import('LrColor')(0.5, 0.5, 0.5),
+      },
+      f:row {
+        spacing = f:control_spacing(),
+        f:static_text {
+          title = 'Masters folder:',
+          alignment = 'right',
+          width = LrView.share('shop_label'),
+        },
+        f:edit_field {
+          value = LrView.bind('mastersDir'),
+          immediate = true,
+          width_in_chars = 36,
+          tooltip = 'Full-resolution fulfilment masters are written here.',
+        },
+        f:push_button {
+          title = 'Choose…',
+          action = function()
+            local result = LrDialogs.runOpenPanel({
+              title = 'Select the fulfilment masters folder',
+              canChooseFiles = false,
+              canChooseDirectories = true,
+              allowsMultipleSelection = false,
+            })
+            if result and result[1] then
+              propertyTable.mastersDir = result[1]
+            end
+          end,
+        },
+      },
+      f:static_text {
+        title = 'Point this at the bulk fulfilment store root (e.g. /Volumes/shop).\n'
+          .. 'The "Export masters" button writes full-res download masters to a\n'
+          .. 'masters/ subfolder, named by GMP reference: masters/GMP-XXXXXXX.jpg\n'
+          .. '(all) + masters/GMP-XXXXXXX.tif (RAW).',
+        height_in_lines = 4,
+        text_color = import('LrColor')(0.5, 0.5, 0.5),
+      },
+      f:row {
+        spacing = f:control_spacing(),
+        f:static_text {
+          title = 'Shared secret:',
+          alignment = 'right',
+          width = LrView.share('shop_label'),
+        },
+        f:password_field {
+          value = LrView.bind('sharedSecret'),
+          immediate = true,
+          width_in_chars = 36,
+          tooltip = 'Must match the origin app’s SHARED_SECRET — used to name masters by GMP reference.',
+        },
+      },
+      f:static_text {
+        title = 'Must match the LAN origin’s SHARED_SECRET so master filenames\n'
+          .. 'match the GMP references the shop uses. Leave blank only in dev.',
         height_in_lines = 2,
         text_color = import('LrColor')(0.5, 0.5, 0.5),
       },
@@ -422,6 +623,43 @@ function provider.sectionsForTopOfDialog(f, propertyTable)
             end)
           end,
         },
+        f:push_button {
+          title = 'Export masters',
+          tooltip = 'Render the full-res download masters for published photos missing them: JPEG for all, 16-bit TIFF for RAW. Skips ones already present.',
+          action = function()
+            local dataDir = propertyTable.shopDataDir
+            if not dataDir or dataDir == '' then
+              LrDialogs.message('Gus McEwan Shop', 'Set the shop data folder first.', 'critical')
+              return
+            end
+            if not cachedPublishService then
+              LrDialogs.message('Gus McEwan Shop',
+                'Publish at least once first — the service reference is not yet cached.', 'info')
+              return
+            end
+            local mastersDir = mastersDirFor(propertyTable)
+            local secret = propertyTable.sharedSecret
+            -- Idle-context async task with its own function context: the render
+            -- yields (so it must NOT be wrapped in pcall), and the context
+            -- reports any error on its own.
+            LrFunctionContext.postAsyncTaskWithContext('gmp-export-masters', function()
+              local jpegPhotos, tiffPhotos, skipJpeg, skipTiff =
+                gatherMasterPhotos(cachedPublishService, mastersDir, secret)
+              if #jpegPhotos == 0 and #tiffPhotos == 0 then
+                LrDialogs.message('Gus McEwan Shop',
+                  'All masters are present — nothing to render.\n('
+                  .. skipJpeg .. ' JPEG, ' .. skipTiff .. ' TIFF already there.)', 'info')
+                return
+              end
+              local nJpeg = renderMasters(jpegPhotos, true, mastersDir, secret)
+              local nTiff = renderMasters(tiffPhotos, false, mastersDir, secret)
+              LrDialogs.message('Gus McEwan Shop — masters',
+                'Wrote ' .. nJpeg .. ' JPEG + ' .. nTiff .. ' TIFF master(s) to:\n'
+                .. mastersDir .. '\n\nSkipped (already present): '
+                .. skipJpeg .. ' JPEG, ' .. skipTiff .. ' TIFF.', 'info')
+            end)
+          end,
+        },
       },
     },
   }
@@ -441,8 +679,13 @@ function provider.processRenderedPhotos(functionContext, exportContext)
     return
   end
 
+  -- Each Publish rendition is the 800px web PREVIEW. Write it to the fast SSD
+  -- at <shopDataDir>/previews/<id>.jpg. (Full-res masters are made by the button.)
   local previewsDir = LrPathUtils.child(dataDir, 'previews')
   LrFileUtils.createAllDirectories(previewsDir)
+  -- Publish only re-renders new/edited photos, so any photo here has changed —
+  -- invalidate its masters so "Export masters" re-renders them.
+  local mastersDir = mastersDirFor(props)
 
   local nPhotos = exportSession:countRenditions()
   local progress = exportContext:configureProgress({
@@ -450,8 +693,8 @@ function provider.processRenderedPhotos(functionContext, exportContext)
       or ('Publishing ' .. nPhotos .. ' photos to the shop'),
   })
 
-  -- Within a publish run, remember which ids already got a JPEG-sourced
-  -- preview, so a RAW sibling never overwrites the JPEG's render.
+  -- Within a run, remember which ids already got a JPEG-sourced preview, so a
+  -- RAW sibling never overwrites the JPEG's render.
   local jpegPreviewed = {}
 
   for _, rendition in exportContext:renditions({ stopIfCanceled = true }) do
@@ -469,8 +712,13 @@ function provider.processRenderedPhotos(functionContext, exportContext)
       else
         local fmt = photo:getRawMetadata('fileFormat')
         local isRaw = (fmt == 'RAW' or fmt == 'DNG')
-        -- The JPEG is the product. Skip the copy only if a JPEG of this id
-        -- already wrote the preview and this rendition is its RAW sibling.
+
+        -- This photo changed — drop its stale masters (named by GMP ref) so
+        -- "Export masters" remakes them.
+        deleteMasters(mastersDir, Sha256.gmpRef(id, props.sharedSecret))
+
+        -- The JPEG sibling is the product. Skip the copy only if a JPEG of this
+        -- id already wrote the preview and this rendition is its RAW sibling.
         if not (isRaw and jpegPreviewed[id]) then
           local destPath = LrPathUtils.child(previewsDir, id .. '.jpg')
           if LrFileUtils.exists(destPath) then
@@ -498,13 +746,16 @@ function provider.processRenderedPhotos(functionContext, exportContext)
     end
   end
 
+  -- Full-res masters (downloads) are made by the "Export masters" button — a
+  -- Publish can't drive a second render, so they're a separate idle-context pass.
+
   -- Rebuild catalog.json from every Shop collection so it stays complete
   -- even when only one collection was just published.
   local total = writeCatalog(exportContext.publishService, dataDir)
   progress:setCaption('catalog.json updated — ' .. total .. ' photos for sale')
 end
 
---- Remove a photo's preview when it leaves a published collection.
+--- Remove a photo's preview and masters when it leaves a published collection.
 function provider.deletePhotosFromPublishedCollection(publishSettings, arrayOfPhotoIds, deletedCallback)
   local dataDir = publishSettings.shopDataDir
   for _, photoId in ipairs(arrayOfPhotoIds) do
@@ -514,6 +765,8 @@ function provider.deletePhotosFromPublishedCollection(publishSettings, arrayOfPh
       if LrFileUtils.exists(previewPath) then
         LrFileUtils.delete(previewPath)
       end
+      -- Remove the download masters (named by GMP ref) too.
+      deleteMasters(mastersDirFor(publishSettings), Sha256.gmpRef(photoId, publishSettings.sharedSecret))
     end
     deletedCallback(photoId)
   end

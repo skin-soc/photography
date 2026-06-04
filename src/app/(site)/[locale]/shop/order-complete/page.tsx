@@ -1,11 +1,10 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { Link } from '@/i18n/navigation'
 import { setRequestLocale } from 'next-intl/server'
+import { stripe } from '@/lib/stripe-server'
 
 type Params = Promise<{ locale: string }>
 type SearchParams = Promise<{ session_id?: string }>
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 interface DownloadItem {
   token: string
@@ -46,6 +45,13 @@ export default async function OrderComplete({
   })()
   const hasPhysical = paid && session?.metadata?.hasPhysical === 'true'
 
+  // The download grant is keyed by the PaymentIntent id (the webhook uses the
+  // same id), so the downloads page lives at /shop/downloads/<paymentIntentId>.
+  const orderId =
+    typeof session?.payment_intent === 'string'
+      ? session.payment_intent
+      : session?.payment_intent?.id ?? null
+
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
       <Link
@@ -66,34 +72,27 @@ export default async function OrderComplete({
             </h1>
             <p className="text-[14px] font-light text-white/50 leading-relaxed mb-8">
               {downloadItems.length > 0
-                ? 'Your payment was received. Your digital download references are below — a confirmation email is on its way.'
+                ? 'Your payment was received. We’ve emailed you a passcode — use it on the download page below to get your files.'
                 : 'Your payment was received. A confirmation email is on its way.'}
             </p>
 
-            {downloadItems.length > 0 && (
-              <div className="space-y-3 mb-8">
-                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30 mb-4">
-                  File references
+            {downloadItems.length > 0 && orderId && (
+              <div className="rounded-[16px] border border-white/10 bg-white/[0.04] px-6 py-6 mb-8">
+                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30 mb-3">
+                  Digital downloads
                 </p>
-                {downloadItems.map((item) => (
-                  <div
-                    key={item.token}
-                    className="rounded-[16px] border border-white/10 bg-white/[0.04] px-6 py-5"
-                  >
-                    <p className="font-mono-ibm text-[20px] font-[200] tracking-wide text-[#931020]">
-                      {item.token}.{item.format === 'tiff' ? 'tiff' : 'jpg'}
-                    </p>
-                    <p className="mt-1 text-[11px] font-light tracking-wide text-white/30">
-                      {item.label} — {item.format === 'tiff' ? '16-bit TIFF' : 'JPEG'}
-                    </p>
-                    <Link
-                      href={`/shop/${item.slug}`}
-                      className="mt-2 inline-block text-[10px] font-light tracking-[0.18em] uppercase text-white/25 hover:text-white/55 transition-colors"
-                    >
-                      View photo →
-                    </Link>
-                  </div>
-                ))}
+                <p className="text-[13px] font-light text-white/50 leading-relaxed mb-5">
+                  {downloadItems.length === 1
+                    ? '1 file is ready.'
+                    : `${downloadItems.length} files are ready.`}{' '}
+                  Your passcode was sent to your email. Links are valid for 30 days.
+                </p>
+                <Link
+                  href={`/shop/downloads/${orderId}`}
+                  className="inline-block text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white transition-colors"
+                >
+                  Go to your downloads →
+                </Link>
               </div>
             )}
 

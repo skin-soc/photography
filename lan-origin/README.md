@@ -24,13 +24,57 @@ Lightroom Classic ──► "Gus McEwan Shop" publish service
 |---------------------|-----------------------------------------------------------|
 | `GET /healthz`      | Liveness probe                                            |
 | `GET /catalog.json` | Sellable photos + metadata + previewUrl + pricing         |
-| `GET /preview/:id`  | The preview, downsized + watermarked — generated once, then cached |
+| `GET /preview/:id`  | The preview (from `previews/<id>.jpg`), downsized + watermarked — generated once, then cached |
 
 Cloudflare edge-caches `/preview/:id` (immutable, 1-year), so each preview
 crosses your home upload link **once**, not once per visitor.
 
-Serving full-resolution originals is **deliberately not implemented yet** — it
-belongs to the fulfilment phase, gated behind a verified Stripe payment.
+Two layers of source files: the Lightroom plugin writes small **800px previews**
+to `previews/<id>.jpg` on the fast SSD (web rendering), and the full-res
+**masters** (`masters/<id>.jpg` + `<id>.tif` for RAW) to the bulk store — those
+are the paid-download source, read only after a verified payment.
+
+## What it does (Phase 2 — fulfilment)
+
+Gated behind a verified Stripe payment. The shop Worker's Stripe webhook calls
+these (all behind `x-shop-secret`):
+
+| Endpoint                        | Purpose                                                       |
+|---------------------------------|---------------------------------------------------------------|
+| `POST /orders`                  | Issue a download grant + generate a passcode + email the buyer |
+| `GET /orders/:id/meta`          | Item labels + expiry for the download page (no passcode)      |
+| `POST /orders/:id/verify`       | Check the buyer's passcode                                    |
+| `GET /orders/:id/file/:sku`     | Generate (once, cached) + stream the copyright-embedded file  |
+
+**Deliverable source.** Every delivered file is produced from the Lightroom-
+exported **edited master** for the photo `id`: `masters/<id>.jpg` for all photos,
+plus `masters/<id>.tif` (16-bit) for RAW shots (the Pro / Original TIFF tiers).
+The plugin renders these from each photo inside Lightroom with edits applied, so
+a download matches the watermarked preview the customer bought. The masters are
+the single source of truth — RAW originals (scattered across per-collection
+folders) are never read directly. A photo that's for sale always has a master;
+if one is missing, re-publish that photo.
+
+`sharp` resizes to the purchased tier (keeping the ICC profile), then
+`exiftool` embeds copyright + per-tier usage terms. Outputs are cached by SKU in
+`cache/` and reused across buyers.
+
+**Access.** A generated passcode (emailed + shown on the order-complete page)
+unlocks the download page. Grants live in `orders/<orderId>.json` and expire
+after `LINK_TTL_DAYS` (default 30). A daily sweep deletes expired grants and
+stale cached files.
+
+**Storage layout.** The web-facing files (`catalog.json`, `previews/`, the
+watermarked preview cache) live on the fast SSD mount (`/data`). The heavy
+fulfilment files — `masters/`, the generated deliverable `cache/`, and the
+`orders/` grants — live on the bulk mount (`/fulfil`, e.g. `/mnt/sydney/shop`).
+The Lightroom plugin writes `masters/` directly to the bulk mount (set its
+"Masters folder").
+
+**Email.** Sent from here (Node) over iCloud SMTP — the Worker can't do SMTP.
+Use an app-specific password; `MAIL_FROM` must be your iCloud address or an
+iCloud Custom-Domain alias. iCloud is a personal mailbox with daily send limits
+and weaker transactional deliverability than a dedicated provider.
 
 ## Where the catalog comes from
 
@@ -40,7 +84,7 @@ you Publish a Shop collection, the plugin writes into the shop-data folder:
 
 - `catalog.json` — which photos are for sale + metadata
   (see [`catalog.sample.json`](./catalog.sample.json) for the format)
-- `previews/<id>.jpg` — a Lightroom-rendered preview (sRGB, ~2560px, clean)
+- `previews/<id>.jpg` — a Lightroom-rendered preview (sRGB, ≤800px, clean)
 
 This service then downsizes and watermarks those previews on demand, and adds a
 `previewUrl` + a priced `products` list to each catalog entry.
@@ -76,6 +120,15 @@ shop-data folder to override `printProducts`, `digitalTiers`, and/or
 | `PUBLIC_URL`    | —                          | Tunnel hostname, e.g. `https://origin.gusmcewan.com` |
 | `PREVIEW_MAX`   | `1600`                     | Longest served-preview edge, px              |
 | `SHARED_SECRET` | —                          | If set, callers must send `x-shop-secret`    |
+| `MASTERS_DIR`   | `$DATA_DIR/masters`        | Fulfilment: Lightroom-exported edited masters (deliverable source) |
+| `FULFIL_CACHE_DIR` | `$DATA_DIR/fulfil-cache` | Fulfilment: generated deliverables, by SKU  |
+| `ORDERS_DIR`    | `$DATA_DIR/orders`         | Fulfilment: download grant records           |
+| `SITE_URL`      | `https://gusmcewan.com`    | Public site, for the download link in emails |
+| `LINK_TTL_DAYS` | `30`                       | Download-link validity                       |
+| `SMTP_HOST`     | `smtp.mail.me.com`         | iCloud SMTP host                             |
+| `SMTP_PORT`     | `587`                      | `465` switches to implicit TLS               |
+| `SMTP_USER` / `SMTP_PASS` | —                | iCloud address + app-specific password       |
+| `MAIL_FROM`     | `$SMTP_USER`               | iCloud address or Custom-Domain alias        |
 
 ## Deploy on TrueNAS Scale
 
