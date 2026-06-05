@@ -186,7 +186,8 @@ function PaymentForm({
         <PaymentElement
           options={{
             layout: 'tabs',
-            fields: { billingDetails: { address: 'auto' } },
+            // phone is unnecessary for this shop — Stripe shows it by default.
+            fields: { billingDetails: { address: 'auto', phone: 'never' } },
           }}
         />
       </div>
