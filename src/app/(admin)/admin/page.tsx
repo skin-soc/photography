@@ -267,31 +267,27 @@ function OrdersTab() {
   const [orders, setOrders] = useState<AdminOrder[] | null>(null)
   const [error, setError] = useState(false)
 
-  async function search(e: React.FormEvent) {
-    e.preventDefault()
-    const q = query.trim()
-    if (!q || loading) return
+  async function runSearch(q: string) {
+    const v = q.trim()
+    if (!v) return
     setLoading(true)
     setOrders(null)
     setError(false)
-    try {
-      const res = await fetch(`/api/admin/order?q=${encodeURIComponent(q)}`)
-      if (!res.ok) throw new Error()
-      const data = (await res.json()) as { orders: AdminOrder[] }
-      setOrders(data.orders)
-    } catch {
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
+    await search0(v, setLoading, setOrders, setError)
+  }
+
+  function search(e: React.FormEvent) {
+    e.preventDefault()
+    if (!loading) runSearch(query)
   }
 
   return (
     <>
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Orders</h1>
       <p className="mt-2 text-sm text-white/45 max-w-prose">
-        Look up a download order by its order id (<span className="font-mono-ibm">pi_…</span>) or the
-        buyer&rsquo;s email — read back the passcode, re-send the link, or extend an expired one.
+        Look up a download order by its order code (<span className="font-mono-ibm">GMP-…</span>), the
+        buyer&rsquo;s email, or a Stripe <span className="font-mono-ibm">pi_…</span> id — read back the
+        passcode, re-send the link, or extend an expired one.
       </p>
 
       <form onSubmit={search} className="mt-8 flex gap-3">
@@ -300,7 +296,7 @@ function OrdersTab() {
           onChange={(e) => setQuery(e.target.value)}
           autoFocus
           spellCheck={false}
-          placeholder="pi_3Q…   ·   buyer@example.com"
+          placeholder="GMP-THOR-…   ·   buyer@example.com   ·   pi_3Q…"
           className="flex-1 bg-white/[0.04] border border-white/15 rounded-md px-4 py-3 font-mono-ibm text-sm tracking-wide outline-none transition-colors focus:border-[#931020] focus:bg-white/[0.06]"
         />
         <button
@@ -327,7 +323,149 @@ function OrdersTab() {
         )}
         {!loading && orders?.map((o) => <OrderCard key={o.orderId} order={o} onChanged={() => search0(query, setLoading, setOrders, setError)} />)}
       </div>
+
+      {/* Last 90 days — overview table; click a row to load it above for actions. */}
+      <RecentOrdersTable
+        onSelect={(code) => {
+          setQuery(code)
+          runSearch(code)
+          if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+      />
     </>
+  )
+}
+
+type OrderSortKey = 'date' | 'code' | 'email' | 'items' | 'downloads' | 'status'
+
+function RecentOrdersTable({ onSelect }: { onSelect: (code: string) => void }) {
+  const [orders, setOrders] = useState<AdminOrder[] | null>(null)
+  const [error, setError] = useState(false)
+  const [sort, setSort] = useState<{ key: OrderSortKey; dir: 1 | -1 }>({ key: 'date', dir: -1 })
+  const [filters, setFilters] = useState<Record<OrderSortKey, string>>({
+    date: '', code: '', email: '', items: '', downloads: '', status: '',
+  })
+
+  useEffect(() => {
+    fetch('/api/admin/order?recent=90')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setOrders((d as { orders: AdminOrder[] }).orders))
+      .catch(() => setError(true))
+  }, [])
+
+  const fmtDate = (ms: number) =>
+    new Date(ms).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })
+  const dlCount = (o: AdminOrder) => o.items.reduce((n, i) => n + i.downloads, 0)
+  const cell = (o: AdminOrder, k: OrderSortKey): string => {
+    switch (k) {
+      case 'date': return fmtDate(o.createdAt)
+      case 'code': return o.orderId
+      case 'email': return o.email ?? ''
+      case 'items': return String(o.items.length)
+      case 'downloads': return String(dlCount(o))
+      case 'status': return o.expired ? 'Expired' : 'Active'
+    }
+  }
+  const sortVal = (o: AdminOrder, k: OrderSortKey): number | string => {
+    if (k === 'date') return o.createdAt
+    if (k === 'items') return o.items.length
+    if (k === 'downloads') return dlCount(o)
+    return cell(o, k).toLowerCase()
+  }
+
+  const cols: { key: OrderSortKey; label: string; num?: boolean }[] = [
+    { key: 'date', label: 'Date' },
+    { key: 'code', label: 'Order code' },
+    { key: 'email', label: 'Email' },
+    { key: 'items', label: 'Items', num: true },
+    { key: 'downloads', label: 'Dls', num: true },
+    { key: 'status', label: 'Status' },
+  ]
+
+  const rows = (orders ?? [])
+    .filter((o) =>
+      (Object.keys(filters) as OrderSortKey[]).every((k) => {
+        const f = filters[k].trim().toLowerCase()
+        return !f || cell(o, k).toLowerCase().includes(f)
+      }),
+    )
+    .sort((a, b) => {
+      const av = sortVal(a, sort.key)
+      const bv = sortVal(b, sort.key)
+      return (av < bv ? -1 : av > bv ? 1 : 0) * sort.dir
+    })
+
+  const toggleSort = (k: OrderSortKey) =>
+    setSort((s) => (s.key === k ? { key: k, dir: (s.dir === 1 ? -1 : 1) as 1 | -1 } : { key: k, dir: 1 }))
+
+  return (
+    <div className="mt-16">
+      <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">
+        Last 90 days{orders ? ` · ${orders.length}` : ''}
+      </h2>
+
+      {error ? (
+        <div className="mt-5"><Notice tone="error" title="Couldn’t load orders" body="Is the origin running?" /></div>
+      ) : !orders ? (
+        <div className="flex justify-center py-12"><span className="shop-spinner" /></div>
+      ) : orders.length === 0 ? (
+        <div className="mt-5"><Notice tone="muted" title="No orders yet" body="Orders from the last 90 days will appear here." /></div>
+      ) : (
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full border-collapse text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-white/10">
+                {cols.map((c) => (
+                  <th key={c.key} className="py-2 pr-4">
+                    <button
+                      onClick={() => toggleSort(c.key)}
+                      className="inline-flex items-center gap-1 text-[10px] font-mono-ibm uppercase tracking-[0.18em] text-white/45 hover:text-white transition-colors"
+                    >
+                      {c.label}
+                      <span className="text-[8px] text-[#e0566a]">{sort.key === c.key ? (sort.dir === 1 ? '▲' : '▼') : ''}</span>
+                    </button>
+                  </th>
+                ))}
+              </tr>
+              <tr className="border-b border-white/10">
+                {cols.map((c) => (
+                  <th key={c.key} className="pb-2 pr-4">
+                    <input
+                      value={filters[c.key]}
+                      onChange={(e) => setFilters((f) => ({ ...f, [c.key]: e.target.value }))}
+                      placeholder="filter"
+                      spellCheck={false}
+                      className="w-full min-w-[5rem] bg-white/[0.04] border border-white/10 rounded px-2 py-1 font-mono-ibm text-[11px] text-white/80 outline-none focus:border-[#931020]"
+                    />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((o) => (
+                <tr
+                  key={o.orderId}
+                  onClick={() => onSelect(o.orderId)}
+                  className="border-b border-white/[0.06] cursor-pointer hover:bg-white/[0.04] transition-colors"
+                >
+                  <td className="py-2.5 pr-4 whitespace-nowrap text-white/60">{fmtDate(o.createdAt)}</td>
+                  <td className="py-2.5 pr-4 whitespace-nowrap font-mono-ibm text-[#e0566a]">{o.orderId}</td>
+                  <td className="py-2.5 pr-4 text-white/70 truncate max-w-[14rem]">{o.email ?? '—'}</td>
+                  <td className="py-2.5 pr-4 text-white/60">{o.items.length}</td>
+                  <td className="py-2.5 pr-4 text-white/60">{dlCount(o)}</td>
+                  <td className={`py-2.5 pr-4 whitespace-nowrap ${o.expired ? 'text-[#e0566a]' : 'text-white/45'}`}>
+                    {o.expired ? 'Expired' : 'Active'}
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr><td colSpan={cols.length} className="py-8 text-center text-white/30 text-[12px]">No rows match the filters.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -391,6 +529,7 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         <Row label="Email" value={order.email ?? '—'} mono />
         <Row label="Passcode" value={order.passcode} mono accent />
         <Row label="Emailed" value={order.emailed ? 'yes' : 'no'} />
+        <Row label="Stripe" value={order.paymentId ?? '—'} mono />
         <Row label="Download page" value={order.downloadUrl} mono />
       </dl>
 

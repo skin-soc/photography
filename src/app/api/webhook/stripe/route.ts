@@ -1,6 +1,6 @@
 import type Stripe from 'stripe'
 import { stripe, cryptoProvider } from '@/lib/stripe-server'
-import { issueGrant, originConfigured, type DownloadItem } from '@/lib/downloads'
+import { issueGrant, orderCodeFor, originConfigured, type DownloadItem } from '@/lib/downloads'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? ''
 
@@ -48,7 +48,8 @@ export async function POST(req: Request) {
           expand: ['latest_charge'],
         })
         await issueGrant({
-          orderId: intent.id,
+          orderId: orderCodeFor(intent.id),
+          paymentId: intent.id,
           email: chargeEmail(full),
           locale: intent.metadata.locale || 'en',
           items,

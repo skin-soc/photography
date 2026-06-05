@@ -121,14 +121,16 @@ export default function CartDrawer() {
     }
   }
 
-  async function handleSuccess(downloads: DownloadItem[], hasPhysical: boolean, orderId: string) {
+  async function handleSuccess(downloads: DownloadItem[], hasPhysical: boolean, paymentIntentId: string) {
     if (!buyNowItem) clearCart()
     // Prefer the digital items from the payment-intent API response (reliable);
     // the client-side PaymentIntent metadata isn't always populated by Stripe.js.
     const dl = (paymentData?.downloadItems && paymentData.downloadItems.length > 0)
       ? paymentData.downloadItems
       : downloads
-    setSuccessData({ downloads: dl, hasPhysical, orderId })
+    // The real order code (GMP-<god>-…) comes back from the issue call below; the
+    // download link/passcode box stay gated until then.
+    setSuccessData({ downloads: dl, hasPhysical, orderId: '' })
     setStep('success')
 
     // Issue the download grant now (the webhook is the backup) and auto-unlock
@@ -139,10 +141,13 @@ export default function CartDrawer() {
         const res = await fetch('/api/downloads/issue', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ paymentIntentId: orderId, clientSecret: paymentData?.clientSecret }),
+          body: JSON.stringify({ paymentIntentId, clientSecret: paymentData?.clientSecret }),
         })
         if (res.ok) {
-          const data = (await res.json()) as { passcode?: string | null }
+          const data = (await res.json()) as { orderId?: string; passcode?: string | null }
+          if (data.orderId) {
+            setSuccessData((prev) => (prev ? { ...prev, orderId: data.orderId! } : prev))
+          }
           setIssuedPasscode(data.passcode ?? null)
           setIssueState('ready')
         } else {

@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { ADMIN_COOKIE, verifySessionToken } from '@/lib/admin-auth'
-import { adminLookupOrders, adminResendOrder, adminExtendOrder } from '@/lib/downloads'
+import { adminLookupOrders, adminRecentOrders, adminResendOrder, adminExtendOrder } from '@/lib/downloads'
 
 async function authed(req: NextRequest): Promise<boolean> {
   const token = req.cookies.get(ADMIN_COOKIE)?.value
@@ -15,6 +15,12 @@ async function authed(req: NextRequest): Promise<boolean> {
 
 export async function GET(req: NextRequest) {
   if (!(await authed(req))) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  // ?recent=90 → the full recent-orders list for the table; ?q=… → a search.
+  const recent = req.nextUrl.searchParams.get('recent')
+  if (recent !== null) {
+    const days = Math.min(3650, Math.max(1, parseInt(recent, 10) || 90))
+    return NextResponse.json({ orders: await adminRecentOrders(days) })
+  }
   const q = req.nextUrl.searchParams.get('q')?.trim()
   if (!q) return NextResponse.json({ error: 'missing query' }, { status: 400 })
   return NextResponse.json({ orders: await adminLookupOrders(q) })

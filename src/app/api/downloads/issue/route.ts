@@ -15,6 +15,7 @@ import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe-server'
 import {
   issueGrant,
+  orderCodeFor,
   originConfigured,
   signOrder,
   cookieName,
@@ -69,8 +70,13 @@ export async function POST(req: NextRequest) {
     /* ignore malformed metadata */
   }
 
+  // Customer-facing order code (GMP-<god>-<code>) — the grant key and the
+  // download-page URL. Deterministic from the payment, so the Stripe webhook
+  // issues the same grant.
+  const orderId = orderCodeFor(intent.id)
+
   if (items.length === 0) {
-    return NextResponse.json({ orderId: intent.id, digital: false })
+    return NextResponse.json({ orderId, digital: false })
   }
   if (!originConfigured()) {
     return NextResponse.json({ error: 'origin not configured' }, { status: 503 })
@@ -79,7 +85,8 @@ export async function POST(req: NextRequest) {
   let passcode: string | null = null
   try {
     const result = await issueGrant({
-      orderId: intent.id,
+      orderId,
+      paymentId: intent.id,
       email: chargeEmail(intent),
       locale: intent.metadata.locale || 'en',
       items,
@@ -90,8 +97,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'issue failed' }, { status: 502 })
   }
 
-  const res = NextResponse.json({ orderId: intent.id, digital: true, passcode })
-  res.cookies.set(cookieName(intent.id), signOrder(intent.id), {
+  const res = NextResponse.json({ orderId, digital: true, passcode })
+  res.cookies.set(cookieName(orderId), signOrder(orderId), {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',

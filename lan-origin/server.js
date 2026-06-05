@@ -865,7 +865,7 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
  *  stored passcode. The passcode is kept in plain text — this file lives on the
  *  NAS behind the shared secret, and the email carries it in clear regardless. */
 app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
-  const { orderId, email, locale, items } = req.body ?? {}
+  const { orderId, paymentId, email, locale, items } = req.body ?? {}
   if (!orderId || !orderPath(orderId) || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'invalid order' })
   }
@@ -875,6 +875,7 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
     const now = Date.now()
     grant = {
       orderId,
+      paymentId: paymentId ? String(paymentId) : null, // Stripe pi_ id, for reconciliation
       email: email ? String(email) : null,
       passcode: generatePasscode(),
       items: items.map((i) => ({
@@ -992,6 +993,7 @@ app.get('/orders/:orderId/file/:sku', async (req, res) => {
 function adminOrderView(grant) {
   return {
     orderId: grant.orderId,
+    paymentId: grant.paymentId ?? null,
     email: grant.email ?? null,
     passcode: grant.passcode,
     emailed: grant.emailed ?? false,
@@ -1030,6 +1032,23 @@ app.get('/admin/orders', async (req, res) => {
       if (grant && (grant.email ?? '').toLowerCase() === needle) {
         orders.push(adminOrderView(grant))
       }
+    }
+  } catch { /* dir missing */ }
+  orders.sort((a, b) => b.createdAt - a.createdAt)
+  res.json({ orders })
+})
+
+/** All orders created within the last N days (default 90), newest first. Backs
+ *  the admin Orders table. Small shop volume, so a full scan is fine. */
+app.get('/admin/orders/recent', async (req, res) => {
+  const days = Math.min(3650, Math.max(1, parseInt(req.query.days, 10) || 90))
+  const since = Date.now() - days * 24 * 60 * 60 * 1000
+  const orders = []
+  try {
+    for (const name of await readdir(ORDERS_DIR)) {
+      if (!name.endsWith('.json')) continue
+      const grant = await readGrant(name.slice(0, -5))
+      if (grant && (grant.createdAt ?? 0) >= since) orders.push(adminOrderView(grant))
     }
   } catch { /* dir missing */ }
   orders.sort((a, b) => b.createdAt - a.createdAt)

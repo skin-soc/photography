@@ -46,6 +46,40 @@ export function originConfigured(): boolean {
   return Boolean(ORIGIN)
 }
 
+// ── Customer-facing order code ────────────────────────────────────────────────
+// GMP-<NORSE GOD>-<5 base32 chars>, e.g. GMP-TYR-72R4E. Derived deterministically
+// from the Stripe payment id so the post-payment issue route and the Stripe
+// webhook independently compute the SAME code (idempotent), and ASCII/uppercase
+// so it's safe as both a URL segment and a grant filename. Distinguishable from
+// product refs (GMP-XXXXXXX) by its three segments.
+const ORDER_GODS = [
+  'ODIN', 'THOR', 'TYR', 'HEIMDALL', 'BRAGI', 'FORSETI', 'ULL',
+  'VIDAR', 'VALI', 'HOD', 'BALDER', 'LOKI', 'HOENIR', 'MIMIR',
+]
+const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ' // Crockford — no ambiguous O/0/I/1
+
+function base32(bytes: Buffer, n: number): string {
+  let bits = 0
+  let val = 0
+  let out = ''
+  for (let i = 0; i < bytes.length; i++) {
+    val = (val << 8) | bytes[i]
+    bits += 8
+    while (bits >= 5) {
+      out += B32[(val >>> (bits - 5)) & 31]
+      bits -= 5
+    }
+  }
+  return out.slice(0, n)
+}
+
+/** Deterministic order code from a Stripe payment id (see comment above). */
+export function orderCodeFor(paymentId: string): string {
+  const d = createHmac('sha256', ORIGIN_SECRET).update(`order:${paymentId}`).digest()
+  const god = ORDER_GODS[d[0] % ORDER_GODS.length]
+  return `GMP-${god}-${base32(d.subarray(1), 5)}`
+}
+
 /**
  * Ask the origin to issue a grant (generate passcode + email the buyer).
  * Returns true on success. Throws on transport/server failure so the Stripe
@@ -53,6 +87,7 @@ export function originConfigured(): boolean {
  */
 export async function issueGrant(input: {
   orderId: string
+  paymentId: string
   email: string | null
   locale: string
   items: DownloadItem[]
@@ -127,6 +162,7 @@ export interface AdminOrderItem {
 }
 export interface AdminOrder {
   orderId: string
+  paymentId: string | null
   email: string | null
   passcode: string
   emailed: boolean
@@ -137,10 +173,24 @@ export interface AdminOrder {
   items: AdminOrderItem[]
 }
 
-/** Look up orders by order id or buyer email. */
+/** Look up orders by order code, buyer email, or a pasted Stripe pi_ id. */
 export async function adminLookupOrders(q: string): Promise<AdminOrder[]> {
   if (!ORIGIN) return []
-  const res = await fetch(`${ORIGIN}/admin/orders?q=${encodeURIComponent(q)}`, {
+  // Allow searching by the underlying Stripe id — translate it to the order code.
+  const query = q.startsWith('pi_') ? orderCodeFor(q) : q
+  const res = await fetch(`${ORIGIN}/admin/orders?q=${encodeURIComponent(query)}`, {
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  if (!res.ok) return []
+  const data = (await res.json()) as { orders: AdminOrder[] }
+  return data.orders ?? []
+}
+
+/** All orders created within the last `days` (default 90), newest first. */
+export async function adminRecentOrders(days = 90): Promise<AdminOrder[]> {
+  if (!ORIGIN) return []
+  const res = await fetch(`${ORIGIN}/admin/orders/recent?days=${days}`, {
     headers: originHeaders(),
     cache: 'no-store',
   })
