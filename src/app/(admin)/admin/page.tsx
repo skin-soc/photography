@@ -285,9 +285,8 @@ function OrdersTab() {
     <>
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Orders</h1>
       <p className="mt-2 text-sm text-white/45 max-w-prose">
-        Look up a download order by its order code (<span className="font-mono-ibm">GMP-…</span>), the
-        buyer&rsquo;s email, or a Stripe <span className="font-mono-ibm">pi_…</span> id — read back the
-        passcode, re-send the link, or extend an expired one.
+        Look up a download order by its order code (<span className="font-mono-ibm">GMP-…</span>) or the
+        buyer&rsquo;s email — read back the passcode, re-send the link, or extend an expired one.
       </p>
 
       <form onSubmit={search} className="mt-8 flex gap-3">
@@ -296,7 +295,7 @@ function OrdersTab() {
           onChange={(e) => setQuery(e.target.value)}
           autoFocus
           spellCheck={false}
-          placeholder="GMP-THOR-…   ·   buyer@example.com   ·   pi_3Q…"
+          placeholder="GMP-THOR-…   ·   buyer@example.com"
           className="flex-1 bg-white/[0.04] border border-white/15 rounded-md px-4 py-3 font-mono-ibm text-sm tracking-wide outline-none transition-colors focus:border-[#931020] focus:bg-white/[0.06]"
         />
         <button
@@ -529,7 +528,6 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         <Row label="Email" value={order.email ?? '—'} mono />
         <Row label="Passcode" value={order.passcode} mono accent />
         <Row label="Emailed" value={order.emailed ? 'yes' : 'no'} />
-        <Row label="Stripe" value={order.paymentId ?? '—'} mono />
         <Row label="Download page" value={order.downloadUrl} mono />
       </dl>
 

@@ -1,6 +1,6 @@
 import type Stripe from 'stripe'
 import { stripe, cryptoProvider } from '@/lib/stripe-server'
-import { issueGrant, orderCodeFor, originConfigured, type DownloadItem } from '@/lib/downloads'
+import { issueGrant, originConfigured, type DownloadItem } from '@/lib/downloads'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? ''
 
@@ -47,14 +47,19 @@ export async function POST(req: Request) {
         const full = await stripe.paymentIntents.retrieve(intent.id, {
           expand: ['latest_charge'],
         })
+        const orderCode = intent.metadata.orderCode
+        if (!orderCode) {
+          console.error('[stripe] missing orderCode metadata on', intent.id)
+          return Response.json({ error: 'order code missing' }, { status: 400 })
+        }
         await issueGrant({
-          orderId: orderCodeFor(intent.id),
+          orderId: orderCode,
           paymentId: intent.id,
           email: chargeEmail(full),
           locale: intent.metadata.locale || 'en',
           items,
         })
-        console.log('[stripe] download grant issued for', intent.id)
+        console.log('[stripe] download grant issued for', orderCode)
       } catch (err) {
         // Return 500 so Stripe retries — issuing is idempotent on orderId.
         console.error('[stripe] failed to issue download grant:', err)

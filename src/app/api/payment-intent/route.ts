@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { getCatalog } from '@/lib/shop'
 import { stripe } from '@/lib/stripe-server'
+import { generateOrderCode } from '@/lib/downloads'
 
 // Stripe tax code for digital images / art
 const TAX_CODE_DIGITAL = 'txcd_10103001'
@@ -96,7 +97,14 @@ export async function POST(req: Request) {
         slug: i.photo.slug,
       }))
 
+    // Our customer-facing order code (GMP-<god>-<code>). Generated up front and
+    // written to the PaymentIntent's description + metadata so it — not the raw
+    // pi_ id — is what shows in the Stripe dashboard and tax/CSV exports. The
+    // issue route and webhook read it back from metadata so every system agrees.
+    const orderCode = generateOrderCode()
+
     const metadata: Record<string, string> = {
+      orderCode,
       locale,
       skus: skus.join(','),
       hasPhysical: String(hasPhysical),
@@ -109,6 +117,7 @@ export async function POST(req: Request) {
       amount,
       currency,
       automatic_payment_methods: { enabled: true },
+      description: `Order ${orderCode}`,
       metadata,
       // Link the tax calculation so Stripe records the tax transaction on
       // payment, reverses it on refund, and includes tax on the receipt.

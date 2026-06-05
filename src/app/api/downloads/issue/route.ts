@@ -15,7 +15,6 @@ import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe-server'
 import {
   issueGrant,
-  orderCodeFor,
   originConfigured,
   signOrder,
   cookieName,
@@ -70,10 +69,13 @@ export async function POST(req: NextRequest) {
     /* ignore malformed metadata */
   }
 
-  // Customer-facing order code (GMP-<god>-<code>) — the grant key and the
-  // download-page URL. Deterministic from the payment, so the Stripe webhook
-  // issues the same grant.
-  const orderId = orderCodeFor(intent.id)
+  // Customer-facing order code (GMP-<god>-<code>) — minted at PI creation and
+  // stored in metadata, so the grant key, the download URL and the Stripe
+  // dashboard all use it. The webhook reads the same value.
+  const orderId = intent.metadata.orderCode || ''
+  if (!orderId) {
+    return NextResponse.json({ error: 'order code missing' }, { status: 422 })
+  }
 
   if (items.length === 0) {
     return NextResponse.json({ orderId, digital: false })

@@ -9,7 +9,7 @@
  * SERVER-SIDE ONLY — uses node:crypto and the origin shared secret.
  */
 
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 const ORIGIN = process.env.SHOP_ORIGIN_URL ?? ''
 const ORIGIN_SECRET = process.env.SHOP_ORIGIN_SECRET ?? ''
@@ -47,11 +47,12 @@ export function originConfigured(): boolean {
 }
 
 // ── Customer-facing order code ────────────────────────────────────────────────
-// GMP-<NORSE GOD>-<5 base32 chars>, e.g. GMP-TYR-72R4E. Derived deterministically
-// from the Stripe payment id so the post-payment issue route and the Stripe
-// webhook independently compute the SAME code (idempotent), and ASCII/uppercase
-// so it's safe as both a URL segment and a grant filename. Distinguishable from
-// product refs (GMP-XXXXXXX) by its three segments.
+// GMP-<NORSE GOD>-<5 base32 chars>, e.g. GMP-TYR-72R4E. Minted up front at
+// PaymentIntent creation and written to the PI's description + metadata, so it —
+// not Stripe's pi_ id — is the identifier everywhere: the dashboard, tax/CSV
+// exports, the grant key, and the /shop/downloads/<code> URL. The issue route
+// and webhook read it back from PI metadata. ASCII/uppercase so it's URL- and
+// filename-safe; three segments distinguish it from product refs (GMP-XXXXXXX).
 const ORDER_GODS = [
   'ODIN', 'THOR', 'TYR', 'HEIMDALL', 'BRAGI', 'FORSETI', 'ULL',
   'VIDAR', 'VALI', 'HOD', 'BALDER', 'LOKI', 'HOENIR', 'MIMIR',
@@ -73,9 +74,10 @@ function base32(bytes: Buffer, n: number): string {
   return out.slice(0, n)
 }
 
-/** Deterministic order code from a Stripe payment id (see comment above). */
-export function orderCodeFor(paymentId: string): string {
-  const d = createHmac('sha256', ORIGIN_SECRET).update(`order:${paymentId}`).digest()
+/** Mint a fresh random order code. Stored on the PaymentIntent so all systems
+ *  read the same value — no derivation needed. */
+export function generateOrderCode(): string {
+  const d = randomBytes(8)
   const god = ORDER_GODS[d[0] % ORDER_GODS.length]
   return `GMP-${god}-${base32(d.subarray(1), 5)}`
 }
@@ -173,12 +175,10 @@ export interface AdminOrder {
   items: AdminOrderItem[]
 }
 
-/** Look up orders by order code, buyer email, or a pasted Stripe pi_ id. */
+/** Look up orders by order code or buyer email. */
 export async function adminLookupOrders(q: string): Promise<AdminOrder[]> {
   if (!ORIGIN) return []
-  // Allow searching by the underlying Stripe id — translate it to the order code.
-  const query = q.startsWith('pi_') ? orderCodeFor(q) : q
-  const res = await fetch(`${ORIGIN}/admin/orders?q=${encodeURIComponent(query)}`, {
+  const res = await fetch(`${ORIGIN}/admin/orders?q=${encodeURIComponent(q)}`, {
     headers: originHeaders(),
     cache: 'no-store',
   })
