@@ -36,6 +36,7 @@
 import express from 'express'
 import sharp from 'sharp'
 import nodemailer from 'nodemailer'
+import { renderDownloadEmail } from './email.js'
 import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
@@ -546,22 +547,29 @@ app.post('/admin/warm', (_req, res) => {
   res.json({ ok: true })
 })
 
-/** Send a test email to confirm SMTP is wired up. Secret-gated. Defaults to
- *  MAIL_FROM (i.e. yourself); pass {"to":"..."} to send elsewhere. */
+/** Send a preview of the real, branded download email so the design can be
+ *  checked in a live client (incl. light/dark). Secret-gated. Defaults to
+ *  MAIL_FROM (yourself); pass {"to":"...","locale":"de"} to override. */
 app.post('/admin/email-test', express.json({ limit: '4kb' }), async (req, res) => {
   if (!emailConfigured()) {
     return res.status(503).json({ error: 'SMTP not configured (set SMTP_USER/SMTP_PASS)' })
   }
   const to = String(req.body?.to || MAIL_FROM || SMTP_USER || '').trim()
   if (!to) return res.status(400).json({ error: 'no recipient — set MAIL_FROM or pass {to}' })
+  const locale = String(req.body?.locale || 'en')
   try {
-    const info = await mailer().sendMail({
-      from: MAIL_FROM,
-      to,
-      subject: 'Gus McEwan Photography — SMTP test',
-      text: 'This is a test message confirming the shop origin can send email via iCloud SMTP.\n',
+    await sendDownloadEmail({
+      email: to,
+      orderId: 'pi_preview_0000000000',
+      passcode: 'TEST7Q2X',
+      locale,
+      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+      items: [
+        { label: 'Standard', format: 'jpeg', token: productToken('preview-std') },
+        { label: 'Master',   format: 'jpeg', token: productToken('preview-master') },
+      ],
     })
-    res.json({ ok: true, to, messageId: info.messageId, accepted: info.accepted, rejected: info.rejected })
+    res.json({ ok: true, to, locale, note: 'branded download-email preview sent' })
   } catch (err) {
     console.error('[email] test send failed:', err.message)
     res.status(502).json({ error: 'send failed', detail: err.message })
@@ -769,40 +777,68 @@ async function verifyMailer() {
   }
 }
 
+const BRAND_NAME = 'Gus McEwan Photography'
+const LOGO_CID = 'brandlogo'
+
+/** White rasterised logo for the brand-red email header. Recolours every fill in
+ *  the logo SVG to white and renders a PNG (mail clients can't display SVG).
+ *  Cached — built once per process. */
+let _emailLogoPng = null
+async function getEmailLogoPng() {
+  if (_emailLogoPng) return _emailLogoPng
+  const raw = await getLogoSvg()
+  const white = raw
+    .replace(/fill:#[0-9A-Fa-f]{3,6}/g, 'fill:#ffffff')
+    .replace(/fill="#[0-9A-Fa-f]{3,6}"/g, 'fill="#ffffff"')
+    .replace('width="20000"', 'width="504"')
+    .replace('height="20000"', 'height="504"')
+  _emailLogoPng = await sharp(Buffer.from(white))
+    .resize(252, 252, { fit: 'inside' })
+    .png()
+    .toBuffer()
+  return _emailLogoPng
+}
+
+/** Human, locale-aware expiry date (e.g. "5 July 2026" / "2026年7月5日"). */
+function formatExpiry(expiresAt, locale) {
+  try {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : locale, {
+      year: 'numeric', month: 'long', day: 'numeric',
+    }).format(new Date(expiresAt))
+  } catch {
+    return new Date(expiresAt).toISOString().slice(0, 10)
+  }
+}
+
 async function sendDownloadEmail({ email, orderId, passcode, items, locale, expiresAt }) {
   if (!email) throw new Error('no recipient email')
   if (!emailConfigured()) throw new Error('SMTP not configured')
 
-  const url = `${SITE_URL}/${locale}/shop/downloads/${orderId}`
-  const expiry = new Date(expiresAt).toISOString().slice(0, 10)
-  const lines = items.map((i) => `  • ${i.label} — ${customerFilename(i)}`).join('\n')
-
-  const text =
-    `Thank you for your purchase.\n\n` +
-    `Your downloads are ready. Open the link below and enter your passcode to download your files.\n\n` +
-    `Download page: ${url}\n` +
-    `Passcode: ${passcode}\n\n` +
-    `Items:\n${lines}\n\n` +
-    `This link is valid until ${expiry}.\n\n` +
-    `${COPYRIGHT}\n`
-
-  const html =
-    `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;color:#111">` +
-    `<p>Thank you for your purchase.</p>` +
-    `<p>Your downloads are ready. Open the page below and enter your passcode to download your files.</p>` +
-    `<p><a href="${url}" style="display:inline-block;padding:10px 18px;background:#931020;color:#fff;text-decoration:none;border-radius:8px">Open your downloads</a></p>` +
-    `<p style="font-size:14px">Passcode: <strong style="font-family:ui-monospace,monospace;letter-spacing:2px">${passcode}</strong></p>` +
-    `<ul style="font-size:14px;color:#444">${items.map((i) => `<li>${i.label} — ${customerFilename(i)}</li>`).join('')}</ul>` +
-    `<p style="font-size:13px;color:#666">This link is valid until ${expiry}.</p>` +
-    `<p style="font-size:12px;color:#999">${COPYRIGHT}</p>` +
-    `</div>`
+  const loc = locale || 'en'
+  const { subject, text, html } = renderDownloadEmail({
+    locale: loc,
+    brandName: BRAND_NAME,
+    url: `${SITE_URL}/${loc}/shop/downloads/${orderId}`,
+    passcode,
+    items: items.map((i) => ({ label: i.label, filename: customerFilename(i), format: i.format })),
+    expiryText: formatExpiry(expiresAt, loc),
+    copyright: COPYRIGHT,
+    logoCid: LOGO_CID,
+  })
 
   await mailer().sendMail({
     from: MAIL_FROM,
     to: email,
-    subject: 'Your Gus McEwan Photography downloads',
+    replyTo: MAIL_FROM,
+    subject,
     text,
     html,
+    attachments: [{
+      filename: 'logo.png',
+      content: await getEmailLogoPng(),
+      cid: LOGO_CID,            // referenced as <img src="cid:brandlogo">
+      contentDisposition: 'inline',
+    }],
   })
 }
 
