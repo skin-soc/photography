@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import type { ProductType, CategoryNode } from '@/lib/shop'
@@ -50,9 +50,29 @@ function keyPhotosForFolder(photos: GridPhoto[], folderPath: string[]): string[]
     .map((p) => `${p.previewUrl}?max=800`)
 }
 
-function RotatingImage({ srcs, delay = 0 }: { srcs: string[]; delay?: number }) {
+function RotatingImage({
+  srcs,
+  delay = 0,
+  gen,
+  onReady,
+}: {
+  srcs: string[]
+  delay?: number
+  /** Changes whenever the view (category/filter) changes — re-arms onReady. */
+  gen?: string
+  /** Fired once when this tile's first image is painted (or there's none). */
+  onReady?: () => void
+}) {
   const [order, setOrder] = useState<string[]>(srcs)
   const [idx, setIdx] = useState(0)
+  const firstRef = useRef<HTMLImageElement | null>(null)
+  const firedRef = useRef(false)
+
+  const fire = useCallback(() => {
+    if (firedRef.current) return
+    firedRef.current = true
+    onReady?.()
+  }, [onReady])
 
   useEffect(() => {
     setOrder(shuffle([...srcs]))
@@ -68,6 +88,15 @@ function RotatingImage({ srcs, delay = 0 }: { srcs: string[]; delay?: number }) 
     return () => { clearTimeout(timeout); clearInterval(interval) }
   }, [order.length, delay])
 
+  // Report readiness for the loading overlay. A folder with no key photo is
+  // "ready" immediately; otherwise we wait for the first image (cached images
+  // are already .complete, so this resolves instantly on revisits).
+  useEffect(() => {
+    firedRef.current = false
+    if (srcs.length === 0) { fire(); return }
+    if (firstRef.current?.complete) fire()
+  }, [gen, srcs.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (order.length === 0) return null
 
   return (
@@ -76,6 +105,9 @@ function RotatingImage({ srcs, delay = 0 }: { srcs: string[]; delay?: number }) 
         <img
           key={src}
           src={src}
+          ref={i === 0 ? firstRef : undefined}
+          onLoad={i === 0 ? fire : undefined}
+          onError={i === 0 ? fire : undefined}
           loading={i === 0 ? 'eager' : 'lazy'}
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
@@ -95,17 +127,52 @@ function countInCategory(photos: GridPhoto[], path: string[], typeFilter: Produc
     .length
 }
 
-function LazyImage({ src, alt }: { src: string; alt: string }) {
+function LazyImage({
+  src,
+  alt,
+  eager = false,
+  gen,
+  onReady,
+}: {
+  src: string
+  alt: string
+  /** Above-the-fold tiles load eagerly so the first page paints promptly. */
+  eager?: boolean
+  /** Changes whenever the view (category/filter) changes — re-arms onReady. */
+  gen?: string
+  /** Fired once when this tile is painted. */
+  onReady?: () => void
+}) {
   const [loaded, setLoaded] = useState(false)
+  const imgRef = useRef<HTMLImageElement | null>(null)
+  const firedRef = useRef(false)
+
+  const fire = useCallback(() => {
+    setLoaded(true)
+    if (firedRef.current) return
+    firedRef.current = true
+    onReady?.()
+  }, [onReady])
+
+  // Re-arm when the view changes so this tile re-reports (handles filter
+  // toggles where the same tile persists). Cached images are already complete.
+  useEffect(() => {
+    firedRef.current = false
+    setLoaded(false)
+    if (imgRef.current?.complete) fire()
+  }, [gen, src]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <img
+      ref={imgRef}
       src={src}
       alt={alt}
-      loading="lazy"
+      loading={eager ? 'eager' : 'lazy'}
       draggable={false}
       onContextMenu={(e) => e.preventDefault()}
       onDragStart={(e) => e.preventDefault()}
-      onLoad={() => setLoaded(true)}
+      onLoad={fire}
+      onError={fire}
       className={`w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-[1.04] pointer-events-none ${loaded ? 'opacity-100' : 'opacity-0'}`}
     />
   )
@@ -192,6 +259,53 @@ export default function ShopGrid({
     // (covers mock data and any catalog written before this fix was deployed).
     .sort((a, b) => (a.captureDate ?? 0) - (b.captureDate ?? 0))
 
+  // ── First-page loading overlay ───────────────────────────────────────────
+  // Grid navigation is entirely client-side (no route change), so the global
+  // NavigationOverlay can't cover it. We show a spinner over the grid until the
+  // first screenful of images has actually painted — at 800px previews this is
+  // the gap the spinner fills.
+  const isFolderView = subCategories.length > 0
+  const itemCount = isFolderView ? subCategories.length : shown.length
+  // A "first page" — enough tiles to fill the initial viewport across
+  // breakpoints (5-col desktop ≈ 2.4 rows, 2-col mobile ≈ 6 rows).
+  const FIRST_PAGE = 12
+  const targetCount = Math.min(itemCount, FIRST_PAGE)
+  const viewKey = `${categoryPath.join('|')}·${typeFilter ?? ''}`
+
+  const loadedRef = useRef(0)
+  const targetRef = useRef(targetCount)
+  targetRef.current = targetCount
+  const [ready, setReady] = useState(targetCount === 0)
+  const [showSpinner, setShowSpinner] = useState(false)
+
+  // Reset readiness synchronously when the view changes (before children
+  // commit), so tile reports for the new view count from zero.
+  const prevKeyRef = useRef(viewKey)
+  if (prevKeyRef.current !== viewKey) {
+    prevKeyRef.current = viewKey
+    loadedRef.current = 0
+    setReady(targetCount === 0)
+  }
+
+  const handleTileLoad = useCallback(() => {
+    loadedRef.current += 1
+    if (loadedRef.current >= targetRef.current) setReady(true)
+  }, [])
+
+  // Delay the spinner slightly so instant (cached) transitions never flash it.
+  useEffect(() => {
+    if (ready) { setShowSpinner(false); return }
+    const id = setTimeout(() => setShowSpinner(true), 180)
+    return () => clearTimeout(id)
+  }, [viewKey, ready])
+
+  // Safety net: never trap the spinner if an image stalls or never loads.
+  useEffect(() => {
+    if (ready) return
+    const id = setTimeout(() => setReady(true), 8000)
+    return () => clearTimeout(id)
+  }, [viewKey, ready])
+
   return (
     <>
       {/* Product type filter — only when the catalog offers more than one type */}
@@ -219,64 +333,83 @@ export default function ShopGrid({
       {/* Breadcrumb */}
       <Breadcrumb path={categoryPath} onNavigate={setCategoryPath} />
 
-      {subCategories.length > 0 ? (
-        /* Has sub-categories: always show folder cards, never the photo grid */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-white/5">
-          {subCategories.map((node, nodeIdx) => {
-            const nodePath = [...categoryPath, node.name]
-            const count = countInCategory(photos, nodePath, typeFilter)
-            const keyUrls = keyPhotosForFolder(photos, nodePath)
-            return (
-              <button
-                key={node.name}
-                onClick={() => setCategoryPath(nodePath)}
-                className="group relative overflow-hidden aspect-[4/3] bg-black text-left"
-              >
-                <RotatingImage srcs={keyUrls} delay={nodeIdx * 700} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/65 transition-all duration-500" />
-                <div className="absolute bottom-0 left-0 p-6 z-10">
-                  <p className="text-xl font-light text-white">{node.name}</p>
-                  {count > 0 && (
-                    <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-accent/70">
-                      {count} {count === 1 ? 'photo' : 'photos'}
-                    </p>
-                  )}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      ) : (
-        /* Leaf level: show photo grid */
-        shown.length === 0 ? (
-          <p className="text-white/40">{t('checkoutSoon')}</p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {shown.map((p) => {
-              const from = categoryPath.length > 0
-                ? `?from=${encodeURIComponent(categoryPath.join('|'))}`
-                : ''
-              return (
-                <Link
-                  key={p.id}
-                  href={`/shop/${p.slug}${from}`}
-                  className="group block select-none"
-                  onContextMenu={(e) => e.preventDefault()}
-                >
-                  <div className="relative overflow-hidden bg-white/5 aspect-square">
-                    <LazyImage
-                      src={`${p.previewUrl}?max=800`}
-                      alt={`${p.title} — ${p.location}`}
-                    />
-                  </div>
-                  <p className="mt-1.5 text-[12px] font-light leading-tight text-white/70 truncate">{p.title}</p>
-                  <p className="text-[10px] tracking-[0.15em] uppercase text-white/35 truncate">{p.location}</p>
-                </Link>
-              )
-            })}
+      <div className="relative min-h-[50vh]">
+        {/* Loading overlay — shown until the first page of images has painted */}
+        {showSpinner && !ready && (
+          <div className="absolute inset-0 z-10 flex items-start justify-center pt-24">
+            <div className="shop-spinner" role="status" aria-label="Loading" />
           </div>
-        )
-      )}
+        )}
+
+        <div className={ready ? 'opacity-100 transition-opacity duration-300' : 'opacity-0 pointer-events-none'}>
+          {isFolderView ? (
+            /* Has sub-categories: always show folder cards, never the photo grid */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-white/5">
+              {subCategories.map((node, nodeIdx) => {
+                const nodePath = [...categoryPath, node.name]
+                const count = countInCategory(photos, nodePath, typeFilter)
+                const keyUrls = keyPhotosForFolder(photos, nodePath)
+                return (
+                  <button
+                    key={node.name}
+                    onClick={() => setCategoryPath(nodePath)}
+                    className="group relative overflow-hidden aspect-[4/3] bg-black text-left"
+                  >
+                    <RotatingImage
+                      srcs={keyUrls}
+                      delay={nodeIdx * 700}
+                      gen={viewKey}
+                      onReady={nodeIdx < targetCount ? handleTileLoad : undefined}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/65 transition-all duration-500" />
+                    <div className="absolute bottom-0 left-0 p-6 z-10">
+                      <p className="text-xl font-light text-white">{node.name}</p>
+                      {count > 0 && (
+                        <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-accent/70">
+                          {count} {count === 1 ? 'photo' : 'photos'}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            /* Leaf level: show photo grid */
+            shown.length === 0 ? (
+              <p className="text-white/40">{t('checkoutSoon')}</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {shown.map((p, i) => {
+                  const from = categoryPath.length > 0
+                    ? `?from=${encodeURIComponent(categoryPath.join('|'))}`
+                    : ''
+                  return (
+                    <Link
+                      key={p.id}
+                      href={`/shop/${p.slug}${from}`}
+                      className="group block select-none"
+                      onContextMenu={(e) => e.preventDefault()}
+                    >
+                      <div className="relative overflow-hidden bg-white/5 aspect-square">
+                        <LazyImage
+                          src={`${p.previewUrl}?max=800`}
+                          alt={`${p.title} — ${p.location}`}
+                          eager={i < targetCount}
+                          gen={viewKey}
+                          onReady={i < targetCount ? handleTileLoad : undefined}
+                        />
+                      </div>
+                      <p className="mt-1.5 text-[12px] font-light leading-tight text-white/70 truncate">{p.title}</p>
+                      <p className="text-[10px] tracking-[0.15em] uppercase text-white/35 truncate">{p.location}</p>
+                    </Link>
+                  )
+                })}
+              </div>
+            )
+          )}
+        </div>
+      </div>
     </>
   )
 }
