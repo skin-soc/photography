@@ -747,6 +747,10 @@ function customerFilename(item) {
 
 // ── Email ────────────────────────────────────────────────────────────────────
 
+// Order ids whose download email is being sent right now — guards against the
+// issue route and the Stripe webhook both emailing the same order.
+const _emailingNow = new Set()
+
 let _mailer = null
 function mailer() {
   if (!_mailer) {
@@ -873,7 +877,7 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
   let grant = await readGrant(orderId)
   if (!grant) {
     const now = Date.now()
-    grant = {
+    const fresh = {
       orderId,
       paymentId: paymentId ? String(paymentId) : null, // Stripe pi_ id, for reconciliation
       email: email ? String(email) : null,
@@ -886,11 +890,23 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
       emailed: false,
       counts: {},
     }
-    await writeFile(orderPath(orderId), JSON.stringify(grant, null, 2))
+    try {
+      // Atomic create (flag 'wx' fails if it already exists) so two near-
+      // simultaneous callers — the post-payment issue route and the Stripe
+      // webhook — can't both create, which could reset the `emailed` flag.
+      await writeFile(orderPath(orderId), JSON.stringify(fresh, null, 2), { flag: 'wx' })
+      grant = fresh
+    } catch (err) {
+      if (err.code === 'EEXIST') grant = await readGrant(orderId) // lost the race — use the winner
+      else throw err
+    }
   }
 
-  // Best-effort email (send once; retry on a later call if it didn't go out).
-  if (!grant.emailed && (email || grant.email)) {
+  // Send the download email EXACTLY once. Both callers can pass the email, so a
+  // synchronous in-memory claim (atomic in single-threaded Node) stops them both
+  // sending; the persisted `emailed` flag stops any later retry re-sending.
+  if (grant && !grant.emailed && (email || grant.email) && !_emailingNow.has(orderId)) {
+    _emailingNow.add(orderId)
     try {
       await sendDownloadEmail({
         email: email || grant.email,
@@ -901,9 +917,12 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
         expiresAt: grant.expiresAt,
       })
       grant.emailed = true
+      if (email && !grant.email) grant.email = String(email) // keep admin display accurate
       await writeFile(orderPath(orderId), JSON.stringify(grant, null, 2)).catch(() => {})
     } catch (err) {
       console.error('[orders] email failed (grant kept, will retry):', err.message)
+    } finally {
+      _emailingNow.delete(orderId)
     }
   }
 
