@@ -28,13 +28,22 @@ services:
       ORDERS_DIR: /fulfil/orders            # download grant records
       SITE_URL: https://gusmcewan.com       # public site, for the email link
       LINK_TTL_DAYS: 30
-      # iCloud SMTP — use an app-specific password; MAIL_FROM must be your iCloud
-      # address or an iCloud Custom-Domain alias.
+      # iCloud SMTP with an iCloud+ Custom Email Domain. Mail is sent FROM
+      # email@gusmcewan.com, but SMTP still AUTHENTICATES as the Apple ID that
+      # owns the domain. Set these two secrets on the NAS:
+      #   SMTP_USER  the Apple ID iCloud address that owns the custom domain,
+      #              e.g. gusmcewan@me.com  (the login — NOT the custom-domain alias)
+      #   SMTP_PASS  an APP-SPECIFIC password (appleid.apple.com → Sign-In & Security
+      #              → App-Specific Passwords). NOT your normal Apple ID password.
+      # MAIL_FROM is the custom-domain address (set up in iCloud+ as a send-from
+      # alias). Not secret, so it's set here. Leave SMTP_USER/SMTP_PASS empty to
+      # disable email (downloads still work; the buyer is auto-unlocked after
+      # payment). On boot the log prints "[email] SMTP ready …" or "… FAILED …".
       SMTP_HOST: smtp.mail.me.com
       SMTP_PORT: 587
       SMTP_USER: ""
       SMTP_PASS: ""
-      MAIL_FROM: ""
+      MAIL_FROM: "Gus McEwan Photography <email@gusmcewan.com>"
     ports:
       - "8787:8787"
     volumes:

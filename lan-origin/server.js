@@ -36,6 +36,7 @@
 import express from 'express'
 import sharp from 'sharp'
 import nodemailer from 'nodemailer'
+import { renderDownloadEmail } from './email.js'
 import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
@@ -360,16 +361,23 @@ const LOGO_HEIGHT_FRACTION = Number(process.env.LOGO_HEIGHT_FRACTION ?? 0.06)
 /** Gap between logo and image edge in pixels. */
 const LOGO_MARGIN = Number(process.env.LOGO_MARGIN ?? 14)
 
-/** Cache the raw SVG string so we only hit disk once. */
+/** Cache the (normalised) SVG string so we only hit disk once. */
 let _logoSvgRaw = null
 async function getLogoSvg() {
-  if (!_logoSvgRaw) _logoSvgRaw = await readFile(LOGO_SVG_PATH, 'utf8')
+  if (!_logoSvgRaw) {
+    const raw = await readFile(LOGO_SVG_PATH, 'utf8')
+    // Some exporters write dimensions in scientific notation (e.g. width="2e4").
+    // Browsers reject that in width/height/viewBox (the SVG renders blank) and it
+    // also defeats the literal width="20000" substitution used when rasterising —
+    // normalise it to a plain integer so every consumer behaves.
+    _logoSvgRaw = raw.replaceAll('2e4', '20000')
+  }
   return _logoSvgRaw
 }
 
 /**
- * Build the logo composite for the watermark — 100% opacity, no shadow,
- * sized to LOGO_HEIGHT_FRACTION of the image height, bottom-right corner.
+ * Build the logo composite for the watermark — sized to LOGO_HEIGHT_FRACTION of
+ * the image height, 100% opacity, bottom-right corner.
  */
 async function buildWatermarkComposites(imgW, imgH) {
   const logoSvgRaw = await getLogoSvg()
@@ -546,6 +554,35 @@ app.post('/admin/warm', (_req, res) => {
   res.json({ ok: true })
 })
 
+/** Send a preview of the real, branded download email so the design can be
+ *  checked in a live client (incl. light/dark). Secret-gated. Defaults to
+ *  MAIL_FROM (yourself); pass {"to":"...","locale":"de"} to override. */
+app.post('/admin/email-test', express.json({ limit: '4kb' }), async (req, res) => {
+  if (!emailConfigured()) {
+    return res.status(503).json({ error: 'SMTP not configured (set SMTP_USER/SMTP_PASS)' })
+  }
+  const to = String(req.body?.to || MAIL_FROM || SMTP_USER || '').trim()
+  if (!to) return res.status(400).json({ error: 'no recipient — set MAIL_FROM or pass {to}' })
+  const locale = String(req.body?.locale || 'en')
+  try {
+    await sendDownloadEmail({
+      email: to,
+      orderId: 'pi_preview_0000000000',
+      passcode: 'TEST7Q2X',
+      locale,
+      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+      items: [
+        { label: 'Standard', format: 'jpeg', token: productToken('preview-std') },
+        { label: 'Master',   format: 'jpeg', token: productToken('preview-master') },
+      ],
+    })
+    res.json({ ok: true, to, locale, note: 'branded download-email preview sent' })
+  } catch (err) {
+    console.error('[email] test send failed:', err.message)
+    res.status(502).json({ error: 'send failed', detail: err.message })
+  }
+})
+
 //==================================================================--
 // Fulfilment (Phase 2) — gated behind a verified Stripe payment.
 //==================================================================--
@@ -716,47 +753,104 @@ function mailer() {
     _mailer = nodemailer.createTransport({
       host: SMTP_HOST,
       port: SMTP_PORT,
-      secure: SMTP_PORT === 465,
+      secure: SMTP_PORT === 465,     // 465 = implicit TLS; 587 = STARTTLS
+      requireTLS: SMTP_PORT !== 465, // force STARTTLS on 587 (iCloud)
       auth: { user: SMTP_USER, pass: SMTP_PASS },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
+      tls: { minVersion: 'TLSv1.2' },
     })
   }
   return _mailer
 }
 
+const emailConfigured = () => Boolean(SMTP_USER && SMTP_PASS)
+
+/** Probe the SMTP connection/credentials at startup so a misconfiguration shows
+ *  up in the logs immediately, not on the first sale. */
+async function verifyMailer() {
+  if (!emailConfigured()) {
+    console.warn('[email] SMTP not configured (SMTP_USER/SMTP_PASS empty) — emails are disabled')
+    return false
+  }
+  try {
+    await mailer().verify()
+    console.log(`[email] SMTP ready — ${SMTP_USER} via ${SMTP_HOST}:${SMTP_PORT}`)
+    return true
+  } catch (err) {
+    console.error(`[email] SMTP verify FAILED (${SMTP_USER} via ${SMTP_HOST}:${SMTP_PORT}):`, err.message)
+    return false
+  }
+}
+
+const BRAND_NAME = 'Gus McEwan Photography'
+const LOGO_CID = 'brandlogo'
+const LOGO_DISPLAY_H = 44 // px shown in the email masthead
+
+/** The email logo: the brand-red signature only. The source artwork layers a
+ *  grey drop-shadow (.st0/.st2 paths) behind the red mark (.st1) — that shadow
+ *  reads as an odd halo on a flat email, so we drop it and render the clean red
+ *  signature, trimmed of padding. Returns the PNG plus its display dimensions.
+ *  Cached for the process. */
+let _emailLogo = null
+async function getEmailLogo() {
+  if (_emailLogo) return _emailLogo
+  const svg = (await getLogoSvg())
+    .replace('width="20000"', 'width="1200"')
+    .replace('height="20000"', 'height="1200"')
+  // Render large, trim transparent padding, then scale to 2× the display height.
+  const trimmed = await sharp(Buffer.from(svg)).resize(1200, 1200, { fit: 'inside' }).trim().png().toBuffer()
+  const content = await sharp(trimmed).resize({ height: LOGO_DISPLAY_H * 2 }).png().toBuffer()
+  const meta = await sharp(content).metadata()
+  _emailLogo = {
+    content,
+    width: Math.round(meta.width / 2),
+    height: Math.round(meta.height / 2),
+  }
+  return _emailLogo
+}
+
+/** Human, locale-aware expiry date (e.g. "5 July 2026" / "2026年7月5日"). */
+function formatExpiry(expiresAt, locale) {
+  try {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : locale, {
+      year: 'numeric', month: 'long', day: 'numeric',
+    }).format(new Date(expiresAt))
+  } catch {
+    return new Date(expiresAt).toISOString().slice(0, 10)
+  }
+}
+
 async function sendDownloadEmail({ email, orderId, passcode, items, locale, expiresAt }) {
   if (!email) throw new Error('no recipient email')
-  if (!SMTP_USER || !SMTP_PASS) throw new Error('SMTP not configured')
+  if (!emailConfigured()) throw new Error('SMTP not configured')
 
-  const url = `${SITE_URL}/${locale}/shop/downloads/${orderId}`
-  const expiry = new Date(expiresAt).toISOString().slice(0, 10)
-  const lines = items.map((i) => `  • ${i.label} — ${customerFilename(i)}`).join('\n')
-
-  const text =
-    `Thank you for your purchase.\n\n` +
-    `Your downloads are ready. Open the link below and enter your passcode to download your files.\n\n` +
-    `Download page: ${url}\n` +
-    `Passcode: ${passcode}\n\n` +
-    `Items:\n${lines}\n\n` +
-    `This link is valid until ${expiry}.\n\n` +
-    `${COPYRIGHT}\n`
-
-  const html =
-    `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;color:#111">` +
-    `<p>Thank you for your purchase.</p>` +
-    `<p>Your downloads are ready. Open the page below and enter your passcode to download your files.</p>` +
-    `<p><a href="${url}" style="display:inline-block;padding:10px 18px;background:#931020;color:#fff;text-decoration:none;border-radius:8px">Open your downloads</a></p>` +
-    `<p style="font-size:14px">Passcode: <strong style="font-family:ui-monospace,monospace;letter-spacing:2px">${passcode}</strong></p>` +
-    `<ul style="font-size:14px;color:#444">${items.map((i) => `<li>${i.label} — ${customerFilename(i)}</li>`).join('')}</ul>` +
-    `<p style="font-size:13px;color:#666">This link is valid until ${expiry}.</p>` +
-    `<p style="font-size:12px;color:#999">${COPYRIGHT}</p>` +
-    `</div>`
+  const loc = locale || 'en'
+  const logo = await getEmailLogo()
+  const { subject, text, html } = renderDownloadEmail({
+    locale: loc,
+    brandName: BRAND_NAME,
+    url: `${SITE_URL}/${loc}/shop/downloads/${orderId}`,
+    passcode,
+    items: items.map((i) => ({ label: i.label, filename: customerFilename(i), format: i.format })),
+    expiryText: formatExpiry(expiresAt, loc),
+    copyright: COPYRIGHT,
+    logoCid: LOGO_CID,
+    logoW: logo.width,
+    logoH: logo.height,
+  })
 
   await mailer().sendMail({
     from: MAIL_FROM,
     to: email,
-    subject: 'Your Gus McEwan Photography downloads',
+    replyTo: MAIL_FROM,
+    subject,
     text,
     html,
+    attachments: [
+      { filename: 'logo.png', content: logo.content, cid: LOGO_CID, contentDisposition: 'inline' },
+    ],
   })
 }
 
@@ -1002,6 +1096,9 @@ app.listen(PORT, () => {
   console.log(`  masters  : ${MASTERS_DIR}`)
   console.log(`  orders   : ${ORDERS_DIR}`)
   console.log(`  public   : ${PUBLIC_URL || '(PUBLIC_URL not set)'}`)
+  // Confirm SMTP credentials work now, so problems surface in the logs rather
+  // than silently on the first sale.
+  verifyMailer()
   // Warm the preview cache in the background so the first view of any collection
   // is a pure cache hit, not a burst of on-demand watermark generation.
   warmPreviewCache().catch((err) => console.error('[warm] startup sweep failed:', err))
