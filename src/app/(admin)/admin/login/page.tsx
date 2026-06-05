@@ -36,7 +36,7 @@ export default async function AdminLogin({
             className="w-full bg-white/[0.04] border border-white/15 rounded-md px-4 py-3 text-sm tracking-wide outline-none transition-colors focus:border-[#931020] focus:bg-white/[0.06]"
           />
           {message && (
-            <p className="text-[13px] text-[#e0566a] tracking-wide">{message}</p>
+            <p className="text-[13px] text-[#931020] tracking-wide">{message}</p>
           )}
           <button
             type="submit"

@@ -421,7 +421,7 @@ function RecentOrdersTable({ onSelect }: { onSelect: (code: string) => void }) {
                       className="inline-flex items-center gap-1 text-[10px] font-mono-ibm uppercase tracking-[0.18em] text-white/45 hover:text-white transition-colors"
                     >
                       {c.label}
-                      <span className="text-[8px] text-[#e0566a]">{sort.key === c.key ? (sort.dir === 1 ? '▲' : '▼') : ''}</span>
+                      <span className="text-[8px] text-[#931020]">{sort.key === c.key ? (sort.dir === 1 ? '▲' : '▼') : ''}</span>
                     </button>
                   </th>
                 ))}
@@ -448,11 +448,11 @@ function RecentOrdersTable({ onSelect }: { onSelect: (code: string) => void }) {
                   className="border-b border-white/[0.06] cursor-pointer hover:bg-white/[0.04] transition-colors"
                 >
                   <td className="py-2.5 pr-4 whitespace-nowrap text-white/60">{fmtDate(o.createdAt)}</td>
-                  <td className="py-2.5 pr-4 whitespace-nowrap font-mono-ibm text-[#e0566a]">{o.orderId}</td>
+                  <td className="py-2.5 pr-4 whitespace-nowrap font-mono-ibm text-[#931020]">{o.orderId}</td>
                   <td className="py-2.5 pr-4 text-white/70 truncate max-w-[14rem]">{o.email ?? '—'}</td>
                   <td className="py-2.5 pr-4 text-white/60">{o.items.length}</td>
                   <td className="py-2.5 pr-4 text-white/60">{dlCount(o)}</td>
-                  <td className={`py-2.5 pr-4 whitespace-nowrap ${o.expired ? 'text-[#e0566a]' : 'text-white/45'}`}>
+                  <td className={`py-2.5 pr-4 whitespace-nowrap ${o.expired ? 'text-[#931020]' : 'text-white/45'}`}>
                     {o.expired ? 'Expired' : 'Active'}
                   </td>
                 </tr>
@@ -514,10 +514,10 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
   return (
     <div className="rounded-lg border border-white/10 bg-white/[0.03] p-5 sm:p-6 animate-[fadeIn_240ms_ease]">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <p className="font-mono-ibm text-sm text-white/90 break-all">{order.orderId}</p>
+        <p className="font-mono-ibm text-sm font-bold text-[#931020] break-all">{order.orderId}</p>
         <span
           className={`text-[10px] font-mono-ibm uppercase tracking-[0.18em] ${
-            order.expired ? 'text-[#e0566a]' : 'text-white/40'
+            order.expired ? 'text-[#931020]' : 'text-white/40'
           }`}
         >
           {order.expired ? 'Expired' : 'Valid'} · until {expiry}
@@ -569,7 +569,7 @@ function Row({ label, value, mono, accent }: { label: string; value: string; mon
   return (
     <div className="grid grid-cols-[140px_1fr] gap-4 py-3.5">
       <dt className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 pt-0.5">{label}</dt>
-      <dd className={`break-all ${mono ? 'font-mono-ibm text-sm' : 'text-[15px]'} ${accent ? 'text-[#e0566a]' : 'text-white/90'}`}>
+      <dd className={`break-all ${mono ? 'font-mono-ibm text-sm' : 'text-[15px]'} ${accent ? 'text-[#931020]' : 'text-white/90'}`}>
         {value}
       </dd>
     </div>
