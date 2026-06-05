@@ -113,6 +113,7 @@
     "added": "تمت الإضافة"
   },
   "cart": {
+    "emailLabel": "البريد الإلكتروني (لرابط التنزيل الخاص بك)",
     "title": "السلة",
     "open": "فتح السلة",
     "openWithCount": "فتح السلة ({count} {count, plural, one {منتج} other {منتجات}})",

@@ -113,6 +113,7 @@
     "added": "Добавлено"
   },
   "cart": {
+    "emailLabel": "Эл. почта (для ссылки на загрузку)",
     "title": "Корзина",
     "open": "Открыть корзину",
     "openWithCount": "Открыть корзину ({count} {count, plural, one {товар} few {товара} other {товаров}})",

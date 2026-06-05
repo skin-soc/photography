@@ -113,6 +113,7 @@
     "added": "Aggiunto"
   },
   "cart": {
+    "emailLabel": "E-mail (per il tuo link di download)",
     "title": "Carrello",
     "open": "Apri carrello",
     "openWithCount": "Apri carrello ({count} {count, plural, one {articolo} other {articoli}})",

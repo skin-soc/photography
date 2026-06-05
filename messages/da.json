@@ -113,6 +113,7 @@
     "added": "Tilføjet"
   },
   "cart": {
+    "emailLabel": "E-mail (til dit downloadlink)",
     "title": "Kurv",
     "open": "Åbn kurv",
     "openWithCount": "Åbn kurv ({count} {count, plural, one {vare} other {varer}})",

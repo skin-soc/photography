@@ -113,6 +113,7 @@
     "added": "추가됨"
   },
   "cart": {
+    "emailLabel": "이메일 (다운로드 링크용)",
     "title": "장바구니",
     "open": "장바구니 열기",
     "openWithCount": "장바구니 열기（{count}개 상품）",

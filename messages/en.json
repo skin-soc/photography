@@ -113,6 +113,7 @@
     "licensingNotePublicEvent": "Licenses are granted for the specific use and copy limits stated. This image was captured at {event}, a public event in a public space. Full licensing terms available <link>here</link>."
   },
   "cart": {
+    "emailLabel": "Email (for your download link)",
     "title": "Cart",
     "open": "Open cart",
     "openWithCount": "Open cart ({count} {count, plural, one {item} other {items}})",

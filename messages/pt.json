@@ -113,6 +113,7 @@
     "added": "Adicionado"
   },
   "cart": {
+    "emailLabel": "E-mail (para o seu link de transferência)",
     "title": "Carrinho",
     "open": "Abrir carrinho",
     "openWithCount": "Abrir carrinho ({count} {count, plural, one {item} other {itens}})",

@@ -5,6 +5,7 @@ import {
   Elements,
   PaymentElement,
   AddressElement,
+  LinkAuthenticationElement,
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js'
@@ -92,6 +93,11 @@ function PaymentForm({
   const elements = useElements()
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+  // Captured explicitly via LinkAuthenticationElement. The Payment Element's
+  // built-in Link email never reaches charge.billing_details on a card payment,
+  // so we read it here and set it on the PaymentIntent (receipt_email) at
+  // confirm — that's what fulfilment uses to send the download email.
+  const [email, setEmail] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -115,6 +121,9 @@ function PaymentForm({
       confirmParams: {
         // We handle the result inline — only redirect for methods that require it
         return_url: `${window.location.origin}/en/shop/order-complete`,
+        // Set the buyer's email on the PaymentIntent so fulfilment (issue route
+        // AND the Stripe webhook) can read it. Optional — empty means no email.
+        ...(email ? { receipt_email: email } : {}),
       },
       redirect: 'if_required',
     })
@@ -143,6 +152,17 @@ function PaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {/* Email — optional; used to send the download link + passcode. Captured
+          here (not scraped off the charge) so it's reliable regardless of Link. */}
+      <div>
+        <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-white/35">
+          {t('emailLabel')}
+        </p>
+        <LinkAuthenticationElement
+          onChange={(e) => setEmail(e.value.email)}
+        />
+      </div>
+
       {/* Shipping address — only for physical items */}
       {hasPhysical && (
         <div>

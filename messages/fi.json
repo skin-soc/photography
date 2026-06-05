@@ -113,6 +113,7 @@
     "added": "Lisätty"
   },
   "cart": {
+    "emailLabel": "Sähköposti (latauslinkkiäsi varten)",
     "title": "Ostoskori",
     "open": "Avaa ostoskori",
     "openWithCount": "Avaa ostoskori ({count} {count, plural, one {tuote} other {tuotetta}})",

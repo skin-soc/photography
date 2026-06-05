@@ -113,6 +113,7 @@
     "added": "Tillagd"
   },
   "cart": {
+    "emailLabel": "E-post (för din nedladdningslänk)",
     "title": "Varukorg",
     "open": "Öppna varukorgen",
     "openWithCount": "Öppna varukorgen ({count} {count, plural, one {vara} other {varor}})",

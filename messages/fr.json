@@ -113,6 +113,7 @@
     "added": "Ajouté"
   },
   "cart": {
+    "emailLabel": "E-mail (pour votre lien de téléchargement)",
     "title": "Panier",
     "open": "Ouvrir le panier",
     "openWithCount": "Ouvrir le panier ({count} {count, plural, one {article} other {articles}})",

@@ -113,6 +113,7 @@
     "added": "Toegevoegd"
   },
   "cart": {
+    "emailLabel": "E-mail (voor je downloadlink)",
     "title": "Winkelwagen",
     "open": "Winkelwagen openen",
     "openWithCount": "Winkelwagen openen ({count} {count, plural, one {artikel} other {artikelen}})",

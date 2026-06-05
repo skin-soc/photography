@@ -113,6 +113,7 @@
     "added": "Lagt til"
   },
   "cart": {
+    "emailLabel": "E-post (for nedlastingslenken din)",
     "title": "Handlekurv",
     "open": "Åpne handlekurven",
     "openWithCount": "Åpne handlekurven ({count} {count, plural, one {vare} other {varer}})",

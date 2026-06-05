@@ -113,6 +113,7 @@
     "added": "Dodano"
   },
   "cart": {
+    "emailLabel": "E-mail (do linku do pobrania)",
     "title": "Koszyk",
     "open": "Otwórz koszyk",
     "openWithCount": "Otwórz koszyk ({count} {count, plural, one {produkt} few {produkty} other {produktów}})",

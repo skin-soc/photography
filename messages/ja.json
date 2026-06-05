@@ -113,6 +113,7 @@
     "added": "追加しました"
   },
   "cart": {
+    "emailLabel": "メールアドレス（ダウンロードリンク用）",
     "title": "カート",
     "open": "カートを開く",
     "openWithCount": "カートを開く（{count}点）",

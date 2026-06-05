@@ -113,6 +113,7 @@
     "added": "Hinzugefügt"
   },
   "cart": {
+    "emailLabel": "E-Mail (für Ihren Download-Link)",
     "title": "Warenkorb",
     "open": "Warenkorb öffnen",
     "openWithCount": "Warenkorb öffnen ({count} {count, plural, one {Artikel} other {Artikel}})",
