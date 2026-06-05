@@ -44,7 +44,7 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
  * Render the download email.
  * @returns {{subject:string, text:string, html:string}}
  */
-function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryText, copyright, logoBrandCid, logoWhiteCid }) {
+function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryText, copyright, logoCid }) {
   const t = M[locale] || M.en
   const dir = locale === 'ar' ? 'rtl' : 'ltr'
   const align = dir === 'rtl' ? 'right' : 'left'
@@ -67,7 +67,7 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
 
   // ── HTML ──
   const fileRows = items.map((i) =>
-    `<tr><td class="filerow text" style="padding:11px 14px;border:1px solid #ececec;background:#fafafa;border-radius:10px;color:#1a1a1a;font-size:14px;">` +
+    `<tr><td class="filerow text" style="padding:11px 14px;border:1px solid #ececec;background:#fafafa;color:#1a1a1a;font-size:14px;">` +
       `<span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:${BRAND};">${esc(i.filename)}</span>` +
       `<span class="muted" style="color:#666;font-size:12px;"> &nbsp;·&nbsp; ${esc(i.label)}${i.format === 'tiff' ? ' · 16-bit TIFF' : ' · JPEG'}</span>` +
     `</td></tr><tr><td style="height:8px;line-height:8px;font-size:8px;">&nbsp;</td></tr>`
@@ -87,73 +87,67 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
   .text { color:#1a1a1a; }
   .muted { color:#666666; }
   .subtle { color:#9a9a9a; }
-  .rule { background:#ececec; }
+  .rule { background:#e6e6e6; }
   .passbox { background:#f6f6f6; border:1px solid #e6e6e6; }
   .passcode { color:${BRAND}; }
   a.cta { background:${BRAND}; color:#ffffff !important; }
-  .logo-d { display:none !important; }
   @media (prefers-color-scheme: dark) {
     body,.wrap { background:#0b0b0b !important; }
-    .card { background:#161616 !important; }
+    .card { background:#141414 !important; }
     .text { color:#f1f1f1 !important; }
     .muted { color:#b9b9b9 !important; }
     .subtle { color:#8a8a8a !important; }
     .rule { background:#2b2b2b !important; }
-    .passbox { background:#211013 !important; border-color:#3a1a20 !important; }
+    .passbox { background:#1d1d1d !important; border-color:#2b2b2b !important; }
     .passcode { color:${BRAND_LIGHT} !important; }
-    .filerow { background:#1c1c1c !important; border-color:#2b2b2b !important; color:#f1f1f1 !important; }
-    .logo-l { display:none !important; }
-    .logo-d { display:inline-block !important; }
+    .filerow { background:#1b1b1b !important; border-color:#2b2b2b !important; color:#f1f1f1 !important; }
   }
-  [data-ogsc] .card { background:#161616 !important; }
+  [data-ogsc] .card { background:#141414 !important; }
   [data-ogsc] .text { color:#f1f1f1 !important; }
   [data-ogsc] .muted { color:#b9b9b9 !important; }
   [data-ogsc] .subtle { color:#8a8a8a !important; }
   [data-ogsc] .rule { background:#2b2b2b !important; }
-  [data-ogsc] .passbox { background:#211013 !important; border-color:#3a1a20 !important; }
+  [data-ogsc] .passbox { background:#1d1d1d !important; border-color:#2b2b2b !important; }
   [data-ogsc] .passcode { color:${BRAND_LIGHT} !important; }
-  [data-ogsc] .filerow { background:#1c1c1c !important; border-color:#2b2b2b !important; color:#f1f1f1 !important; }
-  [data-ogsc] .logo-l { display:none !important; }
-  [data-ogsc] .logo-d { display:inline-block !important; }
+  [data-ogsc] .filerow { background:#1b1b1b !important; border-color:#2b2b2b !important; color:#f1f1f1 !important; }
 </style>
 </head>
 <body class="wrap" style="margin:0;padding:0;background:#f1f1f1;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${esc(t.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="wrap" style="background:#f1f1f1;">
-  <tr><td align="center" style="padding:28px 16px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="max-width:520px;width:100%;background:#ffffff;border-radius:16px;">
+  <tr><td align="center" style="padding:30px 16px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="max-width:520px;width:100%;background:#ffffff;">
       <!-- Slim masthead: logo (start) · wordmark (end) -->
-      <tr><td style="padding:26px 30px 0;">
+      <tr><td style="padding:26px 32px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="${dir}">
           <tr>
-            <td align="${startAlign}" valign="middle" style="width:46px;">
-              <img class="logo-l" src="cid:${logoBrandCid}" width="38" height="38" alt="${esc(brandName)}" style="display:inline-block;border:0;width:38px;height:38px;">
-              <img class="logo-d" src="cid:${logoWhiteCid}" width="38" height="38" alt="${esc(brandName)}" style="display:none;border:0;width:38px;height:38px;">
+            <td align="${startAlign}" valign="middle" style="width:42px;">
+              <img src="cid:${logoCid}" width="36" height="36" alt="${esc(brandName)}" style="display:inline-block;border:0;width:36px;height:36px;">
             </td>
             <td align="${endAlign}" valign="middle">
-              <span class="text" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:#1a1a1a;">${esc(brandName)}</span>
+              <span class="muted" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:400;letter-spacing:0.04em;color:#666;">${esc(brandName)}</span>
             </td>
           </tr>
         </table>
       </td></tr>
       <!-- Hairline divider -->
-      <tr><td style="padding:20px 30px 0;">
-        <div class="rule" style="height:1px;line-height:1px;font-size:1px;background:#ececec;">&nbsp;</div>
+      <tr><td style="padding:20px 32px 0;">
+        <div class="rule" style="height:1px;line-height:1px;font-size:1px;background:#e6e6e6;">&nbsp;</div>
       </td></tr>
       <!-- Body -->
-      <tr><td class="card text" dir="${dir}" style="background:#ffffff;border-radius:0 0 16px 16px;padding:28px 30px 34px;text-align:${align};color:#1a1a1a;">
+      <tr><td class="card text" dir="${dir}" style="background:#ffffff;padding:28px 32px 34px;text-align:${align};color:#1a1a1a;">
         <h1 class="text" style="margin:0 0 14px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:21px;font-weight:600;color:#1a1a1a;">${esc(t.heading)}</h1>
         <p class="muted" style="margin:0 0 24px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#666;">${esc(t.body)}</p>
 
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;">
-          <tr><td style="border-radius:12px;background:${BRAND};">
-            <a class="cta" href="${esc(url)}" style="display:inline-block;padding:13px 26px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:12px;">${esc(t.cta)} ${arrow}</a>
+          <tr><td style="background:${BRAND};">
+            <a class="cta" href="${esc(url)}" style="display:inline-block;padding:13px 26px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#ffffff;text-decoration:none;">${esc(t.cta)} ${arrow}</a>
           </td></tr>
         </table>
 
         <!-- Passcode -->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
-          <tr><td class="passbox" style="background:#f6f6f6;border:1px solid #e6e6e6;border-radius:12px;padding:14px 16px;text-align:${align};">
+          <tr><td class="passbox" style="background:#f6f6f6;border:1px solid #e6e6e6;padding:14px 16px;text-align:${align};">
             <div class="subtle" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a9a9a;margin:0 0 4px;">${esc(t.passcode)}</div>
             <div class="passcode" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;letter-spacing:0.22em;color:${BRAND};">${esc(passcode)}</div>
           </td></tr>

@@ -778,29 +778,21 @@ async function verifyMailer() {
 }
 
 const BRAND_NAME = 'Gus McEwan Photography'
-const LOGO_BRAND_CID = 'logobrand' // true-colour logo, for light backgrounds
-const LOGO_WHITE_CID = 'logowhite' // white logo, for dark backgrounds
+const LOGO_CID = 'brandlogo'
 
-/** Rasterised logo PNGs for the email header (clients can't display SVG).
- *  'brand' keeps the real logo colours (shown in light mode); 'white' recolours
- *  every fill to white (shown in dark mode). Cached — built once per variant. */
-const _emailLogos = {}
-async function getEmailLogoPng(variant) {
-  if (_emailLogos[variant]) return _emailLogos[variant]
-  const raw = await getLogoSvg()
-  let svg = raw
+/** The logo always renders in its true brand colours. Rasterised to PNG (clients
+ *  can't display SVG) and cached for the process. */
+let _emailLogoPng = null
+async function getEmailLogoPng() {
+  if (_emailLogoPng) return _emailLogoPng
+  const svg = (await getLogoSvg())
     .replace('width="20000"', 'width="504"')
     .replace('height="20000"', 'height="504"')
-  if (variant === 'white') {
-    svg = svg
-      .replace(/fill:#[0-9A-Fa-f]{3,6}/g, 'fill:#ffffff')
-      .replace(/fill="#[0-9A-Fa-f]{3,6}"/g, 'fill="#ffffff"')
-  }
-  _emailLogos[variant] = await sharp(Buffer.from(svg))
+  _emailLogoPng = await sharp(Buffer.from(svg))
     .resize(252, 252, { fit: 'inside' })
     .png()
     .toBuffer()
-  return _emailLogos[variant]
+  return _emailLogoPng
 }
 
 /** Human, locale-aware expiry date (e.g. "5 July 2026" / "2026年7月5日"). */
@@ -827,8 +819,7 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
     items: items.map((i) => ({ label: i.label, filename: customerFilename(i), format: i.format })),
     expiryText: formatExpiry(expiresAt, loc),
     copyright: COPYRIGHT,
-    logoBrandCid: LOGO_BRAND_CID,
-    logoWhiteCid: LOGO_WHITE_CID,
+    logoCid: LOGO_CID,
   })
 
   await mailer().sendMail({
@@ -839,8 +830,7 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
     text,
     html,
     attachments: [
-      { filename: 'logo.png',       content: await getEmailLogoPng('brand'), cid: LOGO_BRAND_CID, contentDisposition: 'inline' },
-      { filename: 'logo-white.png', content: await getEmailLogoPng('white'), cid: LOGO_WHITE_CID, contentDisposition: 'inline' },
+      { filename: 'logo.png', content: await getEmailLogoPng(), cid: LOGO_CID, contentDisposition: 'inline' },
     ],
   })
 }
