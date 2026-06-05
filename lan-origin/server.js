@@ -361,16 +361,23 @@ const LOGO_HEIGHT_FRACTION = Number(process.env.LOGO_HEIGHT_FRACTION ?? 0.06)
 /** Gap between logo and image edge in pixels. */
 const LOGO_MARGIN = Number(process.env.LOGO_MARGIN ?? 14)
 
-/** Cache the raw SVG string so we only hit disk once. */
+/** Cache the (normalised) SVG string so we only hit disk once. */
 let _logoSvgRaw = null
 async function getLogoSvg() {
-  if (!_logoSvgRaw) _logoSvgRaw = await readFile(LOGO_SVG_PATH, 'utf8')
+  if (!_logoSvgRaw) {
+    const raw = await readFile(LOGO_SVG_PATH, 'utf8')
+    // Some exporters write dimensions in scientific notation (e.g. width="2e4").
+    // Browsers reject that in width/height/viewBox (the SVG renders blank) and it
+    // also defeats the literal width="20000" substitution used when rasterising —
+    // normalise it to a plain integer so every consumer behaves.
+    _logoSvgRaw = raw.replaceAll('2e4', '20000')
+  }
   return _logoSvgRaw
 }
 
 /**
- * Build the logo composite for the watermark — 100% opacity, no shadow,
- * sized to LOGO_HEIGHT_FRACTION of the image height, bottom-right corner.
+ * Build the logo composite for the watermark — sized to LOGO_HEIGHT_FRACTION of
+ * the image height, 100% opacity, bottom-right corner.
  */
 async function buildWatermarkComposites(imgW, imgH) {
   const logoSvgRaw = await getLogoSvg()
@@ -790,8 +797,6 @@ let _emailLogo = null
 async function getEmailLogo() {
   if (_emailLogo) return _emailLogo
   const svg = (await getLogoSvg())
-    .replace('.st0{fill:#818081;}', '.st0{fill:none;}') // drop shadow layer
-    .replace('.st2{fill:#D5D2D2;}', '.st2{fill:none;}') // drop shadow highlight
     .replace('width="20000"', 'width="1200"')
     .replace('height="20000"', 'height="1200"')
   // Render large, trim transparent padding, then scale to 2× the display height.
