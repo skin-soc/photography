@@ -52,10 +52,11 @@ export default function Nav() {
             alt="Gus McEwan Photography"
             draggable={false}
             style={{
-              height: '64px',
+              height: '46px',
               width: 'auto',
-              filter:
-                'brightness(0) saturate(100%) invert(12%) sepia(74%) saturate(2800%) hue-rotate(340deg) brightness(85%) contrast(110%) drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+              // The SVG is already brand-red (#931020); just a subtle shadow for
+              // legibility over hero images.
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))',
             }}
           />
         </Link>
