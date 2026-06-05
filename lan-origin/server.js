@@ -398,6 +398,53 @@ async function buildWatermarkComposites(imgW, imgH) {
   ]
 }
 
+const previewCacheKey = (id, max) => (max === PREVIEW_MAX ? `${id}.jpg` : `${id}-${max}.jpg`)
+
+/**
+ * Resolve the disk path of a watermarked preview at size `max`, generating and
+ * caching it on first use. Returns null if the clean source preview is absent.
+ *
+ * Generation (resize → tiled mesh → logo → mozjpeg) is the expensive bit, so it
+ * runs once per (id, size) and is then a plain file-stream forever. Writes go to
+ * a temp file and are renamed into place so a concurrent reader (or the warmer)
+ * never sees a half-written file.
+ */
+async function buildPreview(id, max) {
+  const cached = join(CACHE_DIR, previewCacheKey(id, max))
+  try {
+    await stat(cached)
+    return cached // already generated
+  } catch { /* generate below */ }
+
+  const src = join(PREVIEWS_DIR, `${id}.jpg`)
+  try {
+    await stat(src)
+  } catch {
+    return null // no clean preview from Lightroom yet
+  }
+
+  const { data: resizedBuf, info: resizeInfo } = await sharp(src)
+    .resize(max, max, { fit: 'inside', withoutEnlargement: true })
+    .toBuffer({ resolveWithObject: true })
+  const logoComposites = await buildWatermarkComposites(resizeInfo.width, resizeInfo.height)
+
+  const tmp = `${cached}.tmp-${randomBytes(6).toString('hex')}`
+  try {
+    await sharp(resizedBuf)
+      .composite([
+        { input: GMP_PATH, tile: true, blend: 'over' },  // mesh layer
+        ...logoComposites,                                 // shadow + logo on top
+      ])
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toFile(tmp)
+    await rename(tmp, cached)
+  } catch (err) {
+    await unlink(tmp).catch(() => {})
+    throw err
+  }
+  return cached
+}
+
 app.get('/preview/:id', async (req, res) => {
   const { id } = req.params
   if (!/^[A-Za-z0-9_-]+$/.test(id)) return res.status(400).end()
@@ -406,41 +453,10 @@ app.get('/preview/:id', async (req, res) => {
   const max = (!isNaN(requestedMax) && requestedMax > 0 && requestedMax < PREVIEW_MAX)
     ? requestedMax
     : PREVIEW_MAX
-  const cacheKey = max === PREVIEW_MAX ? `${id}.jpg` : `${id}-${max}.jpg`
-  const cached = join(CACHE_DIR, cacheKey)
 
   try {
-    await stat(cached)
-    res.set('Cache-Control', 'public, max-age=31536000, immutable')
-    res.type('jpeg')
-    return createReadStream(cached).pipe(res)
-  } catch {
-    /* not cached yet — generate below */
-  }
-
-  try {
-    // Preview source: the 800px JPEG the Lightroom plugin writes to the SSD.
-    const src = join(PREVIEWS_DIR, `${id}.jpg`)
-    try {
-      await stat(src)
-    } catch {
-      return res.status(404).json({ error: 'not found' })
-    }
-
-    const { data: resizedBuf, info: resizeInfo } = await sharp(src)
-      .resize(max, max, { fit: 'inside', withoutEnlargement: true })
-      .toBuffer({ resolveWithObject: true })
-
-    const logoComposites = await buildWatermarkComposites(resizeInfo.width, resizeInfo.height)
-
-    await sharp(resizedBuf)
-      .composite([
-        { input: GMP_PATH, tile: true, blend: 'over' },  // mesh layer
-        ...logoComposites,                                 // shadow + logo on top
-      ])
-      .jpeg({ quality: 82, mozjpeg: true })
-      .toFile(cached)
-
+    const cached = await buildPreview(id, max)
+    if (!cached) return res.status(404).json({ error: 'not found' })
     res.set('Cache-Control', 'public, max-age=31536000, immutable')
     res.type('jpeg')
     createReadStream(cached).pipe(res)
@@ -448,6 +464,86 @@ app.get('/preview/:id', async (req, res) => {
     console.error('[preview]', id, err)
     res.status(500).json({ error: 'preview failed' })
   }
+})
+
+// ── Preview cache warming ─────────────────────────────────────────────────────
+// Pre-generate watermarked previews so opening a large collection is always a
+// cache hit, never dozens of on-the-fly sharp jobs competing for the NAS CPU.
+// Sizes mirror what the grid/product pages request (the full 800 + the 400 used
+// by srcSet). Throttled so warming never starves live requests.
+const WARM_SIZES = [...new Set([PREVIEW_MAX, 400].filter((n) => n > 0 && n <= PREVIEW_MAX))]
+const WARM_CONCURRENCY = Math.max(1, Number(process.env.WARM_CONCURRENCY ?? 3))
+let _warming = false
+
+async function warmPreviewCache() {
+  if (_warming) return
+  _warming = true
+  try {
+    let files
+    try {
+      files = await readdir(PREVIEWS_DIR)
+    } catch (err) {
+      console.warn('[warm] cannot read previews dir:', err.message)
+      return
+    }
+    const ids = files
+      .filter((f) => f.toLowerCase().endsWith('.jpg'))
+      .map((f) => f.slice(0, -4))
+    const jobs = []
+    for (const id of ids) for (const max of WARM_SIZES) jobs.push({ id, max })
+    if (jobs.length === 0) return
+
+    let cursor = 0
+    let built = 0
+    let failed = 0
+    const started = Date.now()
+    const run = async () => {
+      for (;;) {
+        const idx = cursor++
+        if (idx >= jobs.length) return
+        const { id, max } = jobs[idx]
+        try {
+          await stat(join(CACHE_DIR, previewCacheKey(id, max)))
+          continue // already cached — skip cheaply
+        } catch { /* needs building */ }
+        try {
+          await buildPreview(id, max)
+          built++
+        } catch (err) {
+          failed++
+          console.error('[warm]', id, max, err.message)
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: WARM_CONCURRENCY }, run))
+    if (built || failed) {
+      const secs = ((Date.now() - started) / 1000).toFixed(1)
+      console.log(`[warm] generated ${built} preview(s)${failed ? `, ${failed} failed` : ''} in ${secs}s`)
+    }
+  } finally {
+    _warming = false
+  }
+}
+
+// Re-warm shortly after the plugin publishes new previews. fs.watch is coalesced
+// with a debounce so a burst of writes triggers a single sweep; if the platform
+// doesn't support watching this mount we simply rely on startup + manual warming.
+let _warmTimer = null
+function scheduleWarm(delay = 5000) {
+  if (_warmTimer) clearTimeout(_warmTimer)
+  _warmTimer = setTimeout(() => { _warmTimer = null; warmPreviewCache() }, delay)
+}
+try {
+  const { watch } = await import('node:fs')
+  watch(PREVIEWS_DIR, { persistent: false }, () => scheduleWarm())
+} catch (err) {
+  console.warn('[warm] preview dir watch unavailable:', err.message)
+}
+
+/** Manually kick a warm sweep (secret-gated like everything else). */
+app.post('/admin/warm', (_req, res) => {
+  scheduleWarm(0)
+  res.json({ ok: true })
 })
 
 //==================================================================--
@@ -906,4 +1002,7 @@ app.listen(PORT, () => {
   console.log(`  masters  : ${MASTERS_DIR}`)
   console.log(`  orders   : ${ORDERS_DIR}`)
   console.log(`  public   : ${PUBLIC_URL || '(PUBLIC_URL not set)'}`)
+  // Warm the preview cache in the background so the first view of any collection
+  // is a pure cache hit, not a burst of on-demand watermark generation.
+  warmPreviewCache().catch((err) => console.error('[warm] startup sweep failed:', err))
 })
