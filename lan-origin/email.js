@@ -44,10 +44,13 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
  * Render the download email.
  * @returns {{subject:string, text:string, html:string}}
  */
-function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryText, copyright, logoCid }) {
+function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryText, copyright, logoBrandCid, logoWhiteCid }) {
   const t = M[locale] || M.en
   const dir = locale === 'ar' ? 'rtl' : 'ltr'
   const align = dir === 'rtl' ? 'right' : 'left'
+  const startAlign = dir === 'rtl' ? 'right' : 'left'
+  const endAlign = dir === 'rtl' ? 'left' : 'right'
+  const arrow = dir === 'rtl' ? '&larr;' : '&rarr;'
   const validUntil = t.validUntil.replace('{date}', expiryText)
 
   // ── Plain-text alternative ──
@@ -84,44 +87,67 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
   .text { color:#1a1a1a; }
   .muted { color:#666666; }
   .subtle { color:#9a9a9a; }
+  .rule { background:#ececec; }
   .passbox { background:#f6f6f6; border:1px solid #e6e6e6; }
   .passcode { color:${BRAND}; }
   a.cta { background:${BRAND}; color:#ffffff !important; }
+  .logo-d { display:none !important; }
   @media (prefers-color-scheme: dark) {
     body,.wrap { background:#0b0b0b !important; }
     .card { background:#161616 !important; }
     .text { color:#f1f1f1 !important; }
     .muted { color:#b9b9b9 !important; }
     .subtle { color:#8a8a8a !important; }
+    .rule { background:#2b2b2b !important; }
     .passbox { background:#211013 !important; border-color:#3a1a20 !important; }
     .passcode { color:${BRAND_LIGHT} !important; }
     .filerow { background:#1c1c1c !important; border-color:#2b2b2b !important; color:#f1f1f1 !important; }
+    .logo-l { display:none !important; }
+    .logo-d { display:inline-block !important; }
   }
   [data-ogsc] .card { background:#161616 !important; }
   [data-ogsc] .text { color:#f1f1f1 !important; }
   [data-ogsc] .muted { color:#b9b9b9 !important; }
+  [data-ogsc] .subtle { color:#8a8a8a !important; }
+  [data-ogsc] .rule { background:#2b2b2b !important; }
   [data-ogsc] .passbox { background:#211013 !important; border-color:#3a1a20 !important; }
   [data-ogsc] .passcode { color:${BRAND_LIGHT} !important; }
   [data-ogsc] .filerow { background:#1c1c1c !important; border-color:#2b2b2b !important; color:#f1f1f1 !important; }
+  [data-ogsc] .logo-l { display:none !important; }
+  [data-ogsc] .logo-d { display:inline-block !important; }
 </style>
 </head>
 <body class="wrap" style="margin:0;padding:0;background:#f1f1f1;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${esc(t.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="wrap" style="background:#f1f1f1;">
   <tr><td align="center" style="padding:28px 16px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
-      <!-- Brand header — fixed colour, theme-independent -->
-      <tr><td align="center" style="background:${BRAND};border-radius:16px 16px 0 0;padding:30px 24px;">
-        <img src="cid:${logoCid}" width="84" height="84" alt="${esc(brandName)}" style="display:block;border:0;width:84px;height:auto;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="max-width:520px;width:100%;background:#ffffff;border-radius:16px;">
+      <!-- Slim masthead: logo (start) · wordmark (end) -->
+      <tr><td style="padding:26px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="${dir}">
+          <tr>
+            <td align="${startAlign}" valign="middle" style="width:46px;">
+              <img class="logo-l" src="cid:${logoBrandCid}" width="38" height="38" alt="${esc(brandName)}" style="display:inline-block;border:0;width:38px;height:38px;">
+              <img class="logo-d" src="cid:${logoWhiteCid}" width="38" height="38" alt="${esc(brandName)}" style="display:none;border:0;width:38px;height:38px;">
+            </td>
+            <td align="${endAlign}" valign="middle">
+              <span class="text" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:#1a1a1a;">${esc(brandName)}</span>
+            </td>
+          </tr>
+        </table>
       </td></tr>
-      <!-- Body card -->
-      <tr><td class="card" dir="${dir}" style="background:#ffffff;border-radius:0 0 16px 16px;padding:34px 30px;text-align:${align};">
+      <!-- Hairline divider -->
+      <tr><td style="padding:20px 30px 0;">
+        <div class="rule" style="height:1px;line-height:1px;font-size:1px;background:#ececec;">&nbsp;</div>
+      </td></tr>
+      <!-- Body -->
+      <tr><td class="card text" dir="${dir}" style="background:#ffffff;border-radius:0 0 16px 16px;padding:28px 30px 34px;text-align:${align};color:#1a1a1a;">
         <h1 class="text" style="margin:0 0 14px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:21px;font-weight:600;color:#1a1a1a;">${esc(t.heading)}</h1>
         <p class="muted" style="margin:0 0 24px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#666;">${esc(t.body)}</p>
 
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;">
           <tr><td style="border-radius:12px;background:${BRAND};">
-            <a class="cta" href="${esc(url)}" style="display:inline-block;padding:13px 26px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:12px;">${esc(t.cta)} &rarr;</a>
+            <a class="cta" href="${esc(url)}" style="display:inline-block;padding:13px 26px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:12px;">${esc(t.cta)} ${arrow}</a>
           </td></tr>
         </table>
 
@@ -140,8 +166,10 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
         <p class="subtle" style="margin:18px 0 0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#9a9a9a;">${esc(validUntil)}</p>
         <p class="muted" style="margin:22px 0 0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#666;">${esc(t.help)}</p>
       </td></tr>
-      <!-- Footer -->
-      <tr><td align="center" style="padding:20px 24px 0;">
+    </table>
+    <!-- Footer — outside the card, on the page background -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+      <tr><td align="center" style="padding:18px 24px 0;">
         <p class="subtle" style="margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.6;color:#9a9a9a;">${esc(copyright)}</p>
       </td></tr>
     </table>
