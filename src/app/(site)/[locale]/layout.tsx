@@ -16,6 +16,7 @@ import {
   buildStructuredData,
   getKeywords,
 } from '@/i18n/seo'
+import { getShopOnline } from '@/lib/shop-settings'
 import '@/app/globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -140,6 +141,7 @@ export default async function RootLayout({
   setRequestLocale(locale)
 
   const jsonLd = buildStructuredData(locale)
+  const shopOnline = await getShopOnline()
 
   return (
     <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={`${cormorant.variable} ${ibmPlexMono.variable} ${spaceMono.variable}`}>
@@ -157,7 +159,7 @@ export default async function RootLayout({
         ))}
         <NextIntlClientProvider>
           <NavigationOverlay>
-            <Nav />
+            <Nav shopOnline={shopOnline} />
             {children}
           </NavigationOverlay>
           <CartDrawerPortal />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReferenceLookup } from '@/lib/shop'
 import type { AdminOrder } from '@/lib/downloads'
 import Logo from '../_components/Logo'
@@ -19,14 +19,17 @@ export default function AdminPage() {
             Studio Admin
           </span>
         </div>
-        <form method="post" action="/api/admin/logout">
-          <button
-            type="submit"
-            className="text-[11px] font-mono-ibm uppercase tracking-[0.22em] text-white/40 transition-colors hover:text-white"
-          >
-            Sign out
-          </button>
-        </form>
+        <div className="flex items-center gap-5 sm:gap-7">
+          <ShopStatusToggle />
+          <form method="post" action="/api/admin/logout">
+            <button
+              type="submit"
+              className="text-[11px] font-mono-ibm uppercase tracking-[0.22em] text-white/40 transition-colors hover:text-white"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
       </header>
 
       <main className="flex-1 w-full max-w-3xl mx-auto px-6 sm:px-10 py-12 sm:py-16">
@@ -49,6 +52,65 @@ export default function AdminPage() {
 
         {tab === 'products' ? <ProductsTab /> : <OrdersTab />}
       </main>
+    </div>
+  )
+}
+
+// ── Shop online/offline switch ──────────────────────────────────────────────
+// Hides/shows the SHOP link in the public site nav. Backed by Cloudflare KV.
+function ShopStatusToggle() {
+  const [online, setOnline] = useState<boolean | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/shop-status')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setOnline((d as { online: boolean }).online))
+      .catch(() => setOnline(null))
+  }, [])
+
+  async function toggle() {
+    if (online === null || busy) return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/admin/shop-status', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ online: !online }),
+      })
+      if (res.ok) {
+        const d = (await res.json()) as { online: boolean }
+        setOnline(d.online)
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="hidden sm:inline-flex items-center gap-2">
+        <span
+          className={`h-2 w-2 rounded-full ${
+            online === null ? 'bg-white/25' : online ? 'bg-emerald-500' : 'bg-white/30'
+          }`}
+        />
+        <span className="text-[11px] font-mono-ibm uppercase tracking-[0.22em] text-white/40">
+          {online === null ? 'Shop —' : online ? 'Shop online' : 'Shop offline'}
+        </span>
+      </span>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={online === null || busy}
+        className={`min-w-[6.5rem] rounded-md border px-3 py-1.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+          online
+            ? 'border-white/15 text-white/55 hover:border-white/35 hover:text-white'
+            : 'border-[#931020] bg-[#931020] text-white hover:bg-[#a8131f]'
+        }`}
+      >
+        {busy ? <span className="admin-btn-spinner" aria-hidden /> : online ? 'Take offline' : 'Take online'}
+      </button>
     </div>
   )
 }

@@ -14,6 +14,9 @@
   "images": {
     "binding": "IMAGES"
   },
+  "kv_namespaces": [
+    { "binding": "SHOP_SETTINGS", "id": "8a07bbf434824d53b510c8fa3b9a18f7" }
+  ],
   "observability": {
     "enabled": true
   },
@@ -25,7 +28,10 @@
       },
       "images": {
         "binding": "IMAGES"
-      }
+      },
+      "kv_namespaces": [
+        { "binding": "SHOP_SETTINGS", "id": "8a07bbf434824d53b510c8fa3b9a18f7" }
+      ]
     }
   },
   "upload_source_maps": true

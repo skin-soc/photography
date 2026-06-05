@@ -7,16 +7,17 @@ import LocaleSwitcher from './LocaleSwitcher'
 import CartIcon from './CartIcon'
 
 const portfolioHrefs = ['/people', '/places', '/nature'] as const
-const topHrefs = ['/shop', '/about'] as const
 type NavKey = 'people' | 'places' | 'nature' | 'shop' | 'about'
 
 const TEXT_SHADOW = {
   textShadow: '0 1px 0 rgba(0,0,0,1), 0 1px 1px rgba(0,0,0,0.95), 0 2px 2px rgba(0,0,0,0.75)',
 }
 
-export default function Nav() {
+export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
   const t = useTranslations('nav')
   const pathname = usePathname()
+  // The shop link is hidden from the nav when the admin takes the shop offline.
+  const topHrefs: ('/shop' | '/about')[] = shopOnline ? ['/shop', '/about'] : ['/about']
   // Restore mobile-menu state across locale-switch remounts. LocaleSwitcher
   // writes a timestamp to sessionStorage right before it triggers a router
   // transition; if we mount within 2s of that, the menu opens on first paint
