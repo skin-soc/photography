@@ -546,6 +546,28 @@ app.post('/admin/warm', (_req, res) => {
   res.json({ ok: true })
 })
 
+/** Send a test email to confirm SMTP is wired up. Secret-gated. Defaults to
+ *  MAIL_FROM (i.e. yourself); pass {"to":"..."} to send elsewhere. */
+app.post('/admin/email-test', express.json({ limit: '4kb' }), async (req, res) => {
+  if (!emailConfigured()) {
+    return res.status(503).json({ error: 'SMTP not configured (set SMTP_USER/SMTP_PASS)' })
+  }
+  const to = String(req.body?.to || MAIL_FROM || SMTP_USER || '').trim()
+  if (!to) return res.status(400).json({ error: 'no recipient — set MAIL_FROM or pass {to}' })
+  try {
+    const info = await mailer().sendMail({
+      from: MAIL_FROM,
+      to,
+      subject: 'Gus McEwan Photography — SMTP test',
+      text: 'This is a test message confirming the shop origin can send email via iCloud SMTP.\n',
+    })
+    res.json({ ok: true, to, messageId: info.messageId, accepted: info.accepted, rejected: info.rejected })
+  } catch (err) {
+    console.error('[email] test send failed:', err.message)
+    res.status(502).json({ error: 'send failed', detail: err.message })
+  }
+})
+
 //==================================================================--
 // Fulfilment (Phase 2) — gated behind a verified Stripe payment.
 //==================================================================--
@@ -716,16 +738,40 @@ function mailer() {
     _mailer = nodemailer.createTransport({
       host: SMTP_HOST,
       port: SMTP_PORT,
-      secure: SMTP_PORT === 465,
+      secure: SMTP_PORT === 465,     // 465 = implicit TLS; 587 = STARTTLS
+      requireTLS: SMTP_PORT !== 465, // force STARTTLS on 587 (iCloud)
       auth: { user: SMTP_USER, pass: SMTP_PASS },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
+      tls: { minVersion: 'TLSv1.2' },
     })
   }
   return _mailer
 }
 
+const emailConfigured = () => Boolean(SMTP_USER && SMTP_PASS)
+
+/** Probe the SMTP connection/credentials at startup so a misconfiguration shows
+ *  up in the logs immediately, not on the first sale. */
+async function verifyMailer() {
+  if (!emailConfigured()) {
+    console.warn('[email] SMTP not configured (SMTP_USER/SMTP_PASS empty) — emails are disabled')
+    return false
+  }
+  try {
+    await mailer().verify()
+    console.log(`[email] SMTP ready — ${SMTP_USER} via ${SMTP_HOST}:${SMTP_PORT}`)
+    return true
+  } catch (err) {
+    console.error(`[email] SMTP verify FAILED (${SMTP_USER} via ${SMTP_HOST}:${SMTP_PORT}):`, err.message)
+    return false
+  }
+}
+
 async function sendDownloadEmail({ email, orderId, passcode, items, locale, expiresAt }) {
   if (!email) throw new Error('no recipient email')
-  if (!SMTP_USER || !SMTP_PASS) throw new Error('SMTP not configured')
+  if (!emailConfigured()) throw new Error('SMTP not configured')
 
   const url = `${SITE_URL}/${locale}/shop/downloads/${orderId}`
   const expiry = new Date(expiresAt).toISOString().slice(0, 10)
@@ -1002,6 +1048,9 @@ app.listen(PORT, () => {
   console.log(`  masters  : ${MASTERS_DIR}`)
   console.log(`  orders   : ${ORDERS_DIR}`)
   console.log(`  public   : ${PUBLIC_URL || '(PUBLIC_URL not set)'}`)
+  // Confirm SMTP credentials work now, so problems surface in the logs rather
+  // than silently on the first sale.
+  verifyMailer()
   // Warm the preview cache in the background so the first view of any collection
   // is a pure cache hit, not a burst of on-demand watermark generation.
   warmPreviewCache().catch((err) => console.error('[warm] startup sweep failed:', err))

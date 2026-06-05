@@ -28,8 +28,16 @@ services:
       ORDERS_DIR: /fulfil/orders            # download grant records
       SITE_URL: https://gusmcewan.com       # public site, for the email link
       LINK_TTL_DAYS: 30
-      # iCloud SMTP — use an app-specific password; MAIL_FROM must be your iCloud
-      # address or an iCloud Custom-Domain alias.
+      # iCloud SMTP. Required to send the download email. Set these on the NAS:
+      #   SMTP_USER  your full iCloud address, e.g. gusmcewan@me.com
+      #   SMTP_PASS  an APP-SPECIFIC password (appleid.apple.com → Sign-In & Security
+      #              → App-Specific Passwords). NOT your normal Apple ID password.
+      #   MAIL_FROM  must be your iCloud address or a Custom-Domain alias on that
+      #              account. May include a display name, e.g.
+      #              "Gus McEwan Photography <gusmcewan@me.com>". Defaults to SMTP_USER.
+      # Leave SMTP_USER/SMTP_PASS empty to disable email (downloads still work; the
+      # buyer is auto-unlocked after payment). On boot the log prints either
+      # "[email] SMTP ready …" or "[email] SMTP verify FAILED …".
       SMTP_HOST: smtp.mail.me.com
       SMTP_PORT: 587
       SMTP_USER: ""
