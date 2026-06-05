@@ -779,20 +779,31 @@ async function verifyMailer() {
 
 const BRAND_NAME = 'Gus McEwan Photography'
 const LOGO_CID = 'brandlogo'
+const LOGO_DISPLAY_H = 44 // px shown in the email masthead
 
-/** The logo always renders in its true brand colours. Rasterised to PNG (clients
- *  can't display SVG) and cached for the process. */
-let _emailLogoPng = null
-async function getEmailLogoPng() {
-  if (_emailLogoPng) return _emailLogoPng
+/** The email logo: the brand-red signature only. The source artwork layers a
+ *  grey drop-shadow (.st0/.st2 paths) behind the red mark (.st1) — that shadow
+ *  reads as an odd halo on a flat email, so we drop it and render the clean red
+ *  signature, trimmed of padding. Returns the PNG plus its display dimensions.
+ *  Cached for the process. */
+let _emailLogo = null
+async function getEmailLogo() {
+  if (_emailLogo) return _emailLogo
   const svg = (await getLogoSvg())
-    .replace('width="20000"', 'width="504"')
-    .replace('height="20000"', 'height="504"')
-  _emailLogoPng = await sharp(Buffer.from(svg))
-    .resize(252, 252, { fit: 'inside' })
-    .png()
-    .toBuffer()
-  return _emailLogoPng
+    .replace('.st0{fill:#818081;}', '.st0{fill:none;}') // drop shadow layer
+    .replace('.st2{fill:#D5D2D2;}', '.st2{fill:none;}') // drop shadow highlight
+    .replace('width="20000"', 'width="1200"')
+    .replace('height="20000"', 'height="1200"')
+  // Render large, trim transparent padding, then scale to 2× the display height.
+  const trimmed = await sharp(Buffer.from(svg)).resize(1200, 1200, { fit: 'inside' }).trim().png().toBuffer()
+  const content = await sharp(trimmed).resize({ height: LOGO_DISPLAY_H * 2 }).png().toBuffer()
+  const meta = await sharp(content).metadata()
+  _emailLogo = {
+    content,
+    width: Math.round(meta.width / 2),
+    height: Math.round(meta.height / 2),
+  }
+  return _emailLogo
 }
 
 /** Human, locale-aware expiry date (e.g. "5 July 2026" / "2026年7月5日"). */
@@ -811,6 +822,7 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
   if (!emailConfigured()) throw new Error('SMTP not configured')
 
   const loc = locale || 'en'
+  const logo = await getEmailLogo()
   const { subject, text, html } = renderDownloadEmail({
     locale: loc,
     brandName: BRAND_NAME,
@@ -820,6 +832,8 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
     expiryText: formatExpiry(expiresAt, loc),
     copyright: COPYRIGHT,
     logoCid: LOGO_CID,
+    logoW: logo.width,
+    logoH: logo.height,
   })
 
   await mailer().sendMail({
@@ -830,7 +844,7 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
     text,
     html,
     attachments: [
-      { filename: 'logo.png', content: await getEmailLogoPng(), cid: LOGO_CID, contentDisposition: 'inline' },
+      { filename: 'logo.png', content: logo.content, cid: LOGO_CID, contentDisposition: 'inline' },
     ],
   })
 }

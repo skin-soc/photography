@@ -44,7 +44,7 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
  * Render the download email.
  * @returns {{subject:string, text:string, html:string}}
  */
-function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryText, copyright, logoCid }) {
+function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryText, copyright, logoCid, logoW = 80, logoH = 44 }) {
   const t = M[locale] || M.en
   const dir = locale === 'ar' ? 'rtl' : 'ltr'
   const align = dir === 'rtl' ? 'right' : 'left'
@@ -67,7 +67,7 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
 
   // ── HTML ──
   const fileRows = items.map((i) =>
-    `<tr><td class="filerow text" style="padding:11px 14px;border:1px solid #ececec;background:#fafafa;color:#1a1a1a;font-size:14px;">` +
+    `<tr><td class="filerow text" style="padding:11px 14px;border:1px solid #ececec;background:#fafafa;border-radius:10px;color:#1a1a1a;font-size:14px;">` +
       `<span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:${BRAND};">${esc(i.filename)}</span>` +
       `<span class="muted" style="color:#666;font-size:12px;"> &nbsp;·&nbsp; ${esc(i.label)}${i.format === 'tiff' ? ' · 16-bit TIFF' : ' · JPEG'}</span>` +
     `</td></tr><tr><td style="height:8px;line-height:8px;font-size:8px;">&nbsp;</td></tr>`
@@ -121,8 +121,8 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
       <tr><td style="padding:26px 32px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="${dir}">
           <tr>
-            <td align="${startAlign}" valign="middle" style="width:42px;">
-              <img src="cid:${logoCid}" width="36" height="36" alt="${esc(brandName)}" style="display:inline-block;border:0;width:36px;height:36px;">
+            <td align="${startAlign}" valign="middle" style="width:${logoW + 8}px;">
+              <img src="cid:${logoCid}" width="${logoW}" height="${logoH}" alt="${esc(brandName)}" style="display:inline-block;border:0;width:${logoW}px;height:${logoH}px;">
             </td>
             <td align="${endAlign}" valign="middle">
               <span class="muted" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:400;letter-spacing:0.04em;color:#666;">${esc(brandName)}</span>
@@ -140,14 +140,14 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
         <p class="muted" style="margin:0 0 24px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#666;">${esc(t.body)}</p>
 
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;">
-          <tr><td style="background:${BRAND};">
-            <a class="cta" href="${esc(url)}" style="display:inline-block;padding:13px 26px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#ffffff;text-decoration:none;">${esc(t.cta)} ${arrow}</a>
+          <tr><td style="border-radius:14px;background:${BRAND};">
+            <a class="cta" href="${esc(url)}" style="display:inline-block;padding:13px 26px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:14px;">${esc(t.cta)} ${arrow}</a>
           </td></tr>
         </table>
 
         <!-- Passcode -->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
-          <tr><td class="passbox" style="background:#f6f6f6;border:1px solid #e6e6e6;padding:14px 16px;text-align:${align};">
+          <tr><td class="passbox" style="background:#f6f6f6;border:1px solid #e6e6e6;border-radius:12px;padding:14px 16px;text-align:${align};">
             <div class="subtle" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a9a9a;margin:0 0 4px;">${esc(t.passcode)}</div>
             <div class="passcode" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;letter-spacing:0.22em;color:${BRAND};">${esc(passcode)}</div>
           </td></tr>
