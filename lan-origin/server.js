@@ -38,7 +38,7 @@ import sharp from 'sharp'
 import nodemailer from 'nodemailer'
 import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
-import { readFile, writeFile, mkdir, stat, readdir, unlink } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
 import { createReadStream } from 'node:fs'
 import { join, resolve } from 'node:path'
 
@@ -508,7 +508,9 @@ async function resolveSource(id, format) {
     ?? (await fileIfExists(join(MASTERS_DIR, `${id}.tiff`)))
   const master = format === 'tiff' ? (tif ?? jpg) : (jpg ?? tif)
   if (!master) {
-    throw new Error(`no master for ${id} (${ref}) in ${MASTERS_DIR} — re-publish this photo`)
+    const e = new Error(`no master for ${id} (expected ${ref}.jpg/.tif) in ${MASTERS_DIR} — export the master for this photo`)
+    e.code = 'NO_MASTER'
+    throw e
   }
   return master
 }
@@ -528,31 +530,51 @@ async function generateDerivative(photo, product) {
 
   const srcPath = await resolveSource(photo.id, product.format)
   const target = product.dimensions ?? { w: photo.width, h: photo.height }
-  let pipeline = sharp(srcPath, { limitInputPixels: false })
-    .rotate() // bake in any EXIF orientation before stripping metadata
-    .resize(target.w, target.h, { fit: 'inside', withoutEnlargement: true })
-    .keepIccProfile() // preserve the colour profile — do NOT strip it
-  pipeline = product.format === 'tiff'
-    ? pipeline.tiff({ compression: 'deflate', predictor: 'horizontal' })
-    : pipeline.jpeg({ quality: 92, mozjpeg: true })
-  await pipeline.toFile(out)
+  // Only ever re-encode when the sold size is genuinely smaller than the master.
+  // Full-size tiers (Master, Original) ship the EXACT bytes exported from
+  // Lightroom — copied, never recompressed.
+  const needsResize = target.w < photo.width || target.h < photo.height
 
-  // Embed copyright / usage metadata into the finished file. sharp has already
-  // dropped camera metadata; we keep the ICC profile and add rights here.
-  const tier = licenseTier(product.label)
-  await exiftool.write(out, {
-    Artist: 'Gus McEwan',
-    'XMP-dc:Creator': 'Gus McEwan',
-    'IPTC:By-line': 'Gus McEwan',
-    Copyright: COPYRIGHT,
-    'IPTC:CopyrightNotice': COPYRIGHT,
-    'XMP-dc:Rights': COPYRIGHT,
-    'XMP-xmpRights:WebStatement': 'https://gusmcewan.com',
-    'XMP-xmpRights:Marked': true,
-    'XMP-xmpRights:UsageTerms': USAGE_TERMS[tier],
-    CreatorWorkURL: 'https://gusmcewan.com',
-    // -overwrite_original: write in place, no "<file>_original" backup beside it.
-  }, { writeArgs: ['-overwrite_original'] })
+  // Build in a temp file and move it into place only once fully done. A failure
+  // (resize, or the metadata write) must never leave a half-made file in the
+  // cache that later requests would serve as a finished product.
+  const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.${ext}`
+  try {
+    if (!needsResize) {
+      await copyFile(srcPath, tmp)
+    } else {
+      let pipeline = sharp(srcPath, { limitInputPixels: false })
+        .rotate() // apply EXIF orientation before re-encoding
+        .resize(target.w, target.h, { fit: 'inside', withoutEnlargement: true })
+        .keepIccProfile() // preserve the colour profile — do NOT strip it
+      pipeline = product.format === 'tiff'
+        ? pipeline.tiff({ compression: 'deflate', predictor: 'horizontal' }) // lossless
+        : pipeline.jpeg({ quality: 100, chromaSubsampling: '4:4:4', mozjpeg: true }) // visually lossless
+      await pipeline.toFile(tmp)
+    }
+
+    // Embed copyright / usage metadata. For copied masters this only adds rights
+    // tags; the image data is untouched. The ICC profile is preserved either way.
+    const tier = licenseTier(product.label)
+    await exiftool.write(tmp, {
+      Artist: 'Gus McEwan',
+      'XMP-dc:Creator': 'Gus McEwan',
+      'IPTC:By-line': 'Gus McEwan',
+      Copyright: COPYRIGHT,
+      'IPTC:CopyrightNotice': COPYRIGHT,
+      'XMP-dc:Rights': COPYRIGHT,
+      'XMP-xmpRights:WebStatement': 'https://gusmcewan.com',
+      'XMP-xmpRights:Marked': 'True', // exiftool can't encode a JS boolean; use the literal flag
+      'XMP-xmpRights:UsageTerms': USAGE_TERMS[tier],
+      CreatorWorkURL: 'https://gusmcewan.com',
+      // -overwrite_original: write in place, no "<file>_original" backup beside it.
+    }, { writeArgs: ['-overwrite_original'] })
+
+    await rename(tmp, out)
+  } catch (err) {
+    await unlink(tmp).catch(() => {})
+    throw err
+  }
 
   return { path: out, filename, contentType }
 }
@@ -744,7 +766,13 @@ app.get('/orders/:orderId/file/:sku', async (req, res) => {
     result = await generateDerivative(found.photo, found.product)
   } catch (err) {
     console.error('[fulfil]', sku, err)
-    return res.status(500).json({ error: 'generation failed' })
+    // A missing master isn't a server fault — the photo just hasn't had its
+    // master exported from Lightroom yet. Surface it distinctly so it's clear
+    // the fix is "export that master", not "debug the server".
+    if (err && err.code === 'NO_MASTER') {
+      return res.status(409).json({ error: 'master not available', detail: String(err.message) })
+    }
+    return res.status(500).json({ error: 'generation failed', detail: String(err && err.message) })
   }
 
   grant.counts[sku] = (grant.counts[sku] ?? 0) + 1
