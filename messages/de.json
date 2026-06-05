@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "Privatnutzung plus redaktionelle und kleine kommerzielle Zwecke: Blogs, Zeitschriften, Bücher und selbstveröffentlichte Materialien — bis 5.000 Exemplare.",
     "licenseCommercialDesc": "Redaktionelle Nutzung plus Werbung, Marketingkampagnen, Verpackungen und große Auflagen — bis 500.000 Exemplare.",
     "licenseFullCommercialDesc": "Alle Rechte, einschließlich Merchandise zum Weiterverkauf, unbegrenzte Auflagen und White-Label-Nutzung.",
-    "licensingNotePublicEvent": "Lizenzen werden für die angegebene Nutzung und die genannten Kopierbeschränkungen erteilt. Dieses Bild wurde bei {event}, einer öffentlichen Veranstaltung an einem öffentlichen Ort, aufgenommen. Vollständige Lizenzbedingungen <link>hier</link>."
+    "licensingNotePublicEvent": "Lizenzen werden für die angegebene Nutzung und die genannten Kopierbeschränkungen erteilt. Dieses Bild wurde bei {event}, einer öffentlichen Veranstaltung an einem öffentlichen Ort, aufgenommen. Vollständige Lizenzbedingungen <link>hier</link>.",
+    "buyNow": "Jetzt kaufen",
+    "inCart": "Im Warenkorb",
+    "added": "Hinzugefügt"
   },
   "cart": {
     "title": "Warenkorb",
@@ -138,7 +141,34 @@
     "billingCountry": "Rechnungsland",
     "vatNote": "+ MwSt. wird beim Checkout berechnet",
     "subtotal": "Zwischensumme",
-    "vat": "MwSt."
+    "vat": "MwSt.",
+    "successDigitalReady": "Ihre Dateien stehen unten zum Download bereit. Falls Sie eine E-Mail angegeben haben, wurden der Link und der Zugangscode auch dorthin gesendet.",
+    "preparingDownloads": "Ihre Downloads werden vorbereitet…",
+    "goToDownloads": "Zu Ihren Downloads",
+    "issueErrorHelp": "Falls die Seite nicht öffnet, kontaktieren Sie uns mit Ihrer Bestellreferenz.",
+    "downloadsUnlockedHint": "Auf diesem Gerät bereits freigeschaltet — sofort herunterladen. Falls Sie eine E-Mail angegeben haben, wurden der Link und der Zugangscode auch dorthin gesendet.",
+    "saveAccess": "Zugang speichern",
+    "saveAccessHint": "Bewahren Sie diese auf, um später oder auf einem anderen Gerät erneut herunterzuladen:",
+    "passcodeLabel": "Zugangscode"
+  },
+  "downloads": {
+    "eyebrow": "Ihre Downloads",
+    "heading": "Laden Sie Ihre Dateien herunter.",
+    "intro": "Jede Datei ist für Sie lizenziert und enthält eingebettetes Copyright. Dieser Link ist gültig bis {date}.",
+    "footerHelp": "Falls ein Download fehlschlägt oder Ihr Link abgelaufen ist, nutzen Sie das Kontaktformular auf dieser Website, und wir kümmern uns darum.",
+    "unavailableEyebrow": "Downloads",
+    "unavailableHeading": "Link nicht verfügbar.",
+    "unavailableBody": "Dieser Download-Link ist ungültig oder abgelaufen. Download-Links sind 30 Tage nach dem Kauf gültig. Falls Sie erneut Zugang benötigen, nutzen Sie bitte das Kontaktformular auf dieser Website.",
+    "returnToShop": "Zurück zum Shop",
+    "enterPasscode": "Geben Sie Ihren Zugangscode ein",
+    "passcodePrompt": "Wir haben Ihnen mit Ihrer Bestellbestätigung einen Zugangscode per E-Mail gesendet. Geben Sie ihn ein, um Ihre Downloads freizuschalten.",
+    "passcodeIncorrect": "Dieser Zugangscode ist nicht korrekt.",
+    "passcodeError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "passcodeNetworkError": "Server nicht erreichbar. Bitte versuchen Sie es erneut.",
+    "unlocking": "Wird freigeschaltet…",
+    "unlockDownloads": "Downloads freischalten",
+    "yourFiles": "Ihre Dateien",
+    "download": "Herunterladen"
   },
   "licensing": {
     "title": "Lizenzbedingungen und Nutzungsrechte",

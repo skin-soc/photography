@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "Użytek prywatny plus redakcyjny i mały komercyjny: blogi, czasopisma, książki i materiały własne — do 5 000 egzemplarzy.",
     "licenseCommercialDesc": "Użytek redakcyjny plus reklama, kampanie marketingowe, opakowania i duże nakłady — do 500 000 egzemplarzy.",
     "licenseFullCommercialDesc": "Wszelkie prawa, w tym merchandise do odsprzedaży, nieograniczone nakłady i użytek white-label.",
-    "licensingNotePublicEvent": "Licencje udzielane są na konkretne zastosowanie i określone limity kopii. To zdjęcie zostało wykonane podczas {event}, publicznego wydarzenia w miejscu publicznym. Pełne warunki licencji <link>tutaj</link>."
+    "licensingNotePublicEvent": "Licencje udzielane są na konkretne zastosowanie i określone limity kopii. To zdjęcie zostało wykonane podczas {event}, publicznego wydarzenia w miejscu publicznym. Pełne warunki licencji <link>tutaj</link>.",
+    "buyNow": "Kup teraz",
+    "inCart": "W koszyku",
+    "added": "Dodano"
   },
   "cart": {
     "title": "Koszyk",
@@ -138,7 +141,34 @@
     "billingCountry": "Kraj rozliczenia",
     "vatNote": "+ VAT naliczany przy kasie",
     "subtotal": "Suma częściowa",
-    "vat": "VAT"
+    "vat": "VAT",
+    "successDigitalReady": "Twoje pliki są gotowe do pobrania poniżej. Jeśli podałeś adres e-mail, link i kod dostępu zostały również tam wysłane.",
+    "preparingDownloads": "Przygotowywanie pobierania…",
+    "goToDownloads": "Przejdź do pobrań",
+    "issueErrorHelp": "Jeśli strona się nie otworzy, skontaktuj się z nami, podając numer zamówienia.",
+    "downloadsUnlockedHint": "Otwiera się odblokowane na tym urządzeniu — pobierz od razu. Jeśli podałeś adres e-mail, link i kod dostępu zostały również tam wysłane.",
+    "saveAccess": "Zapisz swój dostęp",
+    "saveAccessHint": "Zachowaj te dane, aby pobrać ponownie później lub na innym urządzeniu:",
+    "passcodeLabel": "Kod dostępu"
+  },
+  "downloads": {
+    "eyebrow": "Twoje pobrania",
+    "heading": "Pobierz swoje pliki.",
+    "intro": "Każdy plik jest licencjonowany dla Ciebie i zawiera osadzone prawa autorskie. Ten link jest ważny do {date}.",
+    "footerHelp": "Jeśli pobieranie się nie powiedzie lub link wygaśnie, skorzystaj z formularza kontaktowego na tej stronie, a my to naprawimy.",
+    "unavailableEyebrow": "Pobrania",
+    "unavailableHeading": "Link niedostępny.",
+    "unavailableBody": "Ten link do pobrania jest nieprawidłowy lub wygasł. Linki do pobrania są ważne przez 30 dni od zakupu. Jeśli ponownie potrzebujesz dostępu, skorzystaj z formularza kontaktowego na tej stronie.",
+    "returnToShop": "Powrót do sklepu",
+    "enterPasscode": "Wprowadź swój kod dostępu",
+    "passcodePrompt": "Wysłaliśmy kod dostępu wraz z potwierdzeniem zamówienia. Wprowadź go, aby odblokować pobierania.",
+    "passcodeIncorrect": "Ten kod dostępu jest nieprawidłowy.",
+    "passcodeError": "Coś poszło nie tak. Spróbuj ponownie.",
+    "passcodeNetworkError": "Nie można połączyć się z serwerem. Spróbuj ponownie.",
+    "unlocking": "Odblokowywanie…",
+    "unlockDownloads": "Odblokuj pobierania",
+    "yourFiles": "Twoje pliki",
+    "download": "Pobierz"
   },
   "licensing": {
     "title": "Warunki licencji i prawa użytkowania",

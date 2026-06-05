@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "개인 사용 및 편집·소규모 상업적 용도: 블로그, 잡지, 도서, 자체 출판물 — 최대 5,000부.",
     "licenseCommercialDesc": "편집 용도 및 광고, 마케팅 캠페인, 패키징, 대량 인쇄 — 최대 500,000부.",
     "licenseFullCommercialDesc": "재판매용 상품, 무제한 인쇄, 화이트라벨 사용을 포함한 모든 권리.",
-    "licensingNotePublicEvent": "라이선스는 명시된 특정 용도 및 복사 한도에 대해 부여됩니다. 이 이미지는 공공 장소에서 열린 공개 행사인 {event}에서 촬영되었습니다. 전체 라이선스 조건은 <link>여기</link>를 참조하세요."
+    "licensingNotePublicEvent": "라이선스는 명시된 특정 용도 및 복사 한도에 대해 부여됩니다. 이 이미지는 공공 장소에서 열린 공개 행사인 {event}에서 촬영되었습니다. 전체 라이선스 조건은 <link>여기</link>를 참조하세요.",
+    "buyNow": "지금 구매",
+    "inCart": "장바구니에 있음",
+    "added": "추가됨"
   },
   "cart": {
     "title": "장바구니",
@@ -138,7 +141,34 @@
     "billingCountry": "Billing country",
     "vatNote": "+ VAT calculated at checkout",
     "subtotal": "Subtotal",
-    "vat": "VAT"
+    "vat": "VAT",
+    "successDigitalReady": "파일을 아래에서 바로 다운로드할 수 있습니다. 이메일을 입력하셨다면 링크와 접근 코드도 해당 이메일로 전송되었습니다.",
+    "preparingDownloads": "다운로드를 준비하는 중…",
+    "goToDownloads": "다운로드로 이동",
+    "issueErrorHelp": "페이지가 열리지 않으면 주문 참조 번호와 함께 문의해 주세요.",
+    "downloadsUnlockedHint": "이 기기에서는 잠금 해제된 상태로 열립니다 — 바로 다운로드하세요. 이메일을 입력하셨다면 링크와 접근 코드도 해당 이메일로 전송되었습니다.",
+    "saveAccess": "접근 정보 저장",
+    "saveAccessHint": "나중에 또는 다른 기기에서 다시 다운로드하려면 다음을 저장하세요:",
+    "passcodeLabel": "접근 코드"
+  },
+  "downloads": {
+    "eyebrow": "내 다운로드",
+    "heading": "파일을 다운로드하세요.",
+    "intro": "각 파일은 귀하에게 라이선스가 부여되며 저작권 정보가 포함되어 있습니다. 이 링크는 {date}까지 유효합니다.",
+    "footerHelp": "다운로드가 실패하거나 링크가 만료된 경우, 이 사이트의 문의 양식을 이용해 주세요. 해결해 드리겠습니다.",
+    "unavailableEyebrow": "다운로드",
+    "unavailableHeading": "링크를 사용할 수 없습니다.",
+    "unavailableBody": "이 다운로드 링크는 유효하지 않거나 만료되었습니다. 다운로드 링크는 구매 후 30일 동안 유효합니다. 다시 접근이 필요하면 이 사이트의 문의 양식을 이용해 주세요.",
+    "returnToShop": "상점으로 돌아가기",
+    "enterPasscode": "접근 코드를 입력하세요",
+    "passcodePrompt": "주문 확인과 함께 접근 코드를 이메일로 보내드렸습니다. 코드를 입력하여 다운로드 잠금을 해제하세요.",
+    "passcodeIncorrect": "접근 코드가 올바르지 않습니다.",
+    "passcodeError": "문제가 발생했습니다. 다시 시도해 주세요.",
+    "passcodeNetworkError": "서버에 연결할 수 없습니다. 다시 시도해 주세요.",
+    "unlocking": "잠금 해제 중…",
+    "unlockDownloads": "다운로드 잠금 해제",
+    "yourFiles": "내 파일",
+    "download": "다운로드"
   },
   "licensing": {
     "title": "라이선스 약관 및 사용 권리",

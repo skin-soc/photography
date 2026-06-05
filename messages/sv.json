@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "Privat bruk plus redaktionellt och litet kommersiellt arbete: bloggar, tidskrifter, böcker och egenutgivna material — upp till 5 000 exemplar.",
     "licenseCommercialDesc": "Redaktionell användning plus reklam, marknadsföringskampanjer, förpackningar och stora upplagor — upp till 500 000 exemplar.",
     "licenseFullCommercialDesc": "Alla rättigheter, inklusive merchandise för vidareförsäljning, obegränsade upplagor och white-label-användning.",
-    "licensingNotePublicEvent": "Licenser beviljas för det specifika bruk och de kopieringsgränser som anges. Denna bild togs vid {event}, ett offentligt evenemang på offentlig plats. Fullständiga licensvillkor <link>här</link>."
+    "licensingNotePublicEvent": "Licenser beviljas för det specifika bruk och de kopieringsgränser som anges. Denna bild togs vid {event}, ett offentligt evenemang på offentlig plats. Fullständiga licensvillkor <link>här</link>.",
+    "buyNow": "Köp nu",
+    "inCart": "I varukorgen",
+    "added": "Tillagd"
   },
   "cart": {
     "title": "Varukorg",
@@ -138,7 +141,34 @@
     "billingCountry": "Faktureringsland",
     "vatNote": "+ moms beräknas vid checkout",
     "subtotal": "Delsumma",
-    "vat": "Moms"
+    "vat": "Moms",
+    "successDigitalReady": "Dina filer är klara att laddas ner nedan. Om du angav en e-postadress skickades länken och åtkomstkoden även dit.",
+    "preparingDownloads": "Förbereder dina nedladdningar…",
+    "goToDownloads": "Gå till dina nedladdningar",
+    "issueErrorHelp": "Om sidan inte öppnas, kontakta oss med din orderreferens.",
+    "downloadsUnlockedHint": "Öppnas upplåst på den här enheten — ladda ner direkt. Om du angav en e-postadress skickades länken och åtkomstkoden även dit.",
+    "saveAccess": "Spara din åtkomst",
+    "saveAccessHint": "Spara dessa för att ladda ner igen senare eller på en annan enhet:",
+    "passcodeLabel": "Åtkomstkod"
+  },
+  "downloads": {
+    "eyebrow": "Dina nedladdningar",
+    "heading": "Ladda ner dina filer.",
+    "intro": "Varje fil är licensierad till dig och innehåller inbäddad upphovsrätt. Den här länken är giltig till {date}.",
+    "footerHelp": "Om en nedladdning misslyckas eller din länk har gått ut, använd kontaktformuläret på den här webbplatsen så löser vi det.",
+    "unavailableEyebrow": "Nedladdningar",
+    "unavailableHeading": "Länken är inte tillgänglig.",
+    "unavailableBody": "Den här nedladdningslänken är ogiltig eller har gått ut. Nedladdningslänkar är giltiga i 30 dagar efter köpet. Om du behöver åtkomst igen, använd kontaktformuläret på den här webbplatsen.",
+    "returnToShop": "Tillbaka till butiken",
+    "enterPasscode": "Ange din åtkomstkod",
+    "passcodePrompt": "Vi mejlade en åtkomstkod med din orderbekräftelse. Ange den för att låsa upp dina nedladdningar.",
+    "passcodeIncorrect": "Åtkomstkoden är inte korrekt.",
+    "passcodeError": "Något gick fel. Försök igen.",
+    "passcodeNetworkError": "Kunde inte nå servern. Försök igen.",
+    "unlocking": "Låser upp…",
+    "unlockDownloads": "Lås upp nedladdningar",
+    "yourFiles": "Dina filer",
+    "download": "Ladda ner"
   },
   "licensing": {
     "title": "Licensvillkor och användningsrättigheter",

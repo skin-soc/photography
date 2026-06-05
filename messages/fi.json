@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "Henkilökohtainen käyttö sekä toimituksellinen ja pienimuotoinen kaupallinen työ: blogit, lehdet, kirjat ja itsejulkaistut materiaalit — enintään 5 000 kpl.",
     "licenseCommercialDesc": "Toimituksellinen käyttö sekä mainonta, markkinointikampanjat, pakkaukset ja suuret painokset — enintään 500 000 kpl.",
     "licenseFullCommercialDesc": "Kaikki oikeudet, mukaan lukien jälleenmyyntiin tarkoitettu merchandise, rajoittamattomat painokset ja white-label-käyttö.",
-    "licensingNotePublicEvent": "Lisenssit myönnetään ilmoitetulle käyttötarkoitukselle ja kopiointirajoituksille. Tämä kuva on otettu tapahtumassa {event}, joka on julkinen tapahtuma julkisella paikalla. Täydelliset lisenssiehdot <link>täällä</link>."
+    "licensingNotePublicEvent": "Lisenssit myönnetään ilmoitetulle käyttötarkoitukselle ja kopiointirajoituksille. Tämä kuva on otettu tapahtumassa {event}, joka on julkinen tapahtuma julkisella paikalla. Täydelliset lisenssiehdot <link>täällä</link>.",
+    "buyNow": "Osta nyt",
+    "inCart": "Ostoskorissa",
+    "added": "Lisätty"
   },
   "cart": {
     "title": "Ostoskori",
@@ -138,7 +141,34 @@
     "billingCountry": "Laskutusmaa",
     "vatNote": "+ ALV lasketaan kassalla",
     "subtotal": "Välisumma",
-    "vat": "ALV"
+    "vat": "ALV",
+    "successDigitalReady": "Tiedostosi ovat valmiina ladattaviksi alta. Jos annoit sähköpostiosoitteen, linkki ja pääsykoodi lähetettiin myös sinne.",
+    "preparingDownloads": "Valmistellaan latauksiasi…",
+    "goToDownloads": "Siirry latauksiisi",
+    "issueErrorHelp": "Jos sivu ei avaudu, ota meihin yhteyttä tilausviitteelläsi.",
+    "downloadsUnlockedHint": "Avautuu lukitsemattomana tällä laitteella — lataa heti. Jos annoit sähköpostiosoitteen, linkki ja pääsykoodi lähetettiin myös sinne.",
+    "saveAccess": "Tallenna pääsysi",
+    "saveAccessHint": "Säilytä nämä ladataksesi uudelleen myöhemmin tai toisella laitteella:",
+    "passcodeLabel": "Pääsykoodi"
+  },
+  "downloads": {
+    "eyebrow": "Latauksesi",
+    "heading": "Lataa tiedostosi.",
+    "intro": "Jokainen tiedosto on lisensoitu sinulle ja sisältää upotetun tekijänoikeuden. Tämä linkki on voimassa {date} asti.",
+    "footerHelp": "Jos lataus epäonnistuu tai linkkisi on vanhentunut, käytä tämän sivuston yhteydenottolomaketta, niin hoidamme asian.",
+    "unavailableEyebrow": "Lataukset",
+    "unavailableHeading": "Linkki ei ole käytettävissä.",
+    "unavailableBody": "Tämä latauslinkki on virheellinen tai vanhentunut. Latauslinkit ovat voimassa 30 päivää ostosta. Jos tarvitset pääsyn uudelleen, käytä tämän sivuston yhteydenottolomaketta.",
+    "returnToShop": "Takaisin kauppaan",
+    "enterPasscode": "Syötä pääsykoodisi",
+    "passcodePrompt": "Lähetimme pääsykoodin tilausvahvistuksesi mukana. Syötä se avataksesi latauksesi.",
+    "passcodeIncorrect": "Pääsykoodi ei ole oikein.",
+    "passcodeError": "Jokin meni pieleen. Yritä uudelleen.",
+    "passcodeNetworkError": "Palvelimeen ei saatu yhteyttä. Yritä uudelleen.",
+    "unlocking": "Avataan…",
+    "unlockDownloads": "Avaa lataukset",
+    "yourFiles": "Tiedostosi",
+    "download": "Lataa"
   },
   "licensing": {
     "title": "Lisenssiehdot ja käyttöoikeudet",

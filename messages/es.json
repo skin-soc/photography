@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "Uso personal más uso editorial y comercial pequeño: blogs, revistas, libros y materiales autopublicados — hasta 5.000 copias.",
     "licenseCommercialDesc": "Uso editorial más publicidad, campañas de marketing, packaging y grandes tiradas — hasta 500.000 copias.",
     "licenseFullCommercialDesc": "Todos los derechos, incluido merchandise para reventa, tiradas ilimitadas y uso de marca blanca.",
-    "licensingNotePublicEvent": "Las licencias se otorgan para el uso específico y los límites de copias indicados. Esta imagen fue tomada en {event}, un evento público en un espacio público. Términos de licencia completos <link>aquí</link>."
+    "licensingNotePublicEvent": "Las licencias se otorgan para el uso específico y los límites de copias indicados. Esta imagen fue tomada en {event}, un evento público en un espacio público. Términos de licencia completos <link>aquí</link>.",
+    "buyNow": "Comprar ahora",
+    "inCart": "En el carrito",
+    "added": "Añadido"
   },
   "cart": {
     "title": "Carrito",
@@ -138,7 +141,34 @@
     "billingCountry": "País de facturación",
     "vatNote": "+ IVA calculado al pago",
     "subtotal": "Subtotal",
-    "vat": "IVA"
+    "vat": "IVA",
+    "successDigitalReady": "Tus archivos están listos para descargar abajo. Si indicaste un correo electrónico, también se enviaron allí el enlace y el código de acceso.",
+    "preparingDownloads": "Preparando tus descargas…",
+    "goToDownloads": "Ir a tus descargas",
+    "issueErrorHelp": "Si la página no se abre, contáctanos con la referencia de tu pedido.",
+    "downloadsUnlockedHint": "Se abre desbloqueado en este dispositivo: descarga de inmediato. Si indicaste un correo electrónico, también se enviaron allí el enlace y el código de acceso.",
+    "saveAccess": "Guarda tu acceso",
+    "saveAccessHint": "Guarda estos datos para descargar de nuevo más tarde o en otro dispositivo:",
+    "passcodeLabel": "Código de acceso"
+  },
+  "downloads": {
+    "eyebrow": "Tus descargas",
+    "heading": "Descarga tus archivos.",
+    "intro": "Cada archivo tiene licencia para ti e incluye copyright integrado. Este enlace es válido hasta el {date}.",
+    "footerHelp": "Si una descarga falla o tu enlace ha caducado, usa el formulario de contacto de este sitio y lo solucionaremos.",
+    "unavailableEyebrow": "Descargas",
+    "unavailableHeading": "Enlace no disponible.",
+    "unavailableBody": "Este enlace de descarga no es válido o ha caducado. Los enlaces de descarga son válidos durante 30 días tras la compra. Si necesitas acceso de nuevo, usa el formulario de contacto de este sitio.",
+    "returnToShop": "Volver a la tienda",
+    "enterPasscode": "Introduce tu código de acceso",
+    "passcodePrompt": "Te enviamos un código de acceso con la confirmación de tu pedido. Introdúcelo para desbloquear tus descargas.",
+    "passcodeIncorrect": "El código de acceso no es correcto.",
+    "passcodeError": "Algo salió mal. Inténtalo de nuevo.",
+    "passcodeNetworkError": "No se pudo conectar con el servidor. Inténtalo de nuevo.",
+    "unlocking": "Desbloqueando…",
+    "unlockDownloads": "Desbloquear descargas",
+    "yourFiles": "Tus archivos",
+    "download": "Descargar"
   },
   "licensing": {
     "title": "Términos de licencia y derechos de uso",

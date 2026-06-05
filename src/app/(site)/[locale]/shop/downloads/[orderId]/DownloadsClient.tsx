@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { OrderMetaItem } from '@/lib/downloads'
 
 export default function DownloadsClient({
@@ -12,6 +13,7 @@ export default function DownloadsClient({
   items: OrderMetaItem[]
   initiallyUnlocked: boolean
 }) {
+  const t = useTranslations('downloads')
   const [unlocked, setUnlocked] = useState(initiallyUnlocked)
   const [passcode, setPasscode] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -30,10 +32,10 @@ export default function DownloadsClient({
       if (res.ok) {
         setUnlocked(true)
       } else {
-        setError(res.status === 401 ? 'That passcode is not correct.' : 'Something went wrong. Please try again.')
+        setError(res.status === 401 ? t('passcodeIncorrect') : t('passcodeError'))
       }
     } catch {
-      setError('Could not reach the server. Please try again.')
+      setError(t('passcodeNetworkError'))
     } finally {
       setSubmitting(false)
     }
@@ -43,10 +45,10 @@ export default function DownloadsClient({
     return (
       <form onSubmit={submit} className="mt-2">
         <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30 mb-4">
-          Enter your passcode
+          {t('enterPasscode')}
         </p>
         <p className="text-[13px] font-light text-white/50 leading-relaxed mb-5">
-          We emailed a passcode with your order confirmation. Enter it to unlock your downloads.
+          {t('passcodePrompt')}
         </p>
         <input
           type="text"
@@ -68,7 +70,7 @@ export default function DownloadsClient({
             disabled={submitting || passcode.trim().length === 0}
             className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white disabled:text-white/20 transition-colors"
           >
-            {submitting ? 'Unlocking…' : 'Unlock downloads →'}
+            {submitting ? t('unlocking') : `${t('unlockDownloads')} →`}
           </button>
         </div>
       </form>
@@ -78,7 +80,7 @@ export default function DownloadsClient({
   return (
     <div className="space-y-3 mt-2">
       <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30 mb-4">
-        Your files
+        {t('yourFiles')}
       </p>
       {items.map((item) => (
         <div
@@ -98,7 +100,7 @@ export default function DownloadsClient({
             download
             className="shrink-0 text-[10px] font-light tracking-[0.18em] uppercase text-white/55 hover:text-white transition-colors"
           >
-            Download →
+            {t('download')} →
           </a>
         </div>
       ))}

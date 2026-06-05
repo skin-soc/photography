@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "个人使用，加上编辑及小型商业用途：博客、杂志、书籍和自出版材料——最多5,000份。",
     "licenseCommercialDesc": "编辑用途，加上广告、营销活动、包装及大批量印刷——最多500,000份。",
     "licenseFullCommercialDesc": "所有权利，包括用于转售的商品、无限制印刷及白标使用。",
-    "licensingNotePublicEvent": "许可证按所述的具体用途和复制限制授予。此图像摄于公开活动{event}，该活动在公共场所举办。完整许可条款<link>请见此处</link>。"
+    "licensingNotePublicEvent": "许可证按所述的具体用途和复制限制授予。此图像摄于公开活动{event}，该活动在公共场所举办。完整许可条款<link>请见此处</link>。",
+    "buyNow": "立即购买",
+    "inCart": "已在购物车",
+    "added": "已添加"
   },
   "cart": {
     "title": "购物车",
@@ -138,7 +141,34 @@
     "billingCountry": "Billing country",
     "vatNote": "+ VAT calculated at checkout",
     "subtotal": "Subtotal",
-    "vat": "VAT"
+    "vat": "VAT",
+    "successDigitalReady": "您的文件已可在下方下载。如果您填写了电子邮箱，链接和访问码也已发送至该邮箱。",
+    "preparingDownloads": "正在准备您的下载…",
+    "goToDownloads": "前往您的下载",
+    "issueErrorHelp": "如果页面无法打开，请联系我们并提供您的订单参考号。",
+    "downloadsUnlockedHint": "在此设备上已解锁打开——可立即下载。如果您填写了电子邮箱，链接和访问码也已发送至该邮箱。",
+    "saveAccess": "保存您的访问信息",
+    "saveAccessHint": "请保存以下信息，以便日后或在其他设备上再次下载：",
+    "passcodeLabel": "访问码"
+  },
+  "downloads": {
+    "eyebrow": "您的下载",
+    "heading": "下载您的文件。",
+    "intro": "每个文件均已授权给您，并嵌入版权信息。此链接在 {date} 之前有效。",
+    "footerHelp": "如果下载失败或链接已过期，请使用本网站的联系表单，我们会为您解决。",
+    "unavailableEyebrow": "下载",
+    "unavailableHeading": "链接不可用。",
+    "unavailableBody": "此下载链接无效或已过期。下载链接在购买后 30 天内有效。如果您需要再次访问，请使用本网站的联系表单。",
+    "returnToShop": "返回商店",
+    "enterPasscode": "请输入您的访问码",
+    "passcodePrompt": "我们已随订单确认向您发送了访问码。请输入以解锁您的下载。",
+    "passcodeIncorrect": "访问码不正确。",
+    "passcodeError": "出了点问题。请重试。",
+    "passcodeNetworkError": "无法连接到服务器。请重试。",
+    "unlocking": "正在解锁…",
+    "unlockDownloads": "解锁下载",
+    "yourFiles": "您的文件",
+    "download": "下载"
   },
   "licensing": {
     "title": "许可条款与使用权利",

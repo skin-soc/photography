@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { Link } from '@/i18n/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { getOrderMeta, verifyOrderCookie, cookieName } from '@/lib/downloads'
 import DownloadsClient from './DownloadsClient'
 
@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function DownloadsPage({ params }: { params: Params }) {
   const { locale, orderId } = await params
   setRequestLocale(locale)
+  const t = await getTranslations({ locale, namespace: 'downloads' })
 
   const meta = await getOrderMeta(orderId)
 
@@ -40,41 +41,37 @@ export default async function DownloadsPage({ params }: { params: Params }) {
         {meta ? (
           <>
             <p className="text-[9px] font-light tracking-[0.22em] uppercase text-[#931020] mb-2">
-              Your downloads
+              {t('eyebrow')}
             </p>
             <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
-              Download your files.
+              {t('heading')}
             </h1>
             <p className="text-[14px] font-light text-white/50 leading-relaxed mb-10">
-              Each file is licensed to you and carries embedded copyright. This link is
-              valid until {expiry}.
+              {t('intro', { date: expiry ?? '' })}
             </p>
 
             <DownloadsClient orderId={orderId} items={meta.items} initiallyUnlocked={unlocked} />
 
             <p className="mt-12 text-[11px] font-light text-white/25 leading-relaxed">
-              If a download fails or your link has expired, use the contact form on this
-              site and we&rsquo;ll sort it out.
+              {t('footerHelp')}
             </p>
           </>
         ) : (
           <>
             <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/40 mb-2">
-              Downloads
+              {t('unavailableEyebrow')}
             </p>
             <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
-              Link not available.
+              {t('unavailableHeading')}
             </h1>
             <p className="text-[14px] font-light text-white/50 leading-relaxed mb-8">
-              This download link is invalid or has expired. Download links are valid for
-              30 days after purchase. If you need access again, please use the contact
-              form on this site.
+              {t('unavailableBody')}
             </p>
             <Link
               href="/shop"
               className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white transition-colors"
             >
-              Return to shop →
+              {t('returnToShop')} →
             </Link>
           </>
         )}

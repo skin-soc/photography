@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "Uso pessoal mais uso editorial e comercial pequeno: blogs, revistas, livros e materiais autopublicados — até 5.000 cópias.",
     "licenseCommercialDesc": "Uso editorial mais publicidade, campanhas de marketing, embalagens e grandes tiragens — até 500.000 cópias.",
     "licenseFullCommercialDesc": "Todos os direitos, incluindo merchandise para revenda, tiragens ilimitadas e uso de marca branca.",
-    "licensingNotePublicEvent": "As licenças são concedidas para o uso específico e os limites de cópias indicados. Esta imagem foi captada em {event}, um evento público num espaço público. Termos de licença completos <link>aqui</link>."
+    "licensingNotePublicEvent": "As licenças são concedidas para o uso específico e os limites de cópias indicados. Esta imagem foi captada em {event}, um evento público num espaço público. Termos de licença completos <link>aqui</link>.",
+    "buyNow": "Comprar agora",
+    "inCart": "No carrinho",
+    "added": "Adicionado"
   },
   "cart": {
     "title": "Carrinho",
@@ -138,7 +141,34 @@
     "billingCountry": "País de cobrança",
     "vatNote": "+ IVA calculado no checkout",
     "subtotal": "Subtotal",
-    "vat": "IVA"
+    "vat": "IVA",
+    "successDigitalReady": "Os seus ficheiros estão prontos para transferir abaixo. Se indicou um e-mail, o link e o código de acesso também foram enviados para lá.",
+    "preparingDownloads": "A preparar as suas transferências…",
+    "goToDownloads": "Ir para as suas transferências",
+    "issueErrorHelp": "Se a página não abrir, contacte-nos com a referência da sua encomenda.",
+    "downloadsUnlockedHint": "Abre desbloqueado neste dispositivo — transfira já. Se indicou um e-mail, o link e o código de acesso também foram enviados para lá.",
+    "saveAccess": "Guarde o seu acesso",
+    "saveAccessHint": "Guarde estes dados para transferir novamente mais tarde ou noutro dispositivo:",
+    "passcodeLabel": "Código de acesso"
+  },
+  "downloads": {
+    "eyebrow": "As suas transferências",
+    "heading": "Transfira os seus ficheiros.",
+    "intro": "Cada ficheiro é licenciado para si e contém direitos de autor incorporados. Este link é válido até {date}.",
+    "footerHelp": "Se uma transferência falhar ou o seu link tiver expirado, use o formulário de contacto deste site e nós tratamos disso.",
+    "unavailableEyebrow": "Transferências",
+    "unavailableHeading": "Link indisponível.",
+    "unavailableBody": "Este link de transferência é inválido ou expirou. Os links de transferência são válidos durante 30 dias após a compra. Se precisar de acesso novamente, use o formulário de contacto deste site.",
+    "returnToShop": "Voltar à loja",
+    "enterPasscode": "Introduza o seu código de acesso",
+    "passcodePrompt": "Enviámos um código de acesso com a confirmação da sua encomenda. Introduza-o para desbloquear as suas transferências.",
+    "passcodeIncorrect": "O código de acesso não está correto.",
+    "passcodeError": "Algo correu mal. Tente novamente.",
+    "passcodeNetworkError": "Não foi possível contactar o servidor. Tente novamente.",
+    "unlocking": "A desbloquear…",
+    "unlockDownloads": "Desbloquear transferências",
+    "yourFiles": "Os seus ficheiros",
+    "download": "Transferir"
   },
   "licensing": {
     "title": "Termos de licença e direitos de uso",

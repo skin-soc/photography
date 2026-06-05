@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "個人利用に加え、ブログ、雑誌、書籍、自主出版物などの編集・小規模商業利用 — 5,000部まで。",
     "licenseCommercialDesc": "編集利用に加え、広告、マーケティングキャンペーン、パッケージング、大量印刷 — 500,000部まで。",
     "licenseFullCommercialDesc": "販売目的の商品、無制限印刷、ホワイトラベル使用を含むすべての権利。",
-    "licensingNotePublicEvent": "ライセンスは記載された特定の用途および複製制限に対して付与されます。この画像は公共の場所で開催されたパブリックイベント「{event}」で撮影されました。完全なライセンス条件は<link>こちら</link>。"
+    "licensingNotePublicEvent": "ライセンスは記載された特定の用途および複製制限に対して付与されます。この画像は公共の場所で開催されたパブリックイベント「{event}」で撮影されました。完全なライセンス条件は<link>こちら</link>。",
+    "buyNow": "今すぐ購入",
+    "inCart": "カート内",
+    "added": "追加しました"
   },
   "cart": {
     "title": "カート",
@@ -138,7 +141,34 @@
     "billingCountry": "Billing country",
     "vatNote": "+ VAT calculated at checkout",
     "subtotal": "Subtotal",
-    "vat": "VAT"
+    "vat": "VAT",
+    "successDigitalReady": "ファイルは下記からダウンロードできます。メールアドレスを入力された場合は、リンクとパスコードもそちらに送信されています。",
+    "preparingDownloads": "ダウンロードを準備しています…",
+    "goToDownloads": "ダウンロードページへ",
+    "issueErrorHelp": "ページが開かない場合は、注文番号を添えてお問い合わせください。",
+    "downloadsUnlockedHint": "このデバイスではロック解除済みで開きます——すぐにダウンロードできます。メールアドレスを入力された場合は、リンクとパスコードもそちらに送信されています。",
+    "saveAccess": "アクセス情報を保存",
+    "saveAccessHint": "後で、または別のデバイスで再度ダウンロードするために、これらを保存してください：",
+    "passcodeLabel": "パスコード"
+  },
+  "downloads": {
+    "eyebrow": "あなたのダウンロード",
+    "heading": "ファイルをダウンロード。",
+    "intro": "各ファイルはあなたにライセンスされ、著作権情報が埋め込まれています。このリンクは {date} まで有効です。",
+    "footerHelp": "ダウンロードに失敗した場合やリンクの有効期限が切れた場合は、当サイトのお問い合わせフォームをご利用ください。対応いたします。",
+    "unavailableEyebrow": "ダウンロード",
+    "unavailableHeading": "リンクは利用できません。",
+    "unavailableBody": "このダウンロードリンクは無効か、有効期限が切れています。ダウンロードリンクは購入後30日間有効です。再度アクセスが必要な場合は、当サイトのお問い合わせフォームをご利用ください。",
+    "returnToShop": "ショップに戻る",
+    "enterPasscode": "パスコードを入力してください",
+    "passcodePrompt": "ご注文確認とともにパスコードをメールでお送りしました。入力してダウンロードのロックを解除してください。",
+    "passcodeIncorrect": "パスコードが正しくありません。",
+    "passcodeError": "問題が発生しました。もう一度お試しください。",
+    "passcodeNetworkError": "サーバーに接続できませんでした。もう一度お試しください。",
+    "unlocking": "ロックを解除しています…",
+    "unlockDownloads": "ダウンロードのロックを解除",
+    "yourFiles": "あなたのファイル",
+    "download": "ダウンロード"
   },
   "licensing": {
     "title": "ライセンス条件と使用権",

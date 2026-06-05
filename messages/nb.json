@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "Privat bruk pluss redaksjonelt og lite kommersielt arbeid: blogger, magasiner, bøker og egenpubliserte materialer — opptil 5 000 eksemplarer.",
     "licenseCommercialDesc": "Redaksjonell bruk pluss reklame, markedsføringskampanjer, emballasje og store opplag — opptil 500 000 eksemplarer.",
     "licenseFullCommercialDesc": "Alle rettigheter, inkludert merchandise for videresalg, ubegrensede opplag og white-label-bruk.",
-    "licensingNotePublicEvent": "Lisenser gis for det spesifikke bruket og kopieringsgrensene som er angitt. Dette bildet ble tatt ved {event}, et offentlig arrangement på et offentlig sted. Fullstendige lisensbetingelser <link>her</link>."
+    "licensingNotePublicEvent": "Lisenser gis for det spesifikke bruket og kopieringsgrensene som er angitt. Dette bildet ble tatt ved {event}, et offentlig arrangement på et offentlig sted. Fullstendige lisensbetingelser <link>her</link>.",
+    "buyNow": "Kjøp nå",
+    "inCart": "I handlekurven",
+    "added": "Lagt til"
   },
   "cart": {
     "title": "Handlekurv",
@@ -138,7 +141,34 @@
     "billingCountry": "Faktureringsland",
     "vatNote": "+ mva beregnes ved kassen",
     "subtotal": "Delsum",
-    "vat": "MVA"
+    "vat": "MVA",
+    "successDigitalReady": "Filene dine er klare til nedlasting nedenfor. Hvis du oppga en e-post, ble lenken og tilgangskoden også sendt dit.",
+    "preparingDownloads": "Forbereder nedlastingene dine…",
+    "goToDownloads": "Gå til nedlastingene dine",
+    "issueErrorHelp": "Hvis siden ikke åpnes, kontakt oss med ordrereferansen din.",
+    "downloadsUnlockedHint": "Åpnes opplåst på denne enheten — last ned med en gang. Hvis du oppga en e-post, ble lenken og tilgangskoden også sendt dit.",
+    "saveAccess": "Lagre tilgangen din",
+    "saveAccessHint": "Ta vare på dette for å laste ned igjen senere eller på en annen enhet:",
+    "passcodeLabel": "Tilgangskode"
+  },
+  "downloads": {
+    "eyebrow": "Nedlastingene dine",
+    "heading": "Last ned filene dine.",
+    "intro": "Hver fil er lisensiert til deg og har innebygd opphavsrett. Denne lenken er gyldig til {date}.",
+    "footerHelp": "Hvis en nedlasting mislykkes eller lenken din har utløpt, bruk kontaktskjemaet på dette nettstedet, så ordner vi det.",
+    "unavailableEyebrow": "Nedlastinger",
+    "unavailableHeading": "Lenke ikke tilgjengelig.",
+    "unavailableBody": "Denne nedlastingslenken er ugyldig eller utløpt. Nedlastingslenker er gyldige i 30 dager etter kjøpet. Hvis du trenger tilgang igjen, bruk kontaktskjemaet på dette nettstedet.",
+    "returnToShop": "Tilbake til butikken",
+    "enterPasscode": "Skriv inn tilgangskoden din",
+    "passcodePrompt": "Vi sendte en tilgangskode med ordrebekreftelsen din på e-post. Skriv den inn for å låse opp nedlastingene dine.",
+    "passcodeIncorrect": "Tilgangskoden er ikke riktig.",
+    "passcodeError": "Noe gikk galt. Prøv igjen.",
+    "passcodeNetworkError": "Kunne ikke nå serveren. Prøv igjen.",
+    "unlocking": "Låser opp…",
+    "unlockDownloads": "Lås opp nedlastinger",
+    "yourFiles": "Filene dine",
+    "download": "Last ned"
   },
   "licensing": {
     "title": "Lisensvilkår og bruksrettigheter",

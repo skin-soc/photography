@@ -107,7 +107,10 @@
     "licenseEditorialDesc": "Privat brug plus redaktionelt og lille kommercielt arbejde: blogs, magasiner, bøger og selvudgivne materialer — op til 5.000 eksemplarer.",
     "licenseCommercialDesc": "Redaktionel brug plus reklame, marketingkampagner, emballage og store oplag — op til 500.000 eksemplarer.",
     "licenseFullCommercialDesc": "Alle rettigheder, herunder merchandise til videresalg, ubegrænsede oplag og white-label brug.",
-    "licensingNotePublicEvent": "Licenser gives til den specifikke brug og de kopibegrænsninger, der er angivet. Dette billede er taget ved {event}, et offentligt arrangement på offentlig grund. Fulde licensbetingelser <link>her</link>."
+    "licensingNotePublicEvent": "Licenser gives til den specifikke brug og de kopibegrænsninger, der er angivet. Dette billede er taget ved {event}, et offentligt arrangement på offentlig grund. Fulde licensbetingelser <link>her</link>.",
+    "buyNow": "Køb nu",
+    "inCart": "I kurv",
+    "added": "Tilføjet"
   },
   "cart": {
     "title": "Kurv",
@@ -138,7 +141,34 @@
     "billingCountry": "Faktureringsland",
     "vatNote": "+ moms beregnes ved checkout",
     "subtotal": "Subtotal",
-    "vat": "Moms"
+    "vat": "Moms",
+    "successDigitalReady": "Dine filer er klar til download nedenfor. Hvis du indtastede en e-mail, blev linket og adgangskoden også sendt dertil.",
+    "preparingDownloads": "Forbereder dine downloads…",
+    "goToDownloads": "Gå til dine downloads",
+    "issueErrorHelp": "Hvis siden ikke åbner, så kontakt os med din ordrereference.",
+    "downloadsUnlockedHint": "Åbner låst op på denne enhed — download med det samme. Hvis du indtastede en e-mail, blev linket og adgangskoden også sendt dertil.",
+    "saveAccess": "Gem din adgang",
+    "saveAccessHint": "Gem disse for at downloade igen senere eller på en anden enhed:",
+    "passcodeLabel": "Adgangskode"
+  },
+  "downloads": {
+    "eyebrow": "Dine downloads",
+    "heading": "Download dine filer.",
+    "intro": "Hver fil er licenseret til dig og indeholder indlejret copyright. Dette link er gyldigt indtil {date}.",
+    "footerHelp": "Hvis en download mislykkes, eller dit link er udløbet, så brug kontaktformularen på dette site, så ordner vi det.",
+    "unavailableEyebrow": "Downloads",
+    "unavailableHeading": "Link ikke tilgængeligt.",
+    "unavailableBody": "Dette downloadlink er ugyldigt eller udløbet. Downloadlinks er gyldige i 30 dage efter købet. Hvis du har brug for adgang igen, så brug kontaktformularen på dette site.",
+    "returnToShop": "Tilbage til shoppen",
+    "enterPasscode": "Indtast din adgangskode",
+    "passcodePrompt": "Vi har sendt en adgangskode med din ordrebekræftelse. Indtast den for at låse op for dine downloads.",
+    "passcodeIncorrect": "Adgangskoden er ikke korrekt.",
+    "passcodeError": "Noget gik galt. Prøv venligst igen.",
+    "passcodeNetworkError": "Kunne ikke nå serveren. Prøv venligst igen.",
+    "unlocking": "Låser op…",
+    "unlockDownloads": "Lås downloads op",
+    "yourFiles": "Dine filer",
+    "download": "Download"
   },
   "licensing": {
     "title": "Licensbetingelser og brugsrettigheder",

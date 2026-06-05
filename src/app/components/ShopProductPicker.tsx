@@ -377,13 +377,13 @@ export default function ShopProductPicker({
         <button
           type="button"
           onClick={handleBuyNow}
-          aria-label={`Buy Now — ${selected.priceText}`}
+          aria-label={`${t('buyNow')} — ${selected.priceText}`}
           className="flex items-center justify-center gap-2 rounded-[20px] py-3.5 text-[11px] font-light tracking-[0.18em] uppercase text-white transition-colors bg-accent/80 hover:bg-accent cursor-pointer"
         >
           <svg width="11" height="16" viewBox="0 0 11 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M6.5 1L1 9h4.5L4.5 15 10 7H5.5L6.5 1Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
           </svg>
-          Buy Now — {selected.priceText}
+          {t('buyNow')} — {selected.priceText}
         </button>
 
         {/* Add to Cart — secondary */}
@@ -391,8 +391,8 @@ export default function ShopProductPicker({
           type="button"
           onClick={handleAddToCart}
           disabled={alreadyInCart}
-          aria-label={alreadyInCart ? 'In cart' : 'Add to cart'}
-          title={alreadyInCart ? 'Already in cart' : 'Add to cart'}
+          aria-label={alreadyInCart ? t('inCart') : t('addToCart')}
+          title={alreadyInCart ? t('inCart') : t('addToCart')}
           className={`flex items-center justify-center gap-2 rounded-[20px] border py-3.5 text-[11px] font-light tracking-[0.18em] uppercase transition-colors ${
             alreadyInCart
               ? 'border-white/15 text-white/30 cursor-default'
@@ -404,7 +404,7 @@ export default function ShopProductPicker({
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Added
+              {t('added')}
             </>
           ) : (
             <>
@@ -412,7 +412,7 @@ export default function ShopProductPicker({
                 <path d="M1.5 6.5h15l-1.5 12h-12L1.5 6.5Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
                 <path d="M6 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
               </svg>
-              {alreadyInCart ? 'In Cart' : 'Add to Cart'}
+              {alreadyInCart ? t('inCart') : t('addToCart')}
             </>
           )}
         </button>

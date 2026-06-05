@@ -265,7 +265,7 @@ export default function CartDrawer() {
               <p className="text-[22px] font-light text-white leading-tight">{t('thankYou')}</p>
               <p className="mt-2 text-[12px] font-light text-white/40 leading-relaxed">
                 {successData.downloads.length > 0
-                  ? 'Your files are ready to download below. If you entered an email, the link and passcode were sent there too.'
+                  ? t('successDigitalReady')
                   : t('successPhysical')}
               </p>
             </div>
@@ -301,27 +301,27 @@ export default function CartDrawer() {
                       : 'bg-[#931020]/80 hover:bg-[#931020] text-white'
                   }`}
                 >
-                  {issueState === 'issuing' ? 'Preparing your downloads…' : 'Go to your downloads →'}
+                  {issueState === 'issuing' ? t('preparingDownloads') : `${t('goToDownloads')} →`}
                 </a>
                 <p className="text-[10px] font-light text-white/30 leading-relaxed text-center">
                   {issueState === 'error'
-                    ? 'If the page doesn’t open, contact us with your order reference.'
-                    : 'Opens unlocked on this device — download right away. If you entered an email, the link + passcode were sent there too.'}
+                    ? t('issueErrorHelp')
+                    : t('downloadsUnlockedHint')}
                 </p>
               </div>
             )}
 
             {successData.downloads.length > 0 && issuedPasscode && (
               <div className="rounded-[12px] border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 space-y-1.5">
-                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30">Save your access</p>
+                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30">{t('saveAccess')}</p>
                 <p className="text-[10px] font-light text-white/40 leading-relaxed">
-                  Keep these to download again later or on another device:
+                  {t('saveAccessHint')}
                 </p>
                 <p className="font-[family-name:var(--font-mono-ibm)] text-[11px] text-white/60 break-all">
                   /{locale}/shop/downloads/{successData.orderId}
                 </p>
                 <p className="text-[11px] text-white/50">
-                  Passcode:{' '}
+                  {t('passcodeLabel')}:{' '}
                   <span className="font-[family-name:var(--font-mono-ibm)] text-[#e0566a] tracking-[0.2em]">
                     {issuedPasscode}
                   </span>
