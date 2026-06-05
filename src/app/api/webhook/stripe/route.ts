@@ -1,6 +1,6 @@
 import type Stripe from 'stripe'
 import { stripe, cryptoProvider } from '@/lib/stripe-server'
-import { issueGrant, originConfigured, type DownloadItem } from '@/lib/downloads'
+import { issueGrant, resolveDownloadItems, originConfigured } from '@/lib/downloads'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? ''
 
@@ -31,14 +31,7 @@ export async function POST(req: Request) {
   if (event.type === 'payment_intent.succeeded') {
     const intent = event.data.object as Stripe.PaymentIntent
 
-    let items: DownloadItem[] = []
-    try {
-      items = intent.metadata.downloadItems
-        ? (JSON.parse(intent.metadata.downloadItems) as DownloadItem[])
-        : []
-    } catch {
-      console.error('[stripe] bad downloadItems metadata on', intent.id)
-    }
+    const items = await resolveDownloadItems((intent.metadata.skus ?? '').split(','))
 
     // Physical-only orders have nothing to deliver digitally.
     if (items.length > 0 && originConfigured()) {

@@ -108,7 +108,9 @@ export async function POST(req: Request) {
       locale,
       skus: skus.join(','),
       hasPhysical: String(hasPhysical),
-      downloadItems: JSON.stringify(downloadItems),
+      // NB: the full download-item list is intentionally NOT stored here — it
+      // exceeds Stripe's 500-char metadata limit on larger carts. Fulfilment
+      // rebuilds it from `skus` via the catalog (resolveDownloadItems).
     }
     if (calculationId) metadata.taxCalculationId = calculationId
     if (country) metadata.billingCountry = country

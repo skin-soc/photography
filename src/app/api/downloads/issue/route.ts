@@ -15,10 +15,10 @@ import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe-server'
 import {
   issueGrant,
+  resolveDownloadItems,
   originConfigured,
   signOrder,
   cookieName,
-  type DownloadItem,
 } from '@/lib/downloads'
 
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 // 30 days, matches the grant TTL
@@ -60,14 +60,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ orderId: intent.id, pending: true })
   }
 
-  let items: DownloadItem[] = []
-  try {
-    items = intent.metadata.downloadItems
-      ? (JSON.parse(intent.metadata.downloadItems) as DownloadItem[])
-      : []
-  } catch {
-    /* ignore malformed metadata */
-  }
+  const items = await resolveDownloadItems((intent.metadata.skus ?? '').split(','))
 
   // Customer-facing order code (GMP-<god>-<code>) — minted at PI creation and
   // stored in metadata, so the grant key, the download URL and the Stripe

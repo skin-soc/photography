@@ -46,6 +46,41 @@ export function originConfigured(): boolean {
   return Boolean(ORIGIN)
 }
 
+/**
+ * Rebuild the digital download items for an order from its SKUs, via the live
+ * catalog. We put the compact `skus` list in Stripe metadata (not the full item
+ * JSON, which blows past Stripe's 500-char-per-value metadata limit on larger
+ * carts), then resolve the rest — token, format, label, slug — here at
+ * fulfilment. Only products that are actually digital (have a download token)
+ * come back.
+ */
+export async function resolveDownloadItems(skus: string[]): Promise<DownloadItem[]> {
+  const wanted = skus.map((s) => s.trim()).filter(Boolean)
+  if (wanted.length === 0) return []
+  const { getCatalog } = await import('@/lib/shop')
+  const catalog = await getCatalog()
+  const bySku = new Map<string, DownloadItem>()
+  for (const photo of catalog) {
+    for (const p of photo.products) {
+      if (p.downloadToken) {
+        bySku.set(p.sku, {
+          sku: p.sku,
+          token: p.downloadToken,
+          format: p.format ?? 'jpeg',
+          label: p.label,
+          slug: photo.slug,
+        })
+      }
+    }
+  }
+  const out: DownloadItem[] = []
+  for (const sku of wanted) {
+    const item = bySku.get(sku)
+    if (item) out.push(item)
+  }
+  return out
+}
+
 // ── Customer-facing order code ────────────────────────────────────────────────
 // GMP-<NORSE GOD>-<5 base32 chars>, e.g. GMP-TYR-72R4E. Minted up front at
 // PaymentIntent creation and written to the PI's description + metadata, so it —
