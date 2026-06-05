@@ -30,6 +30,8 @@ export interface OrderMetaItem {
   format: 'jpeg' | 'tiff'
   slug: string
   filename: string
+  dimensions?: { w: number; h: number } | null
+  bytes?: number | null
 }
 
 export interface OrderMeta {

@@ -860,6 +860,22 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
 
 // ── Fulfilment routes ─────────────────────────────────────────────────────────
 
+/** Generate (and cache) every deliverable in a grant, one at a time. Fire-and-
+ *  forget from /orders so downloads are instant and the meta endpoint can report
+ *  each file's size. Best-effort; a single failure doesn't stop the rest. */
+async function pregenerateGrant(grant) {
+  for (const i of grant.items) {
+    try {
+      const found = await findProductBySku(i.sku)
+      if (found && found.product.type === 'digital') {
+        await generateDerivative(found.photo, found.product)
+      }
+    } catch (err) {
+      console.error('[pregenerate]', i.sku, err.message)
+    }
+  }
+}
+
 /** Issue a download grant + email it. Called by the shop Worker (Stripe webhook
  *  and the post-payment issue route). Idempotent on orderId.
  *
@@ -926,6 +942,10 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
     }
   }
 
+  // Warm the deliverables in the background: makes downloads instant and lets
+  // the download page show each file's size. Best-effort, never blocks.
+  pregenerateGrant(grant)
+
   // Return the passcode so the shop can show it on the success screen — vital
   // when the buyer gave no email (their only way back to the downloads later).
   res.json({ ok: true, emailed: grant.emailed, passcode: grant.passcode })
@@ -936,14 +956,28 @@ app.get('/orders/:orderId/meta', async (req, res) => {
   const grant = await readGrant(req.params.orderId)
   if (!grant) return res.status(404).json({ error: 'not found' })
   if (Date.now() > grant.expiresAt) return res.status(410).json({ error: 'expired' })
-  res.json({
-    orderId: grant.orderId,
-    expiresAt: grant.expiresAt,
-    items: grant.items.map((i) => ({
+
+  // Pixel dimensions (from the catalog) + file size (from the cached deliverable,
+  // once generated) so the buyer can see how big each download is before clicking.
+  let bySku = new Map()
+  try {
+    const { photos } = await loadCatalog()
+    for (const p of photos) for (const pr of (p.products || [])) bySku.set(pr.sku, pr)
+  } catch { /* catalog unavailable — dimensions just omitted */ }
+
+  const items = await Promise.all(grant.items.map(async (i) => {
+    const product = bySku.get(i.sku)
+    const ext = i.format === 'tiff' ? 'tiff' : 'jpg'
+    let bytes = null
+    try { bytes = (await stat(join(FULFIL_CACHE_DIR, `${i.sku}.${ext}`))).size } catch { /* not generated yet */ }
+    return {
       sku: i.sku, label: i.label, format: i.format, slug: i.slug,
       filename: customerFilename(i),
-    })),
-  })
+      dimensions: product?.dimensions ?? null,
+      bytes,
+    }
+  }))
+  res.json({ orderId: grant.orderId, expiresAt: grant.expiresAt, items })
 })
 
 /** Verify the buyer's passcode. */

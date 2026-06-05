@@ -4,6 +4,19 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { OrderMetaItem } from '@/lib/downloads'
 
+/** Human file size, e.g. 124 MB, 6.2 MB, 480 KB. */
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  const units = ['KB', 'MB', 'GB']
+  let v = bytes / 1024
+  let i = 0
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024
+    i++
+  }
+  return `${v >= 100 ? Math.round(v) : v.toFixed(1)} ${units[i]}`
+}
+
 export default function DownloadsClient({
   orderId,
   items,
@@ -93,6 +106,8 @@ export default function DownloadsClient({
             </p>
             <p className="mt-1 text-[11px] font-light tracking-wide text-white/30">
               {item.label} — {item.format === 'tiff' ? '16-bit TIFF' : 'JPEG'}
+              {item.dimensions ? ` · ${item.dimensions.w} × ${item.dimensions.h} px` : ''}
+              {item.bytes ? ` · ${formatBytes(item.bytes)}` : ''}
             </p>
           </div>
           <a
