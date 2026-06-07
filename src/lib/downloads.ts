@@ -139,6 +139,11 @@ export async function issueGrant(input: {
   /** Card-issuer country — second piece of EU VAT location evidence, to
    *  reconcile against the IP-derived taxCountry. */
   cardCountry?: string | null
+  /** B2B: validated VAT id, business name, and whether VAT was reverse-charged
+   *  (0%, intra-EU). Present only for business purchases. */
+  vatId?: string | null
+  businessName?: string | null
+  reverseCharge?: boolean
 }): Promise<{ passcode: string | null }> {
   if (!ORIGIN) return { passcode: null }
   const res = await fetch(`${ORIGIN}/orders`, {
@@ -231,6 +236,10 @@ export interface AdminOrder {
   taxCountry?: string | null
   /** Card-issuer country — second VAT location evidence (vs taxCountry). */
   cardCountry?: string | null
+  /** B2B fields — validated VAT id, business name, reverse-charge (0%) flag. */
+  vatId?: string | null
+  businessName?: string | null
+  reverseCharge?: boolean
   /** Refund state. `refunded` = fully refunded (access revoked); refundedAmount
    *  in minor units covers partial refunds too. */
   refunded?: boolean

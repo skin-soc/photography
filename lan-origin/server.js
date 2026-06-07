@@ -886,7 +886,8 @@ async function pregenerateGrant(grant) {
  *  NAS behind the shared secret, and the email carries it in clear regardless. */
 app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
   const { orderId, paymentId, email, locale, items,
-          livemode, amount, currency, taxAmount, taxCountry, cardCountry } = req.body ?? {}
+          livemode, amount, currency, taxAmount, taxCountry, cardCountry,
+          vatId, businessName, reverseCharge } = req.body ?? {}
   if (!orderId || !orderPath(orderId) || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'invalid order' })
   }
@@ -909,6 +910,10 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
       taxAmount: Number.isFinite(taxAmount) ? taxAmount : null,
       taxCountry: taxCountry ? String(taxCountry) : null,
       cardCountry: cardCountry ? String(cardCountry) : null,
+      // B2B: validated VAT id, business name, reverse-charge (0%) flag.
+      vatId: vatId ? String(vatId) : null,
+      businessName: businessName ? String(businessName) : null,
+      reverseCharge: reverseCharge === true,
       createdAt: now,
       expiresAt: now + LINK_TTL_MS,
       emailed: false,
@@ -1078,6 +1083,9 @@ function adminOrderView(grant, priceBySku) {
     taxAmount: grant.taxAmount ?? null,
     taxCountry: grant.taxCountry ?? null,
     cardCountry: grant.cardCountry ?? null,
+    vatId: grant.vatId ?? null,
+    businessName: grant.businessName ?? null,
+    reverseCharge: grant.reverseCharge ?? false,
     refunded: grant.refunded ?? false,
     refundedAmount: grant.refundedAmount ?? null,
     refundedAt: grant.refundedAt ?? null,

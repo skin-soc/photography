@@ -14,7 +14,8 @@ import Stripe from 'stripe'
 import { getCatalog } from '@/lib/shop'
 import { stripe } from '@/lib/stripe-server'
 import { generateOrderCode } from '@/lib/downloads'
-import { isTaxable, HOME_COUNTRY } from '@/lib/vat'
+import { vatOutcome, HOME_COUNTRY, type BusinessVat } from '@/lib/vat'
+import { verifyVatNumber } from '@/lib/vies'
 import { getVatRate, getVatTaxRateId, setVatTaxRateId } from '@/lib/shop-settings'
 
 interface RequestItem { sku: string }
@@ -42,7 +43,11 @@ async function resolveVatRateId(pct: number): Promise<string> {
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { items: RequestItem[]; locale?: string }
+    const body = (await req.json()) as {
+      items: RequestItem[]
+      locale?: string
+      business?: { vatId?: string }
+    }
     const locale = body.locale ?? 'en'
     // Buyer country from Cloudflare's IP geolocation (as the old flow did), so we
     // can set it on the session for tax WITHOUT making the buyer fill an address
@@ -88,6 +93,20 @@ export async function POST(req: Request) {
         slug: i.photo.slug,
       }))
 
+    // B2B: re-validate the VAT id against VIES SERVER-SIDE — never trust the
+    // client's "valid" claim, or a buyer could fake a VAT id to dodge VAT (our
+    // tax liability). Only a confirmed-valid id grants business treatment; if
+    // VIES says invalid OR is unavailable, we fall back to consumer VAT.
+    let business: (BusinessVat & { vatId: string; name: string | null }) | null = null
+    if (body.business?.vatId) {
+      const v = await verifyVatNumber(body.business.vatId)
+      if (v.status === 'valid') {
+        business = { vatCountry: v.countryCode, vatId: v.fullId, name: v.name ?? null }
+      } else {
+        console.warn('[checkout-session] VAT id not validated server-side:', v.status, v.fullId)
+      }
+    }
+
     // Our customer-facing order code — written to the session AND the
     // PaymentIntent so it (not cs_/pi_) is the identifier everywhere.
     const orderCode = generateOrderCode()
@@ -98,12 +117,21 @@ export async function POST(req: Request) {
       hasPhysical: String(hasPhysical),
     }
 
-    // Manual VAT: DK + EU buyers pay the configured Danish rate; non-EU pay 0%.
-    // When taxable we attach a Stripe Tax Rate (exclusive) to every line item so
-    // Stripe still computes the tax line and total — we just supply the rate
-    // ourselves instead of paying Stripe Tax to decide it.
-    const taxable = isTaxable(country)
-    const vatRateId = taxable ? await resolveVatRateId(await getVatRate()) : null
+    // Manual VAT decision (B2C by IP, or B2B reverse charge for a validated EU
+    // business). When taxable we attach a Stripe Tax Rate (exclusive) to every
+    // line item so Stripe computes the tax line; reverse-charge / non-EU get no
+    // rate (0%). We supply the rate ourselves instead of paying for Stripe Tax.
+    const outcome = vatOutcome(country, business)
+    const vatRateId = outcome.taxable ? await resolveVatRateId(await getVatRate()) : null
+
+    // Record business + VAT treatment on the order for receipts and reporting
+    // (reverse-charge EU sales go on the EC Sales List).
+    if (business) {
+      metadata.vatId = business.vatId
+      if (business.name) metadata.businessName = business.name.slice(0, 200)
+      metadata.vatCountry = business.vatCountry
+    }
+    metadata.reverseCharge = String(outcome.reverseCharge)
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((i) => ({
       quantity: 1,
@@ -147,6 +175,8 @@ export async function POST(req: Request) {
       hasPhysical,
       currency,
       billingCountry: country,
+      reverseCharge: outcome.reverseCharge,
+      businessName: business?.name ?? null,
     })
   } catch (err) {
     const message = err instanceof Stripe.errors.StripeError

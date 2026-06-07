@@ -39,6 +39,9 @@ async function fulfilSession(sessionId: string): Promise<void> {
     taxAmount: session.total_details?.amount_tax ?? null,
     taxCountry: session.customer_details?.address?.country ?? null,
     cardCountry: charge?.payment_method_details?.card?.country ?? null,
+    vatId: session.metadata?.vatId ?? null,
+    businessName: session.metadata?.businessName ?? null,
+    reverseCharge: session.metadata?.reverseCharge === 'true',
   })
   console.log('[stripe] download grant issued for', orderCode)
 }

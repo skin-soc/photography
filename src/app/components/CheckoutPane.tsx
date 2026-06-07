@@ -25,6 +25,9 @@ interface CheckoutPaneProps {
   /** Buyer country from IP — set on the session for tax, no address form needed. */
   billingCountry: string | null
   totalText: string
+  /** B2B: VAT reverse-charged (0%) for a validated EU business — show a note. */
+  reverseCharge?: boolean
+  businessName?: string | null
   onBack: () => void
   onSuccess: (downloads: DownloadItem[], hasPhysical: boolean, sessionId: string) => void
 }
@@ -75,6 +78,8 @@ function PaymentForm({
   downloadItems,
   billingCountry,
   totalText,
+  reverseCharge,
+  businessName,
   onBack,
   onSuccess,
 }: Omit<CheckoutPaneProps, 'clientSecret'>) {
@@ -252,6 +257,15 @@ function PaymentForm({
         {promoErr && <p className="mt-1.5 text-[11px] text-red-400/80">{promoErr}</p>}
       </div>
 
+      {/* B2B reverse charge — no VAT line; explain why. */}
+      {reverseCharge && (
+        <div className="rounded-[8px] border border-emerald-400/25 bg-emerald-400/[0.04] px-3 py-2">
+          <p className="text-[10px] font-light leading-snug text-emerald-300/80">
+            VAT reverse-charged (0%){businessName ? ` · ${businessName}` : ''} — you account for VAT in your country.
+          </p>
+        </div>
+      )}
+
       {/* Order summary — live totals from Stripe (incl. tax once known) */}
       <div className="border-t border-white/[0.07] pt-4 space-y-1.5">
         {taxMinor > 0 && total && (
@@ -318,6 +332,8 @@ export default function CheckoutPane(props: CheckoutPaneProps) {
         downloadItems={props.downloadItems}
         billingCountry={props.billingCountry}
         totalText={props.totalText}
+        reverseCharge={props.reverseCharge}
+        businessName={props.businessName}
         onBack={props.onBack}
         onSuccess={props.onSuccess}
       />

@@ -17,6 +17,17 @@ interface PaymentData {
   downloadItems: DownloadItem[]
   currency: string
   billingCountry: string | null
+  /** B2B: VAT was reverse-charged (0%) for a validated EU business. */
+  reverseCharge?: boolean
+  businessName?: string | null
+}
+
+interface VatCheck {
+  status: 'valid' | 'invalid' | 'unavailable' | 'malformed'
+  name: string | null
+  address: string | null
+  fullId: string
+  countryCode: string
 }
 
 
@@ -39,6 +50,15 @@ export default function CartDrawer() {
   const [issueState, setIssueState] = useState<'idle' | 'issuing' | 'ready' | 'error'>('idle')
   const [issuedPasscode, setIssuedPasscode] = useState<string | null>(null)
 
+  // B2B / VAT — buyer opts into a business purchase and validates their EU VAT
+  // id via VIES before paying (the server re-validates before granting 0%).
+  const [b2b, setB2b] = useState(false)
+  const [vatInput, setVatInput] = useState('')
+  const [vatBusy, setVatBusy] = useState(false)
+  const [vatCheck, setVatCheck] = useState<VatCheck | null>(null)
+  // Only a confirmed-valid id is sent to checkout (whose server re-verifies).
+  const confirmedVat = b2b && vatCheck?.status === 'valid' ? vatCheck.fullId : null
+
   // Items being checked out — cart items or the buy-now single item
   const checkoutItems = buyNowItem ? [buyNowItem] : items
 
@@ -59,6 +79,9 @@ export default function CartDrawer() {
       setIntentError(false)
       setIssueState('idle')
       setIssuedPasscode(null)
+      setB2b(false)
+      setVatInput('')
+      setVatCheck(null)
     }
   }, [isOpen])
 
@@ -93,6 +116,25 @@ export default function CartDrawer() {
       }).format(total / 100)
     : '—'
 
+  async function verifyVat() {
+    const id = vatInput.trim()
+    if (!id || vatBusy) return
+    setVatBusy(true)
+    setVatCheck(null)
+    try {
+      const res = await fetch('/api/vat/verify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ vatId: id }),
+      })
+      setVatCheck((await res.json()) as VatCheck)
+    } catch {
+      setVatCheck({ status: 'unavailable', name: null, address: null, fullId: id.toUpperCase(), countryCode: '' })
+    } finally {
+      setVatBusy(false)
+    }
+  }
+
   async function startPayment(itemsToCharge = checkoutItems) {
     if (itemsToCharge.length === 0) return
     setIntentLoading(true)
@@ -101,7 +143,11 @@ export default function CartDrawer() {
       const res = await fetch('/api/checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: itemsToCharge.map((i) => ({ sku: i.sku })), locale }),
+        body: JSON.stringify({
+          items: itemsToCharge.map((i) => ({ sku: i.sku })),
+          locale,
+          ...(confirmedVat ? { business: { vatId: confirmedVat } } : {}),
+        }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { error?: string }
@@ -251,6 +297,8 @@ export default function CartDrawer() {
             downloadItems={paymentData.downloadItems}
             billingCountry={paymentData.billingCountry}
             totalText={totalText}
+            reverseCharge={paymentData.reverseCharge}
+            businessName={paymentData.businessName}
             onBack={() => setStep('cart')}
             onSuccess={handleSuccess}
           />
@@ -348,6 +396,67 @@ export default function CartDrawer() {
       {/* Footer — only on cart step when items present */}
       {step === 'cart' && items.length > 0 && (
         <div className="border-t border-white/[0.07] px-5 py-5 space-y-3.5 shrink-0">
+          {/* B2B — subtle business/VAT toggle (validated via VIES). */}
+          <div className="space-y-2.5">
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={b2b}
+              onClick={() => { const next = !b2b; setB2b(next); if (!next) setVatCheck(null) }}
+              className="flex items-center gap-2.5 text-left select-none cursor-pointer"
+            >
+              <span className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${b2b ? 'border-[#931020] bg-[#931020]' : 'border-white/30'}`}>
+                {b2b && <span className="h-1.5 w-1.5 rounded-[1px] bg-white" />}
+              </span>
+              <span className="text-[11px] font-light tracking-wide text-white/45 hover:text-white/70 transition-colors">
+                Buying as a VAT-registered business?
+              </span>
+            </button>
+
+            {b2b && (
+              <div className="space-y-2 pl-6">
+                <div className="flex gap-2">
+                  <input
+                    value={vatInput}
+                    onChange={(e) => { setVatInput(e.target.value.toUpperCase()); setVatCheck(null) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void verifyVat() } }}
+                    placeholder="EU VAT no. (e.g. DE123456789)"
+                    spellCheck={false}
+                    className="flex-1 rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 font-[family-name:var(--font-mono-ibm)] text-[12px] tracking-wide text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void verifyVat()}
+                    disabled={vatBusy || !vatInput.trim()}
+                    className="shrink-0 rounded-[8px] border border-white/15 px-3 text-[10px] font-[family-name:var(--font-mono-ibm)] uppercase tracking-[0.18em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
+                  >
+                    {vatBusy ? '…' : 'Verify'}
+                  </button>
+                </div>
+
+                {vatCheck && (vatCheck.status === 'valid' ? (
+                  <div className="rounded-[8px] border border-emerald-400/30 bg-emerald-400/[0.05] px-3 py-2">
+                    <p className="text-[11px] text-emerald-300/90">✓ {vatCheck.name ?? 'Business verified'}</p>
+                    {vatCheck.address && (
+                      <p className="mt-0.5 text-[10px] font-light text-white/40 leading-snug">{vatCheck.address}</p>
+                    )}
+                    <p className="mt-1 text-[10px] font-light text-white/45 leading-snug">
+                      {vatCheck.countryCode === 'DK'
+                        ? 'Danish business — 25% VAT applies.'
+                        : 'VAT reverse-charged — 0% VAT (you account for VAT in your country).'}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[10px] font-light leading-snug text-amber-300/80">
+                    {vatCheck.status === 'invalid' && 'VAT number not found in VIES — you’ll be charged as a consumer.'}
+                    {vatCheck.status === 'unavailable' && 'VIES is temporarily unavailable — please try again in a moment.'}
+                    {vatCheck.status === 'malformed' && 'Enter a valid EU VAT number, e.g. DE123456789.'}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex items-baseline justify-between">
             <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('total')}</p>
             <p className="text-[17px] font-light text-white">{totalText}</p>

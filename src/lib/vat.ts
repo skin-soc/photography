@@ -61,3 +61,41 @@ export function jurisdictionLabel(j: VatJurisdiction): string {
     default: return 'Unknown location'
   }
 }
+
+// ── B2B / reverse charge ──────────────────────────────────────────────────────
+
+/** A VIES-validated business buyer. `vatCountry` is the VIES prefix of their VAT
+ *  id (e.g. 'DE', 'EL' for Greece, 'XI' for Northern Ireland). */
+export interface BusinessVat {
+  vatCountry: string
+}
+
+export type VatOutcome =
+  | { taxable: true; reverseCharge: false }   // charge the configured rate
+  | { taxable: false; reverseCharge: true }   // intra-EU B2B reverse charge → 0%
+  | { taxable: false; reverseCharge: false }  // outside EU scope → 0%
+
+/**
+ * The single VAT decision for an order.
+ *
+ * With a VIES-validated business VAT id:
+ *   - DK business            → taxable (domestic B2B is still standard-rated)
+ *   - other EU member state  → reverse charge (0%; the customer self-accounts,
+ *                              and we record it on the EC Sales List)
+ * Otherwise fall back to consumer (B2C) rules by IP country:
+ *   - DK or EU consumer → taxable (DK rate); non-EU → 0%.
+ *
+ * Note: a non-EU business has no EU VAT id so never reaches the business branch.
+ * Northern Ireland (XI) is treated as EU here; the goods-vs-services nuance for
+ * NI is a refinement to confirm with the accountant if it ever matters.
+ */
+export function vatOutcome(ipCountry: string | null | undefined, business?: BusinessVat | null): VatOutcome {
+  if (business?.vatCountry) {
+    return business.vatCountry.toUpperCase() === HOME_COUNTRY
+      ? { taxable: true, reverseCharge: false }
+      : { taxable: false, reverseCharge: true }
+  }
+  return isTaxable(ipCountry)
+    ? { taxable: true, reverseCharge: false }
+    : { taxable: false, reverseCharge: false }
+}

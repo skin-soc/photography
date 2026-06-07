@@ -86,6 +86,9 @@ export async function POST(req: NextRequest) {
       taxAmount: session.total_details?.amount_tax ?? null,
       taxCountry: session.customer_details?.address?.country ?? null,
       cardCountry,
+      vatId: session.metadata?.vatId ?? null,
+      businessName: session.metadata?.businessName ?? null,
+      reverseCharge: session.metadata?.reverseCharge === 'true',
     })
     passcode = result.passcode
   } catch (err) {

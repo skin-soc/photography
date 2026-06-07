@@ -1321,7 +1321,7 @@ function PeriodBlock({
   const exportCsv = () => {
     // Gross/Tax/Net are net of refunds (matching the on-screen totals); the
     // Charged + Refunded columns preserve the original figures for audit.
-    const head = ['Date', 'Order code', 'Email', 'Mode', 'VAT region', 'Currency', 'Charged', 'Refunded', 'Gross', 'Tax', 'Net', 'Tax country (IP)', 'Card country', 'Location match']
+    const head = ['Date', 'Order code', 'Email', 'Mode', 'VAT region', 'Currency', 'Charged', 'Refunded', 'Gross', 'Tax', 'Net', 'Tax country (IP)', 'Card country', 'Location match', 'Reverse charge', 'VAT ID', 'Business']
     const rows = orders.map((o) => {
       const eff = effectiveAmounts(o)
       return [
@@ -1339,6 +1339,9 @@ function PeriodBlock({
         o.taxCountry ?? '',
         o.cardCountry ?? '',
         locationMatch(o),
+        o.reverseCharge ? 'yes' : '',
+        o.vatId ?? '',
+        o.businessName ?? '',
       ]
     })
     const csv = [head, ...rows]
@@ -1462,6 +1465,7 @@ function PeriodBlock({
                       </span>
                     )}
                     <UnmatchedRefundBadge order={o} />
+                    <B2bBadge order={o} />
                   </td>
                   <td className="py-2.5 pr-4 whitespace-nowrap"><ModeBadge order={o} /></td>
                   <td className="py-2.5 pr-4 whitespace-nowrap text-white/80 tabular-nums" title={refundTitle}>{fmtMoney(eff.gross, o.currency)}</td>
@@ -1655,6 +1659,21 @@ function UnmatchedRefundBadge({ order }: { order: AdminOrder }) {
   )
 }
 
+/** B2B reverse-charge marker — these EU sales carry 0% VAT and belong on the EC
+ *  Sales List. Tooltip shows the business name + validated VAT id. */
+function B2bBadge({ order }: { order: AdminOrder }) {
+  if (!order.reverseCharge && !order.vatId) return null
+  const title = [order.businessName, order.vatId].filter(Boolean).join(' · ') || 'Business purchase'
+  return (
+    <span
+      title={`B2B — ${title}${order.reverseCharge ? ' · VAT reverse-charged (0%)' : ''}`}
+      className="ml-2 inline-flex items-center rounded-[4px] border border-sky-400/40 bg-sky-400/10 px-1.5 py-0.5 text-[8px] font-mono-ibm uppercase tracking-[0.16em] text-sky-300"
+    >
+      B2B
+    </span>
+  )
+}
+
 function RecentOrdersTable({ onSelect }: { onSelect: (code: string) => void }) {
   const [orders, setOrders] = useState<AdminOrder[] | null>(null)
   const [error, setError] = useState(false)
@@ -1770,7 +1789,7 @@ function RecentOrdersTable({ onSelect }: { onSelect: (code: string) => void }) {
                   <td className="py-2.5 pr-4 whitespace-nowrap text-white/60">{fmtDate(o.createdAt)}</td>
                   <td className="py-2.5 pr-4 whitespace-nowrap font-mono-ibm text-[#931020]">{o.orderId}</td>
                   <td className="py-2.5 pr-4 text-white/70 truncate max-w-[14rem]">{o.email ?? '—'}</td>
-                  <td className="py-2.5 pr-4 whitespace-nowrap"><RegionBadge order={o} /></td>
+                  <td className="py-2.5 pr-4 whitespace-nowrap"><RegionBadge order={o} /><B2bBadge order={o} /></td>
                   <td className="py-2.5 pr-4 text-white/60">{o.items.length}</td>
                   <td className="py-2.5 pr-4 text-white/60">{dlCount(o)}</td>
                   <td className={`py-2.5 pr-4 whitespace-nowrap ${o.refunded || o.expired ? 'text-[#931020]' : 'text-white/45'}`}>
