@@ -346,14 +346,18 @@ function SaleNotifySettings() {
       .finally(() => setLoaded(true))
   }, [])
 
-  async function save() {
+  // enabledOverride lets the checkbox persist its new value immediately (state
+  // hasn't updated yet within the same tick), so toggling gives instant feedback
+  // like the Refunds toggle. The Save button calls save() with no override.
+  async function save(enabledOverride?: boolean) {
+    const nextEnabled = enabledOverride ?? enabled
     setBusy(true)
     setNote(null)
     try {
       const res = await fetch('/api/admin/sale-notify', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ enabled, email: email.trim() }),
+        body: JSON.stringify({ enabled: nextEnabled, email: email.trim() }),
       })
       const d = (await res.json().catch(() => ({}))) as { error?: string }
       setNote(res.ok ? 'Saved.' : (d.error || 'Failed.'))
@@ -373,7 +377,8 @@ function SaleNotifySettings() {
       <CheckBox
         className="mt-5"
         checked={enabled}
-        onChange={setEnabled}
+        disabled={!loaded || busy}
+        onChange={(next) => { setEnabled(next); save(next) }}
         label="Email me on every real sale"
       />
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -385,7 +390,7 @@ function SaleNotifySettings() {
           className="min-w-[18rem] flex-1 rounded-md border border-white/15 bg-white/[0.04] px-4 py-2.5 text-[14px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
         />
         <button
-          onClick={save}
+          onClick={() => save()}
           disabled={busy || !loaded}
           className="rounded-md bg-[#931020] px-5 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white hover:bg-[#a8131f] transition-colors disabled:opacity-40"
         >
