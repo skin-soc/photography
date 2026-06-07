@@ -197,7 +197,7 @@ function CouponsTab() {
   return (
     <>
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Coupons</h1>
-      <p className="mt-2 text-sm text-white/45 max-w-prose">
+      <p className="mt-2 text-sm text-white/45">
         Create discount codes customers enter at checkout — created directly as Stripe promotion
         codes. Shows the <strong className="text-white/60">current Stripe mode</strong> (test here, live in production).
       </p>
@@ -337,7 +337,7 @@ function SaleNotifySettings() {
   return (
     <section className="mt-12 rounded-lg border border-white/10 bg-white/[0.03] p-6">
       <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">Sale notifications</h2>
-      <p className="mt-3 text-[13px] font-light text-white/55 max-w-prose leading-relaxed">
+      <p className="mt-3 text-[13px] font-light text-white/55 leading-relaxed">
         Get an email for every real (live) sale. Test orders never trigger a notification.
       </p>
       <label className="mt-5 flex items-center gap-3 cursor-pointer w-fit">
@@ -400,7 +400,7 @@ function RefundPrefs() {
   return (
     <section className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] p-6">
       <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">Refunds</h2>
-      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed max-w-prose">
+      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed">
         Which refund the order card highlights as the primary action. Both buttons are always
         available regardless.
       </p>
@@ -462,7 +462,7 @@ function CacheControls() {
         </button>
         {note && <span className="text-[12px] text-white/55">{note}</span>}
       </div>
-      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed max-w-prose">
+      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed">
         Refresh catalog busts the 5-minute cache so a fresh Lightroom export shows at once. Warm
         previews re-renders any missing watermarked previews. Clear deliverables frees disk — files
         regenerate on the next download.
@@ -565,7 +565,7 @@ function VatRateSettings() {
   return (
     <section className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] p-6">
       <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">VAT rate</h2>
-      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed max-w-prose">
+      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed">
         Charged on top of catalog prices to <strong className="text-white/55">Denmark and EU</strong> buyers
         (location from IP); buyers <strong className="text-white/55">outside the EU</strong> pay 0%. Stripe Tax
         is off — VAT is calculated here, so there’s no per-transaction Stripe Tax fee. While under the EU’s
@@ -613,7 +613,7 @@ function TaxRegistrations() {
   return (
     <section className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] p-6">
       <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">Tax registrations</h2>
-      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed max-w-prose">
+      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed">
         Informational only — VAT is now calculated manually (see <strong className="text-white/55">VAT rate</strong> above),
         so Stripe Tax registrations don’t drive checkout. This lists any registrations still configured in the
         <strong className="text-white/55"> current Stripe mode</strong> (this admin shows <em>test</em>). Manage them in
@@ -695,7 +695,7 @@ function SettingsTab() {
   return (
     <>
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Settings</h1>
-      <p className="mt-2 text-sm text-white/45 max-w-prose">Studio tools and maintenance.</p>
+      <p className="mt-2 text-sm text-white/45">Studio tools and maintenance.</p>
 
       <SaleNotifySettings />
       <VatRateSettings />
@@ -788,7 +788,7 @@ function ProductsTab() {
   return (
     <>
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Product lookup</h1>
-      <p className="mt-2 text-sm text-white/45 max-w-prose">
+      <p className="mt-2 text-sm text-white/45">
         Enter a GMP reference or download token to find the original file and its preview.
       </p>
 
@@ -999,7 +999,7 @@ function OrdersTab() {
   return (
     <>
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Orders</h1>
-      <p className="mt-2 text-sm text-white/45 max-w-prose">
+      <p className="mt-2 text-sm text-white/45">
         Look up a download order by its order code (<span className="font-mono-ibm">GMP-…</span>) or the
         buyer&rsquo;s email — read back the passcode, re-send the link, or extend an expired one.
       </p>
@@ -1191,7 +1191,7 @@ function FinancesTab() {
   return (
     <>
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Finances</h1>
-      <p className="mt-2 text-sm text-white/45 max-w-prose">
+      <p className="mt-2 text-sm text-white/45">
         Real sales grouped by tax reporting quarter, each with its filing deadline and
         gross / tax / net totals — split into <strong className="text-white/65">Denmark</strong>,{' '}
         <strong className="text-white/65">EU (excl. DK)</strong> and{' '}
