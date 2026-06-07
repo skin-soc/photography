@@ -15,10 +15,8 @@ interface PaymentData {
   clientSecret: string
   hasPhysical: boolean
   downloadItems: DownloadItem[]
-  amount: number
-  subtotal: number
-  taxAmount: number
   currency: string
+  billingCountry: string | null
 }
 
 
@@ -100,14 +98,14 @@ export default function CartDrawer() {
     setIntentLoading(true)
     setIntentError(false)
     try {
-      const res = await fetch('/api/payment-intent', {
+      const res = await fetch('/api/checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: itemsToCharge.map((i) => ({ sku: i.sku })), locale }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { error?: string }
-        console.error('[cart] payment-intent failed:', res.status, body)
+        console.error('[cart] checkout-session failed:', res.status, body)
         throw new Error(body.error ?? `HTTP ${res.status}`)
       }
       const data = await res.json() as PaymentData
@@ -121,7 +119,7 @@ export default function CartDrawer() {
     }
   }
 
-  async function handleSuccess(downloads: DownloadItem[], hasPhysical: boolean, paymentIntentId: string) {
+  async function handleSuccess(downloads: DownloadItem[], hasPhysical: boolean, sessionId: string) {
     if (!buyNowItem) clearCart()
     // Prefer the digital items from the payment-intent API response (reliable);
     // the client-side PaymentIntent metadata isn't always populated by Stripe.js.
@@ -141,7 +139,7 @@ export default function CartDrawer() {
         const res = await fetch('/api/downloads/issue', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ paymentIntentId, clientSecret: paymentData?.clientSecret }),
+          body: JSON.stringify({ sessionId }),
         })
         if (res.ok) {
           const data = (await res.json()) as { orderId?: string; passcode?: string | null }
@@ -249,14 +247,10 @@ export default function CartDrawer() {
         {step === 'payment' && paymentData && (
           <CheckoutPane
             clientSecret={paymentData.clientSecret}
-            items={checkoutItems}
             hasPhysical={paymentData.hasPhysical}
-            subtotal={paymentData.subtotal}
-            taxAmount={paymentData.taxAmount}
-            currency={paymentData.currency}
-            totalText={new Intl.NumberFormat(locale === 'en' ? 'en-GB' : locale, {
-              style: 'currency', currency: paymentData.currency,
-            }).format(paymentData.amount / 100)}
+            downloadItems={paymentData.downloadItems}
+            billingCountry={paymentData.billingCountry}
+            totalText={totalText}
             onBack={() => setStep('cart')}
             onSuccess={handleSuccess}
           />

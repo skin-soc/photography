@@ -1,18 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import {
-  Elements,
+  CheckoutElementsProvider,
   PaymentElement,
-  AddressElement,
-  LinkAuthenticationElement,
-  useStripe,
-  useElements,
-} from '@stripe/react-stripe-js'
+  ShippingAddressElement,
+  useCheckout,
+} from '@stripe/react-stripe-js/checkout'
 import type { StripeElementsOptions } from '@stripe/stripe-js'
 import { stripePromise } from '@/lib/stripe-client'
-import { useTranslations, useLocale } from 'next-intl'
-import type { CartItem } from '@/store/cart'
 
 export interface DownloadItem {
   token: string
@@ -23,14 +20,13 @@ export interface DownloadItem {
 
 interface CheckoutPaneProps {
   clientSecret: string
-  items: CartItem[]
   hasPhysical: boolean
-  subtotal: number
-  taxAmount: number
-  currency: string
+  downloadItems: DownloadItem[]
+  /** Buyer country from IP — set on the session for tax, no address form needed. */
+  billingCountry: string | null
   totalText: string
   onBack: () => void
-  onSuccess: (downloads: DownloadItem[], hasPhysical: boolean, orderId: string) => void
+  onSuccess: (downloads: DownloadItem[], hasPhysical: boolean, sessionId: string) => void
 }
 
 // ── Stripe appearance — matches site dark palette ─────────────────────────────
@@ -73,93 +69,121 @@ const appearance: StripeElementsOptions['appearance'] = {
   },
 }
 
-// ── Inner form — must be inside <Elements> ────────────────────────────────────
+// ── Inner form — must be inside <CheckoutElementsProvider> ────────────────────
 function PaymentForm({
   hasPhysical,
-  subtotal,
-  taxAmount,
-  currency,
+  downloadItems,
+  billingCountry,
   totalText,
   onBack,
   onSuccess,
 }: Omit<CheckoutPaneProps, 'clientSecret'>) {
   const t = useTranslations('cart')
-  const locale = useLocale()
-  const fmt = (minor: number) =>
-    new Intl.NumberFormat(locale === 'en' ? 'en-GB' : locale, {
-      style: 'currency', currency,
-    }).format(minor / 100)
-  const stripe = useStripe()
-  const elements = useElements()
+  const co = useCheckout()
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
-  // Captured explicitly via LinkAuthenticationElement. The Payment Element's
-  // built-in Link email never reaches charge.billing_details on a card payment,
-  // so we read it here and set it on the PaymentIntent (receipt_email) at
-  // confirm — that's what fulfilment uses to send the download email.
+  // Plain email input — Stripe records it on the session (customer email), which
+  // fulfilment reads to send the download link. No Link element, no phone field.
   const [email, setEmail] = useState('')
+  const [countrySet, setCountrySet] = useState(false)
+  const [promo, setPromo] = useState('')
+  const [promoBusy, setPromoBusy] = useState(false)
+  const [promoErr, setPromoErr] = useState<string | null>(null)
+
+  // Record the buyer's country (from IP) on the session once — it's our VAT
+  // location evidence (reconciled against the card-issuer country in admin). VAT
+  // itself is already applied as a tax_rate at session creation from this same
+  // country, so no address form is needed for a digital download.
+  useEffect(() => {
+    if (co.type !== 'success' || !billingCountry || countrySet) return
+    setCountrySet(true)
+    co.checkout
+      .updateBillingAddress({ address: { country: billingCountry } })
+      .catch(() => { /* non-fatal — country is just location evidence here */ })
+  }, [co, billingCountry, countrySet])
+
+  if (co.type === 'loading') {
+    return (
+      <div className="flex justify-center py-12">
+        <span className="shop-spinner" />
+      </div>
+    )
+  }
+  if (co.type === 'error') {
+    return <p className="text-[12px] text-red-400/80 leading-snug">{co.error.message}</p>
+  }
+  const checkout = co.checkout
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!stripe || !elements || state === 'loading') return
+    if (state === 'loading') return
     setState('loading')
     setErrorMsg('')
-
-    // Collect address if physical items
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let shippingData: { name?: string; address?: object } | undefined
-    if (hasPhysical) {
-      const addressEl = elements.getElement('address')
-      if (addressEl) {
-        // AddressElement value is captured by Stripe internally; we pass
-        // shipping via confirmParams below.
+    try {
+      // Best-effort: set the buyer's email on the session (for receipt + the
+      // download email). Optional — they also get the passcode on-screen.
+      if (email) await checkout.updateEmail(email)
+      // redirect: 'if_required' keeps card inline; Klarna/Amazon Pay redirect
+      // to the session's return_url (set at session creation).
+      const result = await checkout.confirm({ redirect: 'if_required' })
+      if (result.type === 'error') {
+        console.error('[checkout] confirm error:', result.error)
+        setState('error')
+        setErrorMsg(result.error.message ?? t('paymentFailed'))
+        return
       }
-    }
-
-    const result = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        // We handle the result inline — only redirect for methods that require it
-        return_url: `${window.location.origin}/en/shop/order-complete`,
-        // Set the buyer's email on the PaymentIntent so fulfilment (issue route
-        // AND the Stripe webhook) can read it. Optional — empty means no email.
-        ...(email ? { receipt_email: email } : {}),
-      },
-      redirect: 'if_required',
-    })
-
-    if (result.error) {
+      onSuccess(downloadItems, hasPhysical, result.session.id)
+    } catch (err) {
+      console.error('[checkout] confirm threw:', err)
       setState('error')
-      setErrorMsg(result.error.message ?? t('paymentFailed'))
-      return
+      setErrorMsg(err instanceof Error ? err.message : t('paymentFailed'))
     }
+  }
 
-    // Payment succeeded (no redirect needed)
-    if (
-      result.paymentIntent &&
-      (result.paymentIntent.status === 'succeeded' ||
-        result.paymentIntent.status === 'processing')
-    ) {
-      // Retrieve download items from payment intent metadata
-      const meta = (result.paymentIntent as { metadata?: Record<string, string> }).metadata
-      let downloads: DownloadItem[] = []
-      if (meta?.downloadItems) {
-        try { downloads = JSON.parse(meta.downloadItems) } catch { /* ignore */ }
-      }
-      onSuccess(downloads, hasPhysical, result.paymentIntent.id)
+  // Stripe pre-formats these amount strings (and updates tax once an address is
+  // entered). Fall back to the cart total before the session has computed.
+  const total = checkout.total
+  const taxMinor = total?.taxExclusive?.minorUnitsAmount ?? 0
+  const appliedDiscount = checkout.discountAmounts && checkout.discountAmounts.length > 0
+    ? checkout.discountAmounts[0]
+    : null
+
+  async function applyPromo() {
+    const code = promo.trim()
+    if (!code) return
+    setPromoBusy(true)
+    setPromoErr(null)
+    try {
+      const r = await checkout.applyPromotionCode(code)
+      if (r.type === 'error') setPromoErr(r.error.message || 'Invalid or expired code')
+      else setPromo('')
+    } catch {
+      setPromoErr('Couldn’t apply code')
+    } finally {
+      setPromoBusy(false)
     }
+  }
+  async function removePromo() {
+    setPromoBusy(true)
+    setPromoErr(null)
+    try { await checkout.removePromotionCode() } catch { /* ignore */ } finally { setPromoBusy(false) }
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      {/* Email — optional; used to send the download link + passcode. Captured
-          here (not scraped off the charge) so it's reliable regardless of Link. */}
+      {/* Email — optional; used to send the download link + passcode. */}
       <div>
         <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-white/35">
           {t('emailLabel')}
         </p>
-        <LinkAuthenticationElement
-          onChange={(e) => setEmail(e.value.email)}
+        <input
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="w-full rounded-[8px] border border-white/15 bg-white/[0.04] px-4 py-3 text-[14px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
         />
       </div>
 
@@ -169,12 +193,7 @@ function PaymentForm({
           <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-white/35">
             {t('shippingAddress')}
           </p>
-          <AddressElement
-            options={{
-              mode: 'shipping',
-              allowedCountries: ['GB', 'DK', 'DE', 'FR', 'NL', 'SE', 'NO', 'US', 'CA', 'AU', 'JP'],
-            }}
-          />
+          <ShippingAddressElement />
         </div>
       )}
 
@@ -186,29 +205,76 @@ function PaymentForm({
         <PaymentElement
           options={{
             layout: 'tabs',
-            // phone is unnecessary for this shop — Stripe shows it by default.
-            fields: { billingDetails: { address: 'auto', phone: 'never' } },
+            // We supply the country ourselves (from IP, via updateBillingAddress).
+            // A card form collects country + postal code by default, so both must
+            // be opted out here — otherwise Stripe errors on a partial/conflicting
+            // billing address. EU tax needs only the country, which we provide.
+            fields: { billingDetails: { address: { country: 'never', postalCode: 'never' } } },
           }}
         />
       </div>
 
-      {/* Order summary */}
+      {/* Promo code */}
+      <div>
+        {appliedDiscount ? (
+          <div className="flex items-center justify-between rounded-[8px] border border-[#931020]/40 bg-[#931020]/[0.06] px-4 py-2.5">
+            <span className="text-[12px] font-light text-white/70">
+              {appliedDiscount.displayName} · <span className="text-[#931020]">−{appliedDiscount.amount}</span>
+            </span>
+            <button
+              type="button"
+              onClick={removePromo}
+              disabled={promoBusy}
+              className="text-[10px] font-light tracking-[0.18em] uppercase text-white/40 hover:text-white transition-colors disabled:opacity-40"
+            >
+              {t('remove')}
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              value={promo}
+              onChange={(e) => setPromo(e.target.value.toUpperCase())}
+              placeholder={t('promoCode')}
+              spellCheck={false}
+              className="flex-1 rounded-[8px] border border-white/15 bg-white/[0.04] px-4 py-2.5 font-mono-ibm text-[13px] tracking-wide text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+            />
+            <button
+              type="button"
+              onClick={applyPromo}
+              disabled={promoBusy || !promo.trim()}
+              className="shrink-0 rounded-[8px] border border-white/15 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
+            >
+              {promoBusy ? '…' : t('apply')}
+            </button>
+          </div>
+        )}
+        {promoErr && <p className="mt-1.5 text-[11px] text-red-400/80">{promoErr}</p>}
+      </div>
+
+      {/* Order summary — live totals from Stripe (incl. tax once known) */}
       <div className="border-t border-white/[0.07] pt-4 space-y-1.5">
-        {taxAmount > 0 && (
+        {taxMinor > 0 && total && (
           <>
             <div className="flex items-baseline justify-between">
               <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('subtotal')}</p>
-              <p className="text-[12px] font-light text-white/45">{fmt(subtotal)}</p>
+              <p className="text-[12px] font-light text-white/45">{total.subtotal.amount}</p>
             </div>
             <div className="flex items-baseline justify-between">
               <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('vat')}</p>
-              <p className="text-[12px] font-light text-white/45">{fmt(taxAmount)}</p>
+              <p className="text-[12px] font-light text-white/45">{total.taxExclusive.amount}</p>
             </div>
           </>
         )}
+        {appliedDiscount && total && (
+          <div className="flex items-baseline justify-between">
+            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('discount')}</p>
+            <p className="text-[12px] font-light text-[#931020]">−{total.discount.amount}</p>
+          </div>
+        )}
         <div className="flex items-baseline justify-between">
           <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('total')}</p>
-          <p className="text-[16px] font-light text-white">{totalText}</p>
+          <p className="text-[16px] font-light text-white">{total?.total?.amount ?? totalText}</p>
         </div>
       </div>
 
@@ -218,14 +284,14 @@ function PaymentForm({
 
       <button
         type="submit"
-        disabled={!stripe || state === 'loading'}
+        disabled={state === 'loading'}
         className={`w-full rounded-[14px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
           state === 'loading'
             ? 'bg-[#931020]/35 cursor-default'
             : 'bg-[#931020]/80 hover:bg-[#931020] cursor-pointer'
         }`}
       >
-        {state === 'loading' ? t('processing') : `${t('pay')} ${totalText}`}
+        {state === 'loading' ? t('processing') : `${t('pay')} ${total?.total?.amount ?? totalText}`}
       </button>
 
       <button
@@ -240,26 +306,21 @@ function PaymentForm({
   )
 }
 
-// ── Public export — wraps form in Elements provider ───────────────────────────
+// ── Public export — wraps form in the Checkout provider ───────────────────────
 export default function CheckoutPane(props: CheckoutPaneProps) {
-  const options: StripeElementsOptions = {
-    clientSecret: props.clientSecret,
-    appearance,
-    locale: 'auto',
-  }
-
   return (
-    <Elements stripe={stripePromise} options={options}>
+    <CheckoutElementsProvider
+      stripe={stripePromise}
+      options={{ clientSecret: props.clientSecret, elementsOptions: { appearance } }}
+    >
       <PaymentForm
-        items={props.items}
         hasPhysical={props.hasPhysical}
-        subtotal={props.subtotal}
-        taxAmount={props.taxAmount}
-        currency={props.currency}
+        downloadItems={props.downloadItems}
+        billingCountry={props.billingCountry}
         totalText={props.totalText}
         onBack={props.onBack}
         onSuccess={props.onSuccess}
       />
-    </Elements>
+    </CheckoutElementsProvider>
   )
 }

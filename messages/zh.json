@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "商店",
-      "h1": "艺术微喷与摄影商店",
+      "h1": "艺术微喷、印刷品和数字下载商店",
       "description": "购买 Gus McEwan 的艺术微喷作品与数字下载——精选来自哥本哈根、伦敦及其他地方的人像、风光与旅行摄影作品。"
     }
   },
@@ -119,7 +119,7 @@
     "openWithCount": "打开购物车（{count} 件商品）",
     "close": "关闭购物车",
     "empty": "购物车为空。",
-    "remove": "删除",
+    "remove": "移除",
     "total": "合计",
     "checkout": "结账",
     "preparing": "准备中…",
@@ -127,6 +127,7 @@
     "shipping": "结账时将收集配送地址。",
     "payment": "付款",
     "paymentDetails": "付款详情",
+    "billingAddress": "账单地址",
     "shippingAddress": "配送地址",
     "pay": "立即付款",
     "processing": "处理中…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "在此设备上已解锁打开——可立即下载。如果您填写了电子邮箱，链接和访问码也已发送至该邮箱。",
     "saveAccess": "保存您的访问信息",
     "saveAccessHint": "请保存以下信息，以便日后或在其他设备上再次下载：",
-    "passcodeLabel": "访问码"
+    "passcodeLabel": "访问码",
+    "promoCode": "优惠码",
+    "apply": "应用",
+    "discount": "折扣"
   },
   "downloads": {
     "eyebrow": "您的下载",

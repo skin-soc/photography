@@ -1,14 +1,6 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, IBM_Plex_Mono, Space_Mono } from 'next/font/google'
+import { IBM_Plex_Mono, Space_Mono } from 'next/font/google'
 import '@/app/globals.css'
-
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['300', '400', '500'],
-  style: ['normal', 'italic'],
-  variable: '--font-serif',
-  display: 'swap',
-})
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ['latin'],
@@ -37,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${ibmPlexMono.variable} ${spaceMono.variable}`}
+      className={`${ibmPlexMono.variable} ${spaceMono.variable}`}
     >
       <body className="bg-black text-white antialiased min-h-screen">{children}</body>
     </html>

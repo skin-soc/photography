@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Kauppa",
-      "h1": "Taidevedokset ja valokuvakauppa",
+      "h1": "Taidetulosteet, printit ja lataukset",
       "description": "Osta taidevedoksia ja digitaalisia latauksia Gus McEwanilta — valikoima muotokuva-, maisema- ja matkavalokuvausta Kööpenhaminasta, Lontoosta ja muualta."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Toimitusosoite kerätään kassalla.",
     "payment": "Maksu",
     "paymentDetails": "Maksutiedot",
+    "billingAddress": "Laskutusosoite",
     "shippingAddress": "Toimitusosoite",
     "pay": "Maksa",
     "processing": "Käsitellään…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Avautuu lukitsemattomana tällä laitteella — lataa heti. Jos annoit sähköpostiosoitteen, linkki ja pääsykoodi lähetettiin myös sinne.",
     "saveAccess": "Tallenna pääsysi",
     "saveAccessHint": "Säilytä nämä ladataksesi uudelleen myöhemmin tai toisella laitteella:",
-    "passcodeLabel": "Pääsykoodi"
+    "passcodeLabel": "Pääsykoodi",
+    "promoCode": "Alennuskoodi",
+    "apply": "Käytä",
+    "discount": "Alennus"
   },
   "downloads": {
     "eyebrow": "Latauksesi",

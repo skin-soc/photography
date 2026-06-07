@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Loja",
-      "h1": "Loja de impressões artísticas e fotografia",
+      "h1": "Loja de arte, impressões e downloads",
       "description": "Compre impressões artísticas e downloads digitais de Gus McEwan — uma coleção selecionada de fotografia de retrato, paisagem e viagem de Copenhaga, Londres e além."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Endereço de entrega recolhido no pagamento.",
     "payment": "Pagamento",
     "paymentDetails": "Detalhes do pagamento",
+    "billingAddress": "Endereço de faturação",
     "shippingAddress": "Endereço de entrega",
     "pay": "Pagar",
     "processing": "A processar…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Abre desbloqueado neste dispositivo — transfira já. Se indicou um e-mail, o link e o código de acesso também foram enviados para lá.",
     "saveAccess": "Guarde o seu acesso",
     "saveAccessHint": "Guarde estes dados para transferir novamente mais tarde ou noutro dispositivo:",
-    "passcodeLabel": "Código de acesso"
+    "passcodeLabel": "Código de acesso",
+    "promoCode": "Código promocional",
+    "apply": "Aplicar",
+    "discount": "Desconto"
   },
   "downloads": {
     "eyebrow": "As suas transferências",

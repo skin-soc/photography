@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, IBM_Plex_Mono, Space_Mono } from 'next/font/google'
+import { IBM_Plex_Mono, Space_Mono } from 'next/font/google'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
@@ -18,14 +18,6 @@ import {
 } from '@/i18n/seo'
 import { getShopOnline } from '@/lib/shop-settings'
 import '@/app/globals.css'
-
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['300', '400'],
-  style: ['normal', 'italic'],
-  variable: '--font-serif',
-  display: 'swap',
-})
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ['latin'],
@@ -144,7 +136,7 @@ export default async function RootLayout({
   const shopOnline = await getShopOnline()
 
   return (
-    <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={`${cormorant.variable} ${ibmPlexMono.variable} ${spaceMono.variable}`}>
+    <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={`${ibmPlexMono.variable} ${spaceMono.variable}`}>
       <body className="bg-black text-white antialiased">
         {/* Render each JSON-LD object as a separate script — Next.js 15's
             deduplication logic calls parsed["@context"].toLowerCase() and

@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Shop",
-      "h1": "Stampe d'arte e shop fotografico",
+      "h1": "Stampe d’arte, stampe fotografiche e download",
       "description": "Acquista stampe d'arte e download digitali di Gus McEwan — una selezione di fotografia di ritratto, paesaggio e viaggio da Copenaghen, Londra e oltre."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Indirizzo di spedizione raccolto al momento del pagamento.",
     "payment": "Pagamento",
     "paymentDetails": "Dettagli del pagamento",
+    "billingAddress": "Indirizzo di fatturazione",
     "shippingAddress": "Indirizzo di spedizione",
     "pay": "Paga",
     "processing": "Elaborazione…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Già sbloccato su questo dispositivo: scarica subito. Se hai inserito un'e-mail, il link e il codice di accesso sono stati inviati anche lì.",
     "saveAccess": "Salva il tuo accesso",
     "saveAccessHint": "Conserva questi dati per scaricare di nuovo in seguito o su un altro dispositivo:",
-    "passcodeLabel": "Codice di accesso"
+    "passcodeLabel": "Codice di accesso",
+    "promoCode": "Codice promo",
+    "apply": "Applica",
+    "discount": "Sconto"
   },
   "downloads": {
     "eyebrow": "I tuoi download",

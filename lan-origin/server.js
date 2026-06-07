@@ -885,7 +885,8 @@ async function pregenerateGrant(grant) {
  *  stored passcode. The passcode is kept in plain text — this file lives on the
  *  NAS behind the shared secret, and the email carries it in clear regardless. */
 app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
-  const { orderId, paymentId, email, locale, items } = req.body ?? {}
+  const { orderId, paymentId, email, locale, items,
+          livemode, amount, currency, taxAmount, taxCountry, cardCountry } = req.body ?? {}
   if (!orderId || !orderPath(orderId) || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'invalid order' })
   }
@@ -901,6 +902,13 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
       items: items.map((i) => ({
         sku: i.sku, token: i.token, format: i.format, label: i.label, slug: i.slug,
       })),
+      // Payment facts for the admin orders table (test vs live, total, tax).
+      livemode: typeof livemode === 'boolean' ? livemode : null,
+      amount: Number.isFinite(amount) ? amount : null,
+      currency: currency ? String(currency) : null,
+      taxAmount: Number.isFinite(taxAmount) ? taxAmount : null,
+      taxCountry: taxCountry ? String(taxCountry) : null,
+      cardCountry: cardCountry ? String(cardCountry) : null,
       createdAt: now,
       expiresAt: now + LINK_TTL_MS,
       emailed: false,
@@ -955,7 +963,7 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
 app.get('/orders/:orderId/meta', async (req, res) => {
   const grant = await readGrant(req.params.orderId)
   if (!grant) return res.status(404).json({ error: 'not found' })
-  if (Date.now() > grant.expiresAt) return res.status(410).json({ error: 'expired' })
+  if (grant.revoked || Date.now() > grant.expiresAt) return res.status(410).json({ error: 'expired' })
 
   // Pixel dimensions (from the catalog) + file size (from the cached deliverable,
   // once generated) so the buyer can see how big each download is before clicking.
@@ -965,7 +973,9 @@ app.get('/orders/:orderId/meta', async (req, res) => {
     for (const p of photos) for (const pr of (p.products || [])) bySku.set(pr.sku, pr)
   } catch { /* catalog unavailable — dimensions just omitted */ }
 
-  const items = await Promise.all(grant.items.map(async (i) => {
+  // Hide items that were refunded (undownloaded-only refund revokes them).
+  const visibleItems = grant.items.filter((i) => !(grant.revokedSkus || []).includes(i.sku))
+  const items = await Promise.all(visibleItems.map(async (i) => {
     const product = bySku.get(i.sku)
     const ext = i.format === 'tiff' ? 'tiff' : 'jpg'
     let bytes = null
@@ -984,7 +994,7 @@ app.get('/orders/:orderId/meta', async (req, res) => {
 app.post('/orders/:orderId/verify', express.json({ limit: '4kb' }), async (req, res) => {
   const grant = await readGrant(req.params.orderId)
   if (!grant) return res.status(404).json({ error: 'not found' })
-  if (Date.now() > grant.expiresAt) return res.status(410).json({ error: 'expired' })
+  if (grant.revoked || Date.now() > grant.expiresAt) return res.status(410).json({ error: 'expired' })
   const passcode = String(req.body?.passcode ?? '').trim().toUpperCase()
   if (!passcode || !safeEqualStr(passcode, grant.passcode)) {
     return res.status(401).json({ error: 'invalid passcode' })
@@ -997,7 +1007,8 @@ app.get('/orders/:orderId/file/:sku', async (req, res) => {
   const { orderId, sku } = req.params
   const grant = await readGrant(orderId)
   if (!grant) return res.status(404).json({ error: 'not found' })
-  if (Date.now() > grant.expiresAt) return res.status(410).json({ error: 'expired' })
+  if (grant.revoked || Date.now() > grant.expiresAt) return res.status(410).json({ error: 'expired' })
+  if ((grant.revokedSkus || []).includes(sku)) return res.status(410).json({ error: 'refunded' })
   if (!grant.items.some((i) => i.sku === sku)) return res.status(404).json({ error: 'not in order' })
 
   const found = await findProductBySku(sku)
@@ -1041,15 +1052,38 @@ app.get('/orders/:orderId/file/:sku', async (req, res) => {
 
 // ── Admin order management (secret-gated; behind the shop Worker's admin auth) ──
 
+/** Map of sku → ex-VAT catalog price, for per-item value in the admin view. */
+async function catalogPriceMap() {
+  const m = new Map()
+  try {
+    const { photos } = await loadCatalog()
+    for (const p of photos) for (const pr of (p.products || [])) m.set(pr.sku, pr.price)
+  } catch { /* catalog unavailable — prices just omitted */ }
+  return m
+}
+
 /** Admin view of a grant — includes the passcode (so the admin can read it back
- *  to a customer) and download counts. */
-function adminOrderView(grant) {
+ *  to a customer) and download counts. `priceBySku` (optional) adds each item's
+ *  ex-VAT catalog price so the admin can see per-item value. */
+function adminOrderView(grant, priceBySku) {
   return {
     orderId: grant.orderId,
     paymentId: grant.paymentId ?? null,
     email: grant.email ?? null,
     passcode: grant.passcode,
     emailed: grant.emailed ?? false,
+    livemode: grant.livemode ?? null,
+    amount: grant.amount ?? null,
+    currency: grant.currency ?? null,
+    taxAmount: grant.taxAmount ?? null,
+    taxCountry: grant.taxCountry ?? null,
+    cardCountry: grant.cardCountry ?? null,
+    refunded: grant.refunded ?? false,
+    refundedAmount: grant.refundedAmount ?? null,
+    refundedAt: grant.refundedAt ?? null,
+    refundUnmatched: grant.refundUnmatched ?? false,
+    revoked: grant.revoked ?? false,
+    revokedSkus: grant.revokedSkus ?? [],
     createdAt: grant.createdAt,
     expiresAt: grant.expiresAt,
     expired: Date.now() > grant.expiresAt,
@@ -1060,6 +1094,8 @@ function adminOrderView(grant) {
       format: i.format,
       filename: customerFilename(i),
       downloads: (grant.counts && grant.counts[i.sku]) || 0,
+      refunded: (grant.revokedSkus || []).includes(i.sku),
+      price: priceBySku ? (priceBySku.get(i.sku) ?? null) : null,
     })),
   }
 }
@@ -1068,11 +1104,12 @@ function adminOrderView(grant) {
 app.get('/admin/orders', async (req, res) => {
   const q = String(req.query.q ?? '').trim()
   if (!q) return res.status(400).json({ error: 'missing query' })
+  const priceBySku = await catalogPriceMap()
 
   // Exact order id first.
   if (orderPath(q)) {
     const grant = await readGrant(q)
-    if (grant) return res.json({ orders: [adminOrderView(grant)] })
+    if (grant) return res.json({ orders: [adminOrderView(grant, priceBySku)] })
   }
 
   // Otherwise treat as an email — scan the grants (small shop volume).
@@ -1083,7 +1120,7 @@ app.get('/admin/orders', async (req, res) => {
       if (!name.endsWith('.json')) continue
       const grant = await readGrant(name.slice(0, -5))
       if (grant && (grant.email ?? '').toLowerCase() === needle) {
-        orders.push(adminOrderView(grant))
+        orders.push(adminOrderView(grant, priceBySku))
       }
     }
   } catch { /* dir missing */ }
@@ -1096,12 +1133,13 @@ app.get('/admin/orders', async (req, res) => {
 app.get('/admin/orders/recent', async (req, res) => {
   const days = Math.min(3650, Math.max(1, parseInt(req.query.days, 10) || 90))
   const since = Date.now() - days * 24 * 60 * 60 * 1000
+  const priceBySku = await catalogPriceMap()
   const orders = []
   try {
     for (const name of await readdir(ORDERS_DIR)) {
       if (!name.endsWith('.json')) continue
       const grant = await readGrant(name.slice(0, -5))
-      if (grant && (grant.createdAt ?? 0) >= since) orders.push(adminOrderView(grant))
+      if (grant && (grant.createdAt ?? 0) >= since) orders.push(adminOrderView(grant, priceBySku))
     }
   } catch { /* dir missing */ }
   orders.sort((a, b) => b.createdAt - a.createdAt)
@@ -1114,10 +1152,16 @@ app.post('/admin/orders/:orderId/resend', express.json({ limit: '4kb' }), async 
   if (!grant) return res.status(404).json({ error: 'not found' })
   const to = (req.body && req.body.email) || grant.email
   if (!to) return res.status(400).json({ error: 'no email on file — pass one' })
+  // Only the items the buyer still has — refunded (revoked) items are excluded
+  // so the re-sent email matches what they can actually download.
+  const liveItems = grant.items.filter((i) => !(grant.revokedSkus || []).includes(i.sku))
+  if (grant.revoked || liveItems.length === 0) {
+    return res.status(409).json({ error: 'order fully refunded — nothing to send' })
+  }
   try {
     await sendDownloadEmail({
       email: to, orderId: grant.orderId, passcode: grant.passcode,
-      items: grant.items, locale: 'en', expiresAt: grant.expiresAt,
+      items: liveItems, locale: 'en', expiresAt: grant.expiresAt,
     })
     grant.emailed = true
     if (req.body && req.body.email) grant.email = to
@@ -1133,9 +1177,135 @@ app.post('/admin/orders/:orderId/resend', express.json({ limit: '4kb' }), async 
 app.post('/admin/orders/:orderId/extend', async (req, res) => {
   const grant = await readGrant(req.params.orderId)
   if (!grant) return res.status(404).json({ error: 'not found' })
+  // Extending re-grants access even if it was revoked by a (now reversed) refund.
   grant.expiresAt = Date.now() + LINK_TTL_MS
+  grant.revoked = false
   await writeFile(orderPath(grant.orderId), JSON.stringify(grant, null, 2))
   res.json({ ok: true, expiresAt: grant.expiresAt })
+})
+
+/** Mark an order refunded (called by the Stripe webhook and the admin Refund
+ *  button). A FULL refund revokes download access; a partial one just records
+ *  the refunded amount for the admin's books. */
+app.post('/admin/orders/:orderId/refund', express.json({ limit: '4kb' }), async (req, res) => {
+  const grant = await readGrant(req.params.orderId)
+  if (!grant) return res.status(404).json({ error: 'not found' })
+  const { amountRefunded, fullyRefunded, revokedSkus } = req.body ?? {}
+  grant.refundedAmount = Number.isFinite(amountRefunded) ? amountRefunded : (grant.amount ?? null)
+  grant.refundedAt = Date.now()
+  grant.refunded = !!fullyRefunded
+  if (fullyRefunded) grant.revoked = true // pull all download access on a full refund
+  // Per-item revoke (undownloaded-only refunds). Union, never clear — the
+  // charge.refunded webhook also calls this without skus and must not undo them.
+  if (Array.isArray(revokedSkus) && revokedSkus.length) {
+    grant.revokedSkus = Array.from(new Set([...(grant.revokedSkus || []), ...revokedSkus.map(String)]))
+  }
+  // Guard: our admin only ever issues full refunds or whole-line-item
+  // ("undownloaded only") refunds, the latter always carrying revokedSkus. A
+  // PARTIAL refund that arrives with no line items attached therefore didn't go
+  // through our flow — it's an arbitrary-amount refund typed into the Stripe
+  // Dashboard. We can't reject it (Stripe already executed it and the webhook
+  // must 200), so we flag it: the VAT split is then only proportional, not a
+  // clean line-item reversal, and no download access was revoked. The admin UI
+  // surfaces this for manual review. Recomputed from final state so a later
+  // call that brings the skus clears the flag.
+  grant.refundUnmatched =
+    !grant.refunded && (grant.refundedAmount ?? 0) > 0 && (grant.revokedSkus || []).length === 0
+  await writeFile(orderPath(grant.orderId), JSON.stringify(grant, null, 2))
+  res.json({
+    ok: true,
+    refunded: grant.refunded,
+    refundedAmount: grant.refundedAmount,
+    revoked: grant.revoked,
+    revokedSkus: grant.revokedSkus || [],
+    refundUnmatched: grant.refundUnmatched,
+  })
+})
+
+/** Delete all TEST-mode orders (grants with livemode === false). Live orders and
+ *  any without a recorded mode are left untouched. Returns the number removed. */
+app.post('/admin/orders/delete-test', async (_req, res) => {
+  let deleted = 0
+  try {
+    for (const name of await readdir(ORDERS_DIR)) {
+      if (!name.endsWith('.json')) continue
+      const grant = await readGrant(name.slice(0, -5))
+      if (grant && grant.livemode === false) {
+        await unlink(join(ORDERS_DIR, name)).catch(() => {})
+        deleted += 1
+      }
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message })
+  }
+  res.json({ ok: true, deleted })
+})
+
+/** Delete expired grants now (manual trigger of the expiry sweep). */
+app.post('/admin/orders/purge-expired', async (_req, res) => {
+  const now = Date.now()
+  let deleted = 0
+  try {
+    for (const name of await readdir(ORDERS_DIR)) {
+      if (!name.endsWith('.json')) continue
+      const grant = await readGrant(name.slice(0, -5))
+      if (grant && now > grant.expiresAt) {
+        await unlink(join(ORDERS_DIR, name)).catch(() => {})
+        deleted += 1
+      }
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message })
+  }
+  res.json({ ok: true, deleted })
+})
+
+/** Warm the watermarked-preview cache (re-render any missing previews). */
+app.post('/admin/cache/warm-previews', async (_req, res) => {
+  warmPreviewCache().catch((err) => console.error('[warm] manual sweep failed:', err.message))
+  res.json({ ok: true, started: true })
+})
+
+/** Clear generated deliverables (fulfil cache). They regenerate on next download. */
+app.post('/admin/cache/clear-fulfil', async (_req, res) => {
+  let deleted = 0
+  try {
+    for (const name of await readdir(FULFIL_CACHE_DIR)) {
+      await unlink(join(FULFIL_CACHE_DIR, name)).catch(() => {})
+      deleted += 1
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message })
+  }
+  res.json({ ok: true, deleted })
+})
+
+/** Email the owner a short notification of a new sale. */
+app.post('/admin/notify-sale', express.json({ limit: '4kb' }), async (req, res) => {
+  if (!emailConfigured()) return res.status(503).json({ error: 'SMTP not configured' })
+  const { to, orderId, amountText, buyerEmail, itemCount } = req.body ?? {}
+  if (!to) return res.status(400).json({ error: 'no recipient' })
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  try {
+    await mailer().sendMail({
+      from: MAIL_FROM,
+      to: String(to),
+      subject: `New sale · ${orderId} · ${amountText}`,
+      text: `New order: ${orderId}\nTotal: ${amountText}\nBuyer: ${buyerEmail || '—'}\nItems: ${itemCount}\n\n${SITE_URL}/admin`,
+      html: `<div style="font-family:ui-monospace,Menlo,monospace;color:#111;font-size:14px">
+        <h2 style="color:#931020;font-weight:600;margin:0 0 12px">New sale</h2>
+        <p style="margin:2px 0"><strong>${esc(orderId)}</strong></p>
+        <p style="margin:2px 0">Total: <strong>${esc(amountText)}</strong></p>
+        <p style="margin:2px 0">Buyer: ${esc(buyerEmail) || '—'}</p>
+        <p style="margin:2px 0">Items: ${esc(itemCount)}</p>
+        <p style="margin:14px 0 0"><a href="${SITE_URL}/admin" style="color:#931020">Open admin →</a></p>
+      </div>`,
+    })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('[notify-sale]', err.message)
+    res.status(502).json({ error: err.message })
+  }
 })
 
 // ── Expiry cleanup ─────────────────────────────────────────────────────────────

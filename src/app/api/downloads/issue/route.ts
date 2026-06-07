@@ -1,13 +1,13 @@
 /**
- * Issue a download grant synchronously, right after an embedded-checkout
- * payment, and auto-unlock the buyer's browser.
+ * Issue a download grant synchronously, right after an embedded Checkout payment,
+ * and auto-unlock the buyer's browser.
  *
- * The Stripe webhook is the authoritative issuer, but it's server-to-server and
- * can lag (and never fires against localhost in dev). So the embedded flow also
- * calls this on success: we re-check the PaymentIntent with Stripe, prove the
- * caller owns it via its client secret, issue the grant (idempotent origin-side),
- * and set the proof-of-passcode cookie so they can download immediately. The
- * emailed passcode still gates the link later / on other devices.
+ * The Stripe webhook (checkout.session.completed) is the authoritative issuer,
+ * but it's server-to-server and can lag (and never fires against localhost in
+ * dev). So the embedded flow also calls this on success: we re-fetch the
+ * Checkout Session, prove the caller owns it via its client secret, confirm it's
+ * paid, issue the grant (idempotent origin-side), and set the proof-of-passcode
+ * cookie so the buyer can download immediately.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -23,53 +23,39 @@ import {
 
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 // 30 days, matches the grant TTL
 
-function chargeEmail(intent: Stripe.PaymentIntent): string | null {
-  const charge = intent.latest_charge
-  if (charge && typeof charge !== 'string') {
-    return charge.billing_details?.email ?? intent.receipt_email ?? null
-  }
-  return intent.receipt_email ?? null
-}
-
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => ({}))) as {
-    paymentIntentId?: string
-    clientSecret?: string
-  }
-  const paymentIntentId = String(body.paymentIntentId ?? '')
-  const clientSecret = String(body.clientSecret ?? '')
-  if (!paymentIntentId || !clientSecret) {
+  const body = (await req.json().catch(() => ({}))) as { sessionId?: string }
+  const sessionId = String(body.sessionId ?? '')
+  if (!sessionId) {
     return NextResponse.json({ error: 'missing params' }, { status: 400 })
   }
 
-  let intent: Stripe.PaymentIntent
+  let session: Stripe.Checkout.Session
   try {
-    intent = await stripe.paymentIntents.retrieve(paymentIntentId, {
-      expand: ['latest_charge'],
+    session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['payment_intent.latest_charge'],
     })
   } catch {
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
 
-  // Ownership proof — only the buyer's browser holds the client secret.
-  if (!intent.client_secret || intent.client_secret !== clientSecret) {
-    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-  }
-  if (intent.status !== 'succeeded') {
-    // Async method still settling — the webhook will issue once it succeeds.
-    return NextResponse.json({ orderId: intent.id, pending: true })
-  }
-
-  const items = await resolveDownloadItems((intent.metadata.skus ?? '').split(','))
-
-  // Customer-facing order code (GMP-<god>-<code>) — minted at PI creation and
-  // stored in metadata, so the grant key, the download URL and the Stripe
-  // dashboard all use it. The webhook reads the same value.
-  const orderId = intent.metadata.orderCode || ''
+  // Ownership proof: the session id (cs_…) is a long unguessable token held only
+  // in the buyer's browser (returned by confirm()). We can't compare the session
+  // client_secret — Stripe nulls it once the session completes. Issuing is
+  // idempotent (the webhook also issues), so the worst case is a no-op.
+  // Our GMP-<god>-<code> order code — minted at session creation and stored in
+  // metadata, so the grant key, the download URL and the Stripe dashboard agree.
+  const orderId = session.metadata?.orderCode || ''
   if (!orderId) {
     return NextResponse.json({ error: 'order code missing' }, { status: 422 })
   }
 
+  if (session.payment_status !== 'paid') {
+    // Async method still settling — the webhook will issue once it's paid.
+    return NextResponse.json({ orderId, pending: true })
+  }
+
+  const items = await resolveDownloadItems((session.metadata?.skus ?? '').split(','))
   if (items.length === 0) {
     return NextResponse.json({ orderId, digital: false })
   }
@@ -77,14 +63,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'origin not configured' }, { status: 503 })
   }
 
+  const pi = session.payment_intent
+  const paymentId = typeof pi === 'string' ? pi : pi?.id ?? ''
+  // Card-issuer country (second VAT location evidence) from the expanded charge.
+  const charge =
+    typeof pi !== 'string' && pi?.latest_charge && typeof pi.latest_charge !== 'string'
+      ? pi.latest_charge
+      : null
+  const cardCountry = charge?.payment_method_details?.card?.country ?? null
+
   let passcode: string | null = null
   try {
     const result = await issueGrant({
       orderId,
-      paymentId: intent.id,
-      email: chargeEmail(intent),
-      locale: intent.metadata.locale || 'en',
+      paymentId,
+      email: session.customer_details?.email ?? null,
+      locale: session.metadata?.locale || 'en',
       items,
+      livemode: session.livemode,
+      amount: session.amount_total,
+      currency: session.currency,
+      taxAmount: session.total_details?.amount_tax ?? null,
+      taxCountry: session.customer_details?.address?.country ?? null,
+      cardCountry,
     })
     passcode = result.passcode
   } catch (err) {

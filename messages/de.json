@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Shop",
-      "h1": "Kunstdrucke & Fotografie-Shop",
+      "h1": "Fine-Art-, Print- & Download-Shop",
       "description": "Kaufen Sie Kunstdrucke und digitale Downloads von Gus McEwan — eine ausgewählte Sammlung von Porträt-, Landschafts- und Reisefotografie aus Kopenhagen, London und darüber hinaus."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Lieferadresse wird beim Checkout abgefragt.",
     "payment": "Zahlung",
     "paymentDetails": "Zahlungsdetails",
+    "billingAddress": "Rechnungsadresse",
     "shippingAddress": "Lieferadresse",
     "pay": "Bezahlen",
     "processing": "Wird verarbeitet…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Auf diesem Gerät bereits freigeschaltet — sofort herunterladen. Falls Sie eine E-Mail angegeben haben, wurden der Link und der Zugangscode auch dorthin gesendet.",
     "saveAccess": "Zugang speichern",
     "saveAccessHint": "Bewahren Sie diese auf, um später oder auf einem anderen Gerät erneut herunterzuladen:",
-    "passcodeLabel": "Zugangscode"
+    "passcodeLabel": "Zugangscode",
+    "promoCode": "Gutscheincode",
+    "apply": "Anwenden",
+    "discount": "Rabatt"
   },
   "downloads": {
     "eyebrow": "Ihre Downloads",

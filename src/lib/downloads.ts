@@ -130,6 +130,15 @@ export async function issueGrant(input: {
   email: string | null
   locale: string
   items: DownloadItem[]
+  /** Payment facts captured for the admin orders table (reconciliation/tax). */
+  livemode?: boolean
+  amount?: number | null
+  currency?: string | null
+  taxAmount?: number | null
+  taxCountry?: string | null
+  /** Card-issuer country — second piece of EU VAT location evidence, to
+   *  reconcile against the IP-derived taxCountry. */
+  cardCountry?: string | null
 }): Promise<{ passcode: string | null }> {
   if (!ORIGIN) return { passcode: null }
   const res = await fetch(`${ORIGIN}/orders`, {
@@ -198,6 +207,10 @@ export interface AdminOrderItem {
   format: 'jpeg' | 'tiff'
   filename: string
   downloads: number
+  /** True once this item has been refunded (undownloaded-only refund). */
+  refunded?: boolean
+  /** Ex-VAT catalog price in minor units. */
+  price?: number | null
 }
 export interface AdminOrder {
   orderId: string
@@ -210,6 +223,25 @@ export interface AdminOrder {
   expired: boolean
   downloadUrl: string
   items: AdminOrderItem[]
+  /** Payment facts (present on orders placed after this feature shipped). */
+  livemode?: boolean | null
+  amount?: number | null
+  currency?: string | null
+  taxAmount?: number | null
+  taxCountry?: string | null
+  /** Card-issuer country — second VAT location evidence (vs taxCountry). */
+  cardCountry?: string | null
+  /** Refund state. `refunded` = fully refunded (access revoked); refundedAmount
+   *  in minor units covers partial refunds too. */
+  refunded?: boolean
+  refundedAmount?: number | null
+  refundedAt?: number | null
+  /** A partial refund that didn't go through our whole-line-item flow (e.g. an
+   *  arbitrary amount refunded in the Stripe Dashboard) — needs manual review. */
+  refundUnmatched?: boolean
+  revoked?: boolean
+  /** SKUs refunded (and access-revoked) by an undownloaded-only refund. */
+  revokedSkus?: string[]
 }
 
 /** Look up orders by order code or buyer email. */
@@ -254,6 +286,101 @@ export async function adminExtendOrder(orderId: string): Promise<boolean> {
   const res = await fetch(`${ORIGIN}/admin/orders/${encodeURIComponent(orderId)}/extend`, {
     method: 'POST',
     headers: originHeaders(),
+    cache: 'no-store',
+  })
+  return res.ok
+}
+
+/** Email the shop owner a notification of a new sale (origin sends it via SMTP). */
+export async function notifyOwnerSale(input: {
+  to: string
+  orderId: string
+  amountText: string
+  buyerEmail: string | null
+  itemCount: number
+}): Promise<boolean> {
+  if (!ORIGIN) return false
+  const res = await fetch(`${ORIGIN}/admin/notify-sale`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify(input),
+    cache: 'no-store',
+  })
+  return res.ok
+}
+
+/** Delete all test-mode orders (grants with livemode === false) from the origin
+ *  store. Returns the number removed. */
+export async function adminDeleteTestOrders(): Promise<{ deleted: number } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/orders/delete-test`, {
+    method: 'POST',
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  return (await res.json()) as { deleted: number }
+}
+
+/** Delete expired grants now. Returns the number removed. */
+export async function adminPurgeExpired(): Promise<{ deleted: number } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/orders/purge-expired`, {
+    method: 'POST',
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  return (await res.json()) as { deleted: number }
+}
+
+/** Re-render any missing watermarked previews (best-effort, runs on the origin). */
+export async function adminWarmPreviews(): Promise<boolean> {
+  if (!ORIGIN) return false
+  const res = await fetch(`${ORIGIN}/admin/cache/warm-previews`, {
+    method: 'POST',
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  return res.ok
+}
+
+/** Clear generated deliverables (they regenerate on next download). */
+export async function adminClearFulfilCache(): Promise<{ deleted: number } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/cache/clear-fulfil`, {
+    method: 'POST',
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  return (await res.json()) as { deleted: number }
+}
+
+/** Send a branded test download email (origin uses MAIL_FROM if no `to`). */
+export async function adminSendTestEmail(to?: string): Promise<{ ok: boolean; to?: string; error?: string }> {
+  if (!ORIGIN) return { ok: false, error: 'origin not configured' }
+  const res = await fetch(`${ORIGIN}/admin/email-test`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify(to ? { to } : {}),
+    cache: 'no-store',
+  })
+  const data = (await res.json().catch(() => ({}))) as { to?: string; error?: string }
+  return { ok: res.ok, to: data.to, error: data.error }
+}
+
+/** Record a refund on an order (full refund revokes download access). Called by
+ *  the Stripe webhook and the admin Refund button. Idempotent. */
+export async function markRefund(
+  orderId: string,
+  input: { amountRefunded: number; fullyRefunded: boolean; revokedSkus?: string[] },
+): Promise<boolean> {
+  if (!ORIGIN) return false
+  const res = await fetch(`${ORIGIN}/admin/orders/${encodeURIComponent(orderId)}/refund`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify(input),
     cache: 'no-store',
   })
   return res.ok

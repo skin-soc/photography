@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Sklep",
-      "h1": "Sklep z wydrukami artystycznymi i fotografią",
+      "h1": "Sklep z grafiką, drukami i plikami do pobrania",
       "description": "Kup wydruki artystyczne i pliki cyfrowe Gusa McEwana — wybrana kolekcja fotografii portretowej, krajobrazowej i podróżniczej z Kopenhagi, Londynu i nie tylko."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Adres dostawy zostanie podany przy kasie.",
     "payment": "Płatność",
     "paymentDetails": "Szczegóły płatności",
+    "billingAddress": "Adres rozliczeniowy",
     "shippingAddress": "Adres dostawy",
     "pay": "Zapłać",
     "processing": "Przetwarzanie…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Otwiera się odblokowane na tym urządzeniu — pobierz od razu. Jeśli podałeś adres e-mail, link i kod dostępu zostały również tam wysłane.",
     "saveAccess": "Zapisz swój dostęp",
     "saveAccessHint": "Zachowaj te dane, aby pobrać ponownie później lub na innym urządzeniu:",
-    "passcodeLabel": "Kod dostępu"
+    "passcodeLabel": "Kod dostępu",
+    "promoCode": "Kod promocyjny",
+    "apply": "Zastosuj",
+    "discount": "Rabat"
   },
   "downloads": {
     "eyebrow": "Twoje pobrania",

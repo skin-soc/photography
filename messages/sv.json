@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Butik",
-      "h1": "Konsttryck och fotobutik",
+      "h1": "Butik för konsttryck, print & nedladdningar",
       "description": "Köp konsttryck och digitala nedladdningar av Gus McEwan — ett urval av porträtt-, landskaps- och resefotografi från Köpenhamn, London och vidare."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Leveransadress anges vid kassan.",
     "payment": "Betalning",
     "paymentDetails": "Betalningsuppgifter",
+    "billingAddress": "Faktureringsadress",
     "shippingAddress": "Leveransadress",
     "pay": "Betala",
     "processing": "Behandlar…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Öppnas upplåst på den här enheten — ladda ner direkt. Om du angav en e-postadress skickades länken och åtkomstkoden även dit.",
     "saveAccess": "Spara din åtkomst",
     "saveAccessHint": "Spara dessa för att ladda ner igen senare eller på en annan enhet:",
-    "passcodeLabel": "Åtkomstkod"
+    "passcodeLabel": "Åtkomstkod",
+    "promoCode": "Rabattkod",
+    "apply": "Använd",
+    "discount": "Rabatt"
   },
   "downloads": {
     "eyebrow": "Dina nedladdningar",

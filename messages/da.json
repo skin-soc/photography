@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Shop",
-      "h1": "Kunsttryk & fotobutik",
+      "h1": "Kunsttryk, print & downloads",
       "description": "Køb kunsttryk og digitale downloads af Gus McEwan — en udvalgt samling af portræt-, landskabs- og rejsefotografi fra København, London og videre omkring."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Leveringsadresse opgives ved betaling.",
     "payment": "Betaling",
     "paymentDetails": "Betalingsoplysninger",
+    "billingAddress": "Faktureringsadresse",
     "shippingAddress": "Leveringsadresse",
     "pay": "Betal",
     "processing": "Behandler…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Åbner låst op på denne enhed — download med det samme. Hvis du indtastede en e-mail, blev linket og adgangskoden også sendt dertil.",
     "saveAccess": "Gem din adgang",
     "saveAccessHint": "Gem disse for at downloade igen senere eller på en anden enhed:",
-    "passcodeLabel": "Adgangskode"
+    "passcodeLabel": "Adgangskode",
+    "promoCode": "Rabatkode",
+    "apply": "Anvend",
+    "discount": "Rabat"
   },
   "downloads": {
     "eyebrow": "Dine downloads",

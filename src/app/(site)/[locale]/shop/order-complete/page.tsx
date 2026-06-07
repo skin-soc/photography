@@ -2,16 +2,10 @@ import type Stripe from 'stripe'
 import { Link } from '@/i18n/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { stripe } from '@/lib/stripe-server'
+import { resolveDownloadItems } from '@/lib/downloads'
 
 type Params = Promise<{ locale: string }>
 type SearchParams = Promise<{ session_id?: string }>
-
-interface DownloadItem {
-  token: string
-  format: 'jpeg' | 'tiff'
-  label: string
-  slug: string
-}
 
 export default async function OrderComplete({
   params,
@@ -34,23 +28,15 @@ export default async function OrderComplete({
   }
 
   const paid = session?.payment_status === 'paid'
-  const downloadItems: DownloadItem[] = (() => {
-    try {
-      return paid && session?.metadata?.downloadItems
-        ? (JSON.parse(session.metadata.downloadItems) as DownloadItem[])
-        : []
-    } catch {
-      return []
-    }
-  })()
+  // Digital items rebuilt from the session's skus (the webhook issues the grant).
+  const downloadItems = paid
+    ? await resolveDownloadItems((session?.metadata?.skus ?? '').split(','))
+    : []
   const hasPhysical = paid && session?.metadata?.hasPhysical === 'true'
 
-  // The download grant is keyed by the PaymentIntent id (the webhook uses the
-  // same id), so the downloads page lives at /shop/downloads/<paymentIntentId>.
-  const orderId =
-    typeof session?.payment_intent === 'string'
-      ? session.payment_intent
-      : session?.payment_intent?.id ?? null
+  // Everything is keyed by our GMP order code, stored in session metadata, so the
+  // downloads page lives at /shop/downloads/<orderCode>.
+  const orderId = paid ? (session?.metadata?.orderCode ?? null) : null
 
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">

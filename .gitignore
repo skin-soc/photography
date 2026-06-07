@@ -198,3 +198,6 @@ dist
 .open-next/
 next-env.d.ts
 .tmp_grep.txt
+
+### Local deploy temp (TMPDIR for wrangler/opennext builds + scratch scripts) ###
+.localtmp/

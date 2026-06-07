@@ -280,7 +280,7 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 8000)
     const res = await fetch(`${ORIGIN}/catalog.json`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 300, tags: ['catalog'] },
       headers: { 'x-shop-secret': ORIGIN_SECRET },
       signal: controller.signal,
     }).finally(() => clearTimeout(timer))

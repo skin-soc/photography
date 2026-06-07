@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Shop",
-      "h1": "Kunstprints & fotografieshop",
+      "h1": "Shop voor kunstprints, prints & downloads",
       "description": "Koop kunstprints en digitale downloads van Gus McEwan — een geselecteerde collectie portret-, landschaps- en reisfotografie uit Kopenhagen, Londen en daarbuiten."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Bezorgadres wordt opgegeven bij het afrekenen.",
     "payment": "Betaling",
     "paymentDetails": "Betalingsgegevens",
+    "billingAddress": "Factuuradres",
     "shippingAddress": "Bezorgadres",
     "pay": "Betalen",
     "processing": "Verwerken…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Op dit apparaat al ontgrendeld — meteen downloaden. Als je een e-mailadres hebt opgegeven, zijn de link en de toegangscode daar ook naartoe gestuurd.",
     "saveAccess": "Bewaar je toegang",
     "saveAccessHint": "Bewaar deze om later of op een ander apparaat opnieuw te downloaden:",
-    "passcodeLabel": "Toegangscode"
+    "passcodeLabel": "Toegangscode",
+    "promoCode": "Kortingscode",
+    "apply": "Toepassen",
+    "discount": "Korting"
   },
   "downloads": {
     "eyebrow": "Je downloads",

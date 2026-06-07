@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "상점",
-      "h1": "파인 아트 프린트 & 사진 상점",
+      "h1": "파인아트, 프린트 & 다운로드 샵",
       "description": "Gus McEwan의 파인 아트 프린트와 디지털 다운로드를 구매하세요 — 코펜하겐, 런던 등에서 촬영한 인물, 풍경, 여행 사진의 엄선된 컬렉션입니다."
     }
   },
@@ -119,7 +119,7 @@
     "openWithCount": "장바구니 열기（{count}개 상품）",
     "close": "장바구니 닫기",
     "empty": "장바구니가 비어 있습니다.",
-    "remove": "삭제",
+    "remove": "제거",
     "total": "합계",
     "checkout": "결제",
     "preparing": "준비 중…",
@@ -127,6 +127,7 @@
     "shipping": "배송 주소는 결제 시 수집됩니다.",
     "payment": "결제",
     "paymentDetails": "결제 정보",
+    "billingAddress": "청구 주소",
     "shippingAddress": "배송 주소",
     "pay": "결제하기",
     "processing": "처리 중…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "이 기기에서는 잠금 해제된 상태로 열립니다 — 바로 다운로드하세요. 이메일을 입력하셨다면 링크와 접근 코드도 해당 이메일로 전송되었습니다.",
     "saveAccess": "접근 정보 저장",
     "saveAccessHint": "나중에 또는 다른 기기에서 다시 다운로드하려면 다음을 저장하세요:",
-    "passcodeLabel": "접근 코드"
+    "passcodeLabel": "접근 코드",
+    "promoCode": "프로모 코드",
+    "apply": "적용",
+    "discount": "할인"
   },
   "downloads": {
     "eyebrow": "내 다운로드",

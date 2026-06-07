@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { OrderMetaItem } from '@/lib/downloads'
 
@@ -27,10 +28,28 @@ export default function DownloadsClient({
   initiallyUnlocked: boolean
 }) {
   const t = useTranslations('downloads')
+  const router = useRouter()
   const [unlocked, setUnlocked] = useState(initiallyUnlocked)
   const [passcode, setPasscode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Files are generated in the background right after purchase, so the larger
+  // ones may not have a size yet on first load. Poll the server (re-runs the
+  // page's getOrderMeta) every few seconds until every file reports a size,
+  // so it fills in on its own — no manual refresh needed. Capped so we don't
+  // poll forever if generation genuinely fails.
+  const awaitingSizes = unlocked && items.some((i) => !i.bytes)
+  useEffect(() => {
+    if (!awaitingSizes) return
+    let ticks = 0
+    const id = setInterval(() => {
+      ticks += 1
+      router.refresh()
+      if (ticks >= 15) clearInterval(id) // ~15 × 4s = 1 min ceiling
+    }, 4000)
+    return () => clearInterval(id)
+  }, [awaitingSizes, router])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -101,13 +120,15 @@ export default function DownloadsClient({
           className="flex items-center justify-between gap-4 rounded-[16px] border border-white/10 bg-white/[0.04] px-6 py-5"
         >
           <div className="min-w-0">
-            <p className="font-mono-ibm text-[18px] font-[200] tracking-wide text-[#931020] truncate">
+            <p className="font-mono-ibm text-[18px] font-[400] tracking-wide text-[#931020] truncate">
               {item.filename}
             </p>
             <p className="mt-1 text-[11px] font-light tracking-wide text-white/30">
               {item.label} — {item.format === 'tiff' ? '16-bit TIFF' : 'JPEG'}
               {item.dimensions ? ` · ${item.dimensions.w} × ${item.dimensions.h} px` : ''}
-              {item.bytes ? ` · ${formatBytes(item.bytes)}` : ''}
+              {item.bytes ? ` · ${formatBytes(item.bytes)}` : (
+                <span className="italic text-white/20"> · preparing…</span>
+              )}
             </p>
           </div>
           <a

@@ -78,17 +78,20 @@ export default async function Shop({
 
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
-      <header className="mb-12 max-w-2xl">
-        <h1 className="text-4xl md:text-5xl font-light">
-          {t('h1')}
-        </h1>
-        <p className="mt-4 text-white/60 leading-relaxed">{tShop('intro')}</p>
-      </header>
-
       {photos.length > 0 ? (
-        <ShopGrid photos={photos} categoryTree={categoryTree} availableTypes={types} initialCategoryPath={initialCategoryPath} />
+        <ShopGrid
+          photos={photos}
+          categoryTree={categoryTree}
+          availableTypes={types}
+          initialCategoryPath={initialCategoryPath}
+          heading={t('h1')}
+          intro={tShop('intro')}
+        />
       ) : (
-        <p className="text-white/40">{tShop('checkoutSoon')}</p>
+        <header className="max-w-2xl">
+          <h1 className="text-4xl md:text-5xl font-light">{t('h1')}</h1>
+          <p className="mt-4 text-white/60 leading-relaxed">{tShop('checkoutSoon')}</p>
+        </header>
       )}
     </main>
   )

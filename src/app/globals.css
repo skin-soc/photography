@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  /* Cormorant Garamond retired — `font-serif` now renders IBM Plex Mono so the
+     whole site uses one typeface family. */
+  --font-serif: var(--font-mono-ibm);
   --font-mono-ibm: 'IBM Plex Mono', ui-monospace, monospace;
   --font-mono-space: 'Space Mono', ui-monospace, monospace;
 }

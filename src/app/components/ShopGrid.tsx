@@ -225,11 +225,17 @@ export default function ShopGrid({
   categoryTree,
   availableTypes,
   initialCategoryPath = [],
+  heading,
+  intro,
 }: {
   photos: GridPhoto[]
   categoryTree: CategoryNode[]
   availableTypes: ProductType[]
   initialCategoryPath?: string[]
+  /** Default page heading, shown until a top-level collection is selected. */
+  heading: string
+  /** Shop intro paragraph, shown only on the landing (no collection selected). */
+  intro: string
 }) {
   const t = useTranslations('shop')
   // Only show filters for types the catalog actually offers, in canonical order.
@@ -308,6 +314,17 @@ export default function ShopGrid({
 
   return (
     <>
+      {/* Heading — defaults to the shop title, then becomes the top-level
+          collection name once the buyer drills in (and stays at that top tier). */}
+      <header className="mb-12">
+        <h1 className="text-4xl md:text-5xl font-light">
+          {categoryPath.length > 0 ? categoryPath[0] : heading}
+        </h1>
+        {categoryPath.length === 0 && (
+          <p className="mt-4 max-w-2xl text-white/60 leading-relaxed">{intro}</p>
+        )}
+      </header>
+
       {/* Product type filter — only when the catalog offers more than one type */}
       {typeFilters.length > 1 && (
       <div className="flex flex-wrap gap-x-7 gap-y-2 mb-10">

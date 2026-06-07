@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Boutique",
-      "h1": "Boutique de tirages d'art et de photographie",
+      "h1": "Boutique tirages d’art, impressions & téléchargements",
       "description": "Achetez des tirages d'art et des téléchargements numériques de Gus McEwan — une sélection de photographies de portrait, de paysage et de voyage de Copenhague, Londres et au-delà."
     }
   },
@@ -119,7 +119,7 @@
     "openWithCount": "Ouvrir le panier ({count} {count, plural, one {article} other {articles}})",
     "close": "Fermer le panier",
     "empty": "Votre panier est vide.",
-    "remove": "Supprimer",
+    "remove": "Retirer",
     "total": "Total",
     "checkout": "Commander",
     "preparing": "Préparation…",
@@ -127,6 +127,7 @@
     "shipping": "Adresse de livraison collectée lors du paiement.",
     "payment": "Paiement",
     "paymentDetails": "Détails du paiement",
+    "billingAddress": "Adresse de facturation",
     "shippingAddress": "Adresse de livraison",
     "pay": "Payer",
     "processing": "Traitement…",
@@ -150,7 +151,10 @@
     "downloadsUnlockedHint": "Déjà déverrouillé sur cet appareil — téléchargez immédiatement. Si vous avez saisi une adresse e-mail, le lien et le code d'accès y ont également été envoyés.",
     "saveAccess": "Enregistrez votre accès",
     "saveAccessHint": "Conservez ces informations pour télécharger à nouveau plus tard ou sur un autre appareil :",
-    "passcodeLabel": "Code d'accès"
+    "passcodeLabel": "Code d'accès",
+    "promoCode": "Code promo",
+    "apply": "Appliquer",
+    "discount": "Remise"
   },
   "downloads": {
     "eyebrow": "Vos téléchargements",

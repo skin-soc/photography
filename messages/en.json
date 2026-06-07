@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "Shop",
-      "h1": "Fine Art Prints & Photography Shop",
+      "h1": "Fine Art, Prints & Downloads Shop",
       "description": "Buy fine art prints and digital downloads by Gus McEwan — a selected collection of portrait, landscape and travel photography from Copenhagen, London and beyond."
     }
   },
@@ -127,6 +127,7 @@
     "shipping": "Shipping address collected at checkout.",
     "payment": "Payment",
     "paymentDetails": "Payment details",
+    "billingAddress": "Billing address",
     "shippingAddress": "Shipping address",
     "pay": "Pay",
     "processing": "Processing…",
@@ -150,7 +151,10 @@
     "billingCountry": "Billing country",
     "vatNote": "+ VAT calculated at checkout",
     "subtotal": "Subtotal",
-    "vat": "VAT"
+    "vat": "VAT",
+    "promoCode": "Promo code",
+    "apply": "Apply",
+    "discount": "Discount"
   },
   "downloads": {
     "eyebrow": "Your downloads",
