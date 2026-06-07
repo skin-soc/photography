@@ -1321,7 +1321,7 @@ function PeriodBlock({
   const exportCsv = () => {
     // Gross/Tax/Net are net of refunds (matching the on-screen totals); the
     // Charged + Refunded columns preserve the original figures for audit.
-    const head = ['Date', 'Order code', 'Email', 'Mode', 'VAT region', 'Currency', 'Charged', 'Refunded', 'Gross', 'Tax', 'Net', 'Tax country (IP)', 'Card country', 'Location match', 'Reverse charge', 'VAT ID', 'Business']
+    const head = ['Date', 'Order code', 'Email', 'Mode', 'VAT region', 'Currency', 'Charged', 'Refunded', 'Gross', 'Tax', 'Net', 'Tax country (IP)', 'Card country', 'Location match', 'Reverse charge', 'VAT ID', 'Business', 'VIES consultation']
     const rows = orders.map((o) => {
       const eff = effectiveAmounts(o)
       return [
@@ -1342,6 +1342,7 @@ function PeriodBlock({
         o.reverseCharge ? 'yes' : '',
         o.vatId ?? '',
         o.businessName ?? '',
+        o.vatConsultation ?? '',
       ]
     })
     const csv = [head, ...rows]

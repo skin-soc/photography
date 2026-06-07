@@ -144,6 +144,8 @@ export async function issueGrant(input: {
   vatId?: string | null
   businessName?: string | null
   reverseCharge?: boolean
+  /** VIES consultation number — audit proof of the VAT check. */
+  vatConsultation?: string | null
 }): Promise<{ passcode: string | null }> {
   if (!ORIGIN) return { passcode: null }
   const res = await fetch(`${ORIGIN}/orders`, {
@@ -236,10 +238,12 @@ export interface AdminOrder {
   taxCountry?: string | null
   /** Card-issuer country — second VAT location evidence (vs taxCountry). */
   cardCountry?: string | null
-  /** B2B fields — validated VAT id, business name, reverse-charge (0%) flag. */
+  /** B2B fields — validated VAT id, business name, reverse-charge (0%) flag,
+   *  and the VIES consultation number (audit proof of the check). */
   vatId?: string | null
   businessName?: string | null
   reverseCharge?: boolean
+  vatConsultation?: string | null
   /** Refund state. `refunded` = fully refunded (access revoked); refundedAmount
    *  in minor units covers partial refunds too. */
   refunded?: boolean

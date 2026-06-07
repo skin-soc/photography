@@ -97,11 +97,11 @@ export async function POST(req: Request) {
     // client's "valid" claim, or a buyer could fake a VAT id to dodge VAT (our
     // tax liability). Only a confirmed-valid id grants business treatment; if
     // VIES says invalid OR is unavailable, we fall back to consumer VAT.
-    let business: (BusinessVat & { vatId: string; name: string | null }) | null = null
+    let business: (BusinessVat & { vatId: string; name: string | null; consultation: string | null }) | null = null
     if (body.business?.vatId) {
       const v = await verifyVatNumber(body.business.vatId)
       if (v.status === 'valid') {
-        business = { vatCountry: v.countryCode, vatId: v.fullId, name: v.name ?? null }
+        business = { vatCountry: v.countryCode, vatId: v.fullId, name: v.name ?? null, consultation: v.consultationNumber ?? null }
       } else {
         console.warn('[checkout-session] VAT id not validated server-side:', v.status, v.fullId)
       }
@@ -130,6 +130,7 @@ export async function POST(req: Request) {
       metadata.vatId = business.vatId
       if (business.name) metadata.businessName = business.name.slice(0, 200)
       metadata.vatCountry = business.vatCountry
+      if (business.consultation) metadata.vatConsultation = business.consultation
     }
     metadata.reverseCharge = String(outcome.reverseCharge)
 

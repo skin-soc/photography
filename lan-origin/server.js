@@ -887,7 +887,7 @@ async function pregenerateGrant(grant) {
 app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
   const { orderId, paymentId, email, locale, items,
           livemode, amount, currency, taxAmount, taxCountry, cardCountry,
-          vatId, businessName, reverseCharge } = req.body ?? {}
+          vatId, businessName, reverseCharge, vatConsultation } = req.body ?? {}
   if (!orderId || !orderPath(orderId) || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'invalid order' })
   }
@@ -914,6 +914,7 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
       vatId: vatId ? String(vatId) : null,
       businessName: businessName ? String(businessName) : null,
       reverseCharge: reverseCharge === true,
+      vatConsultation: vatConsultation ? String(vatConsultation) : null,
       createdAt: now,
       expiresAt: now + LINK_TTL_MS,
       emailed: false,
@@ -1086,6 +1087,7 @@ function adminOrderView(grant, priceBySku) {
     vatId: grant.vatId ?? null,
     businessName: grant.businessName ?? null,
     reverseCharge: grant.reverseCharge ?? false,
+    vatConsultation: grant.vatConsultation ?? null,
     refunded: grant.refunded ?? false,
     refundedAmount: grant.refundedAmount ?? null,
     refundedAt: grant.refundedAt ?? null,

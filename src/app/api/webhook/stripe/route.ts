@@ -42,6 +42,7 @@ async function fulfilSession(sessionId: string): Promise<void> {
     vatId: session.metadata?.vatId ?? null,
     businessName: session.metadata?.businessName ?? null,
     reverseCharge: session.metadata?.reverseCharge === 'true',
+    vatConsultation: session.metadata?.vatConsultation ?? null,
   })
   console.log('[stripe] download grant issued for', orderCode)
 }

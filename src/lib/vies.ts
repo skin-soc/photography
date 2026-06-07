@@ -11,8 +11,14 @@
  *   - unavailable → VIES (or the member state) was down → we CANNOT grant the
  *                   reverse charge on an unverified number; ask them to retry
  *
+ * We send our own VAT id as the VIES *requester*, so a successful check returns
+ * an official **consultation number** (`requestIdentifier`) — legal proof that
+ * we validated the customer's VAT on that date, which we store on the order.
+ *
  * SERVER-SIDE ONLY (called from /api/vat/verify and the checkout route).
  */
+
+import { SELLER } from './seller'
 
 // VIES VAT-prefix namespace. Note it differs from ISO 3166: Greece is **EL**
 // (not GR), and **XI** is Northern Ireland. These are the codes VIES accepts.
@@ -35,6 +41,8 @@ export interface ViesResult {
   /** Registered name/address — only on `valid`. */
   name?: string | null
   address?: string | null
+  /** VIES consultation number (proof of the check) — only on `valid`. */
+  consultationNumber?: string | null
 }
 
 /** Split a user-entered VAT id into prefix + number, uppercased, punctuation
@@ -64,11 +72,19 @@ export async function verifyVatNumber(raw: string): Promise<ViesResult> {
     return { status: 'malformed', countryCode, vatNumber: number, fullId }
   }
 
-  const url = `https://ec.europa.eu/taxation_customs/vies/rest-api/ms/${countryCode}/vat/${number}`
+  // POST check-vat-number with our VAT id as requester → response includes a
+  // `requestIdentifier` (consultation number) we keep as proof of the check.
   let data: Record<string, unknown>
   try {
-    const res = await fetch(url, {
-      headers: { accept: 'application/json' },
+    const res = await fetch('https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        countryCode,
+        vatNumber: number,
+        requesterMemberStateCode: SELLER.vatCountry,
+        requesterNumber: SELLER.vatNumber,
+      }),
       cache: 'no-store',
       signal: AbortSignal.timeout(10_000),
     })
@@ -78,16 +94,26 @@ export async function verifyVatNumber(raw: string): Promise<ViesResult> {
     return { status: 'unavailable', countryCode, vatNumber: number, fullId }
   }
 
+  // This endpoint uses `valid` (the GET endpoint used `isValid`) — accept both.
+  const isValid = data.valid === true || data.isValid === true
   const err = String(data.userError ?? '').toUpperCase()
-  if (data.isValid === true) {
-    return { status: 'valid', countryCode, vatNumber: number, fullId, name: clean(data.name), address: clean(data.address) }
-  }
-  if (err === 'INVALID') {
-    return { status: 'invalid', countryCode, vatNumber: number, fullId }
+  if (isValid) {
+    return {
+      status: 'valid',
+      countryCode, vatNumber: number, fullId,
+      name: clean(data.name),
+      address: clean(data.address),
+      consultationNumber: clean(data.requestIdentifier),
+    }
   }
   if (err === 'INVALID_INPUT') {
     return { status: 'malformed', countryCode, vatNumber: number, fullId }
   }
-  // MS_UNAVAILABLE, TIMEOUT, SERVICE_UNAVAILABLE, GLOBAL_MAX_CONCURRENT_REQ, …
-  return { status: 'unavailable', countryCode, vatNumber: number, fullId }
+  // The POST endpoint only flags service errors via `userError`; when it's a
+  // recognised outage we say "unavailable" (so we never grant the reverse charge
+  // on an unverified number). Everything else is a genuine "invalid".
+  if (err && err !== 'VALID' && err !== 'INVALID') {
+    return { status: 'unavailable', countryCode, vatNumber: number, fullId }
+  }
+  return { status: 'invalid', countryCode, vatNumber: number, fullId }
 }
