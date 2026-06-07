@@ -441,32 +441,36 @@ function CacheControls() {
     } catch { setNote('Failed.') } finally { setBusy(null) }
   }
 
-  const btn = 'rounded-md border border-white/15 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40'
+  const btn = 'w-44 shrink-0 h-10 rounded-md border border-white/15 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40'
+
+  const actions: { action: string; label: string; busyLabel: string; desc: string; confirm?: string }[] = [
+    { action: 'refresh-catalog', label: 'Refresh catalog', busyLabel: 'Refreshing…',
+      desc: 'Busts the 5-minute cache so a fresh Lightroom export shows at once.' },
+    { action: 'warm-previews', label: 'Warm previews', busyLabel: 'Warming…',
+      desc: 'Re-renders any missing watermarked previews.' },
+    { action: 'clear-fulfil', label: 'Clear deliverables', busyLabel: 'Clearing…',
+      desc: 'Frees disk — files regenerate on the next download.',
+      confirm: 'Clear all generated deliverables? They regenerate on next download.' },
+  ]
 
   return (
     <section className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] p-6">
       <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">Cache</h2>
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button onClick={() => run('refresh-catalog', 'Catalog refresh')} disabled={busy !== null} className={btn}>
-          {busy === 'refresh-catalog' ? 'Refreshing…' : 'Refresh catalog'}
-        </button>
-        <button onClick={() => run('warm-previews', 'Preview warm-up')} disabled={busy !== null} className={btn}>
-          {busy === 'warm-previews' ? 'Warming…' : 'Warm previews'}
-        </button>
-        <button
-          onClick={() => run('clear-fulfil', 'Deliverables cleared', 'Clear all generated deliverables? They regenerate on next download.')}
-          disabled={busy !== null}
-          className={btn}
-        >
-          {busy === 'clear-fulfil' ? 'Clearing…' : 'Clear deliverables'}
-        </button>
-        {note && <span className="text-[12px] text-white/55">{note}</span>}
+      <div className="mt-5 space-y-3">
+        {actions.map((a) => (
+          <div key={a.action} className="flex items-center gap-4">
+            <button
+              onClick={() => run(a.action, a.label, a.confirm)}
+              disabled={busy !== null}
+              className={btn}
+            >
+              {busy === a.action ? a.busyLabel : a.label}
+            </button>
+            <p className="text-[12px] font-light text-white/40 leading-relaxed">{a.desc}</p>
+          </div>
+        ))}
       </div>
-      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed">
-        Refresh catalog busts the 5-minute cache so a fresh Lightroom export shows at once. Warm
-        previews re-renders any missing watermarked previews. Clear deliverables frees disk — files
-        regenerate on the next download.
-      </p>
+      {note && <p className="mt-4 text-[12px] text-white/55">{note}</p>}
     </section>
   )
 }
