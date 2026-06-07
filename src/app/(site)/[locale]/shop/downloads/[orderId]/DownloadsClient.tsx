@@ -140,6 +140,18 @@ export default function DownloadsClient({
           </a>
         </div>
       ))}
+
+      {/* VAT invoice (PDF) — always available for this order. */}
+      <div className="pt-2">
+        <a
+          href={`/api/downloads/${orderId}/invoice`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35 hover:text-white transition-colors"
+        >
+          Invoice (PDF) ↗
+        </a>
+      </div>
     </div>
   )
 }

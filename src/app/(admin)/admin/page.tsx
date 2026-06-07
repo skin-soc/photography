@@ -1909,6 +1909,7 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         <Row label="Email" value={order.email ?? '—'} mono />
         <Row label="Passcode" value={order.passcode} mono accent />
         <Row label="Emailed" value={order.emailed ? 'yes' : 'no'} />
+        {order.invoiceNumber && <Row label="Invoice no." value={order.invoiceNumber} mono />}
         {order.refundedAmount != null && (
           <Row
             label="Refunded"
@@ -1934,6 +1935,15 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
       </ul>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
+        {/* Invoice is always available — a permanent record, even after refund. */}
+        <a
+          href={`/api/admin/invoice/${order.orderId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-md border border-white/15 px-4 py-2 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors"
+        >
+          Invoice ↗
+        </a>
         {/* Re-send / Extend make no sense once an order is fully refunded
             (access is revoked). They stay available on a partial refund — the
             re-sent email then only lists the items the buyer still has. */}

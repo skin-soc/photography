@@ -161,6 +161,20 @@ export async function issueGrant(input: {
   return { passcode: data.passcode ?? null }
 }
 
+/** Fetch the order's invoice PDF from the origin (regenerated from the grant).
+ *  Returns the bytes + filename, or null if unavailable. */
+export async function fetchInvoicePdf(orderId: string): Promise<{ bytes: ArrayBuffer; filename: string } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/orders/${encodeURIComponent(orderId)}/invoice`, {
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  const cd = res.headers.get('content-disposition') ?? ''
+  const m = /filename="([^"]+)"/.exec(cd)
+  return { bytes: await res.arrayBuffer(), filename: m?.[1] ?? `invoice-${orderId}.pdf` }
+}
+
 /** Fetch non-secret order metadata for the download page. */
 export async function getOrderMeta(orderId: string): Promise<OrderMeta | null> {
   if (!ORIGIN) return null
@@ -244,6 +258,9 @@ export interface AdminOrder {
   businessName?: string | null
   reverseCharge?: boolean
   vatConsultation?: string | null
+  /** Sequential invoice number (live orders) + issue date (ms). */
+  invoiceNumber?: string | null
+  invoiceDate?: number | null
   /** Refund state. `refunded` = fully refunded (access revoked); refundedAmount
    *  in minor units covers partial refunds too. */
   refunded?: boolean

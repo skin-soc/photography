@@ -37,6 +37,7 @@ import express from 'express'
 import sharp from 'sharp'
 import nodemailer from 'nodemailer'
 import { renderDownloadEmail } from './email.js'
+import { buildInvoicePdf } from './invoice.js'
 import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
@@ -745,6 +746,29 @@ function customerFilename(item) {
   return `${item.token}.${item.format === 'tiff' ? 'tiff' : 'jpg'}`
 }
 
+// ── Invoice numbering ─────────────────────────────────────────────────────────
+// A single continuous, gap-free sequence (a legal requirement). Only LIVE orders
+// consume a number — test orders get a clearly-marked non-invoice. The counter
+// is a tiny JSON file; this is a single-process server so read-bump-write is safe.
+const INVOICE_COUNTER_PATH = join(ORDERS_DIR, '_invoice-counter.json')
+
+async function nextInvoiceNumber(year) {
+  let n = 0
+  try { n = JSON.parse(await readFile(INVOICE_COUNTER_PATH, 'utf8')).seq || 0 } catch { /* first run */ }
+  n += 1
+  await writeFile(INVOICE_COUNTER_PATH, JSON.stringify({ seq: n }), 'utf8')
+  return `${year}-${String(n).padStart(4, '0')}`
+}
+
+/** Build the invoice PDF + filename for a grant (regenerated on demand from the
+ *  stored grant — deterministic). */
+async function invoiceForGrant(grant) {
+  const priceBySku = await catalogPriceMap()
+  const buffer = await buildInvoicePdf(grant, priceBySku)
+  const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
+  return { buffer, filename: `invoice-${safe}.pdf` }
+}
+
 // ── Email ────────────────────────────────────────────────────────────────────
 
 // Order ids whose download email is being sent right now — guards against the
@@ -826,7 +850,7 @@ function formatExpiry(expiresAt, locale) {
   }
 }
 
-async function sendDownloadEmail({ email, orderId, passcode, items, locale, expiresAt }) {
+async function sendDownloadEmail({ email, orderId, passcode, items, locale, expiresAt, invoice }) {
   if (!email) throw new Error('no recipient email')
   if (!emailConfigured()) throw new Error('SMTP not configured')
 
@@ -854,6 +878,7 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
     html,
     attachments: [
       { filename: 'logo.png', content: logo.content, cid: LOGO_CID, contentDisposition: 'inline' },
+      ...(invoice ? [{ filename: invoice.filename, content: invoice.buffer, contentType: 'application/pdf' }] : []),
     ],
   })
 }
@@ -920,6 +945,12 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
       emailed: false,
       counts: {},
     }
+    // Live orders get a sequential, gap-free invoice number; test orders don't
+    // consume one (they're rendered as clearly-marked non-invoices).
+    if (fresh.livemode === true) {
+      fresh.invoiceNumber = await nextInvoiceNumber(new Date(now).getUTCFullYear())
+      fresh.invoiceDate = now
+    }
     try {
       // Atomic create (flag 'wx' fails if it already exists) so two near-
       // simultaneous callers — the post-payment issue route and the Stripe
@@ -945,6 +976,7 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
         items: grant.items,
         locale: locale || 'en',
         expiresAt: grant.expiresAt,
+        invoice: await invoiceForGrant(grant).catch((e) => { console.error('[invoice] build failed:', e.message); return null }),
       })
       grant.emailed = true
       if (email && !grant.email) grant.email = String(email) // keep admin display accurate
@@ -994,6 +1026,22 @@ app.get('/orders/:orderId/meta', async (req, res) => {
     }
   }))
   res.json({ orderId: grant.orderId, expiresAt: grant.expiresAt, items })
+})
+
+/** Serve the order's VAT invoice PDF (regenerated from the grant). Available
+ *  regardless of download-link expiry — an invoice is a permanent record. */
+app.get('/orders/:orderId/invoice', async (req, res) => {
+  const grant = await readGrant(req.params.orderId)
+  if (!grant) return res.status(404).json({ error: 'not found' })
+  try {
+    const { buffer, filename } = await invoiceForGrant(grant)
+    res.setHeader('content-type', 'application/pdf')
+    res.setHeader('content-disposition', `inline; filename="${filename}"`)
+    res.send(buffer)
+  } catch (err) {
+    console.error('[invoice]', err.message)
+    res.status(500).json({ error: 'invoice generation failed' })
+  }
 })
 
 /** Verify the buyer's passcode. */
@@ -1088,6 +1136,8 @@ function adminOrderView(grant, priceBySku) {
     businessName: grant.businessName ?? null,
     reverseCharge: grant.reverseCharge ?? false,
     vatConsultation: grant.vatConsultation ?? null,
+    invoiceNumber: grant.invoiceNumber ?? null,
+    invoiceDate: grant.invoiceDate ?? null,
     refunded: grant.refunded ?? false,
     refundedAmount: grant.refundedAmount ?? null,
     refundedAt: grant.refundedAt ?? null,
@@ -1172,6 +1222,7 @@ app.post('/admin/orders/:orderId/resend', express.json({ limit: '4kb' }), async 
     await sendDownloadEmail({
       email: to, orderId: grant.orderId, passcode: grant.passcode,
       items: liveItems, locale: 'en', expiresAt: grant.expiresAt,
+      invoice: await invoiceForGrant(grant).catch(() => null),
     })
     grant.emailed = true
     if (req.body && req.body.email) grant.email = to
