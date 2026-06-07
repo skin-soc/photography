@@ -657,6 +657,7 @@ function SettingsTab() {
   const [note, setNote] = useState<string | null>(null)
 
   const [busyCoupons, setBusyCoupons] = useState(false)
+  const [noteCoupons, setNoteCoupons] = useState<string | null>(null)
 
   async function deleteTestOrders() {
     if (!window.confirm(
@@ -682,15 +683,15 @@ function SettingsTab() {
       'Delete ALL test-mode coupons and deactivate their promotion codes? This only affects test mode and cannot be undone.'
     )) return
     setBusyCoupons(true)
-    setNote(null)
+    setNoteCoupons(null)
     try {
       const res = await fetch('/api/admin/delete-test-coupons', { method: 'POST' })
       const data = (await res.json().catch(() => ({}))) as { deleted?: number; deactivated?: number; error?: string }
-      setNote(res.ok
+      setNoteCoupons(res.ok
         ? `Deleted ${data.deleted ?? 0} coupon${data.deleted === 1 ? '' : 's'}${data.deactivated ? `, deactivated ${data.deactivated} code${data.deactivated === 1 ? '' : 's'}` : ''}.`
         : (data.error || 'Failed.'))
     } catch {
-      setNote('Failed.')
+      setNoteCoupons('Failed.')
     } finally {
       setBusyCoupons(false)
     }
@@ -720,13 +721,16 @@ function SettingsTab() {
               Dashboard if needed.)
             </p>
           </div>
-          <button
-            onClick={deleteTestOrders}
-            disabled={busy || busyCoupons}
-            className="shrink-0 rounded-md border border-[#931020]/60 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#931020] hover:bg-[#931020] hover:text-white transition-colors disabled:opacity-40"
-          >
-            {busy ? 'Deleting…' : 'Delete test orders'}
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            {note && <span className="text-[12px] text-white/60">{note}</span>}
+            <button
+              onClick={deleteTestOrders}
+              disabled={busy || busyCoupons}
+              className="rounded-md border border-[#931020]/60 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#931020] hover:bg-[#931020] hover:text-white transition-colors disabled:opacity-40"
+            >
+              {busy ? 'Deleting…' : 'Delete test orders'}
+            </button>
+          </div>
         </div>
 
         <div className="mt-6 border-t border-[#931020]/20 pt-6 flex flex-wrap items-center justify-between gap-4">
@@ -738,16 +742,17 @@ function SettingsTab() {
               never affected.
             </p>
           </div>
-          <button
-            onClick={deleteTestCoupons}
-            disabled={busy || busyCoupons}
-            className="shrink-0 rounded-md border border-[#931020]/60 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#931020] hover:bg-[#931020] hover:text-white transition-colors disabled:opacity-40"
-          >
-            {busyCoupons ? 'Deleting…' : 'Delete test coupons'}
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            {noteCoupons && <span className="text-[12px] text-white/60">{noteCoupons}</span>}
+            <button
+              onClick={deleteTestCoupons}
+              disabled={busy || busyCoupons}
+              className="rounded-md border border-[#931020]/60 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#931020] hover:bg-[#931020] hover:text-white transition-colors disabled:opacity-40"
+            >
+              {busyCoupons ? 'Deleting…' : 'Delete test coupons'}
+            </button>
+          </div>
         </div>
-
-        {note && <p className="mt-4 text-[12px] text-white/60">{note}</p>}
       </section>
     </>
   )
