@@ -297,6 +297,36 @@ function CouponsTab() {
 // ── Settings tab ────────────────────────────────────────────────────────────
 
 /** Email-me-on-every-real-sale toggle + recipient address. */
+/** Square check control matching the shop's selection markers (square box +
+ *  square inner marker) — no native tick boxes anywhere in the admin. */
+function CheckBox({ checked, onChange, disabled, label, className = '' }: {
+  checked: boolean
+  onChange: (next: boolean) => void
+  disabled?: boolean
+  label: string
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`flex items-center gap-3 w-fit text-left select-none cursor-pointer disabled:opacity-40 disabled:cursor-default ${className}`}
+    >
+      <span
+        className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${
+          checked ? 'border-[#931020] bg-[#931020]' : 'border-white/35'
+        }`}
+      >
+        {checked && <span className="h-1.5 w-1.5 rounded-[1px] bg-white" />}
+      </span>
+      <span className="text-[14px] font-light text-white/80">{label}</span>
+    </button>
+  )
+}
+
 function SaleNotifySettings() {
   const [enabled, setEnabled] = useState(false)
   const [email, setEmail] = useState('')
@@ -340,15 +370,12 @@ function SaleNotifySettings() {
       <p className="mt-3 text-[13px] font-light text-white/55 leading-relaxed">
         Get an email for every real (live) sale. Test orders never trigger a notification.
       </p>
-      <label className="mt-5 flex items-center gap-3 cursor-pointer w-fit">
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={(e) => setEnabled(e.target.checked)}
-          className="h-4 w-4 accent-[#931020]"
-        />
-        <span className="text-[14px] font-light text-white/80">Email me on every real sale</span>
-      </label>
+      <CheckBox
+        className="mt-5"
+        checked={enabled}
+        onChange={setEnabled}
+        label="Email me on every real sale"
+      />
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <input
           type="email"
@@ -404,16 +431,13 @@ function RefundPrefs() {
         Which refund the order card highlights as the primary action. Both buttons are always
         available regardless.
       </p>
-      <label className="mt-5 flex items-center gap-3 cursor-pointer w-fit">
-        <input
-          type="checkbox"
-          checked={val === true}
-          disabled={val === null || busy}
-          onChange={(e) => save(e.target.checked)}
-          className="h-4 w-4 accent-[#931020]"
-        />
-        <span className="text-[14px] font-light text-white/80">Default to “refund undownloaded only”</span>
-      </label>
+      <CheckBox
+        className="mt-5"
+        checked={val === true}
+        disabled={val === null || busy}
+        onChange={(next) => save(next)}
+        label="Default to “refund undownloaded only”"
+      />
       {note && <p className="mt-3 text-[12px] text-white/55">{note}</p>}
     </section>
   )
