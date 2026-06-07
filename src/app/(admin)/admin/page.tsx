@@ -529,7 +529,10 @@ function DiagnosticsSettings() {
   )
 }
 
-/** Read-only list of active Stripe Tax registrations. */
+/** Read-only list of active Stripe Tax registrations.
+ *  NOTE: Not currently rendered — VAT is calculated manually (Stripe Tax off).
+ *  Kept (with TaxRegistrations below) for future use if Stripe Tax / OSS is
+ *  re-enabled; re-add <TaxRegistrations /> to SettingsTab to show it again. */
 interface TaxReg { id: string; country: string; status: string; livemode: boolean; activeFrom: number | null }
 /** Manual VAT rate — applied to DK + EU buyers; non-EU pay 0%. */
 function VatRateSettings() {
@@ -603,6 +606,8 @@ function VatRateSettings() {
   )
 }
 
+// Not currently rendered (manual VAT — see note on TaxReg). Kept for future use.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TaxRegistrations() {
   const [regs, setRegs] = useState<TaxReg[] | null>(null)
   const [error, setError] = useState(false)
@@ -707,7 +712,10 @@ function SettingsTab() {
       <RefundPrefs />
       <CacheControls />
       <DiagnosticsSettings />
-      <TaxRegistrations />
+      {/* Tax registrations panel hidden — VAT is now calculated manually (see
+          VatRateSettings), so Stripe Tax registrations don't drive checkout.
+          The <TaxRegistrations /> component + /api/admin/tax-registrations route
+          are kept for future use if Stripe Tax / OSS is ever re-enabled. */}
 
       <section className="mt-10 rounded-lg border border-[#931020]/30 bg-[#931020]/[0.04] p-6">
         <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-[#931020]">Danger zone</h2>
