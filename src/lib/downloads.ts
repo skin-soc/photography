@@ -143,6 +143,8 @@ export async function issueGrant(input: {
    *  (0%, intra-EU). Present only for business purchases. */
   vatId?: string | null
   businessName?: string | null
+  /** Registered business address from VIES (kept for auditing). */
+  businessAddress?: string | null
   reverseCharge?: boolean
   /** VIES consultation number — audit proof of the VAT check. */
   vatConsultation?: string | null
@@ -256,6 +258,8 @@ export interface AdminOrder {
    *  and the VIES consultation number (audit proof of the check). */
   vatId?: string | null
   businessName?: string | null
+  /** Registered business address from VIES (auditing). */
+  businessAddress?: string | null
   reverseCharge?: boolean
   vatConsultation?: string | null
   /** Sequential invoice number (live orders) + issue date (ms). */

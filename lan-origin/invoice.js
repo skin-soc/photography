@@ -78,6 +78,10 @@ export function buildInvoicePdf(grant, priceBySku) {
       doc.font('Helvetica').fontSize(10).fillColor(ink)
       if (grant.businessName || grant.vatId) {
         if (grant.businessName) doc.text(grant.businessName)
+        if (grant.businessAddress) {
+          doc.fillColor(muted).fontSize(9)
+          String(grant.businessAddress).split(/\s*,\s*|\n/).filter(Boolean).forEach((l) => doc.text(l))
+        }
         if (grant.vatId) doc.fillColor(muted).fontSize(9).text(`VAT ${grant.vatId}`)
       } else {
         doc.text(grant.email || 'Customer')

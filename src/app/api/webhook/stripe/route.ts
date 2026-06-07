@@ -41,6 +41,7 @@ async function fulfilSession(sessionId: string): Promise<void> {
     cardCountry: charge?.payment_method_details?.card?.country ?? null,
     vatId: session.metadata?.vatId ?? null,
     businessName: session.metadata?.businessName ?? null,
+    businessAddress: session.metadata?.businessAddress ?? null,
     reverseCharge: session.metadata?.reverseCharge === 'true',
     vatConsultation: session.metadata?.vatConsultation ?? null,
   })

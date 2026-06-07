@@ -1321,7 +1321,7 @@ function PeriodBlock({
   const exportCsv = () => {
     // Gross/Tax/Net are net of refunds (matching the on-screen totals); the
     // Charged + Refunded columns preserve the original figures for audit.
-    const head = ['Date', 'Order code', 'Email', 'Mode', 'VAT region', 'Currency', 'Charged', 'Refunded', 'Gross', 'Tax', 'Net', 'Tax country (IP)', 'Card country', 'Location match', 'Reverse charge', 'VAT ID', 'Business', 'VIES consultation']
+    const head = ['Date', 'Order code', 'Email', 'Mode', 'VAT region', 'Currency', 'Charged', 'Refunded', 'Gross', 'Tax', 'Net', 'Tax country (IP)', 'Card country', 'Location match', 'Reverse charge', 'VAT ID', 'Business', 'Business address', 'VIES consultation']
     const rows = orders.map((o) => {
       const eff = effectiveAmounts(o)
       return [
@@ -1342,6 +1342,7 @@ function PeriodBlock({
         o.reverseCharge ? 'yes' : '',
         o.vatId ?? '',
         o.businessName ?? '',
+        o.businessAddress ?? '',
         o.vatConsultation ?? '',
       ]
     })
@@ -1910,6 +1911,10 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         <Row label="Passcode" value={order.passcode} mono accent />
         <Row label="Emailed" value={order.emailed ? 'yes' : 'no'} />
         {order.invoiceNumber && <Row label="Invoice no." value={order.invoiceNumber} mono />}
+        {order.businessName && <Row label="Business" value={order.businessName} />}
+        {order.businessAddress && <Row label="Address" value={order.businessAddress} />}
+        {order.vatId && <Row label="VAT ID" value={order.vatId} mono />}
+        {order.vatConsultation && <Row label="VIES ref" value={order.vatConsultation} mono />}
         {order.refundedAmount != null && (
           <Row
             label="Refunded"

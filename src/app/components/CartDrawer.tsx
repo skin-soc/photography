@@ -56,8 +56,11 @@ export default function CartDrawer() {
   const [vatInput, setVatInput] = useState('')
   const [vatBusy, setVatBusy] = useState(false)
   const [vatCheck, setVatCheck] = useState<VatCheck | null>(null)
+  // The buyer must explicitly confirm the VIES-returned business name + address
+  // before we apply business treatment (and capture it for audit).
+  const [vatConfirmed, setVatConfirmed] = useState(false)
   // Only a confirmed-valid id is sent to checkout (whose server re-verifies).
-  const confirmedVat = b2b && vatCheck?.status === 'valid' ? vatCheck.fullId : null
+  const confirmedVat = b2b && vatCheck?.status === 'valid' && vatConfirmed ? vatCheck.fullId : null
 
   // Items being checked out — cart items or the buy-now single item
   const checkoutItems = buyNowItem ? [buyNowItem] : items
@@ -82,6 +85,7 @@ export default function CartDrawer() {
       setB2b(false)
       setVatInput('')
       setVatCheck(null)
+      setVatConfirmed(false)
     }
   }, [isOpen])
 
@@ -121,6 +125,7 @@ export default function CartDrawer() {
     if (!id || vatBusy) return
     setVatBusy(true)
     setVatCheck(null)
+    setVatConfirmed(false)
     try {
       const res = await fetch('/api/vat/verify', {
         method: 'POST',
@@ -402,7 +407,7 @@ export default function CartDrawer() {
               type="button"
               role="checkbox"
               aria-checked={b2b}
-              onClick={() => { const next = !b2b; setB2b(next); if (!next) setVatCheck(null) }}
+              onClick={() => { const next = !b2b; setB2b(next); if (!next) { setVatCheck(null); setVatConfirmed(false) } }}
               className="flex items-center gap-2.5 text-left select-none cursor-pointer"
             >
               <span className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${b2b ? 'border-[#931020] bg-[#931020]' : 'border-white/30'}`}>
@@ -418,7 +423,7 @@ export default function CartDrawer() {
                 <div className="flex gap-2">
                   <input
                     value={vatInput}
-                    onChange={(e) => { setVatInput(e.target.value.toUpperCase()); setVatCheck(null) }}
+                    onChange={(e) => { setVatInput(e.target.value.toUpperCase()); setVatCheck(null); setVatConfirmed(false) }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void verifyVat() } }}
                     placeholder="EU VAT no. (e.g. DE123456789)"
                     spellCheck={false}
@@ -435,16 +440,33 @@ export default function CartDrawer() {
                 </div>
 
                 {vatCheck && (vatCheck.status === 'valid' ? (
-                  <div className="rounded-[8px] border border-emerald-400/30 bg-emerald-400/[0.05] px-3 py-2">
-                    <p className="text-[11px] text-emerald-300/90">✓ {vatCheck.name ?? 'Business verified'}</p>
+                  <div className="rounded-[8px] border border-emerald-400/30 bg-emerald-400/[0.05] px-3 py-2.5">
+                    <p className="text-[9px] font-light tracking-[0.18em] uppercase text-white/30 mb-1">Registered business (VIES)</p>
+                    <p className="text-[12px] text-white/85">{vatCheck.name ?? '—'}</p>
                     {vatCheck.address && (
-                      <p className="mt-0.5 text-[10px] font-light text-white/40 leading-snug">{vatCheck.address}</p>
+                      <p className="mt-0.5 text-[10px] font-light text-white/45 leading-snug whitespace-pre-line">{vatCheck.address}</p>
                     )}
-                    <p className="mt-1 text-[10px] font-light text-white/45 leading-snug">
+                    <p className="mt-1.5 text-[10px] font-light text-white/45 leading-snug">
                       {vatCheck.countryCode === 'DK'
                         ? 'Danish business — 25% VAT applies.'
                         : 'VAT reverse-charged — 0% VAT (you account for VAT in your country).'}
                     </p>
+                    {/* Explicit confirmation — required before we use these details. */}
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={vatConfirmed}
+                      onClick={() => setVatConfirmed((v) => !v)}
+                      className="mt-2.5 flex items-start gap-2 text-left select-none cursor-pointer"
+                    >
+                      <span className={`mt-0.5 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${vatConfirmed ? 'border-emerald-400 bg-emerald-400/80' : 'border-white/35'}`}>
+                        {vatConfirmed && <span className="h-1.5 w-1.5 rounded-[1px] bg-[#0d0d0d]" />}
+                      </span>
+                      <span className="text-[11px] font-light text-white/70">Confirm — these are my business details, and I’ll use this purchase for business.</span>
+                    </button>
+                    {!vatConfirmed && (
+                      <p className="mt-1.5 text-[10px] font-light text-amber-300/70">Tick to confirm, otherwise you’ll be charged as a consumer.</p>
+                    )}
                   </div>
                 ) : (
                   <p className="text-[10px] font-light leading-snug text-amber-300/80">

@@ -912,7 +912,7 @@ async function pregenerateGrant(grant) {
 app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
   const { orderId, paymentId, email, locale, items,
           livemode, amount, currency, taxAmount, taxCountry, cardCountry,
-          vatId, businessName, reverseCharge, vatConsultation } = req.body ?? {}
+          vatId, businessName, businessAddress, reverseCharge, vatConsultation } = req.body ?? {}
   if (!orderId || !orderPath(orderId) || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'invalid order' })
   }
@@ -938,6 +938,7 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
       // B2B: validated VAT id, business name, reverse-charge (0%) flag.
       vatId: vatId ? String(vatId) : null,
       businessName: businessName ? String(businessName) : null,
+      businessAddress: businessAddress ? String(businessAddress) : null,
       reverseCharge: reverseCharge === true,
       vatConsultation: vatConsultation ? String(vatConsultation) : null,
       createdAt: now,
@@ -1134,6 +1135,7 @@ function adminOrderView(grant, priceBySku) {
     cardCountry: grant.cardCountry ?? null,
     vatId: grant.vatId ?? null,
     businessName: grant.businessName ?? null,
+    businessAddress: grant.businessAddress ?? null,
     reverseCharge: grant.reverseCharge ?? false,
     vatConsultation: grant.vatConsultation ?? null,
     invoiceNumber: grant.invoiceNumber ?? null,

@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
       cardCountry,
       vatId: session.metadata?.vatId ?? null,
       businessName: session.metadata?.businessName ?? null,
+      businessAddress: session.metadata?.businessAddress ?? null,
       reverseCharge: session.metadata?.reverseCharge === 'true',
       vatConsultation: session.metadata?.vatConsultation ?? null,
     })
