@@ -368,18 +368,19 @@ export default function CartDrawer() {
 
             {successData.downloads.length > 0 && (
               <div className="space-y-2">
-                <a
-                  href={`/${locale}/shop/downloads/${successData.orderId}`}
-                  onClick={(e) => { if (issueState === 'issuing') e.preventDefault() }}
-                  aria-disabled={issueState === 'issuing'}
-                  className={`block w-full text-center rounded-[14px] py-3 text-[11px] font-light tracking-[0.22em] uppercase transition-colors ${
-                    issueState === 'issuing'
-                      ? 'bg-[#931020]/30 text-white/40 cursor-default'
-                      : 'bg-[#931020]/80 hover:bg-[#931020] text-white'
-                  }`}
-                >
-                  {issueState === 'issuing' ? t('preparingDownloads') : `${t('goToDownloads')} →`}
-                </a>
+                {issueState === 'issuing' ? (
+                  <div className="flex flex-col items-center gap-2 py-3">
+                    <span className="shop-spinner" />
+                    <span className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('preparingDownloads')}</span>
+                  </div>
+                ) : (
+                  <a
+                    href={`/${locale}/shop/downloads/${successData.orderId}`}
+                    className="block w-full text-center rounded-[14px] py-3 text-[11px] font-light tracking-[0.22em] uppercase text-white bg-[#931020]/80 hover:bg-[#931020] transition-colors"
+                  >
+                    {t('goToDownloads')} →
+                  </a>
+                )}
                 <p className="text-[10px] font-light text-white/30 leading-relaxed text-center">
                   {issueState === 'error'
                     ? t('issueErrorHelp')
@@ -460,17 +461,15 @@ export default function CartDrawer() {
                     disabled={vatBusy || !vatInput.trim()}
                     className="shrink-0 rounded-[8px] border border-white/15 px-3 text-[10px] font-[family-name:var(--font-mono-ibm)] uppercase tracking-[0.18em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
                   >
-                    {vatBusy
-                      ? <span className="inline-block h-3 w-3 align-[-1px] animate-spin rounded-full border-2 border-white/25 border-t-white/80" />
-                      : 'Verify'}
+                    Verify
                   </button>
                 </div>
 
                 {vatBusy && (
-                  <p className="flex items-center gap-2 text-[10px] font-light text-white/40">
-                    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-[#931020]" />
-                    Checking VIES…
-                  </p>
+                  <div className="flex flex-col items-center gap-2 py-3">
+                    <span className="shop-spinner" />
+                    <span className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35">Checking VIES…</span>
+                  </div>
                 )}
 
                 {vatCheck && (vatCheck.status === 'valid' ? (
