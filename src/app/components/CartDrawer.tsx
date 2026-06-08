@@ -66,9 +66,13 @@ export default function CartDrawer() {
   // name/address via VIES — the buyer types them in for the invoice/audit.
   const [declaredName, setDeclaredName] = useState('')
   const [declaredAddress, setDeclaredAddress] = useState('')
-  const viesHasDetails = !!vatCheck?.name
+  // Capture name and address independently — any member state can withhold
+  // either (Germany withholds both); we collect whatever VIES doesn't return.
+  const needName = vatCheck?.status === 'valid' && !vatCheck.name
+  const needAddress = vatCheck?.status === 'valid' && !vatCheck.address
   const detailsReady = vatCheck?.status === 'valid'
-    && (viesHasDetails || (declaredName.trim() !== '' && declaredAddress.trim() !== ''))
+    && (!!vatCheck.name || declaredName.trim() !== '')
+    && (!!vatCheck.address || declaredAddress.trim() !== '')
   // Only a confirmed-valid id, with complete details, is sent to checkout.
   const confirmedVat = b2b && vatCheck?.status === 'valid' && detailsReady && vatConfirmed ? vatCheck.fullId : null
 
@@ -168,8 +172,10 @@ export default function CartDrawer() {
           ...(confirmedVat ? { business: {
             vatId: confirmedVat,
             token: vatCheck?.token ?? undefined,
-            // Sent only to fill name/address when VIES withholds them (e.g. DE).
-            ...(viesHasDetails ? {} : { declaredName: declaredName.trim(), declaredAddress: declaredAddress.trim() }),
+            // Sent only to fill name/address that VIES withheld (checkout uses
+            // them for gaps, never overriding VIES-provided values).
+            ...(declaredName.trim() ? { declaredName: declaredName.trim() } : {}),
+            ...(declaredAddress.trim() ? { declaredAddress: declaredAddress.trim() } : {}),
           } } : {}),
         }),
       })
@@ -470,24 +476,26 @@ export default function CartDrawer() {
                 {vatCheck && (vatCheck.status === 'valid' ? (
                   <div className="rounded-[8px] border border-emerald-400/30 bg-emerald-400/[0.05] px-3 py-2.5">
                     <p className="text-[9px] font-light tracking-[0.18em] uppercase text-white/30 mb-1">VAT number valid (VIES)</p>
-                    {viesHasDetails ? (
-                      <>
-                        <p className="text-[12px] text-white/85">{vatCheck.name}</p>
-                        {vatCheck.address && (
-                          <p className="mt-0.5 text-[10px] font-light text-white/45 leading-snug whitespace-pre-line">{vatCheck.address}</p>
-                        )}
-                      </>
-                    ) : (
-                      <div className="mt-1 space-y-2">
-                        <p className="text-[10px] font-light text-white/45 leading-snug">
-                          {vatCheck.countryCode} doesn’t share business details via VIES — please enter your registered name and address for the invoice:
-                        </p>
+                    {(needName || needAddress) && (
+                      <p className="mt-1 mb-2 text-[10px] font-light text-white/45 leading-snug">
+                        {vatCheck.countryCode} doesn’t share {needName && needAddress ? 'business details' : needName ? 'the business name' : 'the business address'} via VIES — please enter {needName && needAddress ? 'them' : 'it'} for your invoice:
+                      </p>
+                    )}
+                    {/* Name — show VIES value, else ask for it. */}
+                    {vatCheck.name
+                      ? <p className="text-[12px] text-white/85">{vatCheck.name}</p>
+                      : (
                         <input
                           value={declaredName}
                           onChange={(e) => setDeclaredName(e.target.value)}
                           placeholder="Registered business name"
-                          className="w-full rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+                          className="mb-2 w-full rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
                         />
+                      )}
+                    {/* Address — show VIES value, else ask for it. */}
+                    {vatCheck.address
+                      ? <p className="mt-0.5 text-[10px] font-light text-white/45 leading-snug whitespace-pre-line">{vatCheck.address}</p>
+                      : (
                         <textarea
                           value={declaredAddress}
                           onChange={(e) => setDeclaredAddress(e.target.value)}
@@ -495,8 +503,7 @@ export default function CartDrawer() {
                           rows={2}
                           className="w-full resize-none rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
                         />
-                      </div>
-                    )}
+                      )}
                     <p className="mt-1.5 text-[10px] font-light text-white/45 leading-snug">
                       {vatCheck.countryCode === 'DK'
                         ? 'Danish business — 25% VAT applies.'
