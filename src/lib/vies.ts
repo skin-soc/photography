@@ -29,7 +29,7 @@ const VIES_PREFIXES: ReadonlySet<string> = new Set([
   'SE', 'SI', 'SK', 'XI',
 ])
 
-export type ViesStatus = 'valid' | 'invalid' | 'unavailable' | 'malformed'
+export type ViesStatus = 'valid' | 'invalid' | 'unavailable' | 'malformed' | 'self'
 
 export interface ViesResult {
   status: ViesStatus
@@ -71,6 +71,10 @@ export async function verifyVatNumber(raw: string): Promise<ViesResult> {
   const fullId = countryCode + number
   if (!VIES_PREFIXES.has(countryCode)) {
     return { status: 'malformed', countryCode, vatNumber: number, fullId }
+  }
+  // Reject our own VAT number — a buyer can't be the seller.
+  if (fullId === SELLER.vat.toUpperCase()) {
+    return { status: 'self', countryCode, vatNumber: number, fullId }
   }
 
   // POST check-vat-number with our VAT id as requester → response includes a
