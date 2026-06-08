@@ -25,6 +25,20 @@ fi
 if ! grep -q '"nodemailer"' "$SOURCE/package.json"; then
   echo "WARNING: $SOURCE/package.json looks stale (no nodemailer) — re-sync it too."
 fi
+# server.js imports ./invoice.js (PDF invoices) — a missing file or a Dockerfile
+# that doesn't COPY it makes the container crash on startup. Fail early & clearly.
+if ! [ -f "$SOURCE/invoice.js" ]; then
+  echo "ERROR: $SOURCE/invoice.js missing — re-sync the FULL lan-origin/ dir, then re-run."
+  exit 1
+fi
+if ! grep -q 'invoice.js' "$SOURCE/Dockerfile"; then
+  echo "ERROR: $SOURCE/Dockerfile does not COPY invoice.js — re-sync the updated Dockerfile."
+  exit 1
+fi
+if ! grep -q '"pdfkit"' "$SOURCE/package.json"; then
+  echo "ERROR: $SOURCE/package.json missing pdfkit — re-sync it, then re-run (npm install adds it)."
+  exit 1
+fi
 echo "==> Source check OK ($SOURCE has the new code)"
 
 # 1. Build the image from scratch.
