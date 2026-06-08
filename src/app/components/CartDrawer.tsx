@@ -435,9 +435,18 @@ export default function CartDrawer() {
                     disabled={vatBusy || !vatInput.trim()}
                     className="shrink-0 rounded-[8px] border border-white/15 px-3 text-[10px] font-[family-name:var(--font-mono-ibm)] uppercase tracking-[0.18em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
                   >
-                    {vatBusy ? '…' : 'Verify'}
+                    {vatBusy
+                      ? <span className="inline-block h-3 w-3 align-[-1px] animate-spin rounded-full border-2 border-white/25 border-t-white/80" />
+                      : 'Verify'}
                   </button>
                 </div>
+
+                {vatBusy && (
+                  <p className="flex items-center gap-2 text-[10px] font-light text-white/40">
+                    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-[#931020]" />
+                    Checking VIES…
+                  </p>
+                )}
 
                 {vatCheck && (vatCheck.status === 'valid' ? (
                   <div className="rounded-[8px] border border-emerald-400/30 bg-emerald-400/[0.05] px-3 py-2.5">
