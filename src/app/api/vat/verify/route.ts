@@ -5,7 +5,7 @@
  * intra-EU reverse charge. See [[vies]].
  */
 
-import { verifyVatNumber } from '@/lib/vies'
+import { verifyVatNumber, signVatToken } from '@/lib/vies'
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { vatId?: string }
@@ -17,6 +17,17 @@ export async function POST(req: Request) {
     return Response.json({ status: 'malformed', error: 'too long' }, { status: 400 })
   }
   const result = await verifyVatNumber(vatId)
+  // On a valid check, hand back a short-lived signed token carrying the
+  // validated details so checkout doesn't have to call (slow) VIES again.
+  const token = result.status === 'valid'
+    ? signVatToken({
+        vatCountry: result.countryCode,
+        vatId: result.fullId,
+        name: result.name ?? null,
+        address: result.address ?? null,
+        consultation: result.consultationNumber ?? null,
+      })
+    : null
   // Don't leak VIES internals; return just what the UI needs.
   return Response.json({
     status: result.status,
@@ -25,5 +36,6 @@ export async function POST(req: Request) {
     fullId: result.fullId,
     name: result.name ?? null,
     address: result.address ?? null,
+    token,
   })
 }

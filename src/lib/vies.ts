@@ -18,6 +18,7 @@
  * SERVER-SIDE ONLY (called from /api/vat/verify and the checkout route).
  */
 
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import { SELLER } from './seller'
 
 // VIES VAT-prefix namespace. Note it differs from ISO 3166: Greece is **EL**
@@ -86,7 +87,8 @@ export async function verifyVatNumber(raw: string): Promise<ViesResult> {
         requesterNumber: SELLER.vatNumber,
       }),
       cache: 'no-store',
-      signal: AbortSignal.timeout(10_000),
+      // VIES member-state services can be slow (DK has been 14–16s); give it room.
+      signal: AbortSignal.timeout(20_000),
     })
     if (!res.ok) return { status: 'unavailable', countryCode, vatNumber: number, fullId }
     data = (await res.json()) as Record<string, unknown>
@@ -116,4 +118,45 @@ export async function verifyVatNumber(raw: string): Promise<ViesResult> {
     return { status: 'unavailable', countryCode, vatNumber: number, fullId }
   }
   return { status: 'invalid', countryCode, vatNumber: number, fullId }
+}
+
+// ── Signed validation token ───────────────────────────────────────────────────
+// VIES is slow (10–20s), so we validate ONCE at cart-time and hand the browser a
+// short-lived, server-signed token carrying the validated details. Checkout then
+// trusts the token instead of calling VIES a second time — fast, and the client
+// can't forge it (HMAC). Falls back to a fresh VIES check if the token is absent.
+
+export interface VatToken {
+  vatCountry: string
+  vatId: string
+  name: string | null
+  address: string | null
+  consultation: string | null
+}
+
+const VAT_TOKEN_TTL_MS = 30 * 60_000 // 30 min — enough to complete checkout
+const vatSecret = () => process.env.DOWNLOAD_LINK_SECRET ?? ''
+
+export function signVatToken(p: VatToken): string {
+  const body = Buffer.from(JSON.stringify({ ...p, exp: Date.now() + VAT_TOKEN_TTL_MS })).toString('base64url')
+  const sig = createHmac('sha256', vatSecret()).update(`vat:${body}`).digest('hex')
+  return `${body}.${sig}`
+}
+
+/** Verify a token from the cart. Returns the validated details or null. */
+export function verifyVatToken(token: string | undefined | null): VatToken | null {
+  if (!token) return null
+  const [body, sig] = String(token).split('.')
+  if (!body || !sig) return null
+  const expected = createHmac('sha256', vatSecret()).update(`vat:${body}`).digest('hex')
+  const a = Buffer.from(sig, 'hex')
+  const b = Buffer.from(expected, 'hex')
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null
+  try {
+    const p = JSON.parse(Buffer.from(body, 'base64url').toString()) as VatToken & { exp?: number }
+    if (!p.exp || Date.now() > p.exp) return null
+    return { vatCountry: p.vatCountry, vatId: p.vatId, name: p.name ?? null, address: p.address ?? null, consultation: p.consultation ?? null }
+  } catch {
+    return null
+  }
 }

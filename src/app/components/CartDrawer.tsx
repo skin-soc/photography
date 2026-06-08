@@ -28,6 +28,9 @@ interface VatCheck {
   address: string | null
   fullId: string
   countryCode: string
+  /** Server-signed token (valid checks only) — passed to checkout so it can
+   *  skip a second slow VIES call. */
+  token: string | null
 }
 
 
@@ -134,7 +137,7 @@ export default function CartDrawer() {
       })
       setVatCheck((await res.json()) as VatCheck)
     } catch {
-      setVatCheck({ status: 'unavailable', name: null, address: null, fullId: id.toUpperCase(), countryCode: '' })
+      setVatCheck({ status: 'unavailable', name: null, address: null, fullId: id.toUpperCase(), countryCode: '', token: null })
     } finally {
       setVatBusy(false)
     }
@@ -151,7 +154,7 @@ export default function CartDrawer() {
         body: JSON.stringify({
           items: itemsToCharge.map((i) => ({ sku: i.sku })),
           locale,
-          ...(confirmedVat ? { business: { vatId: confirmedVat } } : {}),
+          ...(confirmedVat ? { business: { vatId: confirmedVat, token: vatCheck?.token ?? undefined } } : {}),
         }),
       })
       if (!res.ok) {

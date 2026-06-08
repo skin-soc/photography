@@ -15,7 +15,7 @@ import { getCatalog } from '@/lib/shop'
 import { stripe } from '@/lib/stripe-server'
 import { generateOrderCode } from '@/lib/downloads'
 import { vatOutcome, HOME_COUNTRY, type BusinessVat } from '@/lib/vat'
-import { verifyVatNumber } from '@/lib/vies'
+import { verifyVatNumber, verifyVatToken } from '@/lib/vies'
 import { getVatRate, getVatTaxRateId, setVatTaxRateId } from '@/lib/shop-settings'
 
 interface RequestItem { sku: string }
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     const body = (await req.json()) as {
       items: RequestItem[]
       locale?: string
-      business?: { vatId?: string }
+      business?: { vatId?: string; token?: string }
     }
     const locale = body.locale ?? 'en'
     // Buyer country from Cloudflare's IP geolocation (as the old flow did), so we
@@ -98,7 +98,13 @@ export async function POST(req: Request) {
     // tax liability). Only a confirmed-valid id grants business treatment; if
     // VIES says invalid OR is unavailable, we fall back to consumer VAT.
     let business: (BusinessVat & { vatId: string; name: string | null; address: string | null; consultation: string | null }) | null = null
-    if (body.business?.vatId) {
+    // Prefer the signed token from the cart's VIES check (fast, unforgeable) so
+    // we don't hit slow VIES twice. Only fall back to a fresh VIES call if the
+    // token is missing/expired — never trust a raw client "valid" claim.
+    const tokenData = verifyVatToken(body.business?.token)
+    if (tokenData) {
+      business = { vatCountry: tokenData.vatCountry, vatId: tokenData.vatId, name: tokenData.name, address: tokenData.address, consultation: tokenData.consultation }
+    } else if (body.business?.vatId) {
       const v = await verifyVatNumber(body.business.vatId)
       if (v.status === 'valid') {
         business = { vatCountry: v.countryCode, vatId: v.fullId, name: v.name ?? null, address: v.address ?? null, consultation: v.consultationNumber ?? null }
