@@ -62,8 +62,15 @@ export default function CartDrawer() {
   // The buyer must explicitly confirm the VIES-returned business name + address
   // before we apply business treatment (and capture it for audit).
   const [vatConfirmed, setVatConfirmed] = useState(false)
-  // Only a confirmed-valid id is sent to checkout (whose server re-verifies).
-  const confirmedVat = b2b && vatCheck?.status === 'valid' && vatConfirmed ? vatCheck.fullId : null
+  // Some member states (e.g. Germany) validate the number but DON'T disclose the
+  // name/address via VIES — the buyer types them in for the invoice/audit.
+  const [declaredName, setDeclaredName] = useState('')
+  const [declaredAddress, setDeclaredAddress] = useState('')
+  const viesHasDetails = !!vatCheck?.name
+  const detailsReady = vatCheck?.status === 'valid'
+    && (viesHasDetails || (declaredName.trim() !== '' && declaredAddress.trim() !== ''))
+  // Only a confirmed-valid id, with complete details, is sent to checkout.
+  const confirmedVat = b2b && vatCheck?.status === 'valid' && detailsReady && vatConfirmed ? vatCheck.fullId : null
 
   // Items being checked out — cart items or the buy-now single item
   const checkoutItems = buyNowItem ? [buyNowItem] : items
@@ -89,6 +96,8 @@ export default function CartDrawer() {
       setVatInput('')
       setVatCheck(null)
       setVatConfirmed(false)
+      setDeclaredName('')
+      setDeclaredAddress('')
     }
   }, [isOpen])
 
@@ -129,6 +138,8 @@ export default function CartDrawer() {
     setVatBusy(true)
     setVatCheck(null)
     setVatConfirmed(false)
+    setDeclaredName('')
+    setDeclaredAddress('')
     try {
       const res = await fetch('/api/vat/verify', {
         method: 'POST',
@@ -154,7 +165,12 @@ export default function CartDrawer() {
         body: JSON.stringify({
           items: itemsToCharge.map((i) => ({ sku: i.sku })),
           locale,
-          ...(confirmedVat ? { business: { vatId: confirmedVat, token: vatCheck?.token ?? undefined } } : {}),
+          ...(confirmedVat ? { business: {
+            vatId: confirmedVat,
+            token: vatCheck?.token ?? undefined,
+            // Sent only to fill name/address when VIES withholds them (e.g. DE).
+            ...(viesHasDetails ? {} : { declaredName: declaredName.trim(), declaredAddress: declaredAddress.trim() }),
+          } } : {}),
         }),
       })
       if (!res.ok) {
@@ -453,10 +469,33 @@ export default function CartDrawer() {
 
                 {vatCheck && (vatCheck.status === 'valid' ? (
                   <div className="rounded-[8px] border border-emerald-400/30 bg-emerald-400/[0.05] px-3 py-2.5">
-                    <p className="text-[9px] font-light tracking-[0.18em] uppercase text-white/30 mb-1">Registered business (VIES)</p>
-                    <p className="text-[12px] text-white/85">{vatCheck.name ?? '—'}</p>
-                    {vatCheck.address && (
-                      <p className="mt-0.5 text-[10px] font-light text-white/45 leading-snug whitespace-pre-line">{vatCheck.address}</p>
+                    <p className="text-[9px] font-light tracking-[0.18em] uppercase text-white/30 mb-1">VAT number valid (VIES)</p>
+                    {viesHasDetails ? (
+                      <>
+                        <p className="text-[12px] text-white/85">{vatCheck.name}</p>
+                        {vatCheck.address && (
+                          <p className="mt-0.5 text-[10px] font-light text-white/45 leading-snug whitespace-pre-line">{vatCheck.address}</p>
+                        )}
+                      </>
+                    ) : (
+                      <div className="mt-1 space-y-2">
+                        <p className="text-[10px] font-light text-white/45 leading-snug">
+                          {vatCheck.countryCode} doesn’t share business details via VIES — please enter your registered name and address for the invoice:
+                        </p>
+                        <input
+                          value={declaredName}
+                          onChange={(e) => setDeclaredName(e.target.value)}
+                          placeholder="Registered business name"
+                          className="w-full rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+                        />
+                        <textarea
+                          value={declaredAddress}
+                          onChange={(e) => setDeclaredAddress(e.target.value)}
+                          placeholder="Registered business address"
+                          rows={2}
+                          className="w-full resize-none rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+                        />
+                      </div>
                     )}
                     <p className="mt-1.5 text-[10px] font-light text-white/45 leading-snug">
                       {vatCheck.countryCode === 'DK'
@@ -478,6 +517,9 @@ export default function CartDrawer() {
                     </button>
                     {!vatConfirmed && (
                       <p className="mt-1.5 text-[10px] font-light text-amber-300/70">Tick to confirm, otherwise you’ll be charged as a consumer.</p>
+                    )}
+                    {vatConfirmed && !detailsReady && (
+                      <p className="mt-1.5 text-[10px] font-light text-amber-300/70">Enter your business name and address above to apply business treatment.</p>
                     )}
                   </div>
                 ) : (

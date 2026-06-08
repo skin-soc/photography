@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     const body = (await req.json()) as {
       items: RequestItem[]
       locale?: string
-      business?: { vatId?: string; token?: string }
+      business?: { vatId?: string; token?: string; declaredName?: string; declaredAddress?: string }
     }
     const locale = body.locale ?? 'en'
     // Buyer country from Cloudflare's IP geolocation (as the old flow did), so we
@@ -111,6 +111,13 @@ export async function POST(req: Request) {
       } else {
         console.warn('[checkout-session] VAT id not validated server-side:', v.status, v.fullId)
       }
+    }
+    // Some member states (e.g. Germany) validate the VAT id but don't disclose
+    // the name/address. Fall back to the buyer-declared details ONLY to fill
+    // those gaps — never to override what VIES authoritatively returned.
+    if (business) {
+      if (!business.name && body.business?.declaredName) business.name = String(body.business.declaredName).slice(0, 200)
+      if (!business.address && body.business?.declaredAddress) business.address = String(body.business.declaredAddress).replace(/\s+/g, ' ').trim().slice(0, 350)
     }
 
     // Our customer-facing order code — written to the session AND the
