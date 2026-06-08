@@ -484,7 +484,9 @@ export default function CartDrawer() {
                   <p className="text-[10px] font-light leading-snug text-amber-300/80">
                     {vatCheck.status === 'invalid' && 'VAT number not found in VIES — you’ll be charged as a consumer.'}
                     {vatCheck.status === 'unavailable' && 'VIES is responding slowly / unavailable — please try again in a moment.'}
-                    {vatCheck.status === 'malformed' && 'Enter a valid EU VAT number, e.g. DE123456789.'}
+                    {vatCheck.status === 'malformed' && (vatCheck.countryCode === 'GB'
+                      ? 'The UK (GB) left the EU VAT system after Brexit, so a UK VAT number can’t be validated here — and none is needed: no EU VAT is charged on orders outside the EU. (Northern Ireland “XI” numbers still work.)'
+                      : 'Enter a valid EU VAT number, e.g. DE123456789.')}
                     {vatCheck.status === 'self' && 'That’s this shop’s own VAT number — please enter your business’s VAT number.'}
                   </p>
                 ))}
