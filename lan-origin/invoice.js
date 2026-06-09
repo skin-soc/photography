@@ -105,11 +105,20 @@ function fmtDate(ms, loc) {
   return new Date(ms || Date.now()).toLocaleDateString(BCP47[loc] || loc || 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
-/** Friendly label for a Stripe payment_method type. */
-function paymentLabel(method) {
+// Localized word for a card payment. Other methods are brand names (Klarna,
+// PayPal, iDEAL, …) and stay as-is. CJK/Cyrillic locales render natively.
+const CARD_LABEL = {
+  en: 'Card', da: 'Kort', de: 'Karte', es: 'Tarjeta', fr: 'Carte', it: 'Carta',
+  nl: 'Kaart', nb: 'Kort', pl: 'Karta', pt: 'Cartão', fi: 'Kortti', sv: 'Kort',
+  ru: 'Карта', zh: '银行卡', ja: 'カード', ko: '카드', ar: 'بطاقة',
+}
+
+/** Friendly, localized label for a Stripe payment_method type. */
+function paymentLabel(method, loc) {
   if (!method) return null
+  if (method === 'card') return CARD_LABEL[loc] || CARD_LABEL.en
   const map = {
-    card: 'Card', klarna: 'Klarna', paypal: 'PayPal', link: 'Link',
+    klarna: 'Klarna', paypal: 'PayPal', link: 'Link',
     sepa_debit: 'SEPA Direct Debit', ideal: 'iDEAL', bancontact: 'Bancontact',
     sofort: 'Sofort', giropay: 'giropay', mobilepay: 'MobilePay',
     revolut_pay: 'Revolut Pay', eps: 'EPS', p24: 'Przelewy24',
@@ -195,7 +204,7 @@ export function buildInvoicePdf(grant, priceBySku) {
       const net = Math.max(0, gross - vat)
       const ratePct = net > 0 && vat > 0 ? Math.round((vat / net) * 100) : 0
       const isTest = grant.livemode !== true
-      const methodLabel = paymentLabel(grant.paymentMethod)
+      const methodLabel = paymentLabel(grant.paymentMethod, loc)
       const paidOn = fmtDate(grant.paidAt || grant.invoiceDate || grant.createdAt, loc)
 
       const items = Array.isArray(grant.items) ? grant.items : []
