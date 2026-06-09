@@ -219,16 +219,20 @@ export function buildInvoicePdf(grant, priceBySku) {
       const muted = '#666666'
 
       // ── Header: logo + seller (left) + INVOICE/RECEIPT block (right) ──
-      let sellerX = left
-      if (LOGO_PNG) {
-        const logoH = 44
-        doc.image(LOGO_PNG, left, 50, { height: logoH })
-        sellerX = left + Math.round(logoH * LOGO_ASPECT) + 16
-      }
-      // Header shows only name + address; CVR/VAT + email live in the footer note.
-      doc.fillColor(ink).font(FB).fontSize(16).text(SELLER.name, sellerX, 56)
+      // Header shows only name + address; CVR/VAT live in the footer note.
+      // Draw the text first, then vertically centre the logo against that block
+      // so the two are aligned (not the logo floating above the text).
+      const logoH = 44
+      const logoW = Math.round(logoH * LOGO_ASPECT)
+      const sellerX = LOGO_PNG ? left + logoW + 16 : left
+      const blockTop = 56
+      doc.fillColor(ink).font(FB).fontSize(16).text(SELLER.name, sellerX, blockTop)
       doc.font(FN).fontSize(9).fillColor(muted)
       SELLER.addressLines.forEach((l) => doc.text(l))
+      if (LOGO_PNG) {
+        const logoY = (blockTop + doc.y) / 2 - logoH / 2
+        doc.image(LOGO_PNG, left, logoY, { height: logoH })
+      }
 
       doc.font(FB).fontSize(20).fillColor(ink).text(t.title, left, 56, { align: 'right' })
       doc.font(FB).fontSize(8).fillColor(STAMP_INK).text(t.receiptTag, { align: 'right' })
@@ -314,7 +318,7 @@ export function buildInvoicePdf(grant, priceBySku) {
       }
 
       // ── Footer (two single lines, never wrapping) ──
-      // Line 1: business name · financials · address. Line 2 (brand): site · email.
+      // Line 1: business name · financials · address. Line 2 (brand): wordmark.
       // Both must sit ABOVE the bottom-margin line, or PDFKit spills them onto a
       // second page. Anchor relative to that boundary.
       const bottomLimit = doc.page.height - doc.page.margins.bottom
@@ -324,12 +328,15 @@ export function buildInvoicePdf(grant, priceBySku) {
         `${SELLER.name} · CVR ${SELLER.cvr} · VAT ${SELLER.vat} · ${SELLER.addressLines.join(', ')}`,
         left, line1Y, { width: right - left, align: 'center', lineBreak: false },
       )
-      doc.fillColor(STAMP_INK).text(
-        `${SELLER.website} · ${SELLER.email}`,
-        left, line2Y, { width: right - left, align: 'center', lineBreak: false },
+      // Line 2: brand wordmark, letter-spaced (e.g. GUSMCEWAN.COM).
+      const wordmark = SELLER.website.replace(/^https?:\/\//, '').replace(/\/$/, '').toUpperCase()
+      doc.fillColor(STAMP_INK).fontSize(8.5).text(
+        wordmark,
+        left, line2Y, { width: right - left, align: 'center', lineBreak: false, characterSpacing: 3.5 },
       )
       if (isTest) {
-        doc.fillColor('#cc3344').fontSize(9).text(t.testBanner, left, line1Y - 14, { width: right - left, align: 'center', lineBreak: false })
+        // characterSpacing persists in the content stream — reset it after the wordmark.
+        doc.fillColor('#cc3344').fontSize(9).text(t.testBanner, left, line1Y - 14, { width: right - left, align: 'center', lineBreak: false, characterSpacing: 0 })
       }
 
       doc.end()
@@ -363,16 +370,18 @@ export function buildLicensePdf(grant) {
       const ink = '#111111'
       const muted = '#666666'
 
-      // ── Header: logo + seller + order reference ──
-      let sellerX = left
-      if (LOGO_PNG) {
-        const logoH = 40
-        doc.image(LOGO_PNG, left, 50, { height: logoH })
-        sellerX = left + Math.round(logoH * LOGO_ASPECT) + 16
-      }
-      doc.fillColor(ink).font(FB).fontSize(13).text(SELLER.name, sellerX, 54)
+      // ── Header: logo + seller + order reference (logo centred on the text) ──
+      const logoH = 40
+      const logoW = Math.round(logoH * LOGO_ASPECT)
+      const sellerX = LOGO_PNG ? left + logoW + 16 : left
+      const blockTop = 54
+      doc.fillColor(ink).font(FB).fontSize(13).text(SELLER.name, sellerX, blockTop)
       doc.font(FN).fontSize(8.5).fillColor(muted)
         .text(`${INVOICE_STRINGS[loc].order} ${grant.orderId} · ${fmtDate(grant.invoiceDate || grant.createdAt, loc)}`, sellerX)
+      if (LOGO_PNG) {
+        const logoY = (blockTop + doc.y) / 2 - logoH / 2
+        doc.image(LOGO_PNG, left, logoY, { height: logoH })
+      }
 
       doc.moveTo(left, 104).lineTo(right, 104).strokeColor('#dddddd').stroke()
       doc.y = 118
