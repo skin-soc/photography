@@ -261,7 +261,7 @@ function PaymentForm({
       {reverseCharge && (
         <div className="rounded-[8px] border border-emerald-400/25 bg-emerald-400/[0.04] px-3 py-2">
           <p className="text-[10px] font-light leading-snug text-emerald-300/80">
-            VAT reverse-charged (0%){businessName ? ` · ${businessName}` : ''} — you account for VAT in your country.
+            {t('reverseChargeCheckout', { business: businessName ? ` · ${businessName}` : '' })}
           </p>
         </div>
       )}

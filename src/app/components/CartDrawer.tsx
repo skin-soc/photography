@@ -440,7 +440,7 @@ export default function CartDrawer() {
                 {b2b && <span className="h-1.5 w-1.5 rounded-[1px] bg-white" />}
               </span>
               <span className="text-[11px] font-light tracking-wide text-white/45 hover:text-white/70 transition-colors">
-                Buying as a VAT-registered business?
+                {t('b2bToggle')}
               </span>
             </button>
 
@@ -451,7 +451,7 @@ export default function CartDrawer() {
                     value={vatInput}
                     onChange={(e) => { setVatInput(e.target.value.toUpperCase()); setVatCheck(null); setVatConfirmed(false) }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void verifyVat() } }}
-                    placeholder="EU VAT no. (e.g. DE123456789)"
+                    placeholder={t('vatPlaceholder')}
                     spellCheck={false}
                     className="flex-1 rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 font-[family-name:var(--font-mono-ibm)] text-[12px] tracking-wide text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
                   />
@@ -461,23 +461,27 @@ export default function CartDrawer() {
                     disabled={vatBusy || !vatInput.trim()}
                     className="shrink-0 rounded-[8px] border border-white/15 px-3 text-[10px] font-[family-name:var(--font-mono-ibm)] uppercase tracking-[0.18em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
                   >
-                    Verify
+                    {t('verify')}
                   </button>
                 </div>
 
                 {vatBusy && (
                   <div className="flex flex-col items-center gap-2 py-3">
                     <span className="shop-spinner" />
-                    <span className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35">Checking VIES…</span>
+                    <span className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35">{t('checkingVies')}</span>
                   </div>
                 )}
 
                 {vatCheck && (vatCheck.status === 'valid' ? (
                   <div className="rounded-[8px] border border-emerald-400/30 bg-emerald-400/[0.05] px-3 py-2.5">
-                    <p className="text-[9px] font-light tracking-[0.18em] uppercase text-white/30 mb-1">VAT number valid (VIES)</p>
+                    <p className="text-[9px] font-light tracking-[0.18em] uppercase text-white/30 mb-1">{t('vatValid')}</p>
                     {(needName || needAddress) && (
                       <p className="mt-1 mb-2 text-[10px] font-light text-white/45 leading-snug">
-                        {vatCheck.countryCode} doesn’t share {needName && needAddress ? 'business details' : needName ? 'the business name' : 'the business address'} via VIES — please enter {needName && needAddress ? 'them' : 'it'} for your invoice:
+                        {needName && needAddress
+                          ? t('viesWithholdsBoth', { country: vatCheck.countryCode })
+                          : needName
+                            ? t('viesWithholdsName', { country: vatCheck.countryCode })
+                            : t('viesWithholdsAddress', { country: vatCheck.countryCode })}
                       </p>
                     )}
                     {/* Name — show VIES value, else ask for it. */}
@@ -487,7 +491,7 @@ export default function CartDrawer() {
                         <input
                           value={declaredName}
                           onChange={(e) => setDeclaredName(e.target.value)}
-                          placeholder="Registered business name"
+                          placeholder={t('businessNamePlaceholder')}
                           className="mb-2 w-full rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
                         />
                       )}
@@ -498,15 +502,15 @@ export default function CartDrawer() {
                         <textarea
                           value={declaredAddress}
                           onChange={(e) => setDeclaredAddress(e.target.value)}
-                          placeholder="Registered business address"
+                          placeholder={t('businessAddressPlaceholder')}
                           rows={2}
                           className="w-full resize-none rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
                         />
                       )}
                     <p className="mt-1.5 text-[10px] font-light text-white/45 leading-snug">
                       {vatCheck.countryCode === 'DK'
-                        ? 'Danish business — 25% VAT applies.'
-                        : 'VAT reverse-charged — 0% VAT (you account for VAT in your country).'}
+                        ? t('dkBusinessVat')
+                        : t('reverseChargeInfo')}
                     </p>
                     {/* Explicit confirmation — required before we use these details. */}
                     <button
@@ -519,23 +523,21 @@ export default function CartDrawer() {
                       <span className={`mt-0.5 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${vatConfirmed ? 'border-emerald-400 bg-emerald-400/80' : 'border-white/35'}`}>
                         {vatConfirmed && <span className="h-1.5 w-1.5 rounded-[1px] bg-[#0d0d0d]" />}
                       </span>
-                      <span className="text-[11px] font-light text-white/70">Confirm — these are my business details, and I’ll use this purchase for business.</span>
+                      <span className="text-[11px] font-light text-white/70">{t('confirmBusiness')}</span>
                     </button>
                     {!vatConfirmed && (
-                      <p className="mt-1.5 text-[10px] font-light text-amber-300/70">Tick to confirm, otherwise you’ll be charged as a consumer.</p>
+                      <p className="mt-1.5 text-[10px] font-light text-amber-300/70">{t('tickToConfirm')}</p>
                     )}
                     {vatConfirmed && !detailsReady && (
-                      <p className="mt-1.5 text-[10px] font-light text-amber-300/70">Enter your business name and address above to apply business treatment.</p>
+                      <p className="mt-1.5 text-[10px] font-light text-amber-300/70">{t('enterDetailsFirst')}</p>
                     )}
                   </div>
                 ) : (
                   <p className="text-[10px] font-light leading-snug text-amber-300/80">
-                    {vatCheck.status === 'invalid' && 'VAT number not found in VIES — you’ll be charged as a consumer.'}
-                    {vatCheck.status === 'unavailable' && 'VIES is responding slowly / unavailable — please try again in a moment.'}
-                    {vatCheck.status === 'malformed' && (vatCheck.countryCode === 'GB'
-                      ? 'The UK (GB) left the EU VAT system after Brexit, so a UK VAT number can’t be validated here — and none is needed: no EU VAT is charged on orders outside the EU. (Northern Ireland “XI” numbers still work.)'
-                      : 'Enter a valid EU VAT number, e.g. DE123456789.')}
-                    {vatCheck.status === 'self' && 'That’s this shop’s own VAT number — please enter your business’s VAT number.'}
+                    {vatCheck.status === 'invalid' && t('vatInvalid')}
+                    {vatCheck.status === 'unavailable' && t('vatUnavailable')}
+                    {vatCheck.status === 'malformed' && (vatCheck.countryCode === 'GB' ? t('vatGb') : t('vatMalformed'))}
+                    {vatCheck.status === 'self' && t('vatSelf')}
                   </p>
                 ))}
               </div>
