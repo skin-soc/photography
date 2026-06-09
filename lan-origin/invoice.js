@@ -31,7 +31,8 @@ export const SELLER = {
   email: process.env.MAIL_FROM || 'email@gusmcewan.com',
 }
 
-const GREEN = '#1a7f4b' // "paid" accent
+const GREEN = '#1a7f4b'    // "paid" accent (header tag)
+const STAMP_INK = '#931020' // brand red — classic rubber-stamp ink
 
 // Brand logo. PDFKit embeds PNG/JPEG only (not SVG), so we rasterise logo.svg
 // once at load via sharp and reuse the buffer. Intrinsic ratio 1320×1000 = 1.32.
@@ -113,6 +114,35 @@ function paymentLabel(method) {
     revolut_pay: 'Revolut Pay', eps: 'EPS', p24: 'Przelewy24',
   }
   return map[method] || String(method).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+/**
+ * Draw a "PAID" rubber-stamp from localized text — a tilted, double-ruled rounded
+ * box with bold uppercase text in stamp-ink red. Right-anchored to `rightEdge`,
+ * vertically centred on `cy`, and sized to the text so any locale fits. Replaces
+ * the old plain green text mark. Returns the stamp box height (for layout).
+ */
+function drawPaidStamp(doc, text, rightEdge, cy, FB) {
+  const fs = 13
+  doc.font(FB).fontSize(fs)
+  const tw = doc.widthOfString(text)
+  const lh = doc.currentLineHeight()
+  const padX = 18
+  const padY = 10
+  const boxW = Math.ceil(tw) + padX * 2
+  const boxH = Math.ceil(lh) + padY * 2
+  const cx = rightEdge - boxW / 2
+  const x = cx - boxW / 2
+  const y = cy - boxH / 2
+
+  doc.save()
+  doc.rotate(-7, { origin: [cx, cy] }) // slight tilt = hand-stamped feel
+  doc.strokeColor(STAMP_INK)
+  doc.lineWidth(2).roundedRect(x, y, boxW, boxH, 7).stroke()
+  doc.lineWidth(0.8).roundedRect(x + 3.5, y + 3.5, boxW - 7, boxH - 7, 5).stroke()
+  doc.fillColor(STAMP_INK).text(text, x, cy - lh / 2, { width: boxW, align: 'center' })
+  doc.restore()
+  return boxH
 }
 
 /** Register the embedded (or fallback) fonts on a fresh document, picking the
@@ -248,16 +278,15 @@ export function buildInvoicePdf(grant, priceBySku) {
       totalRow(t.amountPaid, money(gross, currency, loc))
       totalRow(t.balanceDue, money(0, currency, loc))
 
-      // ── PAID IN FULL stamp ──
-      y += 2
-      const stampW = 180
-      const stampH = 28
-      const stampX = right - stampW
-      doc.roundedRect(stampX, y, stampW, stampH, 5).lineWidth(1.3).strokeColor(GREEN).stroke()
-      doc.font(FB).fontSize(11).fillColor(GREEN).text(t.paidInFull, stampX, y + 8, { width: stampW, align: 'center' })
+      // ── PAID IN FULL stamp (localized rubber stamp) ──
+      y += 12
+      const stampCy = y + 18
+      drawPaidStamp(doc, t.paidInFull, right - 8, stampCy, FB)
+      // Payment caption beneath the stamp (not rotated).
+      const capY = stampCy + 28
       doc.font(FN).fontSize(8).fillColor(muted)
-        .text(`${t.paid} ${paidOn}${methodLabel ? ` · ${methodLabel}` : ''}`, stampX - 60, y + stampH + 4, { width: stampW + 60, align: 'right' })
-      y += stampH + 22
+        .text(`${t.paid} ${paidOn}${methodLabel ? ` · ${methodLabel}` : ''}`, left + 250, capY, { width: right - (left + 250), align: 'right' })
+      y = capY + 16
 
       // ── VAT notes ──
       doc.font(FN).fontSize(8.5).fillColor(muted)
