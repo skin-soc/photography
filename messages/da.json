@@ -25,7 +25,7 @@
       "description": "Om fotograf Gus McEwan — med base i København og London. Kontakt mig for portræt-, bryllups-, event- eller redaktionel fotografering."
     },
     "shop": {
-      "title": "Shop",
+      "title": "Butik",
       "h1": "Kunsttryk, print & downloads",
       "description": "Køb kunsttryk og digitale downloads af Gus McEwan — en udvalgt samling af portræt-, landskabs- og rejsefotografi fra København, London og videre omkring."
     }
@@ -85,7 +85,7 @@
     "availableAs": "Fås som",
     "addToCart": "Læg i kurv",
     "checkoutSoon": "Onlinebetaling kommer snart — kom gerne tilbage.",
-    "backToShop": "Tilbage til shop",
+    "backToShop": "Tilbage til butikken",
     "prints": "Tryk",
     "fineArt": "Kunsttryk",
     "digital": "Digitale downloads",
@@ -185,7 +185,7 @@
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link ikke tilgængeligt.",
     "unavailableBody": "Dette downloadlink er ugyldigt eller udløbet. Downloadlinks er gyldige i 30 dage efter købet. Hvis du har brug for adgang igen, så brug kontaktformularen på dette site.",
-    "returnToShop": "Tilbage til shoppen",
+    "returnToShop": "Tilbage til butikken",
     "enterPasscode": "Indtast din adgangskode",
     "passcodePrompt": "Vi har sendt en adgangskode med din ordrebekræftelse. Indtast den for at låse op for dine downloads.",
     "passcodeIncorrect": "Adgangskoden er ikke korrekt.",
