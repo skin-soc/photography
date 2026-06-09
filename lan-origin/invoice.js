@@ -88,6 +88,27 @@ const INVOICE_STRINGS = {
   ko: { title: '인보이스', receiptTag: '영수증 — 결제 완료', no: '번호', date: '날짜', order: '주문', paid: '결제일', billTo: '청구 대상', customer: '고객', description: '내역', amount: '금액', discount: '할인', subtotal: '소계(공급가액)', vat: '부가가치세', reverseChargeShort: '대리납부', total: '합계', amountPaid: '결제 금액', balanceDue: '미결제 잔액', paidInFull: '결제 완료', outsideEu: 'EU 부가가치세 적용 대상이 아닌 판매입니다.', testBanner: '테스트 주문 — 유효한 인보이스가 아님', testNo: '테스트 — 유효한 인보이스가 아님', viesRef: 'VIES 조회 번호', reverseChargeNote: '대리납부 — 부가가치세는 공급받는 자가 신고·납부합니다(이사회 지침 2006/112/EC 제196조). 고객 VAT 번호: {vat}.' },
 }
 
+// Refund credit-note chrome (the rest reuses INVOICE_STRINGS). {no} = the
+// original invoice number. ar falls back to en (uiLocale never returns 'ar').
+const REFUND_STRINGS = {
+  en: { creditTitle: 'CREDIT NOTE', refundTag: 'REFUND', refundOf: 'Refund of invoice {no}', refundLine: 'Refund', refundedFull: 'REFUNDED IN FULL', refundedPartial: 'PARTIAL REFUND', creditNo: 'Credit no.', refundDate: 'Refund date', totalRefunded: 'Total refunded' },
+  da: { creditTitle: 'KREDITNOTA', refundTag: 'REFUSION', refundOf: 'Kreditering af faktura {no}', refundLine: 'Refusion', refundedFull: 'FULDT REFUNDERET', refundedPartial: 'DELVIS REFUSION', creditNo: 'Kreditnota nr.', refundDate: 'Refusionsdato', totalRefunded: 'Refunderet i alt' },
+  de: { creditTitle: 'GUTSCHRIFT', refundTag: 'ERSTATTUNG', refundOf: 'Gutschrift zu Rechnung {no}', refundLine: 'Erstattung', refundedFull: 'VOLLSTÄNDIG ERSTATTET', refundedPartial: 'TEILERSTATTUNG', creditNo: 'Gutschrift-Nr.', refundDate: 'Erstattungsdatum', totalRefunded: 'Erstattet gesamt' },
+  es: { creditTitle: 'NOTA DE CRÉDITO', refundTag: 'REEMBOLSO', refundOf: 'Reembolso de la factura {no}', refundLine: 'Reembolso', refundedFull: 'REEMBOLSADO ÍNTEGRAMENTE', refundedPartial: 'REEMBOLSO PARCIAL', creditNo: 'N.º de nota de crédito', refundDate: 'Fecha de reembolso', totalRefunded: 'Total reembolsado' },
+  fr: { creditTitle: 'AVOIR', refundTag: 'REMBOURSEMENT', refundOf: 'Avoir sur facture {no}', refundLine: 'Remboursement', refundedFull: 'INTÉGRALEMENT REMBOURSÉ', refundedPartial: 'REMBOURSEMENT PARTIEL', creditNo: 'N° d’avoir', refundDate: 'Date de remboursement', totalRefunded: 'Total remboursé' },
+  it: { creditTitle: 'NOTA DI CREDITO', refundTag: 'RIMBORSO', refundOf: 'Storno della fattura {no}', refundLine: 'Rimborso', refundedFull: 'RIMBORSATO PER INTERO', refundedPartial: 'RIMBORSO PARZIALE', creditNo: 'N. nota di credito', refundDate: 'Data di rimborso', totalRefunded: 'Totale rimborsato' },
+  nl: { creditTitle: 'CREDITNOTA', refundTag: 'TERUGBETALING', refundOf: 'Creditering van factuur {no}', refundLine: 'Terugbetaling', refundedFull: 'VOLLEDIG TERUGBETAALD', refundedPartial: 'GEDEELTELIJKE TERUGBETALING', creditNo: 'Creditnota-nr.', refundDate: 'Datum terugbetaling', totalRefunded: 'Totaal terugbetaald' },
+  nb: { creditTitle: 'KREDITNOTA', refundTag: 'REFUSJON', refundOf: 'Kreditering av faktura {no}', refundLine: 'Refusjon', refundedFull: 'FULLT REFUNDERT', refundedPartial: 'DELVIS REFUSJON', creditNo: 'Kreditnota-nr.', refundDate: 'Refusjonsdato', totalRefunded: 'Refundert totalt' },
+  pl: { creditTitle: 'NOTA KREDYTOWA', refundTag: 'ZWROT', refundOf: 'Korekta do faktury {no}', refundLine: 'Zwrot', refundedFull: 'ZWRÓCONO W CAŁOŚCI', refundedPartial: 'ZWROT CZĘŚCIOWY', creditNo: 'Nr noty kredytowej', refundDate: 'Data zwrotu', totalRefunded: 'Łącznie zwrócono' },
+  pt: { creditTitle: 'NOTA DE CRÉDITO', refundTag: 'REEMBOLSO', refundOf: 'Nota de crédito da fatura {no}', refundLine: 'Reembolso', refundedFull: 'REEMBOLSADO NA TOTALIDADE', refundedPartial: 'REEMBOLSO PARCIAL', creditNo: 'N.º de nota de crédito', refundDate: 'Data do reembolso', totalRefunded: 'Total reembolsado' },
+  fi: { creditTitle: 'HYVITYSLASKU', refundTag: 'HYVITYS', refundOf: 'Hyvitys laskusta {no}', refundLine: 'Hyvitys', refundedFull: 'HYVITETTY TÄYSIMÄÄRÄISESTI', refundedPartial: 'OSITTAINEN HYVITYS', creditNo: 'Hyvityslaskun nro', refundDate: 'Hyvityspäivä', totalRefunded: 'Hyvitetty yhteensä' },
+  sv: { creditTitle: 'KREDITFAKTURA', refundTag: 'ÅTERBETALNING', refundOf: 'Kreditering av faktura {no}', refundLine: 'Återbetalning', refundedFull: 'ÅTERBETALD I SIN HELHET', refundedPartial: 'DELVIS ÅTERBETALNING', creditNo: 'Kreditfaktura nr', refundDate: 'Återbetalningsdatum', totalRefunded: 'Totalt återbetalat' },
+  ru: { creditTitle: 'КРЕДИТ-НОТА', refundTag: 'ВОЗВРАТ', refundOf: 'Возврат по счёту {no}', refundLine: 'Возврат', refundedFull: 'ВОЗВРАТ ПОЛНОСТЬЮ', refundedPartial: 'ЧАСТИЧНЫЙ ВОЗВРАТ', creditNo: 'Кредит-нота №', refundDate: 'Дата возврата', totalRefunded: 'Возвращено всего' },
+  zh: { creditTitle: '贷项通知单', refundTag: '退款', refundOf: '针对发票 {no} 的退款', refundLine: '退款', refundedFull: '已全额退款', refundedPartial: '部分退款', creditNo: '贷项通知单编号', refundDate: '退款日期', totalRefunded: '退款合计' },
+  ja: { creditTitle: 'クレジットノート', refundTag: '返金', refundOf: '請求書 {no} の返金', refundLine: '返金', refundedFull: '全額返金', refundedPartial: '一部返金', creditNo: 'クレジットノート番号', refundDate: '返金日', totalRefunded: '返金合計' },
+  ko: { creditTitle: '대변전표', refundTag: '환불', refundOf: '인보이스 {no} 환불', refundLine: '환불', refundedFull: '전액 환불', refundedPartial: '부분 환불', creditNo: '대변전표 번호', refundDate: '환불일', totalRefunded: '환불 합계' },
+}
+
 /** Effective UI locale — `override` (e.g. 'da'/'en' for the accounting export)
  *  wins over the grant's issued locale; both fall back to English for scripts
  *  the font can't render or unknown locales. */
@@ -339,6 +360,143 @@ export function buildInvoicePdf(grant, priceBySku, langOverride) {
       } else if (vat === 0) {
         doc.text(t.outsideEu, left, y, { width: right - left })
       }
+
+      // ── Footer ──
+      drawSellerFooter(doc, { FN, left, right, testBanner: isTest ? t.testBanner : null })
+
+      doc.end()
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
+/**
+ * Build the REFUND credit note for a (partly or fully) refunded order — a single
+ * page that mirrors the invoice but shows the refunded amounts as a credit
+ * (negative), referencing the original invoice. `priceBySku` maps sku → ex-VAT
+ * net price; `langOverride` forces the language. Returns Promise<Buffer>, or
+ * Promise<null> when the order has no recorded refund.
+ */
+export function buildRefundPdf(grant, priceBySku, langOverride) {
+  const refundGross = Number(grant.refundedAmount || 0)
+  if (!(refundGross > 0)) return Promise.resolve(null)
+
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: 'A4', margin: 56 })
+      const chunks = []
+      doc.on('data', (c) => chunks.push(c))
+      doc.on('end', () => resolve(Buffer.concat(chunks)))
+      doc.on('error', reject)
+
+      const loc = uiLocale(grant, langOverride)
+      const { FN, FB } = useFonts(doc, loc)
+      const t = INVOICE_STRINGS[loc]
+      const rt = REFUND_STRINGS[loc] || REFUND_STRINGS.en
+
+      const currency = grant.currency || 'DKK'
+      const origGross = Number(grant.amount || 0)
+      const origVat = Number(grant.taxAmount || 0)
+      const refundVat = origGross > 0 ? Math.round(refundGross * origVat / origGross) : 0
+      const refundNet = Math.max(0, refundGross - refundVat)
+      const isFull = grant.refunded === true
+      const isTest = grant.livemode !== true
+      const refundOn = fmtDate(grant.creditDate || grant.refundedAt || Date.now(), loc)
+
+      const items = Array.isArray(grant.items) ? grant.items : []
+      const havePrices = items.every((i) => priceBySku && priceBySku.get(i.sku) != null)
+      const lineNet = (i) => (priceBySku ? Number(priceBySku.get(i.sku) || 0) : 0)
+      // Which lines to show: a whole-line-item refund lists its skus; a full
+      // refund lists everything; an arbitrary partial shows a single Refund line.
+      const skus = Array.isArray(grant.revokedSkus) ? grant.revokedSkus : []
+      const lineItems = skus.length ? items.filter((i) => skus.includes(i.sku))
+        : isFull ? items : null
+
+      const left = doc.page.margins.left
+      const right = doc.page.width - doc.page.margins.right
+      const ink = '#111111'
+      const muted = '#666666'
+
+      // ── Header: logo + seller (left) + CREDIT NOTE block (right) ──
+      const logoH = 44
+      const logoW = Math.round(logoH * LOGO_ASPECT)
+      const sellerX = LOGO_PNG ? left + logoW + 16 : left
+      const blockTop = 56
+      doc.fillColor(ink).font(FB).fontSize(16).text(SELLER.name, sellerX, blockTop)
+      doc.font(FN).fontSize(9).fillColor(muted)
+      SELLER.addressLines.forEach((l) => doc.text(l))
+      if (LOGO_PNG) {
+        const logoY = (blockTop + doc.y) / 2 - logoH / 2
+        doc.image(LOGO_PNG, left, logoY, { height: logoH })
+      }
+
+      doc.font(FB).fontSize(20).fillColor(ink).text(rt.creditTitle, left, 56, { align: 'right' })
+      doc.font(FB).fontSize(8).fillColor(STAMP_INK).text(rt.refundTag, { align: 'right' })
+      doc.font(FN).fontSize(9).fillColor(muted)
+      doc.text(`${rt.creditNo}  ${grant.creditNumber || (isTest ? t.testNo : '—')}`, { align: 'right' })
+      doc.text(`${rt.refundDate}  ${refundOn}`, { align: 'right' })
+      doc.text(`${t.order}  ${grant.orderId}`, { align: 'right' })
+      doc.text(rt.refundOf.replace('{no}', grant.invoiceNumber || '—'), { align: 'right' })
+
+      // ── Bill to ──
+      let y = 160
+      doc.font(FB).fontSize(9).fillColor(muted).text(t.billTo, left, y)
+      doc.font(FN).fontSize(10).fillColor(ink)
+      if (grant.businessName || grant.vatId) {
+        if (grant.businessName) doc.text(grant.businessName)
+        if (grant.businessAddress) {
+          doc.fillColor(muted).fontSize(9)
+          String(grant.businessAddress).split(/\s*,\s*|\n/).filter(Boolean).forEach((l) => doc.text(l))
+        }
+        if (grant.vatId) doc.fillColor(muted).fontSize(9).text(`${t.vat} ${grant.vatId}`)
+      } else {
+        doc.text(grant.email || t.customer)
+      }
+
+      // ── Line items (credit — negative) ──
+      y = 220
+      doc.font(FB).fontSize(9).fillColor(muted)
+      doc.text(t.description, left, y)
+      doc.text(t.amount, left, y, { align: 'right' })
+      y += 6
+      doc.moveTo(left, y + 8).lineTo(right, y + 8).strokeColor('#dddddd').stroke()
+      y += 16
+
+      doc.font(FN).fontSize(10).fillColor(ink)
+      if (lineItems && havePrices) {
+        for (const i of lineItems) {
+          doc.text(i.label || i.sku, left, y, { width: 340 })
+          doc.text(`−${money(lineNet(i), currency, loc)}`, left, y, { align: 'right' })
+          y = doc.y + 6
+        }
+      } else {
+        doc.text(rt.refundLine, left, y, { width: 340 })
+        doc.text(`−${money(refundNet, currency, loc)}`, left, y, { align: 'right' })
+        y = doc.y + 6
+      }
+
+      // ── Totals (all negative) ──
+      y += 6
+      doc.moveTo(left, y).lineTo(right, y).strokeColor('#dddddd').stroke()
+      y += 12
+      const totalRow = (label, value, bold) => {
+        doc.font(bold ? FB : FN).fontSize(bold ? 11 : 10).fillColor(ink)
+        doc.text(label, left, y, { width: 360, align: 'right', lineBreak: false })
+        doc.text(value, left + 250, y, { width: right - (left + 250), align: 'right' })
+        y += bold ? 20 : 16
+      }
+      totalRow(t.subtotal, `−${money(refundNet, currency, loc)}`)
+      totalRow(grant.reverseCharge ? `${t.vat} (${t.reverseChargeShort})` : t.vat, `−${money(refundVat, currency, loc)}`)
+      totalRow(rt.totalRefunded, `−${money(refundGross, currency, loc)}`, true)
+
+      // ── Refund stamp ──
+      y += 12
+      const stampCy = y + 18
+      drawPaidStamp(doc, isFull ? rt.refundedFull : rt.refundedPartial, right - 8, stampCy, FB)
+      const capY = stampCy + 28
+      doc.font(FN).fontSize(8).fillColor(muted)
+        .text(`${rt.refundDate}: ${refundOn}`, left + 250, capY, { width: right - (left + 250), align: 'right' })
 
       // ── Footer ──
       drawSellerFooter(doc, { FN, left, right, testBanner: isTest ? t.testBanner : null })

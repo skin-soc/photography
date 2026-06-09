@@ -175,4 +175,90 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
   return { subject: `${t.subject} — ${brandName}`, text, html }
 }
 
-export { renderDownloadEmail }
+// ── Refund email ──────────────────────────────────────────────────────────────
+// {amount} is substituted in `body`. `help` is reused from M above.
+const M_REFUND = {
+  en: { subject: 'Refund processed', preheader: 'Your refund has been processed.', heading: 'Your refund has been processed.', body: 'We’ve refunded {amount} to your original payment method. A credit note is attached for your records.', amountLabel: 'Amount refunded' },
+  da: { subject: 'Refusion gennemført', preheader: 'Din refusion er gennemført.', heading: 'Din refusion er gennemført.', body: 'Vi har refunderet {amount} til din oprindelige betalingsmetode. En kreditnota er vedhæftet til dit regnskab.', amountLabel: 'Refunderet beløb' },
+  de: { subject: 'Erstattung verarbeitet', preheader: 'Ihre Erstattung wurde verarbeitet.', heading: 'Ihre Erstattung wurde verarbeitet.', body: 'Wir haben {amount} auf Ihr ursprüngliches Zahlungsmittel erstattet. Eine Gutschrift ist beigefügt.', amountLabel: 'Erstatteter Betrag' },
+  es: { subject: 'Reembolso procesado', preheader: 'Tu reembolso se ha procesado.', heading: 'Tu reembolso se ha procesado.', body: 'Hemos reembolsado {amount} a tu método de pago original. Se adjunta una nota de crédito.', amountLabel: 'Importe reembolsado' },
+  fr: { subject: 'Remboursement traité', preheader: 'Votre remboursement a été traité.', heading: 'Votre remboursement a été traité.', body: 'Nous avons remboursé {amount} sur votre moyen de paiement initial. Un avoir est joint.', amountLabel: 'Montant remboursé' },
+  it: { subject: 'Rimborso elaborato', preheader: 'Il tuo rimborso è stato elaborato.', heading: 'Il tuo rimborso è stato elaborato.', body: 'Abbiamo rimborsato {amount} sul tuo metodo di pagamento originale. In allegato la nota di credito.', amountLabel: 'Importo rimborsato' },
+  nl: { subject: 'Terugbetaling verwerkt', preheader: 'Je terugbetaling is verwerkt.', heading: 'Je terugbetaling is verwerkt.', body: 'We hebben {amount} teruggestort op je oorspronkelijke betaalmethode. Een creditnota is bijgevoegd.', amountLabel: 'Terugbetaald bedrag' },
+  nb: { subject: 'Refusjon behandlet', preheader: 'Refusjonen din er behandlet.', heading: 'Refusjonen din er behandlet.', body: 'Vi har refundert {amount} til din opprinnelige betalingsmåte. En kreditnota er vedlagt.', amountLabel: 'Refundert beløp' },
+  pl: { subject: 'Zwrot zrealizowany', preheader: 'Twój zwrot został zrealizowany.', heading: 'Twój zwrot został zrealizowany.', body: 'Zwróciliśmy {amount} na Twoją pierwotną metodę płatności. W załączeniu nota kredytowa.', amountLabel: 'Zwrócona kwota' },
+  pt: { subject: 'Reembolso processado', preheader: 'O seu reembolso foi processado.', heading: 'O seu reembolso foi processado.', body: 'Reembolsámos {amount} para o seu método de pagamento original. Em anexo, uma nota de crédito.', amountLabel: 'Montante reembolsado' },
+  fi: { subject: 'Hyvitys käsitelty', preheader: 'Hyvityksesi on käsitelty.', heading: 'Hyvityksesi on käsitelty.', body: 'Olemme hyvittäneet {amount} alkuperäiseen maksutapaasi. Hyvityslasku on liitteenä.', amountLabel: 'Hyvitetty määrä' },
+  sv: { subject: 'Återbetalning behandlad', preheader: 'Din återbetalning har behandlats.', heading: 'Din återbetalning har behandlats.', body: 'Vi har återbetalat {amount} till din ursprungliga betalningsmetod. En kreditfaktura bifogas.', amountLabel: 'Återbetalat belopp' },
+  ar: { subject: 'تمت معالجة الاسترداد', preheader: 'تمت معالجة استردادك.', heading: 'تمت معالجة استردادك.', body: 'لقد رددنا {amount} إلى طريقة الدفع الأصلية. مرفق إشعار دائن.', amountLabel: 'المبلغ المسترد' },
+  ru: { subject: 'Возврат обработан', preheader: 'Ваш возврат обработан.', heading: 'Ваш возврат обработан.', body: 'Мы вернули {amount} на ваш исходный способ оплаты. Кредит-нота прилагается.', amountLabel: 'Сумма возврата' },
+  zh: { subject: '退款已处理', preheader: '您的退款已处理。', heading: '您的退款已处理。', body: '我们已将 {amount} 退回至您的原付款方式。随附贷项通知单。', amountLabel: '退款金额' },
+  ja: { subject: '返金を処理しました', preheader: '返金を処理しました。', heading: '返金を処理しました。', body: '元のお支払い方法に {amount} を返金しました。クレジットノートを添付します。', amountLabel: '返金額' },
+  ko: { subject: '환불 처리 완료', preheader: '환불이 처리되었습니다.', heading: '환불이 처리되었습니다.', body: '원래 결제 수단으로 {amount}을(를) 환불했습니다. 대변전표를 첨부합니다.', amountLabel: '환불 금액' },
+}
+
+/**
+ * Render the refund-confirmation email (branded; credit note attached separately
+ * by the caller). @returns {{subject:string, text:string, html:string}}
+ */
+function renderRefundEmail({ locale, brandName, amountText, copyright, logoCid, logoW = 80, logoH = 44 }) {
+  const t = M_REFUND[locale] || M_REFUND.en
+  const help = (M[locale] || M.en).help
+  const dir = locale === 'ar' ? 'rtl' : 'ltr'
+  const align = dir === 'rtl' ? 'right' : 'left'
+  const startAlign = align
+  const endAlign = dir === 'rtl' ? 'left' : 'right'
+  const body = t.body.replace('{amount}', amountText)
+
+  const text = `${t.heading}\n\n${body}\n\n${t.amountLabel}: ${amountText}\n\n${help}\n\n${copyright}\n`
+
+  const html = `<!doctype html>
+<html lang="${locale}" dir="${dir}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
+<style>
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  body,.wrap { margin:0; padding:0; background:#f1f1f1; }
+  .card { background:#ffffff; } .text { color:#1a1a1a; } .muted { color:#666666; } .subtle { color:#9a9a9a; }
+  .rule { background:#e6e6e6; } .passbox { background:#f6f6f6; border:1px solid #e6e6e6; } .passcode { color:${BRAND}; }
+  @media (prefers-color-scheme: dark) {
+    body,.wrap { background:#0b0b0b !important; } .card { background:#141414 !important; }
+    .text { color:#f1f1f1 !important; } .muted { color:#b9b9b9 !important; } .subtle { color:#8a8a8a !important; }
+    .rule { background:#2b2b2b !important; } .passbox { background:#1d1d1d !important; border-color:#2b2b2b !important; } .passcode { color:${BRAND_LIGHT} !important; }
+  }
+</style></head>
+<body class="wrap" style="margin:0;padding:0;background:#f1f1f1;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${esc(t.preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="wrap" style="background:#f1f1f1;">
+  <tr><td align="center" style="padding:30px 16px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="max-width:520px;width:100%;background:#ffffff;">
+      <tr><td style="padding:26px 32px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="${dir}"><tr>
+          <td align="${startAlign}" valign="middle" style="width:${logoW + 8}px;"><img src="cid:${logoCid}" width="${logoW}" height="${logoH}" alt="${esc(brandName)}" style="display:inline-block;border:0;width:${logoW}px;height:${logoH}px;"></td>
+          <td align="${endAlign}" valign="middle"><span class="muted" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:400;letter-spacing:0.04em;color:#666;">${esc(brandName)}</span></td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:20px 32px 0;"><div class="rule" style="height:1px;line-height:1px;font-size:1px;background:#e6e6e6;">&nbsp;</div></td></tr>
+      <tr><td class="card text" dir="${dir}" style="background:#ffffff;padding:28px 32px 34px;text-align:${align};color:#1a1a1a;">
+        <h1 class="text" style="margin:0 0 14px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:21px;font-weight:600;color:#1a1a1a;">${esc(t.heading)}</h1>
+        <p class="muted" style="margin:0 0 24px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#666;">${esc(body)}</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
+          <tr><td class="passbox" style="background:#f6f6f6;border:1px solid #e6e6e6;border-radius:12px;padding:14px 16px;text-align:${align};">
+            <div class="subtle" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a9a9a;margin:0 0 4px;">${esc(t.amountLabel)}</div>
+            <div class="passcode" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;letter-spacing:0.04em;color:${BRAND};">${esc(amountText)}</div>
+          </td></tr>
+        </table>
+        <p class="muted" style="margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#666;">${esc(help)}</p>
+      </td></tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+      <tr><td align="center" style="padding:18px 24px 0;"><p class="subtle" style="margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.6;color:#9a9a9a;">${esc(copyright)}</p></td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`
+
+  return { subject: `${t.subject} — ${brandName}`, text, html }
+}
+
+export { renderDownloadEmail, renderRefundEmail }

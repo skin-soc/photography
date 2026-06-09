@@ -1610,9 +1610,15 @@ function PeriodBlock({
                   <td className="py-2.5 pr-4 whitespace-nowrap font-mono-ibm text-[#931020]">
                     {o.orderId}
                     {o.refundedAmount != null && (
-                      <span className="ml-2 rounded-[4px] border border-[#931020]/50 px-1.5 py-0.5 text-[8px] font-mono-ibm uppercase tracking-[0.16em] text-[#931020]">
-                        {o.refunded ? 'refunded' : `−${fmtMoney(o.refundedAmount, o.currency)}`}
-                      </span>
+                      <a
+                        href={`/api/admin/refund/${o.orderId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Refund credit note (PDF)"
+                        className="ml-2 inline-block rounded-[4px] border border-[#931020]/50 px-1.5 py-0.5 text-[8px] font-mono-ibm uppercase tracking-[0.16em] text-[#931020] hover:bg-[#931020]/15 transition-colors"
+                      >
+                        {o.refunded ? 'refunded ↗' : `−${fmtMoney(o.refundedAmount, o.currency)} ↗`}
+                      </a>
                     )}
                     <UnmatchedRefundBadge order={o} />
                     <B2bBadge order={o} />
@@ -2122,6 +2128,16 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         >
           Licence ↗
         </a>
+        {order.refundedAmount != null && (
+          <a
+            href={`/api/admin/refund/${order.orderId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-md border border-[#931020]/40 px-4 py-2 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#931020] hover:border-[#931020] hover:text-white transition-colors"
+          >
+            Refund ↗
+          </a>
+        )}
         {/* Re-send / Extend make no sense once an order is fully refunded
             (access is revoked). They stay available on a partial refund — the
             re-sent email then only lists the items the buyer still has. */}

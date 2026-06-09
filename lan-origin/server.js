@@ -37,8 +37,8 @@ import express from 'express'
 import sharp from 'sharp'
 import nodemailer from 'nodemailer'
 import AdmZip from 'adm-zip'
-import { renderDownloadEmail } from './email.js'
-import { buildInvoicePdf, buildLicensePdf } from './invoice.js'
+import { renderDownloadEmail, renderRefundEmail } from './email.js'
+import { buildInvoicePdf, buildLicensePdf, buildRefundPdf } from './invoice.js'
 import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
@@ -761,6 +761,17 @@ async function nextInvoiceNumber(year) {
   return `${year}-${String(n).padStart(4, '0')}`
 }
 
+const CREDIT_COUNTER_PATH = join(ORDERS_DIR, '_credit-counter.json')
+
+/** Gap-free sequential credit-note number, e.g. "C-2026-0001". */
+async function nextCreditNumber(year) {
+  let n = 0
+  try { n = JSON.parse(await readFile(CREDIT_COUNTER_PATH, 'utf8')).seq || 0 } catch { /* first run */ }
+  n += 1
+  await writeFile(CREDIT_COUNTER_PATH, JSON.stringify({ seq: n }), 'utf8')
+  return `C-${year}-${String(n).padStart(4, '0')}`
+}
+
 /** YYYYMMDD prefix from a grant's invoice/created date, for sortable filenames. */
 function dateStamp(grant) {
   const d = new Date(grant.invoiceDate || grant.paidAt || grant.createdAt || Date.now())
@@ -783,6 +794,18 @@ async function licenseForGrant(grant, lang) {
   if (!buffer) return null
   const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
   return { buffer, filename: `${dateStamp(grant)}-Licence-${safe}.pdf` }
+}
+
+/** Build the refund credit-note PDF + filename (date = refund date), or null when
+ *  the order has no recorded refund. */
+async function refundForGrant(grant, lang) {
+  const priceBySku = await catalogPriceMap()
+  const buffer = await buildRefundPdf(grant, priceBySku, lang)
+  if (!buffer) return null
+  const safe = String(grant.creditNumber || grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
+  const d = new Date(grant.creditDate || grant.refundedAt || Date.now())
+  const stamp = `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`
+  return { buffer, filename: `${stamp}-Refund-${safe}.pdf` }
 }
 
 // ── Email ────────────────────────────────────────────────────────────────────
@@ -896,6 +919,35 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
       { filename: 'logo.png', content: logo.content, cid: LOGO_CID, contentDisposition: 'inline' },
       ...(invoice ? [{ filename: invoice.filename, content: invoice.buffer, contentType: 'application/pdf' }] : []),
       ...(license ? [{ filename: license.filename, content: license.buffer, contentType: 'application/pdf' }] : []),
+    ],
+  })
+}
+
+/** Email the buyer a refund confirmation with the credit-note PDF attached. */
+async function sendRefundEmail({ email, locale, amountText, refund }) {
+  if (!email) throw new Error('no recipient email')
+  if (!emailConfigured()) throw new Error('SMTP not configured')
+  const loc = locale || 'en'
+  const logo = await getEmailLogo()
+  const { subject, text, html } = renderRefundEmail({
+    locale: loc,
+    brandName: BRAND_NAME,
+    amountText,
+    copyright: COPYRIGHT,
+    logoCid: LOGO_CID,
+    logoW: logo.width,
+    logoH: logo.height,
+  })
+  await mailer().sendMail({
+    from: MAIL_FROM,
+    to: email,
+    replyTo: MAIL_FROM,
+    subject,
+    text,
+    html,
+    attachments: [
+      { filename: 'logo.png', content: logo.content, cid: LOGO_CID, contentDisposition: 'inline' },
+      ...(refund ? [{ filename: refund.filename, content: refund.buffer, contentType: 'application/pdf' }] : []),
     ],
   })
 }
@@ -1188,6 +1240,8 @@ function adminOrderView(grant, priceBySku) {
     vatConsultation: grant.vatConsultation ?? null,
     invoiceNumber: grant.invoiceNumber ?? null,
     invoiceDate: grant.invoiceDate ?? null,
+    creditNumber: grant.creditNumber ?? null,
+    creditDate: grant.creditDate ?? null,
     refunded: grant.refunded ?? false,
     refundedAmount: grant.refundedAmount ?? null,
     refundedAt: grant.refundedAt ?? null,
@@ -1277,12 +1331,26 @@ app.get('/admin/invoices/zip', async (req, res) => {
       if (!name.endsWith('.json') || name.startsWith('_')) continue
       const grant = await readGrant(name.slice(0, -5))
       if (!grant || !Array.isArray(grant.items) || grant.items.length === 0) continue
+      // Invoice — filtered by its date.
       const when = grant.invoiceDate || grant.paidAt || grant.createdAt || 0
-      if (when < fromTs || when > toTs) continue
-      const buffer = await buildInvoicePdf(grant, priceBySku, lang)
-      const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
-      zip.addFile(`${dateStamp(grant)}-Invoice-${safe}.pdf`, buffer)
-      count += 1
+      if (when >= fromTs && when <= toTs) {
+        const buffer = await buildInvoicePdf(grant, priceBySku, lang)
+        const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
+        zip.addFile(`${dateStamp(grant)}-Invoice-${safe}.pdf`, buffer)
+        count += 1
+      }
+      // Refund credit note — filtered by the refund date (may differ from invoice).
+      const refundWhen = grant.creditDate || grant.refundedAt || 0
+      if ((grant.refundedAmount ?? 0) > 0 && refundWhen >= fromTs && refundWhen <= toTs) {
+        const rbuf = await buildRefundPdf(grant, priceBySku, lang)
+        if (rbuf) {
+          const safe = String(grant.creditNumber || grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
+          const rd = new Date(refundWhen)
+          const rstamp = `${rd.getUTCFullYear()}${String(rd.getUTCMonth() + 1).padStart(2, '0')}${String(rd.getUTCDate()).padStart(2, '0')}`
+          zip.addFile(`${rstamp}-Refund-${safe}.pdf`, rbuf)
+          count += 1
+        }
+      }
     }
     if (count === 0) return res.status(404).json({ error: 'no invoices in that date range' })
     const out = zip.toBuffer()
@@ -1364,7 +1432,28 @@ app.post('/admin/orders/:orderId/refund', express.json({ limit: '4kb' }), async 
   // call that brings the skus clears the flag.
   grant.refundUnmatched =
     !grant.refunded && (grant.refundedAmount ?? 0) > 0 && (grant.revokedSkus || []).length === 0
+
+  // Assign a gap-free credit-note number on the FIRST refund of a live order.
+  if ((grant.refundedAmount ?? 0) > 0 && grant.livemode === true && !grant.creditNumber) {
+    grant.creditNumber = await nextCreditNumber(new Date(grant.refundedAt).getUTCFullYear())
+    grant.creditDate = grant.refundedAt
+  }
   await writeFile(orderPath(grant.orderId), JSON.stringify(grant, null, 2))
+
+  // Email the buyer a credit note — once per distinct refunded total (Stripe
+  // retries webhooks, and multiple partial refunds bump the total). Best-effort.
+  if ((grant.refundedAmount ?? 0) > 0 && grant.email && grant.refundEmailedAmount !== grant.refundedAmount) {
+    try {
+      const refund = await refundForGrant(grant).catch((e) => { console.error('[refund] pdf failed:', e.message); return null })
+      const amountText = `${(grant.refundedAmount / 100).toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${String(grant.currency || 'DKK').toUpperCase()}`
+      await sendRefundEmail({ email: grant.email, locale: grant.locale || 'en', amountText, refund })
+      grant.refundEmailedAmount = grant.refundedAmount
+      await writeFile(orderPath(grant.orderId), JSON.stringify(grant, null, 2)).catch(() => {})
+    } catch (err) {
+      console.error('[refund] email failed (refund still recorded):', err.message)
+    }
+  }
+
   res.json({
     ok: true,
     refunded: grant.refunded,
@@ -1372,7 +1461,24 @@ app.post('/admin/orders/:orderId/refund', express.json({ limit: '4kb' }), async 
     revoked: grant.revoked,
     revokedSkus: grant.revokedSkus || [],
     refundUnmatched: grant.refundUnmatched,
+    creditNumber: grant.creditNumber ?? null,
   })
+})
+
+/** Serve the order's refund credit-note PDF, or 404 if not refunded. */
+app.get('/orders/:orderId/refund', async (req, res) => {
+  const grant = await readGrant(req.params.orderId)
+  if (!grant) return res.status(404).json({ error: 'not found' })
+  try {
+    const refund = await refundForGrant(grant)
+    if (!refund) return res.status(404).json({ error: 'no refund for this order' })
+    res.setHeader('content-type', 'application/pdf')
+    res.setHeader('content-disposition', `inline; filename="${refund.filename}"`)
+    res.send(refund.buffer)
+  } catch (err) {
+    console.error('[refund]', err.message)
+    res.status(500).json({ error: 'refund note generation failed' })
+  }
 })
 
 /** Delete all TEST-mode orders (grants with livemode === false). Live orders and

@@ -202,6 +202,20 @@ export async function fetchLicensePdf(orderId: string): Promise<{ bytes: ArrayBu
   return { bytes: await res.arrayBuffer(), filename: m?.[1] ?? `Licence-${orderId}.pdf` }
 }
 
+/** Fetch the order's refund credit-note PDF from the origin, or null if the
+ *  order has no recorded refund. */
+export async function fetchRefundPdf(orderId: string): Promise<{ bytes: ArrayBuffer; filename: string } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/orders/${encodeURIComponent(orderId)}/refund`, {
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  const cd = res.headers.get('content-disposition') ?? ''
+  const m = /filename="([^"]+)"/.exec(cd)
+  return { bytes: await res.arrayBuffer(), filename: m?.[1] ?? `Refund-${orderId}.pdf` }
+}
+
 /** Accounting export: ZIP of all invoices between two dates (YYYY-MM-DD) in a
  *  single language ('da'|'en'). Returns bytes + filename, or an error status. */
 export async function fetchInvoicesZip(
@@ -316,6 +330,9 @@ export interface AdminOrder {
   /** Sequential invoice number (live orders) + issue date (ms). */
   invoiceNumber?: string | null
   invoiceDate?: number | null
+  /** Sequential credit-note number + date (set on the first refund of a live order). */
+  creditNumber?: string | null
+  creditDate?: number | null
   /** Refund state. `refunded` = fully refunded (access revoked); refundedAmount
    *  in minor units covers partial refunds too. */
   refunded?: boolean
