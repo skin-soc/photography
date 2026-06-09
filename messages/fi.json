@@ -173,7 +173,9 @@
     "unlocking": "Avataan…",
     "unlockDownloads": "Avaa lataukset",
     "yourFiles": "Tiedostosi",
-    "download": "Lataa"
+    "download": "Lataa",
+    "invoicePdf": "Lasku (PDF)",
+    "licencePdf": "Lisenssi (PDF)"
   },
   "licensing": {
     "title": "Lisenssiehdot ja käyttöoikeudet",

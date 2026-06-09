@@ -173,7 +173,9 @@
     "unlocking": "Wird freigeschaltet…",
     "unlockDownloads": "Downloads freischalten",
     "yourFiles": "Ihre Dateien",
-    "download": "Herunterladen"
+    "download": "Herunterladen",
+    "invoicePdf": "Rechnung (PDF)",
+    "licencePdf": "Lizenz (PDF)"
   },
   "licensing": {
     "title": "Lizenzbedingungen und Nutzungsrechte",

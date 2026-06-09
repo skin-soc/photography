@@ -173,7 +173,9 @@
     "unlocking": "Unlocking…",
     "unlockDownloads": "Unlock downloads",
     "yourFiles": "Your files",
-    "download": "Download"
+    "download": "Download",
+    "invoicePdf": "Invoice (PDF)",
+    "licencePdf": "Licence (PDF)"
   },
   "licensing": {
     "title": "Licensing Terms & Usage Rights",

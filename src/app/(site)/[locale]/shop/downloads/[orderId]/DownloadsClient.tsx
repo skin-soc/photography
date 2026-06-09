@@ -149,7 +149,7 @@ export default function DownloadsClient({
           rel="noopener noreferrer"
           className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35 hover:text-white transition-colors"
         >
-          Invoice (PDF) ↗
+          {t('invoicePdf')} ↗
         </a>
         <a
           href={`/api/downloads/${orderId}/license`}
@@ -157,7 +157,7 @@ export default function DownloadsClient({
           rel="noopener noreferrer"
           className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35 hover:text-white transition-colors"
         >
-          Licence (PDF) ↗
+          {t('licencePdf')} ↗
         </a>
       </div>
     </div>

@@ -173,7 +173,9 @@
     "unlocking": "Ontgrendelen…",
     "unlockDownloads": "Downloads ontgrendelen",
     "yourFiles": "Je bestanden",
-    "download": "Downloaden"
+    "download": "Downloaden",
+    "invoicePdf": "Factuur (PDF)",
+    "licencePdf": "Licentie (PDF)"
   },
   "licensing": {
     "title": "Licentievoorwaarden en gebruiksrechten",

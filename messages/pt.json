@@ -173,7 +173,9 @@
     "unlocking": "A desbloquear…",
     "unlockDownloads": "Desbloquear transferências",
     "yourFiles": "Os seus ficheiros",
-    "download": "Transferir"
+    "download": "Transferir",
+    "invoicePdf": "Fatura (PDF)",
+    "licencePdf": "Licença (PDF)"
   },
   "licensing": {
     "title": "Termos de licença e direitos de uso",

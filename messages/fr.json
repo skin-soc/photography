@@ -173,7 +173,9 @@
     "unlocking": "Déverrouillage…",
     "unlockDownloads": "Déverrouiller les téléchargements",
     "yourFiles": "Vos fichiers",
-    "download": "Télécharger"
+    "download": "Télécharger",
+    "invoicePdf": "Facture (PDF)",
+    "licencePdf": "Licence (PDF)"
   },
   "licensing": {
     "title": "Conditions de licence et droits d'utilisation",

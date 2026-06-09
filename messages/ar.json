@@ -173,7 +173,9 @@
     "unlocking": "جارٍ الفتح…",
     "unlockDownloads": "افتح التنزيلات",
     "yourFiles": "ملفاتك",
-    "download": "تنزيل"
+    "download": "تنزيل",
+    "invoicePdf": "فاتورة (PDF)",
+    "licencePdf": "ترخيص (PDF)"
   },
   "licensing": {
     "title": "شروط الترخيص وحقوق الاستخدام",

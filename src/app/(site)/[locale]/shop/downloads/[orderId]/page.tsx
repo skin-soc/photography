@@ -34,7 +34,7 @@ export default async function DownloadsPage({ params }: { params: Params }) {
         href="/shop"
         className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35 hover:text-white/70 transition-colors"
       >
-        ← Back to shop
+        ← {t('returnToShop')}
       </Link>
 
       <div className="mt-16 max-w-lg">

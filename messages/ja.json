@@ -173,7 +173,9 @@
     "unlocking": "ロックを解除しています…",
     "unlockDownloads": "ダウンロードのロックを解除",
     "yourFiles": "あなたのファイル",
-    "download": "ダウンロード"
+    "download": "ダウンロード",
+    "invoicePdf": "請求書 (PDF)",
+    "licencePdf": "ライセンス (PDF)"
   },
   "licensing": {
     "title": "ライセンス条件と使用権",

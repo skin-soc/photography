@@ -173,7 +173,9 @@
     "unlocking": "正在解锁…",
     "unlockDownloads": "解锁下载",
     "yourFiles": "您的文件",
-    "download": "下载"
+    "download": "下载",
+    "invoicePdf": "发票 (PDF)",
+    "licencePdf": "许可 (PDF)"
   },
   "licensing": {
     "title": "许可条款与使用权利",

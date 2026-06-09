@@ -173,7 +173,9 @@
     "unlocking": "Låser upp…",
     "unlockDownloads": "Lås upp nedladdningar",
     "yourFiles": "Dina filer",
-    "download": "Ladda ner"
+    "download": "Ladda ner",
+    "invoicePdf": "Faktura (PDF)",
+    "licencePdf": "Licens (PDF)"
   },
   "licensing": {
     "title": "Licensvillkor och användningsrättigheter",

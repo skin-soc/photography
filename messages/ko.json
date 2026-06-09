@@ -173,7 +173,9 @@
     "unlocking": "잠금 해제 중…",
     "unlockDownloads": "다운로드 잠금 해제",
     "yourFiles": "내 파일",
-    "download": "다운로드"
+    "download": "다운로드",
+    "invoicePdf": "인보이스 (PDF)",
+    "licencePdf": "라이선스 (PDF)"
   },
   "licensing": {
     "title": "라이선스 약관 및 사용 권리",

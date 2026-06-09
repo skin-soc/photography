@@ -173,7 +173,9 @@
     "unlocking": "Sblocco in corso…",
     "unlockDownloads": "Sblocca i download",
     "yourFiles": "I tuoi file",
-    "download": "Scarica"
+    "download": "Scarica",
+    "invoicePdf": "Fattura (PDF)",
+    "licencePdf": "Licenza (PDF)"
   },
   "licensing": {
     "title": "Termini di licenza e diritti d'uso",

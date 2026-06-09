@@ -173,7 +173,9 @@
     "unlocking": "Разблокировка…",
     "unlockDownloads": "Разблокировать загрузки",
     "yourFiles": "Ваши файлы",
-    "download": "Скачать"
+    "download": "Скачать",
+    "invoicePdf": "Счёт (PDF)",
+    "licencePdf": "Лицензия (PDF)"
   },
   "licensing": {
     "title": "Условия лицензии и права использования",
