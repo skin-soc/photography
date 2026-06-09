@@ -2,6 +2,7 @@ import type Stripe from 'stripe'
 import { stripe, cryptoProvider } from '@/lib/stripe-server'
 import { issueGrant, resolveDownloadItems, originConfigured, markRefund, notifyOwnerSale } from '@/lib/downloads'
 import { getSaleNotify } from '@/lib/shop-settings'
+import { getInvoiceTerms } from '@/lib/terms'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? ''
 
@@ -27,11 +28,18 @@ async function fulfilSession(sessionId: string): Promise<void> {
       ? pi.latest_charge
       : null
 
+  // Payment facts for the receipt: when it was paid and by what method. The
+  // session is only fulfilled on payment_status === 'paid', so this is always a
+  // settled, paid-in-full charge — there are no payment terms.
+  const locale = session.metadata?.locale || 'en'
+  const paidAt = charge?.created ? charge.created * 1000 : (session.created ? session.created * 1000 : null)
+  const paymentMethod = charge?.payment_method_details?.type ?? null
+
   await issueGrant({
     orderId: orderCode,
     paymentId,
     email: session.customer_details?.email ?? null,
-    locale: session.metadata?.locale || 'en',
+    locale,
     items,
     livemode: session.livemode,
     amount: session.amount_total,
@@ -39,6 +47,14 @@ async function fulfilSession(sessionId: string): Promise<void> {
     taxAmount: session.total_details?.amount_tax ?? null,
     taxCountry: session.customer_details?.address?.country ?? null,
     cardCountry: charge?.payment_method_details?.card?.country ?? null,
+    // VAT place-of-supply evidence (Cloudflare geolocation, set at checkout).
+    buyerIp: session.metadata?.buyerIp ?? null,
+    buyerCountry: session.metadata?.buyerCountry ?? null,
+    // Receipt facts.
+    paidAt,
+    paymentMethod,
+    // Snapshot of the licensing terms in force at purchase (for the PDF page 2).
+    terms: await getInvoiceTerms(locale),
     vatId: session.metadata?.vatId ?? null,
     businessName: session.metadata?.businessName ?? null,
     businessAddress: session.metadata?.businessAddress ?? null,

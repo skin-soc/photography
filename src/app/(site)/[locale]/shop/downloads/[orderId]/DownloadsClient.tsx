@@ -141,8 +141,8 @@ export default function DownloadsClient({
         </div>
       ))}
 
-      {/* VAT invoice (PDF) — always available for this order. */}
-      <div className="pt-2">
+      {/* Receipt + licence (PDF) — always available for this order. */}
+      <div className="pt-2 flex gap-5">
         <a
           href={`/api/downloads/${orderId}/invoice`}
           target="_blank"
@@ -150,6 +150,14 @@ export default function DownloadsClient({
           className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35 hover:text-white transition-colors"
         >
           Invoice (PDF) ↗
+        </a>
+        <a
+          href={`/api/downloads/${orderId}/license`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35 hover:text-white transition-colors"
+        >
+          Licence (PDF) ↗
         </a>
       </div>
     </div>

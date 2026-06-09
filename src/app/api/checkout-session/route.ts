@@ -56,6 +56,13 @@ export async function POST(req: Request) {
     const country =
       req.headers.get('cf-ipcountry') ??
       (process.env.NODE_ENV === 'development' ? 'DK' : null)
+    // Buyer IP — recorded with the country as our EU VAT place-of-supply evidence
+    // (a single piece suffices under €100k cross-border; we're well under). Kept
+    // on the order, never placed in a URL. cf-connecting-ip is the real client IP.
+    const buyerIp =
+      req.headers.get('cf-connecting-ip') ??
+      req.headers.get('x-real-ip') ??
+      ((req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null)
     const skus = (body.items ?? []).map((i) => i.sku)
     if (skus.length === 0) {
       return Response.json({ error: 'no items' }, { status: 400 })
@@ -129,6 +136,10 @@ export async function POST(req: Request) {
       skus: skus.join(','),
       hasPhysical: String(hasPhysical),
     }
+    // VAT place-of-supply evidence (Cloudflare geolocation). The webhook copies
+    // these onto the order for the audit trail.
+    if (country) metadata.buyerCountry = country
+    if (buyerIp) metadata.buyerIp = buyerIp
 
     // Manual VAT decision (B2C by IP, or B2B reverse charge for a validated EU
     // business). When taxable we attach a Stripe Tax Rate (exclusive) to every

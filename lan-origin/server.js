@@ -37,7 +37,7 @@ import express from 'express'
 import sharp from 'sharp'
 import nodemailer from 'nodemailer'
 import { renderDownloadEmail } from './email.js'
-import { buildInvoicePdf } from './invoice.js'
+import { buildInvoicePdf, buildLicensePdf } from './invoice.js'
 import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
@@ -760,13 +760,22 @@ async function nextInvoiceNumber(year) {
   return `${year}-${String(n).padStart(4, '0')}`
 }
 
-/** Build the invoice PDF + filename for a grant (regenerated on demand from the
+/** Build the receipt PDF + filename for a grant (regenerated on demand from the
  *  stored grant — deterministic). */
 async function invoiceForGrant(grant) {
   const priceBySku = await catalogPriceMap()
   const buffer = await buildInvoicePdf(grant, priceBySku)
   const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
-  return { buffer, filename: `invoice-${safe}.pdf` }
+  return { buffer, filename: `Invoice-${safe}.pdf` }
+}
+
+/** Build the standalone localized licence PDF + filename, or null when the grant
+ *  has no terms snapshot (legacy orders). */
+async function licenseForGrant(grant) {
+  const buffer = await buildLicensePdf(grant)
+  if (!buffer) return null
+  const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
+  return { buffer, filename: `Licence-${safe}.pdf` }
 }
 
 // ── Email ────────────────────────────────────────────────────────────────────
@@ -850,7 +859,7 @@ function formatExpiry(expiresAt, locale) {
   }
 }
 
-async function sendDownloadEmail({ email, orderId, passcode, items, locale, expiresAt, invoice }) {
+async function sendDownloadEmail({ email, orderId, passcode, items, locale, expiresAt, invoice, license }) {
   if (!email) throw new Error('no recipient email')
   if (!emailConfigured()) throw new Error('SMTP not configured')
 
@@ -879,6 +888,7 @@ async function sendDownloadEmail({ email, orderId, passcode, items, locale, expi
     attachments: [
       { filename: 'logo.png', content: logo.content, cid: LOGO_CID, contentDisposition: 'inline' },
       ...(invoice ? [{ filename: invoice.filename, content: invoice.buffer, contentType: 'application/pdf' }] : []),
+      ...(license ? [{ filename: license.filename, content: license.buffer, contentType: 'application/pdf' }] : []),
     ],
   })
 }
@@ -912,6 +922,7 @@ async function pregenerateGrant(grant) {
 app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
   const { orderId, paymentId, email, locale, items,
           livemode, amount, currency, taxAmount, taxCountry, cardCountry,
+          buyerIp, buyerCountry, paidAt, paymentMethod, terms,
           vatId, businessName, businessAddress, reverseCharge, vatConsultation } = req.body ?? {}
   if (!orderId || !orderPath(orderId) || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'invalid order' })
@@ -935,6 +946,14 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
       taxAmount: Number.isFinite(taxAmount) ? taxAmount : null,
       taxCountry: taxCountry ? String(taxCountry) : null,
       cardCountry: cardCountry ? String(cardCountry) : null,
+      // VAT place-of-supply evidence (Cloudflare geolocation) + receipt facts.
+      buyerIp: buyerIp ? String(buyerIp) : null,
+      buyerCountry: buyerCountry ? String(buyerCountry) : null,
+      paidAt: Number.isFinite(paidAt) ? paidAt : null,
+      paymentMethod: paymentMethod ? String(paymentMethod) : null,
+      locale: locale ? String(locale) : 'en',
+      // Snapshot of the licensing terms in the buyer's language (invoice page 2).
+      terms: terms && typeof terms === 'object' ? terms : null,
       // B2B: validated VAT id, business name, reverse-charge (0%) flag.
       vatId: vatId ? String(vatId) : null,
       businessName: businessName ? String(businessName) : null,
@@ -978,6 +997,7 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
         locale: locale || 'en',
         expiresAt: grant.expiresAt,
         invoice: await invoiceForGrant(grant).catch((e) => { console.error('[invoice] build failed:', e.message); return null }),
+        license: await licenseForGrant(grant).catch((e) => { console.error('[license] build failed:', e.message); return null }),
       })
       grant.emailed = true
       if (email && !grant.email) grant.email = String(email) // keep admin display accurate
@@ -1042,6 +1062,23 @@ app.get('/orders/:orderId/invoice', async (req, res) => {
   } catch (err) {
     console.error('[invoice]', err.message)
     res.status(500).json({ error: 'invoice generation failed' })
+  }
+})
+
+/** Serve the order's standalone licensing Terms PDF (regenerated from the grant
+ *  snapshot). Permanent record, available regardless of download-link expiry. */
+app.get('/orders/:orderId/license', async (req, res) => {
+  const grant = await readGrant(req.params.orderId)
+  if (!grant) return res.status(404).json({ error: 'not found' })
+  try {
+    const license = await licenseForGrant(grant)
+    if (!license) return res.status(404).json({ error: 'no licence for this order' })
+    res.setHeader('content-type', 'application/pdf')
+    res.setHeader('content-disposition', `inline; filename="${license.filename}"`)
+    res.send(license.buffer)
+  } catch (err) {
+    console.error('[license]', err.message)
+    res.status(500).json({ error: 'licence generation failed' })
   }
 })
 
@@ -1133,6 +1170,10 @@ function adminOrderView(grant, priceBySku) {
     taxAmount: grant.taxAmount ?? null,
     taxCountry: grant.taxCountry ?? null,
     cardCountry: grant.cardCountry ?? null,
+    buyerIp: grant.buyerIp ?? null,
+    buyerCountry: grant.buyerCountry ?? null,
+    paidAt: grant.paidAt ?? null,
+    paymentMethod: grant.paymentMethod ?? null,
     vatId: grant.vatId ?? null,
     businessName: grant.businessName ?? null,
     businessAddress: grant.businessAddress ?? null,
@@ -1223,8 +1264,9 @@ app.post('/admin/orders/:orderId/resend', express.json({ limit: '4kb' }), async 
   try {
     await sendDownloadEmail({
       email: to, orderId: grant.orderId, passcode: grant.passcode,
-      items: liveItems, locale: 'en', expiresAt: grant.expiresAt,
+      items: liveItems, locale: grant.locale || 'en', expiresAt: grant.expiresAt,
       invoice: await invoiceForGrant(grant).catch(() => null),
+      license: await licenseForGrant(grant).catch(() => null),
     })
     grant.emailed = true
     if (req.body && req.body.email) grant.email = to
@@ -1327,6 +1369,54 @@ app.post('/admin/orders/purge-expired', async (_req, res) => {
 app.post('/admin/cache/warm-previews', async (_req, res) => {
   warmPreviewCache().catch((err) => console.error('[warm] manual sweep failed:', err.message))
   res.json({ ok: true, started: true })
+})
+
+/**
+ * Force a re-render of watermarked previews. Unlike warm-previews (which only
+ * builds what's missing), this DELETES the cached previews first so they're
+ * regenerated from the clean Lightroom source — used after re-watermarking or a
+ * logo change. An optional `path` (a category prefix, e.g. ["Landscapes","Iceland"])
+ * limits it to that collection and everything below it; omit it to re-render all.
+ */
+app.post('/admin/cache/rerender-previews', express.json({ limit: '4kb' }), async (req, res) => {
+  try {
+    const path = Array.isArray(req.body?.path)
+      ? req.body.path.filter((s) => typeof s === 'string')
+      : []
+
+    const { photos } = await loadCatalog()
+    const matched = path.length === 0
+      ? photos
+      : photos.filter((p) =>
+          Array.isArray(p.category) &&
+          p.category.some((c) => path.every((seg, i) => c[i] === seg)))
+    const idSet = new Set(matched.map((p) => p.id))
+
+    // Delete every cached size for the matched ids. Cache files are `${id}.jpg`
+    // (the full PREVIEW_MAX) and `${id}-${size}.jpg` (smaller variants), so map
+    // each filename back to its photo id robustly before matching.
+    let deleted = 0
+    let files = []
+    try { files = await readdir(CACHE_DIR) } catch { /* empty */ }
+    for (const name of files) {
+      if (!name.toLowerCase().endsWith('.jpg')) continue
+      const base = name.slice(0, -4)
+      let id = base
+      if (!idSet.has(id)) {
+        const m = /^(.+)-\d+$/.exec(base) // strip a `-<size>` suffix and retry
+        if (m && idSet.has(m[1])) id = m[1]
+      }
+      if (!idSet.has(id)) continue
+      await unlink(join(CACHE_DIR, name)).catch(() => {})
+      deleted += 1
+    }
+
+    // Rebuild in the background (same throttled warmer that fills missing ones).
+    warmPreviewCache().catch((err) => console.error('[warm] rerender sweep failed:', err.message))
+    res.json({ ok: true, matched: idSet.size, deleted, started: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 /** Clear generated deliverables (fulfil cache). They regenerate on next download. */

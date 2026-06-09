@@ -139,6 +139,17 @@ export async function issueGrant(input: {
   /** Card-issuer country — second piece of EU VAT location evidence, to
    *  reconcile against the IP-derived taxCountry. */
   cardCountry?: string | null
+  /** Cloudflare-geolocation IP + country — our primary VAT place-of-supply
+   *  evidence (a single piece suffices below the €100k cross-border threshold). */
+  buyerIp?: string | null
+  buyerCountry?: string | null
+  /** Receipt facts: when the order was paid and by what method (e.g. 'card').
+   *  Orders are only granted once paid in full, so there are no payment terms. */
+  paidAt?: number | null
+  paymentMethod?: string | null
+  /** Snapshot of the licensing terms (the `licensing` message namespace) in the
+   *  buyer's language, embedded as page 2 of the invoice/receipt PDF. */
+  terms?: Record<string, string> | null
   /** B2B: validated VAT id, business name, and whether VAT was reverse-charged
    *  (0%, intra-EU). Present only for business purchases. */
   vatId?: string | null
@@ -174,7 +185,21 @@ export async function fetchInvoicePdf(orderId: string): Promise<{ bytes: ArrayBu
   if (!res.ok) return null
   const cd = res.headers.get('content-disposition') ?? ''
   const m = /filename="([^"]+)"/.exec(cd)
-  return { bytes: await res.arrayBuffer(), filename: m?.[1] ?? `invoice-${orderId}.pdf` }
+  return { bytes: await res.arrayBuffer(), filename: m?.[1] ?? `Invoice-${orderId}.pdf` }
+}
+
+/** Fetch the order's standalone licence (Terms) PDF from the origin. Returns the
+ *  bytes + filename, or null if unavailable (e.g. legacy orders with no terms). */
+export async function fetchLicensePdf(orderId: string): Promise<{ bytes: ArrayBuffer; filename: string } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/orders/${encodeURIComponent(orderId)}/license`, {
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  const cd = res.headers.get('content-disposition') ?? ''
+  const m = /filename="([^"]+)"/.exec(cd)
+  return { bytes: await res.arrayBuffer(), filename: m?.[1] ?? `Licence-${orderId}.pdf` }
 }
 
 /** Fetch non-secret order metadata for the download page. */
@@ -254,6 +279,12 @@ export interface AdminOrder {
   taxCountry?: string | null
   /** Card-issuer country — second VAT location evidence (vs taxCountry). */
   cardCountry?: string | null
+  /** Cloudflare-geolocation VAT evidence captured at checkout. */
+  buyerIp?: string | null
+  buyerCountry?: string | null
+  /** Receipt facts: paid timestamp (ms) + method (e.g. 'card'). */
+  paidAt?: number | null
+  paymentMethod?: string | null
   /** B2B fields — validated VAT id, business name, reverse-charge (0%) flag,
    *  and the VIES consultation number (audit proof of the check). */
   vatId?: string | null
@@ -377,6 +408,25 @@ export async function adminWarmPreviews(): Promise<boolean> {
     cache: 'no-store',
   })
   return res.ok
+}
+
+/**
+ * Force a re-render of watermarked previews: deletes the cached previews (for a
+ * collection prefix, or all when `path` is empty) so they regenerate from the
+ * clean source. Returns how many photos matched and cache files were deleted.
+ */
+export async function adminRerenderPreviews(
+  path: string[] = [],
+): Promise<{ matched: number; deleted: number } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/cache/rerender-previews`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify({ path }),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  return (await res.json()) as { matched: number; deleted: number }
 }
 
 /** Clear generated deliverables (they regenerate on next download). */

@@ -20,6 +20,7 @@ import {
   signOrder,
   cookieName,
 } from '@/lib/downloads'
+import { getInvoiceTerms } from '@/lib/terms'
 
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 // 30 days, matches the grant TTL
 
@@ -71,6 +72,12 @@ export async function POST(req: NextRequest) {
       ? pi.latest_charge
       : null
   const cardCountry = charge?.payment_method_details?.card?.country ?? null
+  // This route usually wins the race over the webhook (it fires on the success
+  // page), so it MUST pass the full grant — receipt facts, VAT evidence and the
+  // terms snapshot — or the order would be created without them.
+  const locale = session.metadata?.locale || 'en'
+  const paidAt = charge?.created ? charge.created * 1000 : (session.created ? session.created * 1000 : null)
+  const paymentMethod = charge?.payment_method_details?.type ?? null
 
   let passcode: string | null = null
   try {
@@ -78,7 +85,7 @@ export async function POST(req: NextRequest) {
       orderId,
       paymentId,
       email: session.customer_details?.email ?? null,
-      locale: session.metadata?.locale || 'en',
+      locale,
       items,
       livemode: session.livemode,
       amount: session.amount_total,
@@ -86,6 +93,11 @@ export async function POST(req: NextRequest) {
       taxAmount: session.total_details?.amount_tax ?? null,
       taxCountry: session.customer_details?.address?.country ?? null,
       cardCountry,
+      buyerIp: session.metadata?.buyerIp ?? null,
+      buyerCountry: session.metadata?.buyerCountry ?? null,
+      paidAt,
+      paymentMethod,
+      terms: await getInvoiceTerms(locale),
       vatId: session.metadata?.vatId ?? null,
       businessName: session.metadata?.businessName ?? null,
       businessAddress: session.metadata?.businessAddress ?? null,

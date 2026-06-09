@@ -500,7 +500,83 @@ function CacheControls() {
         ))}
       </div>
       {note && <p className="mt-4 text-[12px] text-white/55">{note}</p>}
+      <RerenderPreviews btn={btn} />
     </section>
+  )
+}
+
+/**
+ * Force a re-render of watermarked previews — for one collection (down to leaf
+ * level) or all of them. Unlike "Warm previews", this deletes the cached
+ * previews first so they regenerate from source (use after a logo or
+ * watermark change). The collection list comes from the live catalog.
+ */
+function RerenderPreviews({ btn }: { btn: string }) {
+  const [collections, setCollections] = useState<{ path: string[]; count: number }[] | null>(null)
+  const [total, setTotal] = useState(0)
+  const [selected, setSelected] = useState('') // JSON of the chosen path; '' = all
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch('/api/admin/cache', { cache: 'no-store' })
+        if (!res.ok) return
+        const d = (await res.json()) as { total?: number; collections?: { path: string[]; count: number }[] }
+        setCollections(d.collections ?? [])
+        setTotal(d.total ?? 0)
+      } catch { /* leave as loading */ }
+    })()
+  }, [])
+
+  async function rerender() {
+    const path = selected ? (JSON.parse(selected) as string[]) : []
+    const label = path.length ? path.join(' › ') : 'all collections'
+    if (!window.confirm(`Re-render previews for ${label}? Cached previews are deleted and rebuilt from source.`)) return
+    setBusy(true)
+    setNote(null)
+    try {
+      const res = await fetch('/api/admin/cache', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'rerender-previews', path }),
+      })
+      const d = (await res.json().catch(() => ({}))) as { matched?: number; deleted?: number; error?: string }
+      setNote(res.ok
+        ? `Re-rendering ${d.matched ?? 0} photo${d.matched === 1 ? '' : 's'} (${d.deleted ?? 0} cached preview${d.deleted === 1 ? '' : 's'} cleared) — rebuilding in the background.`
+        : (d.error || 'Failed.'))
+    } catch { setNote('Failed.') } finally { setBusy(false) }
+  }
+
+  const sel = 'h-10 min-w-[16rem] max-w-full rounded-md border border-white/15 bg-transparent px-3 text-[11px] font-mono-ibm uppercase tracking-[0.12em] text-white/70 hover:border-white/40 focus:border-white/40 focus:outline-none disabled:opacity-40 [&>option]:bg-neutral-900 [&>option]:text-white/80'
+
+  return (
+    <div className="mt-6 border-t border-white/10 pt-5">
+      <p className="text-[12px] font-light text-white/40 leading-relaxed">
+        Force a re-render: deletes cached previews so they rebuild from source (use after a logo or
+        watermark change). Pick a collection — down to a single leaf — or all previews.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <select
+          value={selected}
+          onChange={(e) => setSelected(e.target.value)}
+          disabled={busy || collections === null}
+          className={sel}
+        >
+          <option value="">{collections === null ? 'Loading…' : `All previews (${total})`}</option>
+          {collections?.map((c) => (
+            <option key={JSON.stringify(c.path)} value={JSON.stringify(c.path)}>
+              {'  '.repeat(c.path.length - 1)}{c.path[c.path.length - 1]} ({c.count})
+            </option>
+          ))}
+        </select>
+        <button onClick={rerender} disabled={busy || collections === null} className={btn}>
+          {busy ? 'Re-rendering…' : 'Re-render previews'}
+        </button>
+      </div>
+      {note && <p className="mt-4 text-[12px] text-white/55">{note}</p>}
+    </div>
   )
 }
 
@@ -1321,7 +1397,7 @@ function PeriodBlock({
   const exportCsv = () => {
     // Gross/Tax/Net are net of refunds (matching the on-screen totals); the
     // Charged + Refunded columns preserve the original figures for audit.
-    const head = ['Date', 'Order code', 'Email', 'Mode', 'VAT region', 'Currency', 'Charged', 'Refunded', 'Gross', 'Tax', 'Net', 'Tax country (IP)', 'Card country', 'Location match', 'Reverse charge', 'VAT ID', 'Business', 'Business address', 'VIES consultation']
+    const head = ['Date', 'Order code', 'Email', 'Mode', 'VAT region', 'Currency', 'Charged', 'Refunded', 'Gross', 'Tax', 'Net', 'Tax country (IP)', 'Card country', 'Buyer country (CF)', 'Buyer IP', 'Payment method', 'Paid date', 'Location match', 'Reverse charge', 'VAT ID', 'Business', 'Business address', 'VIES consultation']
     const rows = orders.map((o) => {
       const eff = effectiveAmounts(o)
       return [
@@ -1338,6 +1414,10 @@ function PeriodBlock({
         (eff.net / 100).toFixed(2),
         o.taxCountry ?? '',
         o.cardCountry ?? '',
+        o.buyerCountry ?? '',
+        o.buyerIp ?? '',
+        o.paymentMethod ?? '',
+        o.paidAt ? new Date(o.paidAt).toISOString().slice(0, 10) : '',
         locationMatch(o),
         o.reverseCharge ? 'yes' : '',
         o.vatId ?? '',
@@ -1915,6 +1995,12 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         {order.businessAddress && <Row label="Address" value={order.businessAddress} />}
         {order.vatId && <Row label="VAT ID" value={order.vatId} mono />}
         {order.vatConsultation && <Row label="VIES ref" value={order.vatConsultation} mono />}
+        {order.paidAt && (
+          <Row label="Paid" value={`${new Date(order.paidAt).toLocaleDateString('en-GB')}${order.paymentMethod ? ` · ${order.paymentMethod}` : ''}`} />
+        )}
+        {(order.buyerCountry || order.buyerIp) && (
+          <Row label="VAT evidence" value={`${order.buyerCountry ?? '—'}${order.buyerIp ? ` · ${order.buyerIp}` : ''}`} mono />
+        )}
         {order.refundedAmount != null && (
           <Row
             label="Refunded"
@@ -1940,7 +2026,7 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
       </ul>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        {/* Invoice is always available — a permanent record, even after refund. */}
+        {/* Invoice + licence are always available — permanent records, even after refund. */}
         <a
           href={`/api/admin/invoice/${order.orderId}`}
           target="_blank"
@@ -1948,6 +2034,14 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
           className="rounded-md border border-white/15 px-4 py-2 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors"
         >
           Invoice ↗
+        </a>
+        <a
+          href={`/api/admin/license/${order.orderId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-md border border-white/15 px-4 py-2 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors"
+        >
+          Licence ↗
         </a>
         {/* Re-send / Extend make no sense once an order is fully refunded
             (access is revoked). They stay available on a partial refund — the

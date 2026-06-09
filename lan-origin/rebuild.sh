@@ -39,6 +39,16 @@ if ! grep -q '"pdfkit"' "$SOURCE/package.json"; then
   echo "ERROR: $SOURCE/package.json missing pdfkit — re-sync it, then re-run (npm install adds it)."
   exit 1
 fi
+# The receipt/terms invoice needs the Noto font (Cyrillic terms) installed via
+# apt in the Dockerfile, and the new invoice.js with the PAID-IN-FULL receipt.
+if ! grep -q 'fonts-noto-core' "$SOURCE/Dockerfile" || ! grep -q 'fonts-noto-cjk' "$SOURCE/Dockerfile"; then
+  echo "ERROR: $SOURCE/Dockerfile must install fonts-noto-core AND fonts-noto-cjk — re-sync the updated Dockerfile."
+  exit 1
+fi
+if ! grep -q 'PAID IN FULL' "$SOURCE/invoice.js"; then
+  echo "ERROR: $SOURCE/invoice.js is STALE (no receipt/terms code) — re-sync the updated invoice.js."
+  exit 1
+fi
 echo "==> Source check OK ($SOURCE has the new code)"
 
 # 1. Build the image from scratch.
