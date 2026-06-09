@@ -264,7 +264,11 @@ export function buildInvoicePdf(grant, priceBySku) {
       y += 12
       const totalRow = (label, value, bold) => {
         doc.font(bold ? FB : FN).fontSize(bold ? 11 : 10).fillColor(ink)
-        doc.text(label, left + 250, y, { width: 130, align: 'right' })
+        // Label gets the whole left half and never wraps — long localized labels
+        // (Russian "Промежуточный итог (нетто)", German "Zwischensumme (netto)",
+        // …) would otherwise spill onto a second line and collide with the next
+        // row. Right-aligned to clear the value column.
+        doc.text(label, left, y, { width: 360, align: 'right', lineBreak: false })
         doc.text(value, left + 250, y, { width: right - (left + 250), align: 'right' })
         y += bold ? 20 : 16
       }
