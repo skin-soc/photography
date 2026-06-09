@@ -28,7 +28,9 @@ export const SELLER = {
   vat: 'DK34922993',
   cvr: '34922993',
   addressLines: ['Ryesgade 62', '2100 København Ø', 'Denmark'],
-  email: process.env.MAIL_FROM || 'email@gusmcewan.com',
+  // MAIL_FROM is often a full mail header ("Name <addr>"); keep just the address.
+  email: (process.env.MAIL_FROM || 'email@gusmcewan.com').replace(/^.*</, '').replace(/>.*$/, '').trim(),
+  website: 'https://gusmcewan.com',
 }
 
 const STAMP_INK = '#931020' // brand red — used for the receipt tag + paid stamp
@@ -302,14 +304,23 @@ export function buildInvoicePdf(grant, priceBySku) {
         doc.text(t.outsideEu, left, y, { width: right - left })
       }
 
-      // ── Footer ──
-      doc.font(FN).fontSize(8).fillColor('#999999')
-      doc.text(
-        `${SELLER.name} · CVR ${SELLER.cvr} · VAT ${SELLER.vat} · ${SELLER.email} · ${SELLER.addressLines.join(', ')}`,
-        left, doc.page.height - 70, { width: right - left, align: 'center' },
+      // ── Footer (two single lines, never wrapping) ──
+      // Line 1: business name · financials · address. Line 2 (brand): site · email.
+      // Both must sit ABOVE the bottom-margin line, or PDFKit spills them onto a
+      // second page. Anchor relative to that boundary.
+      const bottomLimit = doc.page.height - doc.page.margins.bottom
+      const line2Y = bottomLimit - 14
+      const line1Y = line2Y - 11
+      doc.font(FN).fontSize(8).fillColor('#999999').text(
+        `${SELLER.name} · CVR ${SELLER.cvr} · VAT ${SELLER.vat} · ${SELLER.addressLines.join(', ')}`,
+        left, line1Y, { width: right - left, align: 'center', lineBreak: false },
+      )
+      doc.fillColor(STAMP_INK).text(
+        `${SELLER.website} · ${SELLER.email}`,
+        left, line2Y, { width: right - left, align: 'center', lineBreak: false },
       )
       if (isTest) {
-        doc.fillColor('#cc3344').fontSize(9).text(t.testBanner, left, doc.page.height - 56, { align: 'center' })
+        doc.fillColor('#cc3344').fontSize(9).text(t.testBanner, left, line1Y - 14, { width: right - left, align: 'center', lineBreak: false })
       }
 
       doc.end()
