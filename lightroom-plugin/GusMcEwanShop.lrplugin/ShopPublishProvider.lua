@@ -24,6 +24,7 @@ local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 local LrExportSession = import 'LrExportSession'
 local LrFunctionContext = import 'LrFunctionContext'
+local LrProgressScope = import 'LrProgressScope'
 
 -- Pure-Lua HMAC-SHA256 → the GMP reference the origin/Worker use.
 local Sha256 = require 'Sha256'
@@ -166,16 +167,23 @@ end
 --- reference: masters/<gmpRef(id)>.<ext> (the customer reference, not the camera
 --- filename). Returns the count written. MUST run inside an async task (it
 --- yields) — and must NOT be wrapped in pcall (Lua can't yield across pcall).
-local function renderMasters(photos, isJpeg, mastersDir, secret)
-  if #photos == 0 then return 0 end
+---
+--- `progress` (optional) is a shared LrProgressScope spanning BOTH the JPEG and
+--- TIFF passes: `doneBefore` is how many masters earlier passes already
+--- processed and `grandTotal` the total across all passes, so the bar reads a
+--- single continuous "N of TOTAL". Honors cancellation between renditions.
+local function renderMasters(photos, isJpeg, mastersDir, secret, progress, doneBefore, grandTotal)
+  if #photos == 0 then return 0, 0 end
   LrFileUtils.createAllDirectories(mastersDir)
   local ext = isJpeg and '.jpg' or '.tif'
+  local label = isJpeg and 'JPEG' or 'TIFF'
   local session = LrExportSession({
     photosToExport = photos,
     exportSettings = masterExportSettings(isJpeg, mastersDir),
   })
-  local written = 0
+  local written, processed = 0, 0
   for _, rendition in session:renditions() do
+    if progress and progress:isCanceled() then break end
     local ok, pathOrMessage = rendition:waitForRender()
     if ok then
       local id = idFromFilename(rendition.photo:getFormattedMetadata('fileName') or '')
@@ -188,8 +196,14 @@ local function renderMasters(photos, isJpeg, mastersDir, secret)
       end
       written = written + 1
     end
+    processed = processed + 1
+    if progress then
+      local done = doneBefore + processed
+      progress:setPortionComplete(done, grandTotal)
+      progress:setCaption(string.format('Exporting masters — %d of %d (%s)', done, grandTotal, label))
+    end
   end
-  return written
+  return written, processed
 end
 
 --==================================================================--
@@ -642,7 +656,7 @@ function provider.sectionsForTopOfDialog(f, propertyTable)
             -- Idle-context async task with its own function context: the render
             -- yields (so it must NOT be wrapped in pcall), and the context
             -- reports any error on its own.
-            LrFunctionContext.postAsyncTaskWithContext('gmp-export-masters', function()
+            LrFunctionContext.postAsyncTaskWithContext('gmp-export-masters', function(context)
               local jpegPhotos, tiffPhotos, skipJpeg, skipTiff =
                 gatherMasterPhotos(cachedPublishService, mastersDir, secret)
               if #jpegPhotos == 0 and #tiffPhotos == 0 then
@@ -651,10 +665,22 @@ function provider.sectionsForTopOfDialog(f, propertyTable)
                   .. skipJpeg .. ' JPEG, ' .. skipTiff .. ' TIFF already there.)', 'info')
                 return
               end
-              local nJpeg = renderMasters(jpegPhotos, true, mastersDir, secret)
-              local nTiff = renderMasters(tiffPhotos, false, mastersDir, secret)
+              -- A single cancelable progress bar (LrC's activity area, top-left)
+              -- spanning both passes so the user sees "N of TOTAL" the whole way.
+              local grandTotal = #jpegPhotos + #tiffPhotos
+              local progress = LrProgressScope({
+                title = 'Exporting download masters',
+                functionContext = context,
+              })
+              progress:setCancelable(true)
+              progress:setCaption(string.format('Exporting masters — 0 of %d', grandTotal))
+              local nJpeg = renderMasters(jpegPhotos, true, mastersDir, secret, progress, 0, grandTotal)
+              local nTiff = renderMasters(tiffPhotos, false, mastersDir, secret, progress, #jpegPhotos, grandTotal)
+              local canceled = progress:isCanceled()
+              progress:done()
               LrDialogs.message('Gus McEwan Shop — masters',
-                'Wrote ' .. nJpeg .. ' JPEG + ' .. nTiff .. ' TIFF master(s) to:\n'
+                (canceled and 'Export canceled early.\n\n' or '')
+                .. 'Wrote ' .. nJpeg .. ' JPEG + ' .. nTiff .. ' TIFF master(s) to:\n'
                 .. mastersDir .. '\n\nSkipped (already present): '
                 .. skipJpeg .. ' JPEG, ' .. skipTiff .. ' TIFF.', 'info')
             end)
