@@ -39,6 +39,10 @@ if ! grep -q '"pdfkit"' "$SOURCE/package.json"; then
   echo "ERROR: $SOURCE/package.json missing pdfkit — re-sync it, then re-run (npm install adds it)."
   exit 1
 fi
+if ! grep -q '"adm-zip"' "$SOURCE/package.json"; then
+  echo "ERROR: $SOURCE/package.json missing adm-zip — re-sync it, then re-run (npm install adds it)."
+  exit 1
+fi
 # The receipt/terms invoice needs the Noto font (Cyrillic terms) installed via
 # apt in the Dockerfile, and the new invoice.js with the PAID-IN-FULL receipt.
 if ! grep -q 'fonts-noto-core' "$SOURCE/Dockerfile" || ! grep -q 'fonts-noto-cjk' "$SOURCE/Dockerfile"; then

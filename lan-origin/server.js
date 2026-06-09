@@ -36,6 +36,7 @@
 import express from 'express'
 import sharp from 'sharp'
 import nodemailer from 'nodemailer'
+import AdmZip from 'adm-zip'
 import { renderDownloadEmail } from './email.js'
 import { buildInvoicePdf, buildLicensePdf } from './invoice.js'
 import { exiftool } from 'exiftool-vendored'
@@ -760,22 +761,28 @@ async function nextInvoiceNumber(year) {
   return `${year}-${String(n).padStart(4, '0')}`
 }
 
+/** YYYYMMDD prefix from a grant's invoice/created date, for sortable filenames. */
+function dateStamp(grant) {
+  const d = new Date(grant.invoiceDate || grant.paidAt || grant.createdAt || Date.now())
+  return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`
+}
+
 /** Build the receipt PDF + filename for a grant (regenerated on demand from the
- *  stored grant — deterministic). */
-async function invoiceForGrant(grant) {
+ *  stored grant — deterministic). `lang` forces the language (accounting export). */
+async function invoiceForGrant(grant, lang) {
   const priceBySku = await catalogPriceMap()
-  const buffer = await buildInvoicePdf(grant, priceBySku)
+  const buffer = await buildInvoicePdf(grant, priceBySku, lang)
   const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
-  return { buffer, filename: `Invoice-${safe}.pdf` }
+  return { buffer, filename: `${dateStamp(grant)}-Invoice-${safe}.pdf` }
 }
 
 /** Build the standalone localized licence PDF + filename, or null when the grant
  *  has no terms snapshot (legacy orders). */
-async function licenseForGrant(grant) {
-  const buffer = await buildLicensePdf(grant)
+async function licenseForGrant(grant, lang) {
+  const buffer = await buildLicensePdf(grant, lang)
   if (!buffer) return null
   const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
-  return { buffer, filename: `Licence-${safe}.pdf` }
+  return { buffer, filename: `${dateStamp(grant)}-Licence-${safe}.pdf` }
 }
 
 // ── Email ────────────────────────────────────────────────────────────────────
@@ -1247,6 +1254,47 @@ app.get('/admin/orders/recent', async (req, res) => {
   } catch { /* dir missing */ }
   orders.sort((a, b) => b.createdAt - a.createdAt)
   res.json({ orders })
+})
+
+/**
+ * Accounting export: a ZIP of every order's invoice between two dates, rendered
+ * in a single chosen language (Danish default, or English) regardless of the
+ * language each was issued in. Files are named YYYYMMDD-Invoice-<no>.pdf so they
+ * sort by date. Date filter is on the invoice/created date.
+ */
+app.get('/admin/invoices/zip', async (req, res) => {
+  const lang = req.query.lang === 'en' ? 'en' : 'da'
+  const fromTs = Date.parse(`${req.query.from}T00:00:00Z`)
+  const toTs = Date.parse(`${req.query.to}T23:59:59.999Z`)
+  if (!Number.isFinite(fromTs) || !Number.isFinite(toTs) || fromTs > toTs) {
+    return res.status(400).json({ error: 'invalid from/to (use YYYY-MM-DD)' })
+  }
+  try {
+    const priceBySku = await catalogPriceMap()
+    const zip = new AdmZip()
+    let count = 0
+    for (const name of await readdir(ORDERS_DIR)) {
+      if (!name.endsWith('.json') || name.startsWith('_')) continue
+      const grant = await readGrant(name.slice(0, -5))
+      if (!grant || !Array.isArray(grant.items) || grant.items.length === 0) continue
+      const when = grant.invoiceDate || grant.paidAt || grant.createdAt || 0
+      if (when < fromTs || when > toTs) continue
+      const buffer = await buildInvoicePdf(grant, priceBySku, lang)
+      const safe = String(grant.invoiceNumber || grant.orderId).replace(/[^A-Za-z0-9_-]/g, '_')
+      zip.addFile(`${dateStamp(grant)}-Invoice-${safe}.pdf`, buffer)
+      count += 1
+    }
+    if (count === 0) return res.status(404).json({ error: 'no invoices in that date range' })
+    const out = zip.toBuffer()
+    const fname = `Invoices-${req.query.from}_${req.query.to}-${lang}.zip`
+    res.setHeader('content-type', 'application/zip')
+    res.setHeader('content-disposition', `attachment; filename="${fname}"`)
+    res.setHeader('x-invoice-count', String(count))
+    res.send(out)
+  } catch (err) {
+    console.error('[invoices/zip]', err.message)
+    res.status(500).json({ error: 'zip generation failed' })
+  }
 })
 
 /** Re-send the download email for an order (using its stored passcode). */

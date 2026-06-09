@@ -1220,6 +1220,71 @@ const fmtEur = (n: number) =>
 
 /** Running EU (excl. DK) cross-border total vs the €10,000 OSS threshold, valued
  *  in EUR at Danmarks Nationalbank's official daily rates (ex-VAT). */
+/** Accounting export — download a ZIP of all invoices between two dates, rendered
+ *  in one language (Danish default / English) regardless of how each was issued. */
+function InvoiceExportCard() {
+  const today = new Date().toISOString().slice(0, 10)
+  const [from, setFrom] = useState(`${new Date().getFullYear()}-01-01`)
+  const [to, setTo] = useState(today)
+  const [lang, setLang] = useState<'da' | 'en'>('da')
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+
+  async function download() {
+    setBusy(true)
+    setNote(null)
+    try {
+      const res = await fetch(`/api/admin/invoices-zip?from=${from}&to=${to}&lang=${lang}`, { cache: 'no-store' })
+      if (!res.ok) {
+        const d = (await res.json().catch(() => ({}))) as { error?: string }
+        setNote(d.error || 'Export failed.')
+        return
+      }
+      const blob = await res.blob()
+      const cd = res.headers.get('content-disposition') ?? ''
+      const m = /filename="([^"]+)"/.exec(cd)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = m?.[1] ?? `Invoices-${from}_${to}-${lang}.zip`
+      a.click()
+      URL.revokeObjectURL(url)
+      setNote('Download started.')
+    } catch {
+      setNote('Export failed.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const field = 'h-10 rounded-md border border-white/15 bg-transparent px-3 text-[12px] text-white/80 [color-scheme:dark] focus:border-white/40 focus:outline-none disabled:opacity-40'
+  const btn = 'h-10 shrink-0 rounded-md border border-white/15 px-5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40'
+
+  return (
+    <section className="mt-8 rounded-lg border border-white/10 bg-white/[0.03] p-6">
+      <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">Invoice export (accounting)</h2>
+      <p className="mt-2 text-[12px] font-light text-white/40 leading-relaxed">
+        Download a ZIP of every invoice between two dates, rendered in one language regardless of how each was issued.
+        Files are named <span className="font-mono-ibm">YYYYMMDD-Invoice-…</span> so they sort by date.
+      </p>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-[10px] font-mono-ibm uppercase tracking-[0.18em] text-white/40">
+          From <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className={field} />
+        </label>
+        <label className="flex items-center gap-2 text-[10px] font-mono-ibm uppercase tracking-[0.18em] text-white/40">
+          To <input type="date" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} className={field} />
+        </label>
+        <select value={lang} onChange={(e) => setLang(e.target.value as 'da' | 'en')} className={`${field} [&>option]:bg-neutral-900`}>
+          <option value="da">Dansk</option>
+          <option value="en">English</option>
+        </select>
+        <button onClick={download} disabled={busy} className={btn}>{busy ? 'Preparing…' : 'Download ZIP'}</button>
+      </div>
+      {note && <p className="mt-4 text-[12px] text-white/55">{note}</p>}
+    </section>
+  )
+}
+
 function EuThresholdBanner() {
   const [data, setData] = useState<EuThreshold | null>(null)
   const [error, setError] = useState(false)
@@ -1322,6 +1387,8 @@ function FinancesTab() {
       </p>
 
       <EuThresholdBanner />
+
+      <InvoiceExportCard />
 
       {error ? (
         <div className="mt-10"><Notice tone="error" title="Couldn’t load finances" body="Is the origin running?" /></div>
@@ -1526,6 +1593,7 @@ function PeriodBlock({
               <th className="py-2 pr-4 font-normal">Tax</th>
               <th className="py-2 pr-4 font-normal">Net</th>
               <th className="py-2 pr-4 font-normal">Location</th>
+              <th className="py-2 pr-4 font-normal">Invoice</th>
             </tr>
           </thead>
           <tbody>
@@ -1560,6 +1628,17 @@ function PeriodBlock({
                       <RegionBadge order={o} />
                       <LocationCell order={o} />
                     </span>
+                  </td>
+                  <td className="py-2.5 pr-4 whitespace-nowrap">
+                    <a
+                      href={`/api/admin/invoice/${o.orderId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-mono-ibm uppercase tracking-[0.14em] text-[#931020] hover:text-white transition-colors"
+                      title="Invoice in the language it was issued"
+                    >
+                      Invoice ↗
+                    </a>
                   </td>
                 </tr>
               )

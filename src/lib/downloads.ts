@@ -202,6 +202,26 @@ export async function fetchLicensePdf(orderId: string): Promise<{ bytes: ArrayBu
   return { bytes: await res.arrayBuffer(), filename: m?.[1] ?? `Licence-${orderId}.pdf` }
 }
 
+/** Accounting export: ZIP of all invoices between two dates (YYYY-MM-DD) in a
+ *  single language ('da'|'en'). Returns bytes + filename, or an error status. */
+export async function fetchInvoicesZip(
+  from: string, to: string, lang: 'da' | 'en',
+): Promise<{ bytes: ArrayBuffer; filename: string } | { error: string; status: number }> {
+  if (!ORIGIN) return { error: 'origin not configured', status: 503 }
+  const qs = new URLSearchParams({ from, to, lang }).toString()
+  const res = await fetch(`${ORIGIN}/admin/invoices/zip?${qs}`, {
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: body.error ?? 'export failed', status: res.status }
+  }
+  const cd = res.headers.get('content-disposition') ?? ''
+  const m = /filename="([^"]+)"/.exec(cd)
+  return { bytes: await res.arrayBuffer(), filename: m?.[1] ?? `Invoices-${from}_${to}-${lang}.zip` }
+}
+
 /** Fetch non-secret order metadata for the download page. */
 export async function getOrderMeta(orderId: string): Promise<OrderMeta | null> {
   if (!ORIGIN) return null

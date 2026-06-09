@@ -88,11 +88,32 @@ const INVOICE_STRINGS = {
   ko: { title: '인보이스', receiptTag: '영수증 — 결제 완료', no: '번호', date: '날짜', order: '주문', paid: '결제일', billTo: '청구 대상', customer: '고객', description: '내역', amount: '금액', discount: '할인', subtotal: '소계(공급가액)', vat: '부가가치세', reverseChargeShort: '대리납부', total: '합계', amountPaid: '결제 금액', balanceDue: '미결제 잔액', paidInFull: '결제 완료', outsideEu: 'EU 부가가치세 적용 대상이 아닌 판매입니다.', testBanner: '테스트 주문 — 유효한 인보이스가 아님', testNo: '테스트 — 유효한 인보이스가 아님', viesRef: 'VIES 조회 번호', reverseChargeNote: '대리납부 — 부가가치세는 공급받는 자가 신고·납부합니다(이사회 지침 2006/112/EC 제196조). 고객 VAT 번호: {vat}.' },
 }
 
-/** Effective UI locale for a grant — falls back to English for scripts the font
- *  can't render or unknown locales. */
-function uiLocale(grant) {
-  const loc = grant && grant.locale ? String(grant.locale) : 'en'
+/** Effective UI locale — `override` (e.g. 'da'/'en' for the accounting export)
+ *  wins over the grant's issued locale; both fall back to English for scripts
+ *  the font can't render or unknown locales. */
+function uiLocale(grant, override) {
+  const loc = override || (grant && grant.locale ? String(grant.locale) : 'en')
   return INVOICE_STRINGS[loc] && !NON_LATIN.has(loc) ? loc : 'en'
+}
+
+/** Shared two-line footer: business name · CVR · VAT · address (grey) + brand
+ *  wordmark (red, letter-spaced), anchored above the bottom margin so it never
+ *  spills onto another page. `testBanner`, when set, prints a red TEST notice. */
+function drawSellerFooter(doc, { FN, left, right, testBanner }) {
+  const bottomLimit = doc.page.height - doc.page.margins.bottom
+  const line2Y = bottomLimit - 14
+  const line1Y = line2Y - 11
+  doc.font(FN).fontSize(8).fillColor('#999999').text(
+    `${SELLER.name} · CVR ${SELLER.cvr} · VAT ${SELLER.vat} · ${SELLER.addressLines.join(', ')}`,
+    left, line1Y, { width: right - left, align: 'center', lineBreak: false },
+  )
+  const wordmark = SELLER.website.replace(/^https?:\/\//, '').replace(/\/$/, '').toUpperCase()
+  doc.fillColor(STAMP_INK).fontSize(8.5).text(
+    wordmark, left, line2Y, { width: right - left, align: 'center', lineBreak: false, characterSpacing: 3.5 },
+  )
+  if (testBanner) {
+    doc.fillColor('#cc3344').fontSize(9).text(testBanner, left, line1Y - 14, { width: right - left, align: 'center', lineBreak: false, characterSpacing: 0 })
+  }
 }
 
 /** Minor units → "1.234,56 DKK" in the locale's grouping. */
@@ -183,9 +204,11 @@ function useFonts(doc, loc) {
 
 /**
  * Build the single-page RECEIPT for a grant. `priceBySku` maps sku → ex-VAT
- * (net) price in minor units. Returns a Promise<Buffer>.
+ * (net) price in minor units. `langOverride` forces the language (e.g. the
+ * accounting export in Danish/English) regardless of the issued locale.
+ * Returns a Promise<Buffer>.
  */
-export function buildInvoicePdf(grant, priceBySku) {
+export function buildInvoicePdf(grant, priceBySku, langOverride) {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ size: 'A4', margin: 56 })
@@ -194,7 +217,7 @@ export function buildInvoicePdf(grant, priceBySku) {
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
 
-      const loc = uiLocale(grant)
+      const loc = uiLocale(grant, langOverride)
       const { FN, FB } = useFonts(doc, loc)
       const t = INVOICE_STRINGS[loc]
 
@@ -317,27 +340,8 @@ export function buildInvoicePdf(grant, priceBySku) {
         doc.text(t.outsideEu, left, y, { width: right - left })
       }
 
-      // ── Footer (two single lines, never wrapping) ──
-      // Line 1: business name · financials · address. Line 2 (brand): wordmark.
-      // Both must sit ABOVE the bottom-margin line, or PDFKit spills them onto a
-      // second page. Anchor relative to that boundary.
-      const bottomLimit = doc.page.height - doc.page.margins.bottom
-      const line2Y = bottomLimit - 14
-      const line1Y = line2Y - 11
-      doc.font(FN).fontSize(8).fillColor('#999999').text(
-        `${SELLER.name} · CVR ${SELLER.cvr} · VAT ${SELLER.vat} · ${SELLER.addressLines.join(', ')}`,
-        left, line1Y, { width: right - left, align: 'center', lineBreak: false },
-      )
-      // Line 2: brand wordmark, letter-spaced (e.g. GUSMCEWAN.COM).
-      const wordmark = SELLER.website.replace(/^https?:\/\//, '').replace(/\/$/, '').toUpperCase()
-      doc.fillColor(STAMP_INK).fontSize(8.5).text(
-        wordmark,
-        left, line2Y, { width: right - left, align: 'center', lineBreak: false, characterSpacing: 3.5 },
-      )
-      if (isTest) {
-        // characterSpacing persists in the content stream — reset it after the wordmark.
-        doc.fillColor('#cc3344').fontSize(9).text(t.testBanner, left, line1Y - 14, { width: right - left, align: 'center', lineBreak: false, characterSpacing: 0 })
-      }
+      // ── Footer ──
+      drawSellerFooter(doc, { FN, left, right, testBanner: isTest ? t.testBanner : null })
 
       doc.end()
     } catch (err) {
@@ -351,7 +355,7 @@ export function buildInvoicePdf(grant, priceBySku) {
  * on the grant (grant.terms, in the buyer's language). Returns Promise<Buffer>,
  * or Promise<null> when there are no terms to render (e.g. legacy orders).
  */
-export function buildLicensePdf(grant) {
+export function buildLicensePdf(grant, langOverride) {
   const terms = grant && grant.terms && typeof grant.terms === 'object' ? grant.terms : null
   if (!terms || !terms.title) return Promise.resolve(null)
 
@@ -363,7 +367,7 @@ export function buildLicensePdf(grant) {
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
 
-      const loc = uiLocale(grant)
+      const loc = uiLocale(grant, langOverride)
       const { FN, FB } = useFonts(doc, loc)
       const left = doc.page.margins.left
       const right = doc.page.width - doc.page.margins.right
@@ -388,6 +392,10 @@ export function buildLicensePdf(grant) {
       doc.x = left
 
       renderTerms(doc, terms, { FN, FB, ink, muted, left, right })
+
+      // Same footer as the invoice (on the last page).
+      const isTest = grant.livemode !== true
+      drawSellerFooter(doc, { FN, left, right, testBanner: isTest ? INVOICE_STRINGS[loc].testBanner : null })
 
       doc.end()
     } catch (err) {
