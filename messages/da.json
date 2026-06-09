@@ -181,7 +181,7 @@
     "eyebrow": "Dine downloads",
     "heading": "Download dine filer.",
     "intro": "Hver fil er licenseret til dig og indeholder indlejret copyright. Dette link er gyldigt indtil {date}.",
-    "footerHelp": "Hvis en download mislykkes, eller dit link er udløbet, så brug kontaktformularen på dette site, så ordner vi det.",
+    "footerHelp": "Problemer med download? <link>Kontakt os</link> med din ordrekode, så løser vi det.",
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link ikke tilgængeligt.",
     "unavailableBody": "Dette downloadlink er ugyldigt eller udløbet. Downloadlinks er gyldige i 30 dage efter købet. Hvis du har brug for adgang igen, så brug kontaktformularen på dette site.",
@@ -196,7 +196,8 @@
     "yourFiles": "Dine filer",
     "download": "Download",
     "invoicePdf": "Faktura (PDF)",
-    "licencePdf": "Licens (PDF)"
+    "licencePdf": "Licens (PDF)",
+    "contactTitle": "Hjælp til download"
   },
   "licensing": {
     "title": "Licensbetingelser og brugsrettigheder",

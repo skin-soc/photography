@@ -181,7 +181,7 @@
     "eyebrow": "Your downloads",
     "heading": "Download your files.",
     "intro": "Each file is licensed to you and carries embedded copyright. This link is valid until {date}.",
-    "footerHelp": "If a download fails or your link has expired, use the contact form on this site and we’ll sort it out.",
+    "footerHelp": "Having trouble downloading? <link>Contact us</link> with your order code and we’ll sort it out.",
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link not available.",
     "unavailableBody": "This download link is invalid or has expired. Download links are valid for 30 days after purchase. If you need access again, please use the contact form on this site.",
@@ -196,7 +196,8 @@
     "yourFiles": "Your files",
     "download": "Download",
     "invoicePdf": "Invoice (PDF)",
-    "licencePdf": "Licence (PDF)"
+    "licencePdf": "Licence (PDF)",
+    "contactTitle": "Download help"
   },
   "licensing": {
     "title": "Licensing Terms & Usage Rights",

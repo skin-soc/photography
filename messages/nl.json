@@ -181,7 +181,7 @@
     "eyebrow": "Je downloads",
     "heading": "Download je bestanden.",
     "intro": "Elk bestand is aan jou gelicentieerd en bevat ingebedde copyright. Deze link is geldig tot {date}.",
-    "footerHelp": "Als een download mislukt of je link is verlopen, gebruik dan het contactformulier op deze site en wij lossen het op.",
+    "footerHelp": "Problemen met downloaden? <link>Neem contact op</link> met je bestelcode en we lossen het op.",
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link niet beschikbaar.",
     "unavailableBody": "Deze downloadlink is ongeldig of verlopen. Downloadlinks zijn 30 dagen geldig na aankoop. Als je opnieuw toegang nodig hebt, gebruik dan het contactformulier op deze site.",
@@ -196,7 +196,8 @@
     "yourFiles": "Je bestanden",
     "download": "Downloaden",
     "invoicePdf": "Factuur (PDF)",
-    "licencePdf": "Licentie (PDF)"
+    "licencePdf": "Licentie (PDF)",
+    "contactTitle": "Hulp bij downloaden"
   },
   "licensing": {
     "title": "Licentievoorwaarden en gebruiksrechten",

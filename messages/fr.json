@@ -181,7 +181,7 @@
     "eyebrow": "Vos téléchargements",
     "heading": "Téléchargez vos fichiers.",
     "intro": "Chaque fichier vous est concédé sous licence et comporte un copyright intégré. Ce lien est valable jusqu'au {date}.",
-    "footerHelp": "Si un téléchargement échoue ou si votre lien a expiré, utilisez le formulaire de contact de ce site et nous réglerons cela.",
+    "footerHelp": "Un problème de téléchargement ? <link>Contactez-nous</link> avec votre code de commande et nous réglerons cela.",
     "unavailableEyebrow": "Téléchargements",
     "unavailableHeading": "Lien indisponible.",
     "unavailableBody": "Ce lien de téléchargement est invalide ou a expiré. Les liens de téléchargement sont valables 30 jours après l'achat. Si vous avez de nouveau besoin d'un accès, veuillez utiliser le formulaire de contact de ce site.",
@@ -196,7 +196,8 @@
     "yourFiles": "Vos fichiers",
     "download": "Télécharger",
     "invoicePdf": "Facture (PDF)",
-    "licencePdf": "Licence (PDF)"
+    "licencePdf": "Licence (PDF)",
+    "contactTitle": "Aide au téléchargement"
   },
   "licensing": {
     "title": "Conditions de licence et droits d'utilisation",

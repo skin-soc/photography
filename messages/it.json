@@ -181,7 +181,7 @@
     "eyebrow": "I tuoi download",
     "heading": "Scarica i tuoi file.",
     "intro": "Ogni file è concesso in licenza a te e contiene il copyright incorporato. Questo link è valido fino al {date}.",
-    "footerHelp": "Se un download non riesce o il tuo link è scaduto, usa il modulo di contatto su questo sito e risolveremo.",
+    "footerHelp": "Problemi con il download? <link>Contattaci</link> con il tuo codice ordine e risolveremo.",
     "unavailableEyebrow": "Download",
     "unavailableHeading": "Link non disponibile.",
     "unavailableBody": "Questo link di download non è valido o è scaduto. I link di download sono validi per 30 giorni dall'acquisto. Se hai di nuovo bisogno di accesso, usa il modulo di contatto su questo sito.",
@@ -196,7 +196,8 @@
     "yourFiles": "I tuoi file",
     "download": "Scarica",
     "invoicePdf": "Fattura (PDF)",
-    "licencePdf": "Licenza (PDF)"
+    "licencePdf": "Licenza (PDF)",
+    "contactTitle": "Aiuto per il download"
   },
   "licensing": {
     "title": "Termini di licenza e diritti d'uso",

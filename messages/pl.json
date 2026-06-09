@@ -181,7 +181,7 @@
     "eyebrow": "Twoje pobrania",
     "heading": "Pobierz swoje pliki.",
     "intro": "Każdy plik jest licencjonowany dla Ciebie i zawiera osadzone prawa autorskie. Ten link jest ważny do {date}.",
-    "footerHelp": "Jeśli pobieranie się nie powiedzie lub link wygaśnie, skorzystaj z formularza kontaktowego na tej stronie, a my to naprawimy.",
+    "footerHelp": "Problem z pobieraniem? <link>Skontaktuj się z nami</link>, podając kod zamówienia, a my to rozwiążemy.",
     "unavailableEyebrow": "Pobrania",
     "unavailableHeading": "Link niedostępny.",
     "unavailableBody": "Ten link do pobrania jest nieprawidłowy lub wygasł. Linki do pobrania są ważne przez 30 dni od zakupu. Jeśli ponownie potrzebujesz dostępu, skorzystaj z formularza kontaktowego na tej stronie.",
@@ -196,7 +196,8 @@
     "yourFiles": "Twoje pliki",
     "download": "Pobierz",
     "invoicePdf": "Faktura (PDF)",
-    "licencePdf": "Licencja (PDF)"
+    "licencePdf": "Licencja (PDF)",
+    "contactTitle": "Pomoc z pobieraniem"
   },
   "licensing": {
     "title": "Warunki licencji i prawa użytkowania",

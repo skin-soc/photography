@@ -181,7 +181,7 @@
     "eyebrow": "Dina nedladdningar",
     "heading": "Ladda ner dina filer.",
     "intro": "Varje fil är licensierad till dig och innehåller inbäddad upphovsrätt. Den här länken är giltig till {date}.",
-    "footerHelp": "Om en nedladdning misslyckas eller din länk har gått ut, använd kontaktformuläret på den här webbplatsen så löser vi det.",
+    "footerHelp": "Problem med nedladdningen? <link>Kontakta oss</link> med din orderkod, så löser vi det.",
     "unavailableEyebrow": "Nedladdningar",
     "unavailableHeading": "Länken är inte tillgänglig.",
     "unavailableBody": "Den här nedladdningslänken är ogiltig eller har gått ut. Nedladdningslänkar är giltiga i 30 dagar efter köpet. Om du behöver åtkomst igen, använd kontaktformuläret på den här webbplatsen.",
@@ -196,7 +196,8 @@
     "yourFiles": "Dina filer",
     "download": "Ladda ner",
     "invoicePdf": "Faktura (PDF)",
-    "licencePdf": "Licens (PDF)"
+    "licencePdf": "Licens (PDF)",
+    "contactTitle": "Hjälp med nedladdning"
   },
   "licensing": {
     "title": "Licensvillkor och användningsrättigheter",

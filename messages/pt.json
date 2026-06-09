@@ -181,7 +181,7 @@
     "eyebrow": "As suas transferências",
     "heading": "Transfira os seus ficheiros.",
     "intro": "Cada ficheiro é licenciado para si e contém direitos de autor incorporados. Este link é válido até {date}.",
-    "footerHelp": "Se uma transferência falhar ou o seu link tiver expirado, use o formulário de contacto deste site e nós tratamos disso.",
+    "footerHelp": "Problemas com a transferência? <link>Contacte-nos</link> com o seu código de encomenda e tratamos disso.",
     "unavailableEyebrow": "Transferências",
     "unavailableHeading": "Link indisponível.",
     "unavailableBody": "Este link de transferência é inválido ou expirou. Os links de transferência são válidos durante 30 dias após a compra. Se precisar de acesso novamente, use o formulário de contacto deste site.",
@@ -196,7 +196,8 @@
     "yourFiles": "Os seus ficheiros",
     "download": "Transferir",
     "invoicePdf": "Fatura (PDF)",
-    "licencePdf": "Licença (PDF)"
+    "licencePdf": "Licença (PDF)",
+    "contactTitle": "Ajuda com a transferência"
   },
   "licensing": {
     "title": "Termos de licença e direitos de uso",

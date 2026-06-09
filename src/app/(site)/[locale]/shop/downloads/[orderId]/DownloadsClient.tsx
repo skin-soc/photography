@@ -147,7 +147,7 @@ export default function DownloadsClient({
           href={`/api/downloads/${orderId}/invoice`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35 hover:text-white transition-colors"
+          className="text-[10px] font-light tracking-[0.18em] uppercase text-[#931020] hover:text-white transition-colors"
         >
           {t('invoicePdf')} ↗
         </a>
@@ -155,7 +155,7 @@ export default function DownloadsClient({
           href={`/api/downloads/${orderId}/license`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35 hover:text-white transition-colors"
+          className="text-[10px] font-light tracking-[0.18em] uppercase text-[#931020] hover:text-white transition-colors"
         >
           {t('licencePdf')} ↗
         </a>

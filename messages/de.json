@@ -181,7 +181,7 @@
     "eyebrow": "Ihre Downloads",
     "heading": "Laden Sie Ihre Dateien herunter.",
     "intro": "Jede Datei ist für Sie lizenziert und enthält eingebettetes Copyright. Dieser Link ist gültig bis {date}.",
-    "footerHelp": "Falls ein Download fehlschlägt oder Ihr Link abgelaufen ist, nutzen Sie das Kontaktformular auf dieser Website, und wir kümmern uns darum.",
+    "footerHelp": "Probleme beim Herunterladen? <link>Kontaktieren Sie uns</link> mit Ihrer Bestellnummer, und wir kümmern uns darum.",
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link nicht verfügbar.",
     "unavailableBody": "Dieser Download-Link ist ungültig oder abgelaufen. Download-Links sind 30 Tage nach dem Kauf gültig. Falls Sie erneut Zugang benötigen, nutzen Sie bitte das Kontaktformular auf dieser Website.",
@@ -196,7 +196,8 @@
     "yourFiles": "Ihre Dateien",
     "download": "Herunterladen",
     "invoicePdf": "Rechnung (PDF)",
-    "licencePdf": "Lizenz (PDF)"
+    "licencePdf": "Lizenz (PDF)",
+    "contactTitle": "Hilfe beim Download"
   },
   "licensing": {
     "title": "Lizenzbedingungen und Nutzungsrechte",

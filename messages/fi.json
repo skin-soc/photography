@@ -181,7 +181,7 @@
     "eyebrow": "Latauksesi",
     "heading": "Lataa tiedostosi.",
     "intro": "Jokainen tiedosto on lisensoitu sinulle ja sisältää upotetun tekijänoikeuden. Tämä linkki on voimassa {date} asti.",
-    "footerHelp": "Jos lataus epäonnistuu tai linkkisi on vanhentunut, käytä tämän sivuston yhteydenottolomaketta, niin hoidamme asian.",
+    "footerHelp": "Ongelmia latauksen kanssa? <link>Ota yhteyttä</link> tilauskoodillasi, niin hoidamme asian.",
     "unavailableEyebrow": "Lataukset",
     "unavailableHeading": "Linkki ei ole käytettävissä.",
     "unavailableBody": "Tämä latauslinkki on virheellinen tai vanhentunut. Latauslinkit ovat voimassa 30 päivää ostosta. Jos tarvitset pääsyn uudelleen, käytä tämän sivuston yhteydenottolomaketta.",
@@ -196,7 +196,8 @@
     "yourFiles": "Tiedostosi",
     "download": "Lataa",
     "invoicePdf": "Lasku (PDF)",
-    "licencePdf": "Lisenssi (PDF)"
+    "licencePdf": "Lisenssi (PDF)",
+    "contactTitle": "Apua lataukseen"
   },
   "licensing": {
     "title": "Lisenssiehdot ja käyttöoikeudet",

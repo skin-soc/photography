@@ -3,6 +3,7 @@ import { Link } from '@/i18n/navigation'
 import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { getOrderMeta, verifyOrderCookie, cookieName } from '@/lib/downloads'
 import DownloadsClient from './DownloadsClient'
+import DownloadsHelp from './DownloadsHelp'
 
 type Params = Promise<{ locale: string; orderId: string }>
 
@@ -52,9 +53,7 @@ export default async function DownloadsPage({ params }: { params: Params }) {
 
             <DownloadsClient orderId={orderId} items={meta.items} initiallyUnlocked={unlocked} />
 
-            <p className="mt-12 text-[11px] font-light text-white/25 leading-relaxed">
-              {t('footerHelp')}
-            </p>
+            <DownloadsHelp orderId={orderId} />
           </>
         ) : (
           <>

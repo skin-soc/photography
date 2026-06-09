@@ -181,7 +181,7 @@
     "eyebrow": "Nedlastingene dine",
     "heading": "Last ned filene dine.",
     "intro": "Hver fil er lisensiert til deg og har innebygd opphavsrett. Denne lenken er gyldig til {date}.",
-    "footerHelp": "Hvis en nedlasting mislykkes eller lenken din har utløpt, bruk kontaktskjemaet på dette nettstedet, så ordner vi det.",
+    "footerHelp": "Problemer med nedlasting? <link>Kontakt oss</link> med ordrekoden din, så ordner vi det.",
     "unavailableEyebrow": "Nedlastinger",
     "unavailableHeading": "Lenke ikke tilgjengelig.",
     "unavailableBody": "Denne nedlastingslenken er ugyldig eller utløpt. Nedlastingslenker er gyldige i 30 dager etter kjøpet. Hvis du trenger tilgang igjen, bruk kontaktskjemaet på dette nettstedet.",
@@ -196,7 +196,8 @@
     "yourFiles": "Filene dine",
     "download": "Last ned",
     "invoicePdf": "Faktura (PDF)",
-    "licencePdf": "Lisens (PDF)"
+    "licencePdf": "Lisens (PDF)",
+    "contactTitle": "Hjelp til nedlasting"
   },
   "licensing": {
     "title": "Lisensvilkår og bruksrettigheter",
