@@ -56,6 +56,26 @@ const dkkWhole = new Intl.NumberFormat('da-DK', {
   maximumFractionDigits: 0,
 })
 
+/**
+ * Buffer applied when converting a EUR cost to a DKK client price. DKK is pegged
+ * to the euro (drift < ~0.3%), so this exists mainly to absorb **Stripe's FX
+ * spread** (~1–2%) on the DKK→EUR Issuing top-up that pays Prodigi — not market
+ * movement. See docs/fap-print-fulfilment.md §2.
+ */
+export const EUR_DKK_BUFFER = 1.03
+
+/**
+ * Convert a EUR amount (minor units / cents) to DKK øre for a client-facing
+ * price, via the ECB daily rate already in `rates` (rates.EUR = EUR per DKK, so
+ * DKK-per-EUR = 1 / rates.EUR), with the FX buffer applied. Used for the live
+ * Prodigi shipping line at checkout (print prices are baked at catalog-build).
+ */
+export function eurToDkkOre(eurMinor: number, rates: Rates, buffer = EUR_DKK_BUFFER): number {
+  if (!rates.EUR) return 0
+  const dkkPerEur = 1 / rates.EUR
+  return Math.round(eurMinor * dkkPerEur * buffer)
+}
+
 /** Format an øre amount as a DKK price, e.g. 19500 → "195 kr." */
 export function formatDKK(ore: number): string {
   const kr = ore / 100
