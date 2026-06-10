@@ -344,6 +344,68 @@ needed because the print price is static while Prodigi cost can drift.
 
 ---
 
+## 12. Catalogue → KV migration (scale to 20k+ photos)
+
+The current model pulls the **whole** `catalog.json` from the NAS per request
+(now edge-cached + gzipped). That's fine at ~2k photos; at **20k+ it must stop** —
+no request should ever load the whole catalogue. Decisions made: **(1) push-on-
+publish, (2) per-country shipping, (3) NAS iCloud emailer.**
+
+### Principle
+Cloudflare **KV is the read store**; the NAS only **pushes** to it on publish.
+Every shop request reads a few small KV values — never the whole catalogue.
+
+### KV schema (namespace SHOP_SETTINGS, prefixed `cat:`)
+- `cat:meta` → `{ generated, totalPhotos }`.
+- `cat:tree` → the type→subject category tree **with counts** (drives the grid nav).
+- `cat:list:<type>|<subjectPath>:<page>` → ordered page (~60) of **light summaries**
+  `{ slug, title, location, thumbId, fromPriceText, key }` for that leaf. Powers
+  paginated browsing without loading 20k.
+- `photo:<slug>` → **full** photo detail (dimensions, products, category, caption,
+  rawAvailable…) for the product page — a single `KV.get` per view.
+- Worker still **applies `PRINT_RANGE`** to each photo's offers (range stays with
+  the worker); KV stores the photo + its offers, not baked prices.
+
+### Push-on-publish (decision 1)
+On publish, the NAS (after generating its catalogue) **POSTs the catalogue,
+gzipped, to a worker endpoint** `POST /api/admin/catalog-sync` (auth:
+`SHOP_ORIGIN_SECRET` — no Cloudflare API token on the NAS). The worker:
+1. diffs against `cat:meta.generated`; writes only changed `photo:<slug>` (hash
+   per photo) to avoid rewriting 20k keys each time,
+2. rebuilds `cat:tree` + the affected `cat:list:*` pages,
+3. updates `cat:meta`.
+Bulk writes spread via `waitUntil`/batching, or the worker uses the KV bulk REST
+API for the initial full load. Publishes are infrequent, so cost is bounded.
+
+### Read-path rewrite
+- **Product page** `getPhoto(slug)` → `KV.get(photo:<slug>)` (O(1), size-independent).
+- **Shop grid** → read `cat:tree` for nav + `cat:list:*` pages for the current
+  leaf; **server-side pagination** (don't ship 20k to the browser).
+- `getCatalog()` (whole-catalogue) is retired from the request path; kept only for
+  admin/validation batch jobs.
+
+### Per-country shipping (decision 2)
+The daily validator extends to **pre-quote shipping per SKU per destination
+country** (each SKU's Prodigi `shipsTo` list — ~5 SKUs × ~44 countries ≈ 220
+quotes/day, batched) and stores a matrix `ship:<providerSku>:<country>` (or folds
+into the validation snapshot). The product/cart shows the buyer's **geolocated
+country** shipping (we already detect it for VAT) — **pre-validated, so checkout
+matches**. No live per-order quote.
+
+### Email (decision 3)
+Change alerts already route through the **NAS iCloud SMTP** via
+`/admin/notify-change`. The catalogue-sync and shipping jobs reuse the same path.
+
+### Phased build (each independently shippable)
+1. **`POST /api/admin/catalog-sync`** + NAS push step — populate KV from publish
+   (keep the current read path live in parallel).
+2. **Per-photo read path** — `getPhoto` → `photo:<slug>`; product pages off KV.
+3. **Paginated grid** — `cat:tree` + `cat:list:*`; retire whole-catalogue load.
+4. **Per-country shipping matrix** in the validator + cart/product display.
+5. Retire the per-request NAS `catalog.json` fetch entirely.
+
+---
+
 ## Appendix A — Prodigi support message (EU/NL-only routing)
 
 > Subject: Restricting production to EU / Netherlands facilities (exclude UK)
