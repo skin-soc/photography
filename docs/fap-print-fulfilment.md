@@ -317,10 +317,9 @@ needed because the print price is static while Prodigi cost can drift.
 - `src/lib/currency.ts` — `eurToDkkOre()` (ECB rate × buffer).
 - `lan-origin/server.js` — catalogue now passes `provider/providerSku/attributes/
   cost` through (backward-compatible).
-- `lan-origin/products.example.json` — verified Prodigi-backed starter range
-  (FAP A3/A2/A1 giclée, PAP photographic, CFPM A2 framed; all route NL). **Copy to
-  the NAS DATA_DIR as `products.json` + rebuild to activate.** Retail prices are
-  starters — tune (fine art is value-priced).
+- Starter `products.json` range — Appendix B (config, authored in `/data`, NOT in
+  the build context). FAP A3/A2/A1 giclée, PAP photographic, CFPM A2 framed; all
+  route NL. **No rebuild to change the range** (runtime-read). Prices are starters.
 - `src/app/api/shop/quote/route.ts` — POST {items,country} → DKK shipping + NL
   guard; returns `physical:false` when no `providerSku` items.
 - `src/app/components/FramePreview.tsx` + product page — in-frame mockup, shown
@@ -371,3 +370,32 @@ needed because the print price is static while Prodigi cost can drift.
 > Thank you.
 
 _(Drafted for the user to review and send — outward comms are the user's to make.)_
+
+---
+
+## Appendix B — Starter `products.json` (config, NOT build-context)
+
+`products.json` is **runtime config**, read from `DATA_DIR` (`/data/products.json`
+→ `/mnt/chicago/photography/Shop/products.json`, beside `catalog.json`). It is
+**not** code and must NOT live in the `lan-origin/` build context. Author it
+directly in `/data`; changing it needs **no rebuild** (re-read per catalogue
+fetch). Omit it entirely to fall back to the built-in placeholder.
+
+Verified Prodigi-backed starter range (all SKUs route `prodigi_eu`/NL; costs are
+ex-tax EUR from the 2026-06 sandbox). **`price` is the client retail in DKK minor
+units — TUNE IT** (fine art is value-priced, not cost-plus); `cost` is for margin.
+
+```json
+{
+  "printProducts": [
+    { "type": "print",    "label": "40×60 cm — photographic",   "printSize": { "w": 40,   "h": 60 },   "price": 59500,  "currency": "DKK", "provider": "prodigi", "providerSku": "GLOBAL-PAP-16X24", "attributes": {},                "cost": 1000, "costCurrency": "EUR" },
+    { "type": "fine-art", "label": "A3 — giclée (EMA 200gsm)",   "printSize": { "w": 29.7, "h": 42 },   "price": 59500,  "currency": "DKK", "provider": "prodigi", "providerSku": "GLOBAL-FAP-A3",    "attributes": {},                "cost": 700,  "costCurrency": "EUR" },
+    { "type": "fine-art", "label": "A2 — giclée (EMA 200gsm)",   "printSize": { "w": 42,   "h": 59.4 }, "price": 89500,  "currency": "DKK", "provider": "prodigi", "providerSku": "GLOBAL-FAP-A2",    "attributes": {},                "cost": 1000, "costCurrency": "EUR" },
+    { "type": "fine-art", "label": "A1 — giclée (EMA 200gsm)",   "printSize": { "w": 59.4, "h": 84.1 }, "price": 129500, "currency": "DKK", "provider": "prodigi", "providerSku": "GLOBAL-FAP-A1",    "attributes": {},                "cost": 1400, "costCurrency": "EUR" },
+    { "type": "fine-art", "label": "A2 — framed, mounted",       "printSize": { "w": 42,   "h": 59.4 }, "price": 199500, "currency": "DKK", "provider": "prodigi", "providerSku": "GLOBAL-CFPM-A2",   "attributes": { "color": "black" }, "cost": 4800, "costCurrency": "EUR" }
+  ]
+}
+```
+
+`digitalTiers` / `masterBrackets` / `tiffMasterBrackets` may also be overridden
+here; omit them to keep the defaults.
