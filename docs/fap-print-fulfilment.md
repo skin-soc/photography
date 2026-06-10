@@ -76,12 +76,25 @@ options**, each mapped to a `providerSku` with its `cost`. Fine art should offer
 more than one size/finish. Source the range from Prodigi's product data (and the
 NL-produced subset per §7), not a hand-written template.
 
-### In-frame preview (customer-facing)
+**Probe data (sandbox, 2026-06-10).** `GET /v4.0/products/{sku}` returns
+`description`, `productDimensions`, `attributes`, `printAreas`, and `variants`
+(each variant: `attributes`, `shipsTo`, `printAreaSizes`, `pagePricing`). Example
+real fine-art SKU — `GLOBAL-CFPM-16X20`: *"Classic Frame, EMA 200gsm Fine Art
+Print, Mounted/Matted, Perspex Glaze, 40x50cm"*; attributes include
+`frame`, `color` (black/brown/dark grey/gold/light grey/natural/silver/white…),
+`glaze`, `mount`, `paperType`, `style`, `substrateWeight`. So the picker's
+size/paper/frame/mount/colour options come straight from `attributes`/`variants`.
+**Cost basis for markup = ex-tax** (quote `costSummary.items` + `shipping`,
+excluding `totalTax` — Prodigi's ~20% is reclaimable input VAT, see §6).
 
-Show the artwork **inside the chosen frame/size** on the product page. Prodigi
-provides **mockup / preview images** for framed and mounted products; use those
-(or a generated composite) so the buyer sees the framed result before ordering.
-Treat as part of the picker UX once the real range lands.
+### In-frame preview (customer-facing) — we composite it ourselves
+
+Show the artwork **inside the chosen frame/size** on the product page. **Prodigi's
+API returns NO mockup/image URLs** (confirmed: product details has only text +
+specs). So we must **generate the framed preview ourselves** — overlay the
+artwork into a frame/mount template (per frame colour + aspect ratio) via CSS or
+canvas. Build a small set of frame templates keyed to the `frame`/`color`/`mount`
+attributes. Treat as part of the picker UX once the real range lands.
 
 ### Licensing applies to DIGITAL only
 
@@ -201,26 +214,36 @@ refund**. No-float makes refunds *safer*.
 
 ---
 
-## 7. NL-only production routing (OPEN BLOCKER)
+## 7. NL-only production routing
 
 **Requirement: always produce in the Netherlands / EU, never UK.**
 
-Prodigi's API gives **no control** over production location — allocation is
-automatic and cost-driven; no order/quote parameter for country/lab/routing; orders
-can **split** across facilities. You only see `countryCode` / `labCode` per shipment
-**after** allocation. Account currency (EUR) does **not** constrain the lab.
+Prodigi's API gives **no payload control** over production location — allocation
+is automatic and cost-driven; no order/quote parameter for country/lab/routing;
+orders can **split** across facilities. Account currency (EUR) does **not**
+constrain the lab.
 
-Enforce with a combination (no single guarantee from the payload):
+**RESOLVED (sandbox probe, 2026-06-10): the QUOTE exposes the production lab
+pre-charge.** A `POST /v4.0/quotes` to NL returned, per shipment:
+`fulfillmentLocation: { countryCode: "NL", labCode: "prodigi_eu" }` and
+`carrier: "DPD NL"`. So we get the lab/country **before** charging — a clean
+**pre-charge gate** is feasible (no post-charge cancellations needed).
 
-1. **Account-level routing arrangement with Prodigi** (primary fix) — ask support
+Enforce in layers:
+
+1. **Pre-charge guard in code (primary, now feasible).** At quote time, read each
+   shipment's `fulfillmentLocation.countryCode`; if any is not in the EU/NL
+   allow-list (or any `labCode` is a UK lab), **block the sale** before charging.
+   The no-float funding gate (§4) is the natural checkpoint.
+2. **Account-level routing arrangement with Prodigi** (belt & braces) — ask support
    to pin the account to EU/NL and exclude UK. See Appendix A for the message.
-2. **Catalogue curation** — build from `providerSku`s known to be NL/EU-produced
-   (needs Prodigi's product↔lab matrix).
-3. **Detection guard in code** (backstop) — inspect allocation, refuse/cancel any
-   UK-routed shipment + alert. **TODO: confirm via sandbox whether the QUOTE
-   exposes `countryCode`/`labCode`** (→ pre-charge gate, clean) **or only the ORDER
-   does** (→ post-charge cancel, messy). The no-float funding gate (§4) is a natural
-   checkpoint to abort before committing.
+3. **Catalogue curation** — prefer `providerSku`s that route EU (the probe SKU
+   `GLOBAL-CFPM-16X20` routed to `prodigi_eu`/NL for an NL destination).
+
+Open: confirm whether a quote can ever return a **split** across an EU + UK lab
+(then we block the whole order), and whether routing changes by destination
+country (an EU buyer outside NL may still pull a non-NL EU lab — acceptable, since
+the rule is "EU, never UK", with NL as the ideal).
 
 ---
 
@@ -270,9 +293,10 @@ needed because the print price is static while Prodigi cost can drift.
 
 1. **Stripe Issuing** approved (sales) + **balance transfers (preview)** enabled +
    KYB complete + EUR card created with spend controls.
-2. **Prodigi NL-only routing** arrangement (Appendix A) + NL-produced `providerSku`s.
-3. **Sandbox probe**: does the Prodigi **quote** expose lab/country (pre-charge gate)
-   or only the order?
+2. **Prodigi NL-only routing** arrangement (Appendix A) — now *belt & braces*; the
+   pre-charge quote guard (§7) is the primary control. Still worth doing.
+3. ~~Sandbox probe: does the quote expose lab/country?~~ **DONE** — yes, quote
+   returns `fulfillmentLocation.countryCode`/`labCode` pre-charge (§7).
 4. **Confirm** Prodigi settlement currency is EUR in account billing settings.
 
 ---
