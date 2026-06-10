@@ -2,6 +2,7 @@ import type Stripe from 'stripe'
 import { stripe, cryptoProvider } from '@/lib/stripe-server'
 import { issueGrant, resolveDownloadItems, originConfigured, markRefund, notifyOwnerSale } from '@/lib/downloads'
 import { getSaleNotify } from '@/lib/shop-settings'
+import { redeemCoupon } from '@/lib/coupons'
 import { getInvoiceTerms } from '@/lib/terms'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? ''
@@ -44,7 +45,9 @@ async function fulfilSession(sessionId: string): Promise<void> {
     livemode: session.livemode,
     amount: session.amount_total,
     currency: session.currency,
-    taxAmount: session.total_details?.amount_tax ?? null,
+    // VAT we computed at checkout (Stripe does no tax calc) — read from metadata,
+    // not Stripe's total_details. amount_total is the gross actually charged.
+    taxAmount: Number(session.metadata?.taxAmount ?? '') || 0,
     taxCountry: session.customer_details?.address?.country ?? null,
     cardCountry: charge?.payment_method_details?.card?.country ?? null,
     // VAT place-of-supply evidence (Cloudflare geolocation, set at checkout).
@@ -62,6 +65,15 @@ async function fulfilSession(sessionId: string): Promise<void> {
     vatConsultation: session.metadata?.vatConsultation ?? null,
   })
   console.log('[stripe] download grant issued for', orderCode)
+
+  // Count one coupon redemption on the authoritative (webhook) fulfilment only —
+  // the synchronous issue route deliberately doesn't, so a code isn't double-counted.
+  const couponCode = session.metadata?.couponCode
+  if (couponCode) {
+    try { await redeemCoupon(couponCode) } catch (err) {
+      console.error('[stripe] coupon redeem failed (non-fatal):', err)
+    }
+  }
 }
 
 export async function POST(req: Request) {

@@ -153,6 +153,7 @@
     "saveAccessHint": "Zachowaj te dane, aby pobrać ponownie później lub na innym urządzeniu:",
     "passcodeLabel": "Kod dostępu",
     "promoCode": "Kod promocyjny",
+    "promoInvalid": "Nieprawidłowy lub wygasły kod",
     "apply": "Zastosuj",
     "discount": "Rabat",
     "b2bToggle": "Kupujesz jako firma zarejestrowana jako podatnik VAT?",

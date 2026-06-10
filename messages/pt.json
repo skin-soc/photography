@@ -153,6 +153,7 @@
     "saveAccessHint": "Guarde estes dados para transferir novamente mais tarde ou noutro dispositivo:",
     "passcodeLabel": "Código de acesso",
     "promoCode": "Código promocional",
+    "promoInvalid": "Código inválido ou expirado",
     "apply": "Aplicar",
     "discount": "Desconto",
     "b2bToggle": "Compra como empresa registada para IVA?",

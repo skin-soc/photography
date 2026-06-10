@@ -153,6 +153,7 @@
     "saveAccessHint": "Gem disse for at downloade igen senere eller på en anden enhed:",
     "passcodeLabel": "Adgangskode",
     "promoCode": "Rabatkode",
+    "promoInvalid": "Ugyldig eller udløbet kode",
     "apply": "Anvend",
     "discount": "Rabat",
     "b2bToggle": "Køber du som momsregistreret virksomhed?",

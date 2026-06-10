@@ -153,6 +153,7 @@
     "saveAccessHint": "Spara dessa för att ladda ner igen senare eller på en annan enhet:",
     "passcodeLabel": "Åtkomstkod",
     "promoCode": "Rabattkod",
+    "promoInvalid": "Ogiltig eller utgången kod",
     "apply": "Använd",
     "discount": "Rabatt",
     "b2bToggle": "Köper du som momsregistrerat företag?",

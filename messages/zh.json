@@ -153,6 +153,7 @@
     "saveAccessHint": "请保存以下信息，以便日后或在其他设备上再次下载：",
     "passcodeLabel": "访问码",
     "promoCode": "优惠码",
+    "promoInvalid": "无效或已过期的代码",
     "apply": "应用",
     "discount": "折扣",
     "b2bToggle": "以增值税登记企业身份购买？",

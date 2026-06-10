@@ -198,8 +198,8 @@ function CouponsTab() {
     <>
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Coupons</h1>
       <p className="mt-2 text-sm text-white/45">
-        Create discount codes customers enter at checkout — created directly as Stripe promotion
-        codes. Shows the <strong className="text-white/60">current Stripe mode</strong> (test here, live in production).
+        Create discount codes customers enter at checkout — applied by us at checkout (Stripe does no
+        calculation). Shows the <strong className="text-white/60">current mode</strong> (test here, live in production).
       </p>
 
       <form onSubmit={create} className="mt-8 rounded-lg border border-white/10 bg-white/[0.03] p-6">
@@ -850,9 +850,8 @@ function SettingsTab() {
           <div className="max-w-prose">
             <p className="text-[14px] font-light text-white/80">Delete test coupons</p>
             <p className="mt-1 text-[12px] font-light text-white/45 leading-relaxed">
-              Deletes all test-mode coupons and deactivates their promotion codes (Stripe doesn’t
-              allow deleting codes). Test mode only — refused against a live key, so live coupons are
-              never affected.
+              Deletes all test-mode coupons from our store. Test mode only — refused against a live
+              key, so live coupons are never affected.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">

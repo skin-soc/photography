@@ -90,7 +90,8 @@ export async function POST(req: NextRequest) {
       livemode: session.livemode,
       amount: session.amount_total,
       currency: session.currency,
-      taxAmount: session.total_details?.amount_tax ?? null,
+      // VAT we computed at checkout (Stripe does no tax calc) — read from metadata.
+      taxAmount: Number(session.metadata?.taxAmount ?? '') || 0,
       taxCountry: session.customer_details?.address?.country ?? null,
       cardCountry,
       buyerIp: session.metadata?.buyerIp ?? null,

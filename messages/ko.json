@@ -153,6 +153,7 @@
     "saveAccessHint": "나중에 또는 다른 기기에서 다시 다운로드하려면 다음을 저장하세요:",
     "passcodeLabel": "접근 코드",
     "promoCode": "프로모 코드",
+    "promoInvalid": "유효하지 않거나 만료된 코드입니다",
     "apply": "적용",
     "discount": "할인",
     "b2bToggle": "VAT 등록 사업자로 구매하시나요?",

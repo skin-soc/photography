@@ -1,15 +1,14 @@
 /**
- * Danger-zone cleanup: remove TEST-mode coupons + promotion codes.
+ * Danger-zone cleanup: delete every TEST-mode coupon from our KV store.
  *
  * Refuses to run against a live key — this only ever clears test clutter before
- * going live. Stripe lets us delete coupons but not promotion codes, so we
- * delete every coupon (which invalidates its codes) and deactivate any remaining
- * active promotion codes. Session-gated.
+ * going live. Coupons live in our own KV (not Stripe) and are mode-scoped, so we
+ * just delete the `coupon:test:*` keys. Session-gated. See [[stripe-payments-only]].
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { ADMIN_COOKIE, verifySessionToken } from '@/lib/admin-auth'
-import { stripe } from '@/lib/stripe-server'
+import { listCoupons, deleteCoupon } from '@/lib/coupons'
 
 async function authed(req: NextRequest): Promise<boolean> {
   const token = req.cookies.get(ADMIN_COOKIE)?.value
@@ -25,21 +24,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Deactivate any active promotion codes (codes can't be deleted via the API).
-    let deactivated = 0
-    for await (const code of stripe.promotionCodes.list({ limit: 100 })) {
-      if (code.active) {
-        await stripe.promotionCodes.update(code.id, { active: false })
-        deactivated += 1
-      }
-    }
-    // Delete every coupon (this invalidates its promotion codes too).
+    const codes = await listCoupons('test')
     let deleted = 0
-    for await (const coupon of stripe.coupons.list({ limit: 100 })) {
-      await stripe.coupons.del(coupon.id)
-      deleted += 1
+    for (const c of codes) {
+      if (await deleteCoupon(c.code, 'test')) deleted += 1
     }
-    return NextResponse.json({ deleted, deactivated })
+    return NextResponse.json({ deleted, deactivated: 0 })
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'failed' }, { status: 502 })
   }

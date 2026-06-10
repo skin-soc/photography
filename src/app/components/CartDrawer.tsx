@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { useCartStore } from '@/store/cart'
 import dynamic from 'next/dynamic'
-import type { DownloadItem } from './CheckoutPane'
+import type { DownloadItem, CheckoutSummary } from './CheckoutPane'
 
 const CheckoutPane = dynamic(() => import('./CheckoutPane'), { ssr: false })
 
@@ -17,6 +17,9 @@ interface PaymentData {
   downloadItems: DownloadItem[]
   currency: string
   billingCountry: string | null
+  summary: CheckoutSummary | null
+  /** The coupon the session was created with: applied code, or an error reason. */
+  coupon: { code: string; error: string | null } | null
   /** B2B: VAT was reverse-charged (0%) for a validated EU business. */
   reverseCharge?: boolean
   businessName?: string | null
@@ -48,6 +51,13 @@ export default function CartDrawer() {
   const [successData, setSuccessData] = useState<{ downloads: DownloadItem[]; hasPhysical: boolean; orderId: string } | null>(null)
   const [intentLoading, setIntentLoading] = useState(false)
   const [intentError, setIntentError] = useState(false)
+  // Coupon — our own (not Stripe). The applied code is part of the session, so
+  // applying/removing re-creates it. `promo` is the input; `couponBusy` covers
+  // the re-creation; `couponError` is already localized for display.
+  const [promo, setPromo] = useState('')
+  const [couponCode, setCouponCode] = useState<string | null>(null)
+  const [couponBusy, setCouponBusy] = useState(false)
+  const [couponError, setCouponError] = useState<string | null>(null)
   // Download grant issuing — 'issuing' while we create it, 'ready' once the
   // downloads page is usable, 'error' if it couldn't be issued.
   const [issueState, setIssueState] = useState<'idle' | 'issuing' | 'ready' | 'error'>('idle')
@@ -96,6 +106,10 @@ export default function CartDrawer() {
       setIntentError(false)
       setIssueState('idle')
       setIssuedPasscode(null)
+      setPromo('')
+      setCouponCode(null)
+      setCouponBusy(false)
+      setCouponError(null)
       setB2b(false)
       setVatInput('')
       setVatCheck(null)
@@ -158,7 +172,7 @@ export default function CartDrawer() {
     }
   }
 
-  async function startPayment(itemsToCharge = checkoutItems) {
+  async function startPayment(itemsToCharge = checkoutItems, coupon: string | null = couponCode) {
     if (itemsToCharge.length === 0) return
     setIntentLoading(true)
     setIntentError(false)
@@ -169,6 +183,7 @@ export default function CartDrawer() {
         body: JSON.stringify({
           items: itemsToCharge.map((i) => ({ sku: i.sku })),
           locale,
+          ...(coupon ? { couponCode: coupon } : {}),
           ...(confirmedVat ? { business: {
             vatId: confirmedVat,
             token: vatCheck?.token ?? undefined,
@@ -186,12 +201,48 @@ export default function CartDrawer() {
       }
       const data = await res.json() as PaymentData
       setPaymentData(data)
+      // Reconcile coupon state from the authoritative server response.
+      if (data.coupon?.error) {
+        setCouponCode(null)
+        setCouponError(t('promoInvalid'))
+      } else if (data.coupon?.code) {
+        setCouponCode(data.coupon.code)
+        setCouponError(null)
+      } else {
+        setCouponCode(null)
+        setCouponError(null)
+      }
       setStep('payment')
     } catch (err) {
       console.error('[cart] startPayment error:', err)
       setIntentError(true)
     } finally {
       setIntentLoading(false)
+    }
+  }
+
+  // Apply / remove a coupon by re-creating the session with (or without) the code
+  // baked in — Stripe never sees the discount as a separate calc.
+  async function applyCoupon() {
+    const code = promo.trim().toUpperCase()
+    if (!code || couponBusy) return
+    setCouponBusy(true)
+    setCouponError(null)
+    try {
+      await startPayment(checkoutItems, code)
+    } finally {
+      setCouponBusy(false)
+    }
+  }
+  async function removeCoupon() {
+    if (couponBusy) return
+    setCouponBusy(true)
+    setCouponError(null)
+    setPromo('')
+    try {
+      await startPayment(checkoutItems, null)
+    } finally {
+      setCouponBusy(false)
     }
   }
 
@@ -322,13 +373,22 @@ export default function CartDrawer() {
         {/* ── Payment step ──────────────────────────────────────────────── */}
         {step === 'payment' && paymentData && (
           <CheckoutPane
+            key={paymentData.clientSecret}
             clientSecret={paymentData.clientSecret}
             hasPhysical={paymentData.hasPhysical}
             downloadItems={paymentData.downloadItems}
             billingCountry={paymentData.billingCountry}
             totalText={totalText}
+            summary={paymentData.summary}
             reverseCharge={paymentData.reverseCharge}
             businessName={paymentData.businessName}
+            promo={promo}
+            onPromoChange={setPromo}
+            appliedCoupon={couponCode}
+            couponError={couponError}
+            couponBusy={couponBusy}
+            onApplyCoupon={applyCoupon}
+            onRemoveCoupon={removeCoupon}
             onBack={() => setStep('cart')}
             onSuccess={handleSuccess}
           />

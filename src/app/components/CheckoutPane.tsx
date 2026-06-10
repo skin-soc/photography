@@ -18,6 +18,21 @@ export interface DownloadItem {
   slug: string
 }
 
+/** Order summary computed by US at session creation (Stripe does no tax/discount
+ *  calc — see [[stripe-payments-only]]). All `*Minor` are in minor units; the
+ *  string fields are pre-formatted for display. */
+export interface CheckoutSummary {
+  vatRate: number
+  subtotalMinor: number
+  discountMinor: number
+  vatMinor: number
+  totalMinor: number
+  subtotal: string
+  discount: string
+  vat: string
+  total: string
+}
+
 interface CheckoutPaneProps {
   clientSecret: string
   hasPhysical: boolean
@@ -25,9 +40,20 @@ interface CheckoutPaneProps {
   /** Buyer country from IP — set on the session for tax, no address form needed. */
   billingCountry: string | null
   totalText: string
+  summary: CheckoutSummary | null
   /** B2B: VAT reverse-charged (0%) for a validated EU business — show a note. */
   reverseCharge?: boolean
   businessName?: string | null
+  // ── Coupon (owned by the parent: applying re-creates the session) ──
+  promo: string
+  onPromoChange: (v: string) => void
+  /** The code currently applied to this session, or null. */
+  appliedCoupon: string | null
+  /** Last coupon error (already localized), or null. */
+  couponError: string | null
+  couponBusy: boolean
+  onApplyCoupon: () => void
+  onRemoveCoupon: () => void
   onBack: () => void
   onSuccess: (downloads: DownloadItem[], hasPhysical: boolean, sessionId: string) => void
 }
@@ -78,8 +104,16 @@ function PaymentForm({
   downloadItems,
   billingCountry,
   totalText,
+  summary,
   reverseCharge,
   businessName,
+  promo,
+  onPromoChange,
+  appliedCoupon,
+  couponError,
+  couponBusy,
+  onApplyCoupon,
+  onRemoveCoupon,
   onBack,
   onSuccess,
 }: Omit<CheckoutPaneProps, 'clientSecret'>) {
@@ -91,14 +125,11 @@ function PaymentForm({
   // fulfilment reads to send the download link. No Link element, no phone field.
   const [email, setEmail] = useState('')
   const [countrySet, setCountrySet] = useState(false)
-  const [promo, setPromo] = useState('')
-  const [promoBusy, setPromoBusy] = useState(false)
-  const [promoErr, setPromoErr] = useState<string | null>(null)
 
   // Record the buyer's country (from IP) on the session once — it's our VAT
   // location evidence (reconciled against the card-issuer country in admin). VAT
-  // itself is already applied as a tax_rate at session creation from this same
-  // country, so no address form is needed for a digital download.
+  // itself is computed by us (a line item) from this same country at session
+  // creation, so no address form is needed for a digital download.
   useEffect(() => {
     if (co.type !== 'success' || !billingCountry || countrySet) return
     setCountrySet(true)
@@ -145,34 +176,7 @@ function PaymentForm({
     }
   }
 
-  // Stripe pre-formats these amount strings (and updates tax once an address is
-  // entered). Fall back to the cart total before the session has computed.
-  const total = checkout.total
-  const taxMinor = total?.taxExclusive?.minorUnitsAmount ?? 0
-  const appliedDiscount = checkout.discountAmounts && checkout.discountAmounts.length > 0
-    ? checkout.discountAmounts[0]
-    : null
-
-  async function applyPromo() {
-    const code = promo.trim()
-    if (!code) return
-    setPromoBusy(true)
-    setPromoErr(null)
-    try {
-      const r = await checkout.applyPromotionCode(code)
-      if (r.type === 'error') setPromoErr(r.error.message || 'Invalid or expired code')
-      else setPromo('')
-    } catch {
-      setPromoErr('Couldn’t apply code')
-    } finally {
-      setPromoBusy(false)
-    }
-  }
-  async function removePromo() {
-    setPromoBusy(true)
-    setPromoErr(null)
-    try { await checkout.removePromotionCode() } catch { /* ignore */ } finally { setPromoBusy(false) }
-  }
+  const totalDisplay = summary?.total ?? totalText
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -219,17 +223,21 @@ function PaymentForm({
         />
       </div>
 
-      {/* Promo code */}
+      {/* Promo code — our own coupons. Applying re-creates the session (parent),
+          so entering a code after card details will reset the payment fields. */}
       <div>
-        {appliedDiscount ? (
+        {appliedCoupon ? (
           <div className="flex items-center justify-between rounded-[8px] border border-[#931020]/40 bg-[#931020]/[0.06] px-4 py-2.5">
             <span className="text-[12px] font-light text-white/70">
-              {appliedDiscount.displayName} · <span className="text-[#931020]">−{appliedDiscount.amount}</span>
+              <span className="font-mono-ibm tracking-wide">{appliedCoupon}</span>
+              {summary && summary.discountMinor > 0 && (
+                <> · <span className="text-[#931020]">−{summary.discount}</span></>
+              )}
             </span>
             <button
               type="button"
-              onClick={removePromo}
-              disabled={promoBusy}
+              onClick={onRemoveCoupon}
+              disabled={couponBusy}
               className="text-[10px] font-light tracking-[0.18em] uppercase text-white/40 hover:text-white transition-colors disabled:opacity-40"
             >
               {t('remove')}
@@ -239,22 +247,23 @@ function PaymentForm({
           <div className="flex gap-2">
             <input
               value={promo}
-              onChange={(e) => setPromo(e.target.value.toUpperCase())}
+              onChange={(e) => onPromoChange(e.target.value.toUpperCase())}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (promo.trim()) onApplyCoupon() } }}
               placeholder={t('promoCode')}
               spellCheck={false}
               className="flex-1 rounded-[8px] border border-white/15 bg-white/[0.04] px-4 py-2.5 font-mono-ibm text-[13px] tracking-wide text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
             />
             <button
               type="button"
-              onClick={applyPromo}
-              disabled={promoBusy || !promo.trim()}
+              onClick={onApplyCoupon}
+              disabled={couponBusy || !promo.trim()}
               className="shrink-0 rounded-[8px] border border-white/15 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
             >
-              {promoBusy ? '…' : t('apply')}
+              {couponBusy ? '…' : t('apply')}
             </button>
           </div>
         )}
-        {promoErr && <p className="mt-1.5 text-[11px] text-red-400/80">{promoErr}</p>}
+        {couponError && <p className="mt-1.5 text-[11px] text-red-400/80">{couponError}</p>}
       </div>
 
       {/* B2B reverse charge — no VAT line; explain why. */}
@@ -266,29 +275,31 @@ function PaymentForm({
         </div>
       )}
 
-      {/* Order summary — live totals from Stripe (incl. tax once known) */}
+      {/* Order summary — our own figures (subtotal / discount / VAT / total). */}
       <div className="border-t border-white/[0.07] pt-4 space-y-1.5">
-        {taxMinor > 0 && total && (
-          <>
-            <div className="flex items-baseline justify-between">
-              <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('subtotal')}</p>
-              <p className="text-[12px] font-light text-white/45">{total.subtotal.amount}</p>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('vat')}</p>
-              <p className="text-[12px] font-light text-white/45">{total.taxExclusive.amount}</p>
-            </div>
-          </>
+        {summary && (summary.vatMinor > 0 || summary.discountMinor > 0) && (
+          <div className="flex items-baseline justify-between">
+            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('subtotal')}</p>
+            <p className="text-[12px] font-light text-white/45">{summary.subtotal}</p>
+          </div>
         )}
-        {appliedDiscount && total && (
+        {summary && summary.discountMinor > 0 && (
           <div className="flex items-baseline justify-between">
             <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('discount')}</p>
-            <p className="text-[12px] font-light text-[#931020]">−{total.discount.amount}</p>
+            <p className="text-[12px] font-light text-[#931020]">−{summary.discount}</p>
+          </div>
+        )}
+        {summary && summary.vatMinor > 0 && (
+          <div className="flex items-baseline justify-between">
+            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">
+              {t('vat')}{summary.vatRate ? ` (${summary.vatRate}%)` : ''}
+            </p>
+            <p className="text-[12px] font-light text-white/45">{summary.vat}</p>
           </div>
         )}
         <div className="flex items-baseline justify-between">
           <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('total')}</p>
-          <p className="text-[16px] font-light text-white">{total?.total?.amount ?? totalText}</p>
+          <p className="text-[16px] font-light text-white">{totalDisplay}</p>
         </div>
       </div>
 
@@ -298,14 +309,14 @@ function PaymentForm({
 
       <button
         type="submit"
-        disabled={state === 'loading'}
+        disabled={state === 'loading' || couponBusy}
         className={`w-full rounded-[14px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
-          state === 'loading'
+          state === 'loading' || couponBusy
             ? 'bg-[#931020]/35 cursor-default'
             : 'bg-[#931020]/80 hover:bg-[#931020] cursor-pointer'
         }`}
       >
-        {state === 'loading' ? t('processing') : `${t('pay')} ${total?.total?.amount ?? totalText}`}
+        {state === 'loading' ? t('processing') : `${t('pay')} ${totalDisplay}`}
       </button>
 
       <button
@@ -332,8 +343,16 @@ export default function CheckoutPane(props: CheckoutPaneProps) {
         downloadItems={props.downloadItems}
         billingCountry={props.billingCountry}
         totalText={props.totalText}
+        summary={props.summary}
         reverseCharge={props.reverseCharge}
         businessName={props.businessName}
+        promo={props.promo}
+        onPromoChange={props.onPromoChange}
+        appliedCoupon={props.appliedCoupon}
+        couponError={props.couponError}
+        couponBusy={props.couponBusy}
+        onApplyCoupon={props.onApplyCoupon}
+        onRemoveCoupon={props.onRemoveCoupon}
         onBack={props.onBack}
         onSuccess={props.onSuccess}
       />

@@ -153,6 +153,7 @@
     "saveAccessHint": "Conservez ces informations pour télécharger à nouveau plus tard ou sur un autre appareil :",
     "passcodeLabel": "Code d'accès",
     "promoCode": "Code promo",
+    "promoInvalid": "Code invalide ou expiré",
     "apply": "Appliquer",
     "discount": "Remise",
     "b2bToggle": "Achat en tant qu’entreprise assujettie à la TVA ?",

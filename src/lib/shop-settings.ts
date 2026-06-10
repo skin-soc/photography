@@ -129,26 +129,3 @@ export async function setVatRate(pct: number): Promise<boolean> {
   await kv.put(VAT_RATE_KEY, String(pct))
   return true
 }
-
-// Stripe Tax Rate objects are immutable and mode-specific (test vs live), so we
-// cache the id per (mode, percentage) and create lazily on first use at
-// checkout. Changing the rate just creates/uses a different cached object.
-function vatRateIdKey(mode: 'live' | 'test', pct: number): string {
-  return `vat:rateId:${mode}:${pct}`
-}
-
-export async function getVatTaxRateId(mode: 'live' | 'test', pct: number): Promise<string | null> {
-  const kv = await settingsKV()
-  if (!kv) return null
-  try {
-    return await kv.get(vatRateIdKey(mode, pct))
-  } catch {
-    return null
-  }
-}
-
-export async function setVatTaxRateId(mode: 'live' | 'test', pct: number, id: string): Promise<void> {
-  const kv = await settingsKV()
-  if (!kv) return
-  await kv.put(vatRateIdKey(mode, pct), id)
-}

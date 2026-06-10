@@ -2,50 +2,33 @@
  * Create a Checkout Session for the embedded Payment Element (ui_mode: 'elements').
  *
  * This is the Stripe-recommended surface (over a raw PaymentIntent): Stripe owns
- * dynamic payment methods, wallets and billing-field rules. VAT, however, we
- * calculate ourselves (Stripe Tax is OFF) to avoid its 0.5%/txn fee: we apply a
- * Danish VAT Tax Rate to DK + EU buyers and 0% to non-EU buyers, classified from
- * the IP country. See [[vat]] for the jurisdiction rule. We keep our own GMP
- * order code as the identifier by writing it to the session + the underlying
- * PaymentIntent (description + metadata).
+ * dynamic payment methods, wallets and billing-field rules. VAT and discounts,
+ * however, we compute ourselves — Stripe does NO calculation (see
+ * [[stripe-payments-only]]). We add a self-computed VAT line for DK + EU buyers
+ * (0% for non-EU, classified from the IP country, see [[vat]]) and apply our own
+ * KV coupons to the net before tax, then hand Stripe one gross amount. We keep
+ * our own GMP order code as the identifier by writing it to the session + the
+ * underlying PaymentIntent (description + metadata).
  */
 
 import Stripe from 'stripe'
 import { getCatalog } from '@/lib/shop'
 import { stripe } from '@/lib/stripe-server'
 import { generateOrderCode } from '@/lib/downloads'
-import { vatOutcome, HOME_COUNTRY, type BusinessVat } from '@/lib/vat'
+import { vatOutcome, type BusinessVat } from '@/lib/vat'
 import { verifyVatNumber, verifyVatToken } from '@/lib/vies'
-import { getVatRate, getVatTaxRateId, setVatTaxRateId } from '@/lib/shop-settings'
+import { getVatRate } from '@/lib/shop-settings'
+import { validateCoupon, discountFor } from '@/lib/coupons'
+import { formatDKK } from '@/lib/currency'
 
 interface RequestItem { sku: string }
-
-/**
- * Resolve (creating + caching on first use) the Stripe Tax Rate id for a given
- * VAT percentage in the current Stripe mode. Tax Rate objects are immutable and
- * mode-specific, so the cache is keyed by (mode, pct).
- */
-async function resolveVatRateId(pct: number): Promise<string> {
-  const mode: 'live' | 'test' = (process.env.STRIPE_SECRET_KEY ?? '').startsWith('sk_live') ? 'live' : 'test'
-  const cached = await getVatTaxRateId(mode, pct)
-  if (cached) return cached
-  const rate = await stripe.taxRates.create({
-    display_name: 'VAT',
-    description: `Danish VAT ${pct}%`,
-    percentage: pct,
-    inclusive: false, // exclusive — added on top of the catalog price
-    country: HOME_COUNTRY,
-    tax_type: 'vat',
-  })
-  await setVatTaxRateId(mode, pct, rate.id)
-  return rate.id
-}
 
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as {
       items: RequestItem[]
       locale?: string
+      couponCode?: string
       business?: { vatId?: string; token?: string; declaredName?: string; declaredAddress?: string }
     }
     const locale = body.locale ?? 'en'
@@ -142,11 +125,37 @@ export async function POST(req: Request) {
     if (buyerIp) metadata.buyerIp = buyerIp
 
     // Manual VAT decision (B2C by IP, or B2B reverse charge for a validated EU
-    // business). When taxable we attach a Stripe Tax Rate (exclusive) to every
-    // line item so Stripe computes the tax line; reverse-charge / non-EU get no
-    // rate (0%). We supply the rate ourselves instead of paying for Stripe Tax.
+    // business). DK + EU are taxable at the configured rate; reverse-charge /
+    // non-EU are 0%. Catalog prices are net (ex-VAT).
     const outcome = vatOutcome(country, business)
-    const vatRateId = outcome.taxable ? await resolveVatRateId(await getVatRate()) : null
+    const rate = await getVatRate()
+    const netTotal = items.reduce((s, i) => s + i.product.price, 0)
+
+    // Our own coupon (Stripe does NO discount calc). Validate against this Stripe
+    // mode's KV store; an invalid/expired code is surfaced to the client but
+    // doesn't block checkout — the order just proceeds without a discount.
+    let discountMinor = 0
+    let appliedCoupon: string | null = null
+    let couponError: string | null = null
+    const couponCode = (body.couponCode ?? '').trim().toUpperCase()
+    if (couponCode) {
+      const v = await validateCoupon(couponCode, currency)
+      if (v.ok) {
+        discountMinor = discountFor(v.coupon, netTotal)
+        appliedCoupon = v.coupon.code
+      } else {
+        couponError = v.reason
+      }
+    }
+
+    const discountedNet = netTotal - discountMinor
+    // A coupon that would zero the order isn't chargeable via the Payment Element.
+    if (discountedNet <= 0) {
+      return Response.json({ error: 'coupon too large for this order' }, { status: 400 })
+    }
+    // VAT computed by us on the discounted net (single rounding); 0% when not taxable.
+    const taxMinor = outcome.taxable ? Math.round(discountedNet * rate / 100) : 0
+    const gross = discountedNet + taxMinor
 
     // Record business + VAT treatment on the order for receipts and reporting
     // (reverse-charge EU sales go on the EC Sales List).
@@ -158,25 +167,55 @@ export async function POST(req: Request) {
       if (business.consultation) metadata.vatConsultation = business.consultation
     }
     metadata.reverseCharge = String(outcome.reverseCharge)
+    // VAT + discount facts read back by fulfilment (webhook / issue route) — these
+    // are the source of truth for the receipt, NOT any Stripe-computed tax.
+    metadata.taxAmount = String(taxMinor)
+    metadata.netAmount = String(discountedNet)
+    metadata.vatRate = String(rate)
+    if (appliedCoupon) {
+      metadata.couponCode = appliedCoupon
+      metadata.discountAmount = String(discountMinor)
+    }
 
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((i) => ({
-      quantity: 1,
-      ...(vatRateId ? { tax_rates: [vatRateId] } : {}),
-      price_data: {
-        currency,
-        unit_amount: i.product.price,
-        product_data: {
-          name: `${i.photo.title} — ${i.product.label}`,
-          metadata: { sku: i.product.sku },
+    // Spread the discounted net across the product lines (proportional to price),
+    // reconciling rounding on the last line so the sum is exact — Stripe Checkout
+    // has no negative line items, so the discount is baked into the line amounts.
+    // A single self-computed VAT line follows; the invoice re-derives the discount
+    // from (catalog sum − net), so no per-line discount record is needed.
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
+    let allocated = 0
+    items.forEach((i, idx) => {
+      const lineNet = idx === items.length - 1
+        ? discountedNet - allocated
+        : Math.round(discountedNet * (i.product.price / netTotal))
+      allocated += lineNet
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency,
+          unit_amount: lineNet,
+          product_data: {
+            name: `${i.photo.title} — ${i.product.label}`,
+            metadata: { sku: i.product.sku },
+          },
         },
-      },
-    }))
+      })
+    })
+    if (taxMinor > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency,
+          unit_amount: taxMinor,
+          product_data: { name: `VAT (${rate}%)`, metadata: { sku: 'vat' } },
+        },
+      })
+    }
 
     const session = await stripe.checkout.sessions.create({
       ui_mode: 'elements',
       mode: 'payment',
       line_items: lineItems,
-      allow_promotion_codes: true, // buyer can enter a promo code at checkout
       // No billing_address_collection: 'required' — for a digital download we set
       // the country (from IP) client-side via updateBillingAddress instead of
       // showing an address form. Physical orders still collect a shipping address.
@@ -195,6 +234,13 @@ export async function POST(req: Request) {
       },
     })
 
+    // Display strings come from US (Stripe computes no tax/discount now). The
+    // shop charges DKK; format accordingly, with a generic fallback.
+    const money = (minor: number) =>
+      currency === 'dkk'
+        ? formatDKK(minor)
+        : new Intl.NumberFormat('en', { style: 'currency', currency: currency.toUpperCase() }).format(minor / 100)
+
     return Response.json({
       clientSecret: session.client_secret,
       downloadItems,
@@ -203,6 +249,22 @@ export async function POST(req: Request) {
       billingCountry: country,
       reverseCharge: outcome.reverseCharge,
       businessName: business?.name ?? null,
+      summary: {
+        vatRate: rate,
+        subtotalMinor: netTotal,
+        discountMinor,
+        vatMinor: taxMinor,
+        totalMinor: gross,
+        subtotal: money(netTotal),
+        discount: money(discountMinor),
+        vat: money(taxMinor),
+        total: money(gross),
+      },
+      coupon: appliedCoupon
+        ? { code: appliedCoupon, error: null as string | null }
+        : couponError
+          ? { code: couponCode, error: couponError }
+          : null,
     })
   } catch (err) {
     const message = err instanceof Stripe.errors.StripeError

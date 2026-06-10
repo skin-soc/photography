@@ -153,6 +153,7 @@
     "saveAccessHint": "Conserva questi dati per scaricare di nuovo in seguito o su un altro dispositivo:",
     "passcodeLabel": "Codice di accesso",
     "promoCode": "Codice promo",
+    "promoInvalid": "Codice non valido o scaduto",
     "apply": "Applica",
     "discount": "Sconto",
     "b2bToggle": "Acquisti come azienda con partita IVA?",

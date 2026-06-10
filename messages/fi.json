@@ -153,6 +153,7 @@
     "saveAccessHint": "Säilytä nämä ladataksesi uudelleen myöhemmin tai toisella laitteella:",
     "passcodeLabel": "Pääsykoodi",
     "promoCode": "Alennuskoodi",
+    "promoInvalid": "Virheellinen tai vanhentunut koodi",
     "apply": "Käytä",
     "discount": "Alennus",
     "b2bToggle": "Ostatko alv-velvollisena yrityksenä?",

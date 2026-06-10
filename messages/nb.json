@@ -153,6 +153,7 @@
     "saveAccessHint": "Ta vare på dette for å laste ned igjen senere eller på en annen enhet:",
     "passcodeLabel": "Tilgangskode",
     "promoCode": "Rabattkode",
+    "promoInvalid": "Ugyldig eller utløpt kode",
     "apply": "Bruk",
     "discount": "Rabatt",
     "b2bToggle": "Kjøper du som mva-registrert virksomhet?",

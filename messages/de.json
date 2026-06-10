@@ -153,6 +153,7 @@
     "saveAccessHint": "Bewahren Sie diese auf, um später oder auf einem anderen Gerät erneut herunterzuladen:",
     "passcodeLabel": "Zugangscode",
     "promoCode": "Gutscheincode",
+    "promoInvalid": "Ungültiger oder abgelaufener Code",
     "apply": "Anwenden",
     "discount": "Rabatt",
     "b2bToggle": "Kauf als umsatzsteuerpflichtiges Unternehmen?",

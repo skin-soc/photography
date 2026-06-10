@@ -153,6 +153,7 @@
     "saveAccessHint": "Bewaar deze om later of op een ander apparaat opnieuw te downloaden:",
     "passcodeLabel": "Toegangscode",
     "promoCode": "Kortingscode",
+    "promoInvalid": "Ongeldige of verlopen code",
     "apply": "Toepassen",
     "discount": "Korting",
     "b2bToggle": "Koop je als btw-plichtige onderneming?",

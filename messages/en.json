@@ -153,6 +153,7 @@
     "subtotal": "Subtotal",
     "vat": "VAT",
     "promoCode": "Promo code",
+    "promoInvalid": "Invalid or expired code",
     "apply": "Apply",
     "discount": "Discount",
     "b2bToggle": "Buying as a VAT-registered business?",

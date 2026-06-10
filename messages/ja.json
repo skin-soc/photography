@@ -153,6 +153,7 @@
     "saveAccessHint": "後で、または別のデバイスで再度ダウンロードするために、これらを保存してください：",
     "passcodeLabel": "パスコード",
     "promoCode": "プロモコード",
+    "promoInvalid": "無効または期限切れのコードです",
     "apply": "適用",
     "discount": "割引",
     "b2bToggle": "VAT登録事業者として購入しますか？",
