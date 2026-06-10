@@ -63,6 +63,33 @@ Keeps the existing LR → catalog.json → origin → shop pipeline; only the pr
 template grows. Provider maps onto the existing `print` vs `fine-art` types
 (`print` → Prodigi everyday; a future premium tier → WhiteWall).
 
+### Product range — replace the placeholder with the real Prodigi catalogue
+
+**Current state is a PLACEHOLDER.** `DEFAULT_PRINT_PRODUCTS` in the origin
+`server.js` (mirrored by `PRINT_TEMPLATE` in `src/lib/shop.ts` for dev) hardcodes
+a skeleton — `print` A4 395 / A3 595 DKK and a single `fine-art` "A2 — archival"
+1495 DKK. This pre-dates the integration and is NOT the real offering.
+
+**To build:** drive print/fine-art variants from the **real Prodigi product
+catalogue** — a proper range of **sizes, papers/media, and framed/mounted
+options**, each mapped to a `providerSku` with its `cost`. Fine art should offer
+more than one size/finish. Source the range from Prodigi's product data (and the
+NL-produced subset per §7), not a hand-written template.
+
+### In-frame preview (customer-facing)
+
+Show the artwork **inside the chosen frame/size** on the product page. Prodigi
+provides **mockup / preview images** for framed and mounted products; use those
+(or a generated composite) so the buyer sees the framed result before ordering.
+Treat as part of the picker UX once the real range lands.
+
+### Licensing applies to DIGITAL only
+
+Usage-rights licence tiers are a **digital-download** concept. Print and fine-art
+products are physical objects and must NOT show a licence tier in the picker
+(fixed in `shop/[slug]/page.tsx`: `license` set only when `type === 'digital'`).
+Physical receipts/terms are a separate, later concern from the download licence.
+
 ---
 
 ## 3. Money flow — single charge, paid separately

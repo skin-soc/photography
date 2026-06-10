@@ -130,7 +130,9 @@ export default async function ShopItem({
     approxText: approxLine(p.price, rates),
     format: p.format,
     downloadToken: p.downloadToken,
-    license: productLicense(p),
+    // Usage-rights licences apply to digital downloads only. A physical print or
+    // fine-art piece is an object, not a licence — no usage tier is shown.
+    license: p.type === 'digital' ? productLicense(p) : undefined,
   }))
 
   const schemaTypeName: Record<ProductType, string> = {
