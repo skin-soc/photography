@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "Licenties worden verleend voor het opgegeven gebruik en de genoemde kopielimieten. Dit beeld is vastgelegd bij {event}, een openbaar evenement op een openbare locatie. Volledige licentievoorwaarden <link>hier</link>.",
     "buyNow": "Nu kopen",
     "inCart": "In winkelwagen",
-    "added": "Toegevoegd"
+    "added": "Toegevoegd",
+    "sectionTitle": "{name}-shop"
   },
   "cart": {
     "emailLabel": "E-mail (voor je downloadlink)",

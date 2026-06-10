@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "ライセンスは記載された特定の用途および複製制限に対して付与されます。この画像は公共の場所で開催されたパブリックイベント「{event}」で撮影されました。完全なライセンス条件は<link>こちら</link>。",
     "buyNow": "今すぐ購入",
     "inCart": "カート内",
-    "added": "追加しました"
+    "added": "追加しました",
+    "sectionTitle": "{name}ショップ"
   },
   "cart": {
     "emailLabel": "メールアドレス（ダウンロードリンク用）",

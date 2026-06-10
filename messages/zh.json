@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "许可证按所述的具体用途和复制限制授予。此图像摄于公开活动{event}，该活动在公共场所举办。完整许可条款<link>请见此处</link>。",
     "buyNow": "立即购买",
     "inCart": "已在购物车",
-    "added": "已添加"
+    "added": "已添加",
+    "sectionTitle": "{name}商店"
   },
   "cart": {
     "emailLabel": "电子邮箱（用于您的下载链接）",

@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "Licenser beviljas för det specifika bruk och de kopieringsgränser som anges. Denna bild togs vid {event}, ett offentligt evenemang på offentlig plats. Fullständiga licensvillkor <link>här</link>.",
     "buyNow": "Köp nu",
     "inCart": "I varukorgen",
-    "added": "Tillagd"
+    "added": "Tillagd",
+    "sectionTitle": "{name}-butik"
   },
   "cart": {
     "emailLabel": "E-post (för din nedladdningslänk)",

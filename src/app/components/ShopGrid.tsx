@@ -3,7 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import type { ProductType, CategoryNode } from '@/lib/shop'
+import type { CategoryNode } from '@/lib/shop'
+import {
+  type ProductType,
+  PRODUCT_TYPE_ORDER,
+  isProductType,
+  typeMessageKey,
+} from '@/lib/product-types'
 
 export interface GridPhoto {
   id: string
@@ -20,16 +26,6 @@ export interface GridPhoto {
   captureDate?: number
 }
 
-const TYPE_FILTERS: { key: ProductType; label: string }[] = [
-  { key: 'print', label: 'prints' },
-  { key: 'fine-art', label: 'fineArt' },
-  { key: 'digital', label: 'digital' },
-]
-
-// Canonical priority for picking a sensible default filter when the catalog
-// doesn't offer every type.
-const TYPE_PRIORITY: ProductType[] = ['digital', 'print', 'fine-art']
-
 function matchesCategory(photo: GridPhoto, path: string[]): boolean {
   if (path.length === 0) return true
   return photo.category.some((c) => path.every((seg, i) => c[i] === seg))
@@ -44,9 +40,21 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function keyPhotosForFolder(photos: GridPhoto[], folderPath: string[]): string[] {
+/** Key (green-labelled) photos of a product type — rotating hero on type cards. */
+function keyPhotosForType(photos: GridPhoto[], type: ProductType): string[] {
   return photos
-    .filter((p) => p.key && matchesCategory(p, folderPath))
+    .filter((p) => p.key && p.types.includes(type))
+    .map((p) => `${p.previewUrl}?max=800`)
+}
+
+/** Key photos within a subject folder (optionally constrained to a type). */
+function keyPhotosForFolder(
+  photos: GridPhoto[],
+  folderPath: string[],
+  type: ProductType | null,
+): string[] {
+  return photos
+    .filter((p) => p.key && matchesCategory(p, folderPath) && (type === null || p.types.includes(type)))
     .map((p) => `${p.previewUrl}?max=800`)
 }
 
@@ -127,6 +135,11 @@ function countInCategory(photos: GridPhoto[], path: string[], typeFilter: Produc
     .length
 }
 
+/** Photos offered in a product type, anywhere in the catalog. */
+function countInType(photos: GridPhoto[], type: ProductType): number {
+  return photos.filter((p) => p.types.includes(type)).length
+}
+
 function LazyImage({
   src,
   alt,
@@ -178,34 +191,43 @@ function LazyImage({
   )
 }
 
+/**
+ * Breadcrumb over the full nav path. Segment 0 is the product-type tier
+ * (rendered with its friendly label); the rest are Lightroom subject folders.
+ */
 function Breadcrumb({
-  path,
+  navPath,
+  typeLabel,
   onNavigate,
 }: {
-  path: string[]
+  navPath: string[]
+  /** Friendly label for the leading product-type token. */
+  typeLabel: (token: string) => string
   onNavigate: (path: string[]) => void
 }) {
-  if (path.length === 0) return null
-  const parentPath = path.slice(0, -1)
-  const parentLabel = parentPath.length === 0 ? 'Browse' : parentPath[parentPath.length - 1]
+  if (navPath.length === 0) return null
+  const parentPath = navPath.slice(0, -1)
+  const labelFor = (path: string[]) =>
+    path.length === 1 ? typeLabel(path[0]) : path[path.length - 1]
+  const parentLabel = parentPath.length === 0 ? 'Browse' : labelFor(parentPath)
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
       <div className="hidden sm:flex items-center gap-2 text-white/40">
         <button onClick={() => onNavigate([])} className="hover:text-white transition-colors">
           Browse
         </button>
-        {path.map((seg, i) => (
+        {navPath.map((seg, i) => (
           <span key={i} className="flex items-center gap-2">
             <span>/</span>
             <button
-              onClick={() => onNavigate(path.slice(0, i + 1))}
+              onClick={() => onNavigate(navPath.slice(0, i + 1))}
               className={
-                i === path.length - 1
+                i === navPath.length - 1
                   ? 'text-white'
                   : 'hover:text-white transition-colors'
               }
             >
-              {seg}
+              {i === 0 ? typeLabel(seg) : seg}
             </button>
           </span>
         ))}
@@ -231,34 +253,49 @@ export default function ShopGrid({
   photos: GridPhoto[]
   categoryTree: CategoryNode[]
   availableTypes: ProductType[]
+  /** Full nav path: [productType, ...subjectFolders]. Empty = landing. */
   initialCategoryPath?: string[]
-  /** Default page heading, shown until a top-level collection is selected. */
+  /** Default page heading, shown on the landing (no product type chosen). */
   heading: string
-  /** Shop intro paragraph, shown only on the landing (no collection selected). */
+  /** Shop intro paragraph, shown only on the landing. */
   intro: string
 }) {
   const t = useTranslations('shop')
-  // Only show filters for types the catalog actually offers, in canonical order.
-  const typeFilters = TYPE_FILTERS.filter((f) => availableTypes.includes(f.key))
-  const defaultType = TYPE_PRIORITY.find((tp) => availableTypes.includes(tp)) ?? null
-  const [categoryPath, setCategoryPath] = useState<string[]>(initialCategoryPath)
-  const [typeFilter, setTypeFilter] = useState<ProductType | null>(defaultType)
+  const typeLabel = useCallback(
+    (token: string) => (isProductType(token) ? t(typeMessageKey(token)) : token),
+    [t],
+  )
+
+  // The top tier of the tree is the product type; the rest is the subject path.
+  const [navPath, setNavPath] = useState<string[]>(initialCategoryPath)
+  const typeFilter: ProductType | null =
+    navPath.length > 0 && isProductType(navPath[0]) ? navPath[0] : null
+  const subjectPath = typeFilter ? navPath.slice(1) : []
+  const isLanding = navPath.length === 0
+
+  // The product-type cards shown on the landing, in publish-tree order.
+  const typeCards = PRODUCT_TYPE_ORDER.filter((tp) => availableTypes.includes(tp))
 
   const currentNode: CategoryNode | null = (() => {
-    if (categoryPath.length === 0) return null
-    let node = categoryTree.find((n) => n.name === categoryPath[0]) ?? null
-    for (let i = 1; i < categoryPath.length && node; i++) {
-      node = node.children.find((c) => c.name === categoryPath[i]) ?? null
+    if (subjectPath.length === 0) return null
+    let node = categoryTree.find((n) => n.name === subjectPath[0]) ?? null
+    for (let i = 1; i < subjectPath.length && node; i++) {
+      node = node.children.find((c) => c.name === subjectPath[i]) ?? null
     }
     return node
   })()
 
+  // Subject folders at the current level — only those that actually hold photos
+  // of the selected product type (so e.g. Fine Art hides folders with no fine-art).
   const subCategories: CategoryNode[] = (
-    categoryPath.length === 0 ? categoryTree : (currentNode?.children ?? [])
-  ).slice().sort((a, b) => a.name.localeCompare(b.name))
+    subjectPath.length === 0 ? categoryTree : (currentNode?.children ?? [])
+  )
+    .filter((node) => countInCategory(photos, [...subjectPath, node.name], typeFilter) > 0)
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
 
   const shown = photos
-    .filter((p) => matchesCategory(p, categoryPath))
+    .filter((p) => matchesCategory(p, subjectPath))
     .filter((p) => typeFilter === null || p.types.includes(typeFilter))
     // Sort chronologically within a leaf collection. The plugin now writes
     // catalog.json in capture-date order, but we sort here too as a fallback
@@ -268,15 +305,14 @@ export default function ShopGrid({
   // ── First-page loading overlay ───────────────────────────────────────────
   // Grid navigation is entirely client-side (no route change), so the global
   // NavigationOverlay can't cover it. We show a spinner over the grid until the
-  // first screenful of images has actually painted — at 800px previews this is
-  // the gap the spinner fills.
-  const isFolderView = subCategories.length > 0
-  const itemCount = isFolderView ? subCategories.length : shown.length
+  // first screenful of images has actually painted.
+  const isFolderView = !isLanding && subCategories.length > 0
+  const itemCount = isLanding ? typeCards.length : isFolderView ? subCategories.length : shown.length
   // A "first page" — enough tiles to fill the initial viewport across
   // breakpoints (5-col desktop ≈ 2.4 rows, 2-col mobile ≈ 6 rows).
   const FIRST_PAGE = 12
   const targetCount = Math.min(itemCount, FIRST_PAGE)
-  const viewKey = `${categoryPath.join('|')}·${typeFilter ?? ''}`
+  const viewKey = navPath.join('|') || '·landing'
 
   const loadedRef = useRef(0)
   const targetRef = useRef(targetCount)
@@ -314,41 +350,19 @@ export default function ShopGrid({
 
   return (
     <>
-      {/* Heading — defaults to the shop title, then becomes the top-level
-          collection name once the buyer drills in (and stays at that top tier). */}
+      {/* Heading — the shop title on the landing, then "<Type> Shop" once a
+          product type is chosen, held at that tier while browsing subjects. */}
       <header className="mb-12">
         <h1 className="text-4xl md:text-5xl font-light">
-          {categoryPath.length > 0 ? categoryPath[0] : heading}
+          {typeFilter ? t('sectionTitle', { name: t(typeMessageKey(typeFilter)) }) : heading}
         </h1>
-        {categoryPath.length === 0 && (
+        {isLanding && (
           <p className="mt-4 max-w-2xl text-white/60 leading-relaxed">{intro}</p>
         )}
       </header>
 
-      {/* Product type filter — only when the catalog offers more than one type */}
-      {typeFilters.length > 1 && (
-      <div className="flex flex-wrap gap-x-7 gap-y-2 mb-10">
-        {typeFilters.map(({ key, label }) => {
-          const active = typeFilter === key
-          return (
-            <button
-              key={key}
-              onClick={() => setTypeFilter(active ? null : key)}
-              className={`text-[11px] font-light tracking-[0.22em] uppercase pb-[5px] border-b-2 transition-colors ${
-                active
-                  ? 'border-[#931020] text-white'
-                  : 'border-transparent text-white/55 hover:text-white'
-              }`}
-            >
-              {t(label)}
-            </button>
-          )
-        })}
-      </div>
-      )}
-
-      {/* Breadcrumb */}
-      <Breadcrumb path={categoryPath} onNavigate={setCategoryPath} />
+      {/* Breadcrumb (hidden on the landing) */}
+      <Breadcrumb navPath={navPath} typeLabel={typeLabel} onNavigate={setNavPath} />
 
       <div className="relative min-h-[50vh]">
         {/* Loading overlay — shown until the first page of images has painted */}
@@ -359,17 +373,48 @@ export default function ShopGrid({
         )}
 
         <div className={ready ? 'opacity-100 transition-opacity duration-300' : 'opacity-0 pointer-events-none'}>
-          {isFolderView ? (
+          {isLanding ? (
+            /* Landing: one card per product type — Fine Art · Prints · Digital */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-white/5">
+              {typeCards.map((type, idx) => {
+                const count = countInType(photos, type)
+                const keyUrls = keyPhotosForType(photos, type)
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setNavPath([type])}
+                    className="group relative overflow-hidden aspect-[4/3] bg-black text-left"
+                  >
+                    <RotatingImage
+                      srcs={keyUrls}
+                      delay={idx * 700}
+                      gen={viewKey}
+                      onReady={idx < targetCount ? handleTileLoad : undefined}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/65 transition-all duration-500" />
+                    <div className="absolute bottom-0 left-0 p-6 z-10">
+                      <p className="text-2xl font-light text-white">{t(typeMessageKey(type))}</p>
+                      {count > 0 && (
+                        <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-accent/70">
+                          {count} {count === 1 ? 'photo' : 'photos'}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          ) : isFolderView ? (
             /* Has sub-categories: always show folder cards, never the photo grid */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-white/5">
               {subCategories.map((node, nodeIdx) => {
-                const nodePath = [...categoryPath, node.name]
+                const nodePath = [...subjectPath, node.name]
                 const count = countInCategory(photos, nodePath, typeFilter)
-                const keyUrls = keyPhotosForFolder(photos, nodePath)
+                const keyUrls = keyPhotosForFolder(photos, nodePath, typeFilter)
                 return (
                   <button
                     key={node.name}
-                    onClick={() => setCategoryPath(nodePath)}
+                    onClick={() => setNavPath([...navPath, node.name])}
                     className="group relative overflow-hidden aspect-[4/3] bg-black text-left"
                   >
                     <RotatingImage
@@ -398,8 +443,8 @@ export default function ShopGrid({
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {shown.map((p, i) => {
-                  const from = categoryPath.length > 0
-                    ? `?from=${encodeURIComponent(categoryPath.join('|'))}`
+                  const from = navPath.length > 0
+                    ? `?from=${encodeURIComponent(navPath.join('|'))}`
                     : ''
                   return (
                     <Link

@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "Lisenssit myönnetään ilmoitetulle käyttötarkoitukselle ja kopiointirajoituksille. Tämä kuva on otettu tapahtumassa {event}, joka on julkinen tapahtuma julkisella paikalla. Täydelliset lisenssiehdot <link>täällä</link>.",
     "buyNow": "Osta nyt",
     "inCart": "Ostoskorissa",
-    "added": "Lisätty"
+    "added": "Lisätty",
+    "sectionTitle": "{name}-kauppa"
   },
   "cart": {
     "emailLabel": "Sähköposti (latauslinkkiäsi varten)",

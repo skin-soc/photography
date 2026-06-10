@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Link } from '@/i18n/navigation'
-import { getPhoto, productSpec, displayTitle, productLicense } from '@/lib/shop'
+import { getPhoto, productSpec, displayTitle, productLicense, isProductType, typeMessageKey } from '@/lib/shop'
 import type { ProductType } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
@@ -13,13 +13,23 @@ import { routing } from '@/i18n/routing'
 type Params = Promise<{ locale: string; slug: string }>
 type SearchParams = Promise<{ from?: string }>
 
-function ProductBreadcrumb({ path, title }: { path: string[]; title: string }) {
+function ProductBreadcrumb({
+  path,
+  title,
+  typeLabel,
+}: {
+  path: string[]
+  title: string
+  /** Friendly label for the leading product-type token (segment 0). */
+  typeLabel: (token: string) => string
+}) {
   // The back button returns to exactly where the user came from — the leaf
   // collection they were browsing. The breadcrumb links cover parent navigation.
+  const label = (seg: string, i: number) => (i === 0 ? typeLabel(seg) : seg)
   const backHref = path.length === 0
     ? '/shop'
     : `/shop?cat=${encodeURIComponent(path.join('|'))}`
-  const backLabel = path.length === 0 ? 'Browse' : path[path.length - 1]
+  const backLabel = path.length === 0 ? 'Browse' : label(path[path.length - 1], path.length - 1)
 
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
@@ -30,7 +40,7 @@ function ProductBreadcrumb({ path, title }: { path: string[]; title: string }) {
           return (
             <span key={i} className="flex items-center gap-2 min-w-0">
               <span className="shrink-0">/</span>
-              <Link href={segHref} className="hover:text-white transition-colors truncate">{seg}</Link>
+              <Link href={segHref} className="hover:text-white transition-colors truncate">{label(seg, i)}</Link>
             </span>
           )
         })}
@@ -164,7 +174,11 @@ export default async function ShopItem({
       />
 
       {fromPath.length > 0 ? (
-        <ProductBreadcrumb path={fromPath} title={displayTitle(photo)} />
+        <ProductBreadcrumb
+          path={fromPath}
+          title={displayTitle(photo)}
+          typeLabel={(token) => (isProductType(token) ? t(typeMessageKey(token)) : token)}
+        />
       ) : (
         <Link
           href="/shop"

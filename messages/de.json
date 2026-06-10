@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "Lizenzen werden für die angegebene Nutzung und die genannten Kopierbeschränkungen erteilt. Dieses Bild wurde bei {event}, einer öffentlichen Veranstaltung an einem öffentlichen Ort, aufgenommen. Vollständige Lizenzbedingungen <link>hier</link>.",
     "buyNow": "Jetzt kaufen",
     "inCart": "Im Warenkorb",
-    "added": "Hinzugefügt"
+    "added": "Hinzugefügt",
+    "sectionTitle": "{name}-Shop"
   },
   "cart": {
     "emailLabel": "E-Mail (für Ihren Download-Link)",

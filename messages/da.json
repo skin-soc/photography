@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "Licenser gives til den specifikke brug og de kopibegrænsninger, der er angivet. Dette billede er taget ved {event}, et offentligt arrangement på offentlig grund. Fulde licensbetingelser <link>her</link>.",
     "buyNow": "Køb nu",
     "inCart": "I kurv",
-    "added": "Tilføjet"
+    "added": "Tilføjet",
+    "sectionTitle": "{name}-shop"
   },
   "cart": {
     "emailLabel": "E-mail (til dit downloadlink)",

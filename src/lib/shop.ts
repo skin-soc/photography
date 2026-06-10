@@ -16,7 +16,11 @@
 
 import { createHmac } from 'node:crypto'
 
-export type ProductType = 'digital' | 'print' | 'fine-art'
+// Product-type primitives live in a client-safe module (no node:crypto), and
+// are re-exported here so existing `@/lib/shop` importers keep working.
+import type { ProductType } from './product-types'
+export type { ProductType }
+export { PRODUCT_TYPE_ORDER, isProductType, typeMessageKey } from './product-types'
 
 /**
  * Usage-rights tier bundled with a digital product.

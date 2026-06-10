@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "Licencje udzielane są na konkretne zastosowanie i określone limity kopii. To zdjęcie zostało wykonane podczas {event}, publicznego wydarzenia w miejscu publicznym. Pełne warunki licencji <link>tutaj</link>.",
     "buyNow": "Kup teraz",
     "inCart": "W koszyku",
-    "added": "Dodano"
+    "added": "Dodano",
+    "sectionTitle": "Sklep {name}"
   },
   "cart": {
     "emailLabel": "E-mail (do linku do pobrania)",

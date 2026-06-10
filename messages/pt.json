@@ -110,7 +110,8 @@
     "licensingNotePublicEvent": "As licenças são concedidas para o uso específico e os limites de cópias indicados. Esta imagem foi captada em {event}, um evento público num espaço público. Termos de licença completos <link>aqui</link>.",
     "buyNow": "Comprar agora",
     "inCart": "No carrinho",
-    "added": "Adicionado"
+    "added": "Adicionado",
+    "sectionTitle": "Loja {name}"
   },
   "cart": {
     "emailLabel": "E-mail (para o seu link de transferência)",
