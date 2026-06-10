@@ -34,6 +34,7 @@
  */
 
 import express from 'express'
+import compression from 'compression'
 import sharp from 'sharp'
 import nodemailer from 'nodemailer'
 import AdmZip from 'adm-zip'
@@ -251,6 +252,10 @@ await mkdir(ORDERS_DIR, { recursive: true })
 
 const app = express()
 app.disable('x-powered-by')
+// Gzip responses — catalog.json is ~2MB JSON and the tunnel upstream is slow
+// (~80KB/s); compression cuts it ~6-8x so the worker's cold fetch drops from
+// ~28s to a few seconds. Applies to all JSON/text responses.
+app.use(compression())
 
 /** Shared-secret gate — every route except /healthz requires the header. */
 app.use((req, res, next) => {
