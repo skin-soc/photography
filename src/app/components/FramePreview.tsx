@@ -55,11 +55,12 @@ export default function FramePreview({
       {/* inner lip — a thin dark rabbet line inside the moulding */}
       <div style={{ padding: '1px', background: 'rgba(0,0,0,0.35)' }}>
         <div style={matStyle}>
+          {/* Server Component: no event handlers (onContextMenu) — they throw at
+              render. draggable={false} + pointer-events-none suffice. */}
           <img
             src={src}
             alt={alt}
             draggable={false}
-            onContextMenu={(e) => e.preventDefault()}
             className="block w-full h-auto select-none pointer-events-none"
             style={{ boxShadow: matted ? '0 1px 4px rgba(0,0,0,0.25)' : 'none' }}
           />
