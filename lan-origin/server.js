@@ -332,6 +332,16 @@ async function loadCatalog() {
         price: prod.price,
         currency: prod.currency,
         printSize: prod.printSize,
+        // Print-fulfilment wiring (optional; undefined fields drop from JSON).
+        // provider/providerSku map our SKU to the lab's product; attributes pin
+        // the chosen variant (e.g. frame colour); cost (ex-tax minor, in
+        // costCurrency) is for margin + the no-float transfer. See
+        // docs/fap-print-fulfilment.md.
+        provider: prod.provider,
+        providerSku: prod.providerSku,
+        attributes: prod.attributes,
+        cost: prod.cost,
+        costCurrency: prod.costCurrency,
       }))
 
     if (allowed.includes('digital')) {

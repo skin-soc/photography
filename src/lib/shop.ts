@@ -86,6 +86,17 @@ export interface ShopProduct {
    * filename (GMP-XXXXXXX.jpg / .tiff) and verified stateless at download time.
    */
   downloadToken?: string
+  // ── Print fulfilment (physical products only; see docs/fap-print-fulfilment.md) ──
+  /** Fulfilment provider, e.g. 'prodigi'. Absent on digital + legacy print. */
+  provider?: string
+  /** The provider's product SKU this maps to (e.g. 'GLOBAL-FAP-A2'). */
+  providerSku?: string
+  /** Chosen provider variant attributes (e.g. { color: 'black' }). */
+  attributes?: Record<string, string>
+  /** Provider ex-tax cost in minor units of `costCurrency` — for margin only. */
+  cost?: number
+  /** Currency of `cost` (e.g. 'EUR'). */
+  costCurrency?: string
 }
 
 export interface ShopPhoto {
@@ -327,6 +338,19 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
 export async function getPhoto(slug: string): Promise<ShopPhoto | null> {
   const catalog = await getCatalog()
   return catalog.find((p) => p.slug === slug) ?? null
+}
+
+/** Resolve a product SKU to its product (+ owning photo) across the catalog.
+ *  Used server-side to map a cart SKU to its Prodigi providerSku for quoting. */
+export async function findProductBySku(
+  sku: string,
+): Promise<{ photo: ShopPhoto; product: ShopProduct } | null> {
+  const catalog = await getCatalog()
+  for (const photo of catalog) {
+    const product = photo.products.find((p) => p.sku === sku)
+    if (product) return { photo, product }
+  }
+  return null
 }
 
 /** The distinct product types a photo is offered in, in canonical order. */

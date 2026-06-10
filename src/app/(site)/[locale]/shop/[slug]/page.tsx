@@ -6,6 +6,7 @@ import { getPhoto, productSpec, displayTitle, productLicense, isProductType, typ
 import type { ProductType } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
+import FramePreview, { type FrameColor } from '@/app/components/FramePreview'
 import LicensingLink from '@/app/components/LicensingLink'
 import { SITE_URL, BUSINESS_NAME, OG_LOCALE_MAP } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
@@ -167,6 +168,11 @@ export default async function ShopItem({
   const previewW = Math.round(photo.width  * scale)
   const previewH = Math.round(photo.height * scale)
 
+  // A framed fine-art product (carries a Prodigi frame `color` attribute) drives
+  // the in-frame preview mockup; otherwise the plain white-frame image is shown.
+  const framedProduct = photo.products.find((p) => p.type === 'fine-art' && p.attributes?.color)
+  const frameColor = (framedProduct?.attributes?.color as FrameColor | undefined) ?? 'black'
+
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
       <script
@@ -192,19 +198,31 @@ export default async function ShopItem({
 
       <div className="mt-10 flex flex-col xl:flex-row gap-10 xl:gap-16 items-start">
 
-        {/* Photo — 21px white frame */}
-        <div className="select-none shrink-0 mx-auto xl:mx-0 border-[21px] border-white" style={{ maxWidth: previewW, width: '100%' }}>
-          <img
-            src={`${photo.previewUrl}?max=800`}
-            srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
-            sizes={`${previewW}px`}
-            alt={`${displayTitle(photo)} — ${photo.location}`}
-            width={previewW}
-            height={previewH}
-            draggable={false}
-            className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
-          />
-        </div>
+        {/* Photo — framed mockup when a framed product is offered, else the
+            default 21px white frame. (Framed preview uses the product's frame
+            colour; reacting live to the picker selection is a follow-up.) */}
+        {framedProduct ? (
+          <div className="select-none shrink-0 mx-auto xl:mx-0" style={{ maxWidth: previewW + 42, width: '100%' }}>
+            <FramePreview
+              src={`${photo.previewUrl}?max=800`}
+              alt={`${displayTitle(photo)} — ${photo.location}`}
+              frameColor={frameColor}
+            />
+          </div>
+        ) : (
+          <div className="select-none shrink-0 mx-auto xl:mx-0 border-[21px] border-white" style={{ maxWidth: previewW, width: '100%' }}>
+            <img
+              src={`${photo.previewUrl}?max=800`}
+              srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
+              sizes={`${previewW}px`}
+              alt={`${displayTitle(photo)} — ${photo.location}`}
+              width={previewW}
+              height={previewH}
+              draggable={false}
+              className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
+            />
+          </div>
+        )}
 
         {/* Info column — title/caption/license now live inside the first picker card */}
         <div className="min-w-0 flex-1">

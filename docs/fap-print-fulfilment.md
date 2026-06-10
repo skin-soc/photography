@@ -309,6 +309,30 @@ needed because the print price is static while Prodigi cost can drift.
 
 ---
 
+## 10a. Build progress
+
+**Built & verified (sandbox), read-only half:**
+- `src/lib/prodigi.ts` — product details, quotes (normalised, ex-tax), per-shipment
+  fulfilment, `checkEuFulfilment()` pre-charge guard.
+- `src/lib/currency.ts` — `eurToDkkOre()` (ECB rate × buffer).
+- `lan-origin/server.js` — catalogue now passes `provider/providerSku/attributes/
+  cost` through (backward-compatible).
+- `lan-origin/products.example.json` — verified Prodigi-backed starter range
+  (FAP A3/A2/A1 giclée, PAP photographic, CFPM A2 framed; all route NL). **Copy to
+  the NAS DATA_DIR as `products.json` + rebuild to activate.** Retail prices are
+  starters — tune (fine art is value-priced).
+- `src/app/api/shop/quote/route.ts` — POST {items,country} → DKK shipping + NL
+  guard; returns `physical:false` when no `providerSku` items.
+- `src/app/components/FramePreview.tsx` + product page — in-frame mockup, shown
+  when a framed product is offered (frame colour from the product attribute).
+
+**Not yet built / pending:**
+- Populate the NAS catalogue (load `products.example.json`, rebuild) — unblocks the
+  picker range, the quote route, and the frame preview live.
+- Wire the quote route into checkout (Phase 3 shipping line) + show shipping in cart.
+- Live frame-colour reactivity (preview reacts to the picker selection).
+- Order creation + no-float funding cron + `/api/webhook/prodigi` (gated on Issuing).
+
 ## 11. Open blockers (all non-code)
 
 1. **Stripe Issuing** approved (sales) + **balance transfers (preview)** enabled +
