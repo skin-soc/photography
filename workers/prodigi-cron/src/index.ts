@@ -10,10 +10,13 @@
 interface Env {
   VALIDATE_URL: string
   CRON_SECRET: string
+  /** Service binding to the main app worker (calls cross-worker on one account
+   *  must use a binding, not a public fetch — Cloudflare error 1042). */
+  MAIN: { fetch(input: string, init?: RequestInit): Promise<Response> }
 }
 
 async function runValidation(env: Env): Promise<Response> {
-  return fetch(env.VALIDATE_URL, {
+  return env.MAIN.fetch(env.VALIDATE_URL, {
     method: 'POST',
     headers: { 'x-cron-secret': env.CRON_SECRET },
   })
