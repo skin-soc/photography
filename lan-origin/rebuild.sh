@@ -55,9 +55,15 @@ if ! grep -q 'PAID IN FULL' "$SOURCE/invoice.js"; then
 fi
 echo "==> Source check OK ($SOURCE has the new code)"
 
-# 1. Build the image from scratch.
-echo "==> Building $IMAGE from $SOURCE (no cache)"
-sudo docker build --no-cache -t "$IMAGE" "$SOURCE"
+# 1. Build the image. Cached by DEFAULT — the Dockerfile copies app code LAST, so
+#    a server.js change only rebuilds that final COPY layer; the slow font-apt and
+#    npm-install layers are reused (seconds, not minutes). Pass --no-cache only
+#    when you actually need a clean rebuild (Dockerfile/base image changed, or a
+#    suspected stale layer):  ./rebuild.sh --no-cache
+NOCACHE=""
+if [ "${1:-}" = "--no-cache" ]; then NOCACHE="--no-cache"; fi
+echo "==> Building $IMAGE from $SOURCE ${NOCACHE:+(no cache)}"
+sudo docker build $NOCACHE -t "$IMAGE" "$SOURCE"
 
 # 2. Remove the old container (don't abort if it's missing / differently named).
 echo "==> Removing old container (if any)"
