@@ -36,5 +36,5 @@ export const PRINT_RANGE: RangeItem[] = [
   { type: 'fine-art', label: 'A3 — giclée (EMA 200gsm)',  printSize: { w: 29.7, h: 42 },   price: 59500,  currency: 'DKK', provider: 'prodigi', providerSku: 'GLOBAL-FAP-A3',    attributes: {},                 cost: 700,  costCurrency: 'EUR' },
   { type: 'fine-art', label: 'A2 — giclée (EMA 200gsm)',  printSize: { w: 42,   h: 59.4 }, price: 89500,  currency: 'DKK', provider: 'prodigi', providerSku: 'GLOBAL-FAP-A2',    attributes: {},                 cost: 1000, costCurrency: 'EUR' },
   { type: 'fine-art', label: 'A1 — giclée (EMA 200gsm)',  printSize: { w: 59.4, h: 84.1 }, price: 129500, currency: 'DKK', provider: 'prodigi', providerSku: 'GLOBAL-FAP-A1',    attributes: {},                 cost: 1400, costCurrency: 'EUR' },
-  { type: 'fine-art', label: 'A2 — framed, mounted',      printSize: { w: 42,   h: 59.4 }, price: 199500, currency: 'DKK', provider: 'prodigi', providerSku: 'GLOBAL-CFPM-A2',   attributes: { color: 'black' }, cost: 4800, costCurrency: 'EUR' },
+  { type: 'fine-art', label: 'A2 — framed, mounted',      printSize: { w: 42,   h: 59.4 }, price: 199500, currency: 'DKK', provider: 'prodigi', providerSku: 'GLOBAL-CFPM-A2',   attributes: { color: 'black' }, cost: 5200, costCurrency: 'EUR' },
 ]

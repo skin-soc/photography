@@ -119,6 +119,11 @@ export async function validateRange(): Promise<ValidationReport> {
     if (s.exists && !s.routesEu && !changes.some((c) => c.includes(s.providerSku))) {
       changes.push(`⚠️ ${s.providerSku} (${s.label}) — routes ${s.fulfilCountry ?? '?'} (not EU)`)
     }
+    // Surface a stale RECORDED cost (range out of date vs live) — wrong margin.
+    // Fires until product-range.ts `cost` is corrected (self-resolving).
+    if (s.exists && s.cost != null && s.cost !== s.recordedCost && !changes.some((c) => c.includes(`${s.providerSku} (${s.label}) — cost`))) {
+      changes.push(`💶 ${s.providerSku} (${s.label}) — recorded cost ${eur(s.recordedCost)} ≠ live ${eur(s.cost)} (update range)`)
+    }
   }
 
   // Persist the new snapshot.
