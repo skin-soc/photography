@@ -411,6 +411,22 @@ export async function notifyOwnerSale(input: {
   return res.ok
 }
 
+/** Email the owner a summary of product price/availability/routing changes found
+ *  by the daily Prodigi validator (origin sends it via SMTP). */
+export async function notifyOwnerChange(input: {
+  to: string
+  changes: string[]
+}): Promise<boolean> {
+  if (!ORIGIN || !input.to || input.changes.length === 0) return false
+  const res = await fetch(`${ORIGIN}/admin/notify-change`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify(input),
+    cache: 'no-store',
+  })
+  return res.ok
+}
+
 /** Delete all test-mode orders (grants with livemode === false) from the origin
  *  store. Returns the number removed. */
 export async function adminDeleteTestOrders(): Promise<{ deleted: number } | null> {

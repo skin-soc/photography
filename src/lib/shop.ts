@@ -15,6 +15,7 @@
  */
 
 import { createHmac } from 'node:crypto'
+import { PRINT_RANGE } from '@/config/product-range'
 
 // Product-type primitives live in a client-safe module (no node:crypto), and
 // are re-exported here so existing `@/lib/shop` importers keep working.
@@ -373,6 +374,32 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
       // and all preview fetches go through the Worker which adds the secret.
       previewUrl: `/api/preview/${p.id}`,
     }))
+    // Apply the worker-owned print/fine-art RANGE (products.json now lives with
+    // the worker — src/config/product-range.ts). We keep the origin's DIGITAL
+    // products (dimension-based, with download tokens) and replace the physical
+    // products with PRINT_RANGE entries for whichever physical types the photo is
+    // offered in (derived from the origin's products, set by Lightroom collections).
+    for (const p of photos) {
+      const offered = new Set(
+        p.products.filter((x) => x.type === 'print' || x.type === 'fine-art').map((x) => x.type),
+      )
+      if (offered.size === 0) continue
+      const digital = p.products.filter((x) => x.type === 'digital')
+      const physical: ShopProduct[] = PRINT_RANGE.filter((r) => offered.has(r.type)).map((r, i) => ({
+        sku: `${p.id}-r-${i + 1}`,
+        type: r.type,
+        label: r.label,
+        price: r.price,
+        currency: r.currency,
+        printSize: r.printSize,
+        provider: r.provider,
+        providerSku: r.providerSku,
+        attributes: r.attributes,
+        cost: r.cost,
+        costCurrency: r.costCurrency,
+      }))
+      p.products = [...physical, ...digital]
+    }
     // Replace camera-filename slugs with GMP-based slugs so URLs are clean, and
     // precompute the display title in the SAME pass — both derive from one HMAC
     // per untitled photo. Done here (inside the module cache) so the per-request

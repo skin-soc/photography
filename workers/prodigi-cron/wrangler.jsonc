@@ -1,0 +1,27 @@
+/**
+ * Tiny scheduled worker that triggers the main app's Prodigi validation daily.
+ * The Next app (OpenNext) can't host a scheduled() handler, so this standalone
+ * worker does — it just calls POST /api/admin/prodigi-validate with the shared
+ * CRON_SECRET. The validation logic + KV + email all live in the main app.
+ *
+ * Deploy:  cd workers/prodigi-cron && npx wrangler deploy
+ * Secret:  npx wrangler secret put CRON_SECRET     (same value on the main worker)
+ * The main app must also have CRON_SECRET set:
+ *          npx wrangler secret put CRON_SECRET            (prod: photography)
+ *          npx wrangler secret put CRON_SECRET --env preview
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "prodigi-cron",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-14",
+  "triggers": {
+    // 06:10 UTC daily. Adjust as needed.
+    "crons": ["10 6 * * *"]
+  },
+  "vars": {
+    // Point at preview while testing; switch to https://gusmcewan.com at go-live.
+    "VALIDATE_URL": "https://photography-preview.gusmcewan.workers.dev/api/admin/prodigi-validate"
+  },
+  "observability": { "enabled": true }
+}

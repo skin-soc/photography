@@ -1625,6 +1625,33 @@ app.post('/admin/notify-sale', express.json({ limit: '4kb' }), async (req, res) 
   }
 })
 
+/** Email the owner a summary of product price/availability/routing changes found
+ *  by the daily Prodigi validator on the worker. Body: { to, changes: string[] }. */
+app.post('/admin/notify-change', express.json({ limit: '16kb' }), async (req, res) => {
+  if (!emailConfigured()) return res.status(503).json({ error: 'SMTP not configured' })
+  const { to, changes } = req.body ?? {}
+  if (!to) return res.status(400).json({ error: 'no recipient' })
+  if (!Array.isArray(changes) || changes.length === 0) return res.json({ ok: true, skipped: 'no changes' })
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  try {
+    await mailer().sendMail({
+      from: MAIL_FROM,
+      to: String(to),
+      subject: `Prodigi product changes · ${changes.length} item${changes.length === 1 ? '' : 's'}`,
+      text: `The daily Prodigi check found changes:\n\n${changes.map((c) => `• ${c}`).join('\n')}\n\n${SITE_URL}/admin`,
+      html: `<div style="font-family:ui-monospace,Menlo,monospace;color:#111;font-size:14px">
+        <h2 style="color:#931020;font-weight:600;margin:0 0 12px">Prodigi product changes</h2>
+        <ul style="margin:0 0 12px;padding-left:18px">${changes.map((c) => `<li style="margin:3px 0">${esc(c)}</li>`).join('')}</ul>
+        <p style="margin:14px 0 0"><a href="${SITE_URL}/admin" style="color:#931020">Open admin →</a></p>
+      </div>`,
+    })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('[notify-change]', err.message)
+    res.status(502).json({ error: err.message })
+  }
+})
+
 // ── Expiry cleanup ─────────────────────────────────────────────────────────────
 
 /** Delete expired grants and stale cached derivatives. */
