@@ -303,21 +303,62 @@ interface RawCatalog {
  * in BOTH generateMetadata and the body) processed the catalog twice per view.
  */
 let _processed: { key: string; photos: ShopPhoto[] } | null = null
+let _inflight: Promise<ShopPhoto[]> | null = null
 
-/** Fetch the full catalog of sellable photos. */
+/** Stable cache key for the raw catalog at the Cloudflare edge. */
+const CATALOG_CACHE_KEY = 'https://shop-origin.internal/catalog.json'
+
+/**
+ * Fetch the raw catalog, served from the Cloudflare edge cache (per-colo,
+ * cross-isolate) so the slow ~2MB tunnel fetch (~28s at the NAS's upstream)
+ * happens at most once per 5 min per colo — NOT on every request. The Next fetch
+ * cache wasn't persisting across isolates here, so we cache explicitly.
+ */
+async function fetchRawCatalog(): Promise<RawCatalog> {
+  const edge: Cache | undefined = (globalThis as { caches?: { default?: Cache } }).caches?.default
+  if (edge) {
+    const hit = await edge.match(CATALOG_CACHE_KEY).catch(() => undefined)
+    if (hit) return hit.json() as Promise<RawCatalog>
+  }
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 30000)
+  const res = await fetch(`${ORIGIN}/catalog.json`, {
+    headers: { 'x-shop-secret': ORIGIN_SECRET },
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timer))
+  if (!res.ok) throw new Error(`origin responded ${res.status}`)
+  const buf = await res.arrayBuffer()
+  if (edge) {
+    // Cache the catalog body (not the secret-bearing request) for 5 min.
+    edge
+      .put(
+        CATALOG_CACHE_KEY,
+        new Response(buf, {
+          headers: { 'content-type': 'application/json', 'cache-control': 'max-age=300' },
+        }),
+      )
+      .catch(() => {})
+  }
+  return JSON.parse(new TextDecoder().decode(buf)) as RawCatalog
+}
+
+/** Fetch the full catalog of sellable photos. Deduped (one in-flight build) and
+ *  cached both at the edge (raw fetch) and in-isolate (processed result). */
 export async function getCatalog(): Promise<ShopPhoto[]> {
   if (!ORIGIN) return MOCK_CATALOG
-
+  if (_inflight) return _inflight
+  const run = buildCatalog()
+  _inflight = run
   try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 15000)
-    const res = await fetch(`${ORIGIN}/catalog.json`, {
-      next: { revalidate: 300, tags: ['catalog'] },
-      headers: { 'x-shop-secret': ORIGIN_SECRET },
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timer))
-    if (!res.ok) throw new Error(`origin responded ${res.status}`)
-    const data = (await res.json()) as RawCatalog
+    return await run
+  } finally {
+    if (_inflight === run) _inflight = null
+  }
+}
+
+async function buildCatalog(): Promise<ShopPhoto[]> {
+  try {
+    const data = await fetchRawCatalog()
     // Cache key: the origin's generation stamp, falling back to a cheap content
     // signature so we still memoize when `generated` is absent.
     const key =
