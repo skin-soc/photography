@@ -103,6 +103,26 @@ products are physical objects and must NOT show a licence tier in the picker
 (fixed in `shop/[slug]/page.tsx`: `license` set only when `type === 'digital'`).
 Physical receipts/terms are a separate, later concern from the download licence.
 
+### EUR → DKK conversion (client prices are always DKK)
+
+Prodigi quotes/costs are **EUR**; the shop charges **DKK**. We already have the
+rate: `getRates()` (`src/lib/currency.ts`) pulls the **ECB daily feed** (incl.
+DKK), cached 24h → **DKK-per-EUR = `1 / rates.EUR`**. No new FX dependency.
+
+The rate that actually costs us is **Stripe's**, not the ECB mid: we collect DKK
+but pay Prodigi EUR from the EUR Issuing card, so a **DKK→EUR balance transfer
+carries a Stripe FX spread (~1–2%)** (§4). DKK is **pegged** to the euro (central
+7.46038, tight band, usually <0.3% drift) — so **rate freshness barely matters;
+the buffer for Stripe's spread does.**
+
+- **Print price** (static): convert EUR cost → DKK at **catalog-build time**, with
+  the markup absorbing FX. No request-time FX. Re-baked on rebuilds.
+- **Shipping line** (live EUR quote): convert at **checkout** using `getRates()`
+  daily `1/rates.EUR` **× a buffer (≈1.02–1.03)** so DKK shipping always covers the
+  EUR outlay + Stripe FX. Round to whole kr.
+- Make the buffer + rate source configurable; never ship a live mid-rate with no
+  buffer. Pegged + buffer ≫ fresh rate alone.
+
 ---
 
 ## 3. Money flow — single charge, paid separately
