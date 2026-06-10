@@ -64,6 +64,7 @@ function titleIsFilename(photo: ShopPhoto): boolean {
  * SERVER-SIDE ONLY — call only from server components / route handlers.
  */
 export function displayTitle(photo: ShopPhoto): string {
+  if (photo._displayTitle !== undefined) return photo._displayTitle
   return titleIsFilename(photo) ? photoRef(photo.id, ORIGIN_SECRET) : photo.title
 }
 
@@ -128,6 +129,9 @@ export interface ShopPhoto {
    * Absent on legacy catalog entries; treat 0 / undefined as unknown.
    */
   captureDate?: number
+  /** Precomputed display title (set once during getCatalog processing, inside the
+   *  module cache) so the hot render paths don't recompute an HMAC per photo. */
+  _displayTitle?: string
 }
 
 const ORIGIN = process.env.SHOP_ORIGIN_URL
@@ -284,8 +288,21 @@ const MOCK_CATALOG: ShopPhoto[] = [
 ]
 
 interface RawCatalog {
+  generated?: string
   photos: ShopPhoto[]
 }
+
+/**
+ * Module-scoped cache of the PROCESSED catalog, keyed by the origin's `generated`
+ * stamp (with a content fallback). The heavy post-fetch work — an HMAC per
+ * untitled photo for slug/title, plus a whole-catalog dedup pass — is O(n) and
+ * `createHmac` is slow on Workers, so at a few thousand photos it must NOT run on
+ * every request. The raw fetch stays Next-data-cached (revalidate 300); this
+ * caches the processing on top, so a warm isolate reprocesses only when the
+ * catalog actually changes. Without this, a product page (which calls getCatalog
+ * in BOTH generateMetadata and the body) processed the catalog twice per view.
+ */
+let _processed: { key: string; photos: ShopPhoto[] } | null = null
 
 /** Fetch the full catalog of sellable photos. */
 export async function getCatalog(): Promise<ShopPhoto[]> {
@@ -293,7 +310,7 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
 
   try {
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 8000)
+    const timer = setTimeout(() => controller.abort(), 15000)
     const res = await fetch(`${ORIGIN}/catalog.json`, {
       next: { revalidate: 300, tags: ['catalog'] },
       headers: { 'x-shop-secret': ORIGIN_SECRET },
@@ -301,6 +318,12 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
     }).finally(() => clearTimeout(timer))
     if (!res.ok) throw new Error(`origin responded ${res.status}`)
     const data = (await res.json()) as RawCatalog
+    // Cache key: the origin's generation stamp, falling back to a cheap content
+    // signature so we still memoize when `generated` is absent.
+    const key =
+      data.generated ||
+      `${data.photos.length}:${data.photos[0]?.id ?? ''}:${data.photos[data.photos.length - 1]?.id ?? ''}`
+    if (_processed && _processed.key === key) return _processed.photos
     const photos = data.photos.map((p) => ({
       ...p,
       category: p.category ?? [],
@@ -309,12 +332,21 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
       // and all preview fetches go through the Worker which adds the secret.
       previewUrl: `/api/preview/${p.id}`,
     }))
-    // Replace camera-filename slugs with GMP-based slugs so URLs are clean.
-    // The Lightroom plugin writes slug = slugify(title) or remoteId:lower(),
-    // so when no title is set the slug equals the camera filename / photo ID.
+    // Replace camera-filename slugs with GMP-based slugs so URLs are clean, and
+    // precompute the display title in the SAME pass — both derive from one HMAC
+    // per untitled photo. Done here (inside the module cache) so the per-request
+    // render paths never HMAC. The plugin writes slug = slugify(title) or
+    // remoteId:lower(), and title = title or remoteId, so "untitled" means the
+    // slug and/or title equals the photo id.
     for (const p of photos) {
-      if (p.slug.toLowerCase() === p.id.toLowerCase()) {
-        p.slug = photoRef(p.id, ORIGIN_SECRET).toLowerCase()  // "gmp-xxxxxxx"
+      const untitledSlug = p.slug.toLowerCase() === p.id.toLowerCase()
+      const untitledTitle = p.title.toLowerCase() === p.id.toLowerCase()
+      if (untitledSlug || untitledTitle) {
+        const ref = photoRef(p.id, ORIGIN_SECRET) // "GMP-XXXXXXX" — one HMAC
+        if (untitledSlug) p.slug = ref.toLowerCase()
+        p._displayTitle = untitledTitle ? ref : p.title
+      } else {
+        p._displayTitle = p.title
       }
     }
     // Deduplicate slugs — appends the photo id when two photos share a slug.
@@ -328,9 +360,13 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
         p.slug = n === 1 ? p.slug : `${p.slug}-${p.id.toLowerCase()}`
       }
     }
+    _processed = { key, photos }
     return photos
   } catch (err) {
     console.error('[shop] failed to load catalog from origin:', err)
+    // Serve the last good processed catalog if we have one, rather than a blank
+    // shop, when a refetch transiently fails.
+    if (_processed) return _processed.photos
     return []
   }
 }
