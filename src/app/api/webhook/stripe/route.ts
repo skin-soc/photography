@@ -93,8 +93,9 @@ export async function POST(req: Request) {
 
   // checkout.session.completed → card/instant methods (paid immediately).
   // checkout.session.async_payment_succeeded → delayed methods (e.g. Klarna)
-  // once the funds clear. Stripe Tax records the tax transaction itself, so no
-  // manual createFromCalculation is needed.
+  // once the funds clear. Both are gated on payment_status === 'paid', so a
+  // failed/expired/abandoned session never fulfils and needs no event. VAT is
+  // ours (a line item), recorded from metadata — Stripe computes no tax.
   if (
     event.type === 'checkout.session.completed' ||
     event.type === 'checkout.session.async_payment_succeeded'
