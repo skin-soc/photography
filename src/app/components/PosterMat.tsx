@@ -94,13 +94,16 @@ export default function PosterMat({
         </h1>
       </figcaption>
 
+      {/* Website line — the site's own IBM Plex Mono (its brand face), not the
+          poster serif: a clean technical foot line that matches the sample. */}
       <p
-        className={posterSerif.className}
+        className="font-mono-ibm"
         style={{
           margin: 0,
           padding: '7cqw 0 4.5cqw',
           textAlign: 'center',
-          fontSize: '1.2cqw',
+          fontSize: '1.15cqw',
+          fontWeight: 300,
           letterSpacing: '0.3em',
           textTransform: 'uppercase',
           color: '#6a6a6a',
