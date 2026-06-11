@@ -215,9 +215,9 @@ local ALL_TYPES = { 'print', 'fine-art', 'digital' }
 --- Map a node name (collection OR set) to the shop product type(s) it grants.
 --- A bucket named "All Formats" / "Everything" grants all three at once — so a
 --- photo sold every way lives in ONE collection, not three. Otherwise loose
---- match: "Digital Downloads" → digital, "Fine Art" → fine-art, "Prints" →
---- print ("Fine Art Prints" resolves to fine-art — fine/frame is checked
---- before print). Returns a list, or nil if the name matches nothing.
+--- match: "Digital Downloads" → digital, "Fine Art" → fine-art, "Prints" /
+--- "Posters" → print ("Fine Art Prints" resolves to fine-art — fine/frame is
+--- checked before print). Returns a list, or nil if the name matches nothing.
 local function nameToProductTypes(name)
   local s = slugify(name) or ''
   if s == 'all' or s == 'everything' or (s:find('all') and s:find('format')) then
@@ -225,7 +225,9 @@ local function nameToProductTypes(name)
   end
   if s:find('digital') or s:find('download') then return { 'digital' } end
   if s:find('fine') or s:find('frame') then return { 'fine-art' } end
-  if s:find('print') then return { 'print' } end
+  -- The "Prints" line is presented to customers as "Posters"; accept either
+  -- collection name. Both map to the internal 'print' product type.
+  if s:find('print') or s:find('poster') then return { 'print' } end
   return nil
 end
 

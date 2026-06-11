@@ -40,22 +40,32 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-/** Key (green-labelled) photos of a product type — rotating hero on type cards. */
-function keyPhotosForType(photos: GridPhoto[], type: ProductType): string[] {
-  return photos
-    .filter((p) => p.key && p.types.includes(type))
-    .map((p) => `${p.previewUrl}?max=800`)
+/** How many photos to rotate as a hero when falling back to non-key photos. */
+const HERO_FALLBACK_MAX = 6
+
+/** Hero URLs for a set of matching photos: prefer the curated green-labelled
+ *  (`key`) photos; if a category has none, fall back to the first few matching
+ *  photos so the card is never blank (e.g. Nature with nothing green-labelled). */
+function heroUrls(matching: GridPhoto[]): string[] {
+  const keyed = matching.filter((p) => p.key)
+  const chosen = keyed.length > 0 ? keyed : matching.slice(0, HERO_FALLBACK_MAX)
+  return chosen.map((p) => `${p.previewUrl}?max=800`)
 }
 
-/** Key photos within a subject folder (optionally constrained to a type). */
+/** Hero photos of a product type — rotating hero on type cards. */
+function keyPhotosForType(photos: GridPhoto[], type: ProductType): string[] {
+  return heroUrls(photos.filter((p) => p.types.includes(type)))
+}
+
+/** Hero photos within a subject folder (optionally constrained to a type). */
 function keyPhotosForFolder(
   photos: GridPhoto[],
   folderPath: string[],
   type: ProductType | null,
 ): string[] {
-  return photos
-    .filter((p) => p.key && matchesCategory(p, folderPath) && (type === null || p.types.includes(type)))
-    .map((p) => `${p.previewUrl}?max=800`)
+  return heroUrls(
+    photos.filter((p) => matchesCategory(p, folderPath) && (type === null || p.types.includes(type))),
+  )
 }
 
 function RotatingImage({
