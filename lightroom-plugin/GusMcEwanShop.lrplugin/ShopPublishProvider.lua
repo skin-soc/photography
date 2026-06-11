@@ -798,7 +798,19 @@ function provider.deletePhotosFromPublishedCollection(publishSettings, arrayOfPh
     end
     deletedCallback(photoId)
   end
-  -- catalog.json is rebuilt on the next Publish.
+  -- Rebuild catalog.json NOW so removed photos don't linger as ghost entries —
+  -- their previews + masters were just deleted above, which would otherwise leave
+  -- the catalog pointing at missing files (broken thumbnails in the shop). The
+  -- live publish service is resolved by toolkit id. Best-effort (pcall): if it
+  -- can't be resolved here, the catalog still rebuilds on the next Publish.
+  if dataDir and dataDir ~= '' then
+    pcall(function()
+      local services = LrApplication.activeCatalog():getPublishServices('com.gusmcewan.shop')
+      if services and #services > 0 then
+        writeCatalog(services[1], dataDir)
+      end
+    end)
+  end
 end
 
 return provider
