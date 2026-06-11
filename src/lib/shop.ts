@@ -380,9 +380,10 @@ const CATALOG_CACHE_KEY = 'https://shop-origin.internal/catalog.json'
 
 /**
  * Fetch the raw catalog, served from the Cloudflare edge cache (per-colo,
- * cross-isolate) so the slow ~2MB tunnel fetch (~28s at the NAS's upstream)
- * happens at most once per 5 min per colo — NOT on every request. The Next fetch
- * cache wasn't persisting across isolates here, so we cache explicitly.
+ * cross-isolate) so the ~2MB tunnel fetch happens at most once per 60s per colo —
+ * NOT on every request. The Next fetch cache wasn't persisting across isolates
+ * here, so we cache explicitly. TTL is short (60s) so a republish shows up almost
+ * immediately; the cold rebuild it triggers is cheap now (native WebCrypto HMAC).
  */
 async function fetchRawCatalog(): Promise<RawCatalog> {
   const edge: Cache | undefined = (globalThis as { caches?: { default?: Cache } }).caches?.default
@@ -399,12 +400,12 @@ async function fetchRawCatalog(): Promise<RawCatalog> {
   if (!res.ok) throw new Error(`origin responded ${res.status}`)
   const buf = await res.arrayBuffer()
   if (edge) {
-    // Cache the catalog body (not the secret-bearing request) for 5 min.
+    // Cache the catalog body (not the secret-bearing request) for 60s.
     edge
       .put(
         CATALOG_CACHE_KEY,
         new Response(buf, {
-          headers: { 'content-type': 'application/json', 'cache-control': 'max-age=300' },
+          headers: { 'content-type': 'application/json', 'cache-control': 'max-age=60' },
         }),
       )
       .catch(() => {})
