@@ -6,6 +6,7 @@ import { getPhoto, productSpec, displayTitle, productLicense, isProductType, typ
 import type { ProductType } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
+import PosterMat from '@/app/components/PosterMat'
 import LicensingLink from '@/app/components/LicensingLink'
 import { SITE_URL, BUSINESS_NAME, OG_LOCALE_MAP } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
@@ -174,21 +175,20 @@ export default async function ShopItem({
   const previewW = Math.round(photo.width  * scale)
   const previewH = Math.round(photo.height * scale)
 
-  // Poster presentation: when viewed in the Posters context, the photo wears a
-  // museum-mat white border — double width on three sides (2×21 = 42px) and a
-  // deep bottom margin (4×21 = 84px), the classic poster look. The wider side
-  // borders are offset in maxWidth so the photo itself stays the same size.
+  // Poster presentation: in the Posters context the photo is shown on a white
+  // gallery mat with the title + caption typeset below (PosterMat). Everything
+  // else (fine art, digital, direct links) uses the simple 21px gallery frame.
   const posterView = primaryType === 'print'
-  const frameClass = posterView
-    ? 'border-white border-t-[42px] border-x-[42px] border-b-[84px]'
-    : 'border-white border-[21px]'
-  const frameMaxWidth = posterView ? previewW + 42 : previewW
+  const posterCardMaxWidth = Math.min(previewW + 60, 680)
 
   // Physical (poster / fine-art) contexts preview the artwork WITHOUT the logo
   // badge — the customer is judging the print, not buying a file. The repeating
   // mesh watermark stays on every variant. Digital (and direct links) keep the logo.
   const heroNoLogo = primaryType === 'print' || primaryType === 'fine-art'
   const heroQuery = (max: number) => `?max=${max}${heroNoLogo ? '&logo=0' : ''}`
+
+  // Foot line on the poster mat — our site, formatted like the gallery sample.
+  const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
 
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
@@ -216,21 +216,33 @@ export default async function ShopItem({
 
       <div className="mt-10 flex flex-col xl:flex-row gap-10 xl:gap-16 items-start">
 
-        {/* Photo — gallery white frame (default 21px), or the wider asymmetric
-            poster mat when viewed as a Poster. Real in-situ framed mockups are a
-            future enhancement. */}
-        <div className={`select-none shrink-0 mx-auto xl:mx-0 ${frameClass}`} style={{ maxWidth: frameMaxWidth, width: '100%' }}>
-          <img
+        {/* Photo — gallery poster mat (typeset title/caption) in the Posters
+            context, otherwise the simple 21px white frame. */}
+        {posterView ? (
+          <PosterMat
             src={`${photo.previewUrl}${heroQuery(800)}`}
             srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
-            sizes={`${previewW}px`}
+            sizes={`${posterCardMaxWidth}px`}
             alt={`${displayTitle(photo)} — ${photo.location}`}
-            width={previewW}
-            height={previewH}
-            draggable={false}
-            className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
+            title={displayTitle(photo)}
+            caption={photo.caption}
+            siteLabel={siteLabel}
+            maxWidth={posterCardMaxWidth}
           />
-        </div>
+        ) : (
+          <div className="select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px]" style={{ maxWidth: previewW, width: '100%' }}>
+            <img
+              src={`${photo.previewUrl}${heroQuery(800)}`}
+              srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
+              sizes={`${previewW}px`}
+              alt={`${displayTitle(photo)} — ${photo.location}`}
+              width={previewW}
+              height={previewH}
+              draggable={false}
+              className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
+            />
+          </div>
+        )}
 
         {/* Info column — title/caption/license now live inside the first picker card */}
         <div className="min-w-0 flex-1">
