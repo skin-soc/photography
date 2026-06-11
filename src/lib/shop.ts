@@ -15,7 +15,7 @@
  */
 
 import { createHmac } from 'node:crypto'
-import { matchPosters, FINE_ART_PENDING, POSTER_MATERIAL } from '@/config/product-range'
+import { posterOptions, FINE_ART_PENDING } from '@/config/product-range'
 
 // Product-type primitives live in a client-safe module (no node:crypto), and
 // are re-exported here so existing `@/lib/shop` importers keep working.
@@ -105,6 +105,13 @@ export interface ShopProduct {
   printSize?: { w: number; h: number }
   /** Material/spec descriptor shown in the picker — physical products only. */
   material?: string
+  // ── Poster paper variant (posters only) — the customer picks a paper, then a size. ──
+  /** Paper code, e.g. 'FAP'. Groups poster options in the picker. */
+  paper?: string
+  /** Customer-facing paper name, e.g. 'Enhanced Matte'. */
+  paperLabel?: string
+  /** Short paper descriptor, e.g. 'Smooth matte giclée · 200gsm'. */
+  paperBlurb?: string
   /** File format for digital downloads. Absent on print/fine-art products. */
   format?: 'jpeg' | 'tiff'
   /**
@@ -178,21 +185,25 @@ function physicalProducts(
 ): ShopProduct[] {
   const out: ShopProduct[] = []
   if (hasPrint) {
-    matchPosters(w, h).forEach((s, i) => {
+    // Posters: every paper × A-size whose resolution passes for this photo.
+    for (const o of posterOptions(w, h)) {
       out.push({
-        sku: `${id}-poster-${i + 1}`,
+        sku: `${id}-${o.paper}-${o.size}`,
         type: 'print',
-        label: `${s.widthCm} × ${s.heightCm} cm`,
-        price: s.price,
+        label: o.size,
+        price: o.price,
         currency: 'DKK',
-        printSize: { w: s.widthCm, h: s.heightCm },
-        material: POSTER_MATERIAL,
+        printSize: { w: o.widthCm, h: o.heightCm },
+        material: `${o.widthCm} × ${o.heightCm} cm`,
+        paper: o.paper,
+        paperLabel: o.paperLabel,
+        paperBlurb: o.paperBlurb,
         provider: 'prodigi',
-        providerSku: s.providerSku,
-        cost: s.cost,
+        providerSku: o.providerSku,
+        cost: o.cost,
         costCurrency: 'EUR',
       })
-    })
+    }
   }
   if (hasFineArt) {
     const portrait = h > w
@@ -460,8 +471,8 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
     // Apply the worker-owned RANGE (products.json now lives with the worker —
     // src/config/product-range.ts). Keep the origin's DIGITAL products
     // (dimension-based, with download tokens) and replace the physical products:
-    //  • Posters (type 'print') → Prodigi PAP, ASPECT-MATCHED to the photo's
-    //    shape + orientation, resolution-gated (matchPosters).
+    //  • Posters (type 'print') → Prodigi A-series on 4 papers, each size offered
+    //    only when the photo resolves it at the paper's DPI floor (posterOptions).
     //  • Fine art (type 'fine-art') → a single WhiteWall placeholder (pending),
     //    oriented to the photo, so the line persists until WhiteWall is wired.
     // Which physical types a photo is offered in comes from the origin's

@@ -141,6 +141,9 @@ export default async function ShopItem({
     // Usage-rights licences apply to digital downloads only. A physical print or
     // fine-art piece is an object, not a licence — no usage tier is shown.
     license: p.type === 'digital' ? productLicense(p) : undefined,
+    paper: p.paper,
+    paperLabel: p.paperLabel,
+    paperBlurb: p.paperBlurb,
   }))
 
   const schemaTypeName: Record<ProductType, string> = {

@@ -1,133 +1,133 @@
 /**
- * Print product RANGE — the curated provider SKUs we sell, and the logic that
- * matches them to a photo's shape. This is the small "products.json" that lives
- * WITH the worker (deploys with the code, no NAS dependency).
+ * Print product RANGE — the curated provider SKUs we sell and the logic that
+ * offers them per photo. Lives WITH the worker (no NAS dependency).
  *
- * Two lines, two providers:
- *  • POSTERS  → Prodigi PAP (Photographic Art Print, 240gsm). Offered
- *    aspect-matched: a photo is only shown sizes whose ratio matches its own
- *    shape, in its own orientation (a square never sees a tall poster). Sizes
- *    are also gated by resolution so a small file isn't offered a huge print.
- *  • FINE ART → WhiteWall (premium lab) — NOT YET WIRED. Kept as a single
- *    placeholder so the section persists; real WhiteWall SKUs + trade pricing
- *    replace `FINE_ART_PENDING` once API access lands. The daily validator only
- *    checks Prodigi SKUs (see prodigi-validate.ts).
+ * POSTERS → Prodigi, A-series sheets (A4–A0) on FOUR papers the customer chooses:
+ *   PAP Photographic · FAP Enhanced-Matte · HPR Hahnemühle Photo Rag ·
+ *   HGE Hahnemühle German Etching.
+ * Every poster is a portrait A-series sheet with the photo + title typeset on it
+ * (see the origin compositor / docs/fap-print-fulfilment.md). A size is only
+ * OFFERED for a (photo, paper) when the source resolves the photo's slot at the
+ * paper's minimum DPI — premium papers demand more pixels (close inspection).
  *
- * All Prodigi sizes below are verified to fulfil in NL (prodigi_eu); the GB-only
- * 24×36 is deliberately excluded. Retail `price` (DKK minor) is value-priced;
- * `cost` (EUR minor, ex-tax) is the recorded provider cost for margin + drift.
- * See docs/fap-print-fulfilment.md.
+ * FINE ART → WhiteWall (premium lab) — NOT YET WIRED. Kept as a single
+ * placeholder so the section persists; real WhiteWall SKUs replace
+ * FINE_ART_PENDING once API access lands. The validator only checks Prodigi SKUs.
+ *
+ * All A-series SKUs below are verified to fulfil in NL (prodigi_eu). Retail
+ * `price` (DKK minor) is value-priced; `cost` (EUR minor, ex-tax) is the recorded
+ * provider cost for margin + drift detection.
  */
 
-/** Posters are ALWAYS a portrait sheet in this single format (decided with the
- *  Tom Hegen reference). Every poster is offered these sizes regardless of the
- *  source photo's own aspect — the poster mat crops it to fit. 4:5 = 8×10. */
-const POSTER_FORMAT = '4:5'
+const MM_PER_INCH = 25.4
 
-/** Minimum print resolution. A size is only offered when the photo's long edge
- *  supports it at ≥ this DPI — "size of photo matters, within reason". Posters
- *  are viewed at a distance, so 120 DPI is a sound floor. */
-const MIN_DPI = 120
-const CM_PER_INCH = 2.54
+/** A-series sheet sizes (portrait, mm) — the printed paper. */
+const A_SERIES: Record<string, { wMm: number; hMm: number }> = {
+  A4: { wMm: 210, hMm: 297 },
+  A3: { wMm: 297, hMm: 420 },
+  A2: { wMm: 420, hMm: 594 },
+  A1: { wMm: 594, hMm: 841 },
+  A0: { wMm: 841, hMm: 1189 },
+}
+/** Smallest → largest. */
+const SIZE_ORDER = ['A4', 'A3', 'A2', 'A1', 'A0'] as const
+export type PosterSizeCode = (typeof SIZE_ORDER)[number]
 
-interface FamilySize {
-  providerSku: string
-  /** Physical dimensions in cm, short edge then long edge (unoriented). */
-  shortCm: number
-  longCm: number
-  /** Retail price, DKK minor units (øre). */
-  price: number
-  /** Recorded provider ex-tax cost, EUR minor units. */
-  cost: number
+/** The photo fills this fraction of the sheet on the poster layout (the rest is
+ *  margin + the typeset title band). Mirrors the print compositor + poster.json. */
+const SLOT_W_FRAC = 0.84
+const SLOT_H_FRAC = 0.66
+
+export type PaperCode = 'PAP' | 'FAP' | 'HPR' | 'HGE'
+
+interface Paper {
+  code: PaperCode
+  /** Prodigi SKU family prefix, e.g. 'GLOBAL-FAP' → GLOBAL-FAP-A2. */
+  prodigiPrefix: string
+  /** Customer-facing paper name. */
+  label: string
+  /** Short descriptor under the paper name. */
+  blurb: string
+  /** Minimum print resolution (DPI). Gates which sizes this paper offers. */
+  minDpi: number
+  /** Provider ex-tax cost (EUR minor) per A-size. */
+  cost: Record<PosterSizeCode, number>
+  /** Retail price (DKK minor / øre) per A-size. */
+  price: Record<PosterSizeCode, number>
 }
 
-interface AspectFamily {
-  /** Human label for the shape, e.g. '2:3'. */
-  name: string
-  /** Long ÷ short, ≥ 1. A photo matches the family with the closest ratio. */
-  ratio: number
-  /** Sizes ascending by long edge. */
-  sizes: FamilySize[]
-}
+/** Photographic + Enhanced-Matte share a cost/price ladder; the two Hahnemühles
+ *  share a premium one. Prices are value-priced — tune freely. */
+const PHOTO_COST = { A4: 500, A3: 700, A2: 1000, A1: 1400, A0: 2600 }
+const PHOTO_PRICE = { A4: 24500, A3: 34500, A2: 49500, A1: 69500, A0: 109500 }
+const PREMIUM_COST = { A4: 600, A3: 1200, A2: 1800, A1: 3400, A0: 6100 }
+const PREMIUM_PRICE = { A4: 39500, A3: 59500, A2: 84500, A1: 129500, A0: 199500 }
 
-/** Prodigi PAP poster families (provider: prodigi). NL-routing only. */
-const POSTER_FAMILIES: AspectFamily[] = [
-  {
-    name: '2:3',
-    ratio: 3 / 2,
-    sizes: [
-      { providerSku: 'GLOBAL-PAP-8X12',  shortCm: 20, longCm: 30, price: 29500,  cost: 500 },
-      { providerSku: 'GLOBAL-PAP-12X18', shortCm: 30, longCm: 45, price: 44500,  cost: 800 },
-      { providerSku: 'GLOBAL-PAP-16X24', shortCm: 40, longCm: 60, price: 59500,  cost: 1000 },
-      { providerSku: 'GLOBAL-PAP-20X30', shortCm: 50, longCm: 75, price: 84500,  cost: 1300 },
-    ],
-  },
-  {
-    name: '3:4',
-    ratio: 4 / 3,
-    sizes: [
-      { providerSku: 'GLOBAL-PAP-12X16', shortCm: 30, longCm: 40, price: 44500,  cost: 700 },
-      { providerSku: 'GLOBAL-PAP-18X24', shortCm: 45, longCm: 60, price: 64500,  cost: 1100 },
-    ],
-  },
-  {
-    name: '4:5',
-    ratio: 5 / 4,
-    sizes: [
-      { providerSku: 'GLOBAL-PAP-8X10',  shortCm: 20, longCm: 25, price: 34500,  cost: 500 },
-      { providerSku: 'GLOBAL-PAP-16X20', shortCm: 40, longCm: 50, price: 59500,  cost: 950 },
-    ],
-  },
-  {
-    name: 'square',
-    ratio: 1,
-    sizes: [
-      { providerSku: 'GLOBAL-PAP-12X12', shortCm: 30, longCm: 30, price: 39500,  cost: 600 },
-      { providerSku: 'GLOBAL-PAP-30X30', shortCm: 75, longCm: 75, price: 109500, cost: 1900 },
-    ],
-  },
+const PAPERS: Paper[] = [
+  { code: 'PAP', prodigiPrefix: 'GLOBAL-PAP', label: 'Photographic', blurb: 'Lustre photographic · 240gsm', minDpi: 240, cost: PHOTO_COST, price: PHOTO_PRICE },
+  { code: 'FAP', prodigiPrefix: 'GLOBAL-FAP', label: 'Enhanced Matte', blurb: 'Smooth matte giclée · 200gsm', minDpi: 240, cost: PHOTO_COST, price: PHOTO_PRICE },
+  { code: 'HPR', prodigiPrefix: 'GLOBAL-HPR', label: 'Hahnemühle Photo Rag', blurb: '100% cotton museum matte', minDpi: 300, cost: PREMIUM_COST, price: PREMIUM_PRICE },
+  { code: 'HGE', prodigiPrefix: 'GLOBAL-HGE', label: 'Hahnemühle German Etching', blurb: 'Textured mould-made fine-art', minDpi: 300, cost: PREMIUM_COST, price: PREMIUM_PRICE },
 ]
 
-/** A poster size resolved to a specific photo: oriented to its shape, priced. */
-export interface PosterSize {
+/** A poster option offered for a photo: one paper at one size. */
+export interface PosterOption {
+  paper: PaperCode
+  paperLabel: string
+  paperBlurb: string
+  size: PosterSizeCode
   providerSku: string
-  /** Physical cm oriented to the photo (portrait ⇒ tall, landscape ⇒ wide). */
+  /** Sheet size in cm (portrait) — the printed paper. */
   widthCm: number
   heightCm: number
+  /** Retail price, DKK minor (øre). */
   price: number
+  /** Provider ex-tax cost, EUR minor. */
   cost: number
+}
+
+/** Does a (wPx × hPx) source resolve the photo slot of `size` at `minDpi`? The
+ *  photo is cover-cropped into the slot, so BOTH oriented dimensions must meet
+ *  the slot's pixel requirement without upscaling. */
+function resolves(wPx: number, hPx: number, size: PosterSizeCode, minDpi: number): boolean {
+  const a = A_SERIES[size]
+  // Slot physical size (mm) — portrait, short × long.
+  const slotShortIn = (a.wMm * SLOT_W_FRAC) / MM_PER_INCH
+  const slotLongIn = (a.hMm * SLOT_H_FRAC) / MM_PER_INCH
+  const needShort = slotShortIn * minDpi
+  const needLong = slotLongIn * minDpi
+  const srcShort = Math.min(wPx, hPx)
+  const srcLong = Math.max(wPx, hPx)
+  return srcShort >= needShort && srcLong >= needLong
 }
 
 /**
- * The poster sizes offered for a photo of (wPx × hPx). Posters are always the
- * portrait POSTER_FORMAT sheet (4:5), so every poster photo gets the same sizes —
- * the only filter is resolution: a size is dropped if the photo's long edge can't
- * print it at MIN_DPI. The poster mat crops the photo to the portrait format, so
- * the source photo's own aspect no longer matters.
+ * The poster options offered for a photo of (wPx × hPx): every paper × size whose
+ * source resolution meets the paper's DPI floor. Ordered paper-major, size
+ * ascending. Empty when the photo is too small for even A4.
  */
-export function matchPosters(wPx: number, hPx: number): PosterSize[] {
+export function posterOptions(wPx: number, hPx: number): PosterOption[] {
   if (!wPx || !hPx) return []
-  const family = POSTER_FAMILIES.find((f) => f.name === POSTER_FORMAT)
-  if (!family) return []
-  const longPx = Math.max(wPx, hPx)
-  const maxLongCm = (longPx / MIN_DPI) * CM_PER_INCH
-
-  const out: PosterSize[] = []
-  for (const s of family.sizes) {
-    if (s.longCm > maxLongCm) continue // photo can't support this size at MIN_DPI
-    out.push({
-      providerSku: s.providerSku,
-      widthCm: s.shortCm, // always portrait
-      heightCm: s.longCm,
-      price: s.price,
-      cost: s.cost,
-    })
+  const out: PosterOption[] = []
+  for (const p of PAPERS) {
+    for (const size of SIZE_ORDER) {
+      if (!resolves(wPx, hPx, size, p.minDpi)) continue
+      const a = A_SERIES[size]
+      out.push({
+        paper: p.code,
+        paperLabel: p.label,
+        paperBlurb: p.blurb,
+        size,
+        providerSku: `${p.prodigiPrefix}-${size}`,
+        widthCm: Math.round((a.wMm / 10) * 10) / 10,
+        heightCm: Math.round((a.hMm / 10) * 10) / 10,
+        price: p.price[size],
+        cost: p.cost[size],
+      })
+    }
   }
   return out
 }
-
-/** Material descriptor shown as the poster spec line. */
-export const POSTER_MATERIAL = 'Photographic · 240gsm'
 
 /**
  * Fine-art placeholder — WhiteWall is not wired yet, so the line is kept alive
@@ -144,11 +144,13 @@ export const FINE_ART_PENDING = {
   material: 'Giclée · WhiteWall (coming soon)',
 }
 
-/** Prodigi SKU list for the daily validator — only the sizes we actually sell
- *  (the POSTER_FORMAT family). Validator is Prodigi-only; WhiteWall excluded. */
+/** Flattened Prodigi SKU list for the daily validator — every paper × size once,
+ *  with its recorded cost. (Validator is Prodigi-only; WhiteWall excluded.) */
 export const PRODIGI_SKUS: { providerSku: string; label: string; cost: number }[] =
-  (POSTER_FAMILIES.find((f) => f.name === POSTER_FORMAT)?.sizes ?? []).map((s) => ({
-    providerSku: s.providerSku,
-    label: `${POSTER_FORMAT} · ${s.shortCm}×${s.longCm}cm`,
-    cost: s.cost,
-  }))
+  PAPERS.flatMap((p) =>
+    SIZE_ORDER.map((size) => ({
+      providerSku: `${p.prodigiPrefix}-${size}`,
+      label: `${p.label} · ${size}`,
+      cost: p.cost[size],
+    })),
+  )

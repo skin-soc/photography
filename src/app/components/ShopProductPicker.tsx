@@ -21,6 +21,13 @@ export interface PickerProduct {
   downloadToken?: string
   /** Usage-rights tier bundled with this product. */
   license?: LicenseTier
+  // ── Poster paper variant (posters only) ──
+  /** Paper code, e.g. 'FAP' — posters are grouped by paper, then size. */
+  paper?: string
+  /** Customer-facing paper name, e.g. 'Enhanced Matte'. */
+  paperLabel?: string
+  /** Short paper descriptor. */
+  paperBlurb?: string
 }
 
 const TYPE_ORDER: ProductType[] = ['print', 'fine-art', 'digital']
@@ -197,6 +204,27 @@ export default function ShopProductPicker({
   const [selectedSku, setSelectedSku] = useState(cheapest.sku)
   const selected = products.find((p) => p.sku === selectedSku) ?? cheapest
 
+  // Poster papers (distinct, in product order) — posters offer a paper choice,
+  // then the sizes that pass for this photo on that paper.
+  const posterPapers: { code: string; label: string; blurb?: string }[] = []
+  for (const p of products) {
+    if (p.type === 'print' && p.paper && !posterPapers.some((x) => x.code === p.paper)) {
+      posterPapers.push({ code: p.paper, label: p.paperLabel ?? p.paper, blurb: p.paperBlurb })
+    }
+  }
+  const [selectedPaper, setSelectedPaper] = useState<string | null>(
+    () => products.find((p) => p.type === 'print' && p.paper)?.paper ?? null,
+  )
+  // Switch paper, keeping the same size when it's offered on the new paper.
+  function selectPaper(paper: string) {
+    setSelectedPaper(paper)
+    const cur = products.find((p) => p.sku === selectedSku)
+    const sameSize = products.find((p) => p.type === 'print' && p.paper === paper && p.label === cur?.label)
+    const firstOfPaper = products.find((p) => p.type === 'print' && p.paper === paper)
+    const next = sameSize ?? firstOfPaper
+    if (next) setSelectedSku(next.sku)
+  }
+
   const [rawModalOpen, setRawModalOpen] = useState(false)
   const [expandedSku, setExpandedSku] = useState<string | null>(null)
 
@@ -209,7 +237,7 @@ export default function ShopProductPicker({
       sku: selected.sku,
       photoSlug,
       photoTitle,
-      productLabel: selected.label,
+      productLabel: selected.paper ? `${selected.label} · ${selected.paperLabel}` : selected.label,
       price: selected.price,
       currency: selected.currency,
       priceText: selected.priceText,
@@ -254,7 +282,17 @@ export default function ShopProductPicker({
       )}
 
       <div className="space-y-4">
-        {groups.map((g, groupIndex) => (
+        {groups.map((g, groupIndex) => {
+          // Posters: a paper chooser, then only the sizes that pass for this photo
+          // on the chosen paper. Other types: the plain option list.
+          const isPoster = g.type === 'print' && posterPapers.length > 0
+          const items = isPoster && selectedPaper
+            ? g.items.filter((p) => p.paper === selectedPaper)
+            : g.items
+          const paperBlurb = isPoster
+            ? posterPapers.find((x) => x.code === selectedPaper)?.blurb
+            : undefined
+          return (
           <div key={g.type} className="overflow-hidden rounded-[20px] border border-white/10">
 
             {/* Title section — rendered inside the first card only */}
@@ -284,9 +322,37 @@ export default function ShopProductPicker({
               </h2>
             </div>
 
+            {/* Paper chooser (posters only) */}
+            {isPoster && (
+              <div className="px-5 pt-4 pb-3 border-b border-white/[0.06]">
+                <div className="flex flex-wrap gap-2">
+                  {posterPapers.map((pp) => {
+                    const on = pp.code === selectedPaper
+                    return (
+                      <button
+                        key={pp.code}
+                        type="button"
+                        onClick={() => selectPaper(pp.code)}
+                        className={`rounded-full px-3 py-1.5 text-[11px] tracking-[0.04em] transition-colors ${
+                          on
+                            ? 'bg-accent/90 text-white'
+                            : 'border border-white/15 text-white/55 hover:border-white/35 hover:text-white/80'
+                        }`}
+                      >
+                        {pp.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {paperBlurb && (
+                  <p className="mt-2 text-[11px] font-light text-white/35">{paperBlurb}</p>
+                )}
+              </div>
+            )}
+
             {/* Selectable options */}
             <div className="divide-y divide-white/[0.07]">
-              {g.items.map((p) => {
+              {items.map((p) => {
                 const on = p.sku === selectedSku
                 const isTiff = p.format === 'tiff'
                 const infoOpen = expandedSku === p.sku
@@ -385,7 +451,8 @@ export default function ShopProductPicker({
               )}
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Buy Now + Add to Cart — equal halves */}
