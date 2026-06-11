@@ -427,6 +427,19 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
   }
 }
 
+/**
+ * Force the next catalog read to refetch from the origin — clears the edge cache
+ * (this colo) and the in-isolate processed memo. Backs the admin "Refresh
+ * catalog" button so a just-published Lightroom export shows immediately instead
+ * of waiting out the 60s cache window.
+ */
+export async function purgeCatalogCache(): Promise<void> {
+  _processed = null
+  _inflight = null
+  const edge: Cache | undefined = (globalThis as { caches?: { default?: Cache } }).caches?.default
+  if (edge) await edge.delete(CATALOG_CACHE_KEY).catch(() => {})
+}
+
 async function buildCatalog(): Promise<ShopPhoto[]> {
   try {
     const data = await fetchRawCatalog()

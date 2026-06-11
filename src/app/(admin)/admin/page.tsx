@@ -474,7 +474,7 @@ function CacheControls() {
 
   const actions: { action: string; label: string; busyLabel: string; desc: string; confirm?: string }[] = [
     { action: 'refresh-catalog', label: 'Refresh catalog', busyLabel: 'Refreshing…',
-      desc: 'Busts the 5-minute cache so a fresh Lightroom export shows at once.' },
+      desc: 'Forces an immediate refresh. A republished Lightroom export otherwise appears within ~60s on its own.' },
     { action: 'warm-previews', label: 'Warm previews', busyLabel: 'Warming…',
       desc: 'Re-renders any missing watermarked previews.' },
     { action: 'clear-fulfil', label: 'Clear deliverables', busyLabel: 'Clearing…',
