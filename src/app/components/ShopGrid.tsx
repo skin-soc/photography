@@ -43,18 +43,30 @@ function shuffle<T>(arr: T[]): T[] {
 /** How many photos to rotate as a hero when falling back to non-key photos. */
 const HERO_FALLBACK_MAX = 6
 
+/** Posters / fine art are previewed WITHOUT the logo badge (the customer is
+ *  judging the physical print, not buying a file); only digital downloads keep
+ *  it. The repeating mesh watermark stays on every variant regardless. */
+function isPhysical(type: ProductType | null): boolean {
+  return type === 'print' || type === 'fine-art'
+}
+
+/** Build a preview URL, suppressing the logo badge for physical product types. */
+function previewSrc(previewUrl: string, max: number, noLogo: boolean): string {
+  return `${previewUrl}?max=${max}${noLogo ? '&logo=0' : ''}`
+}
+
 /** Hero URLs for a set of matching photos: prefer the curated green-labelled
  *  (`key`) photos; if a category has none, fall back to the first few matching
  *  photos so the card is never blank (e.g. Nature with nothing green-labelled). */
-function heroUrls(matching: GridPhoto[]): string[] {
+function heroUrls(matching: GridPhoto[], noLogo: boolean): string[] {
   const keyed = matching.filter((p) => p.key)
   const chosen = keyed.length > 0 ? keyed : matching.slice(0, HERO_FALLBACK_MAX)
-  return chosen.map((p) => `${p.previewUrl}?max=800`)
+  return chosen.map((p) => previewSrc(p.previewUrl, 800, noLogo))
 }
 
 /** Hero photos of a product type — rotating hero on type cards. */
 function keyPhotosForType(photos: GridPhoto[], type: ProductType): string[] {
-  return heroUrls(photos.filter((p) => p.types.includes(type)))
+  return heroUrls(photos.filter((p) => p.types.includes(type)), isPhysical(type))
 }
 
 /** Hero photos within a subject folder (optionally constrained to a type). */
@@ -65,6 +77,7 @@ function keyPhotosForFolder(
 ): string[] {
   return heroUrls(
     photos.filter((p) => matchesCategory(p, folderPath) && (type === null || p.types.includes(type))),
+    isPhysical(type),
   )
 }
 
@@ -465,7 +478,7 @@ export default function ShopGrid({
                     >
                       <div className="relative overflow-hidden bg-white/5 aspect-square">
                         <LazyImage
-                          src={`${p.previewUrl}?max=800`}
+                          src={previewSrc(p.previewUrl, 800, isPhysical(typeFilter))}
                           alt={`${p.title} — ${p.location}`}
                           eager={i < targetCount}
                           gen={viewKey}

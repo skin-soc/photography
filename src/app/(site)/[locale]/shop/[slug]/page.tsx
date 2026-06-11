@@ -184,6 +184,12 @@ export default async function ShopItem({
     : 'border-white border-[21px]'
   const frameMaxWidth = posterView ? previewW + 42 : previewW
 
+  // Physical (poster / fine-art) contexts preview the artwork WITHOUT the logo
+  // badge — the customer is judging the print, not buying a file. The repeating
+  // mesh watermark stays on every variant. Digital (and direct links) keep the logo.
+  const heroNoLogo = primaryType === 'print' || primaryType === 'fine-art'
+  const heroQuery = (max: number) => `?max=${max}${heroNoLogo ? '&logo=0' : ''}`
+
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
       <script
@@ -215,8 +221,8 @@ export default async function ShopItem({
             future enhancement. */}
         <div className={`select-none shrink-0 mx-auto xl:mx-0 ${frameClass}`} style={{ maxWidth: frameMaxWidth, width: '100%' }}>
           <img
-            src={`${photo.previewUrl}?max=800`}
-            srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
+            src={`${photo.previewUrl}${heroQuery(800)}`}
+            srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
             sizes={`${previewW}px`}
             alt={`${displayTitle(photo)} — ${photo.location}`}
             width={previewW}

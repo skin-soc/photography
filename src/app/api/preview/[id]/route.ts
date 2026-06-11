@@ -51,6 +51,10 @@ export async function GET(
   const upstreamUrl = new URL(`${ORIGIN}/preview/${id}`)
   const max = request.nextUrl.searchParams.get('max')
   if (max) upstreamUrl.searchParams.set('max', max)
+  // logo=0 requests the no-logo-badge variant (posters / fine art). The edge
+  // cache key is the full request URL, so each variant caches independently.
+  const logo = request.nextUrl.searchParams.get('logo')
+  if (logo === '0') upstreamUrl.searchParams.set('logo', '0')
 
   let upstreamRes: Response
   try {

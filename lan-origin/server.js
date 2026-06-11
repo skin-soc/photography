@@ -423,7 +423,12 @@ async function buildWatermarkComposites(imgW, imgH) {
   ]
 }
 
-const previewCacheKey = (id, max) => (max === PREVIEW_MAX ? `${id}.jpg` : `${id}-${max}.jpg`)
+const previewCacheKey = (id, max, logo = true) => {
+  const base = max === PREVIEW_MAX ? id : `${id}-${max}`
+  // The no-logo variant (posters / fine art) caches separately so we never serve
+  // the wrong watermark. The repeating mesh is on both; only the badge differs.
+  return logo ? `${base}.jpg` : `${base}-nologo.jpg`
+}
 
 /**
  * Resolve the disk path of a watermarked preview at size `max`, generating and
@@ -434,8 +439,8 @@ const previewCacheKey = (id, max) => (max === PREVIEW_MAX ? `${id}.jpg` : `${id}
  * a temp file and are renamed into place so a concurrent reader (or the warmer)
  * never sees a half-written file.
  */
-async function buildPreview(id, max) {
-  const cached = join(CACHE_DIR, previewCacheKey(id, max))
+async function buildPreview(id, max, logo = true) {
+  const cached = join(CACHE_DIR, previewCacheKey(id, max, logo))
   try {
     await stat(cached)
     return cached // already generated
@@ -451,15 +456,17 @@ async function buildPreview(id, max) {
   const { data: resizedBuf, info: resizeInfo } = await sharp(src)
     .resize(max, max, { fit: 'inside', withoutEnlargement: true })
     .toBuffer({ resolveWithObject: true })
-  const logoComposites = await buildWatermarkComposites(resizeInfo.width, resizeInfo.height)
+
+  // The repeating mesh is always applied; the logo badge only for digital downloads.
+  const composites = [{ input: GMP_PATH, tile: true, blend: 'over' }] // mesh layer
+  if (logo) {
+    composites.push(...await buildWatermarkComposites(resizeInfo.width, resizeInfo.height))
+  }
 
   const tmp = `${cached}.tmp-${randomBytes(6).toString('hex')}`
   try {
     await sharp(resizedBuf)
-      .composite([
-        { input: GMP_PATH, tile: true, blend: 'over' },  // mesh layer
-        ...logoComposites,                                 // shadow + logo on top
-      ])
+      .composite(composites)
       .jpeg({ quality: 82, mozjpeg: true })
       .toFile(tmp)
     await rename(tmp, cached)
@@ -479,8 +486,11 @@ app.get('/preview/:id', async (req, res) => {
     ? requestedMax
     : PREVIEW_MAX
 
+  // logo=0 → posters / fine-art variant (mesh watermark only, no logo badge).
+  const logo = req.query.logo !== '0'
+
   try {
-    const cached = await buildPreview(id, max)
+    const cached = await buildPreview(id, max, logo)
     if (!cached) return res.status(404).json({ error: 'not found' })
     res.set('Cache-Control', 'public, max-age=31536000, immutable')
     res.type('jpeg')
