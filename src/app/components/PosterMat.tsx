@@ -22,8 +22,9 @@ const posterSerif = Cormorant_Garamond({
 })
 
 // ── Layout proportions (tune here; the print compositor mirrors these) ──────────
-/** Image area aspect — posters are cropped to this portrait ratio (height ÷ width). */
-const IMAGE_RATIO = 1.24
+/** Image area aspect — posters are cropped to this portrait ratio (height ÷ width).
+ *  1.25 = 4:5 (8×10), the standard poster crop. */
+const IMAGE_RATIO = 1.25
 const MARGIN_TOP = '5%' // white above the photo (% of sheet width)
 const MARGIN_X = '5.5%' // white left/right (% of sheet width)
 
