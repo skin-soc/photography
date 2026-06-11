@@ -179,7 +179,7 @@ export default async function ShopItem({
   // gallery mat with the title + caption typeset below (PosterMat). Everything
   // else (fine art, digital, direct links) uses the simple 21px gallery frame.
   const posterView = primaryType === 'print'
-  const posterCardMaxWidth = Math.min(previewW + 60, 680)
+  const posterCardMaxWidth = Math.min(previewW + 40, 600)
 
   // Physical (poster / fine-art) contexts preview the artwork WITHOUT the logo
   // badge — the customer is judging the print, not buying a file. The repeating
