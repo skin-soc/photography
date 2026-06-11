@@ -66,6 +66,7 @@ export default async function Shop({
       slug: p.slug,
       title: displayTitle(p),
       location: p.location,
+      caption: p.caption,
       types: photoTypes(p),
       previewUrl: p.previewUrl,
       fromText: formatDKK(lo.price),
@@ -75,6 +76,8 @@ export default async function Shop({
       captureDate: p.captureDate,
     }
   })
+  // Poster cards (grid) carry the same foot line as the product-page poster.
+  const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
 
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
@@ -86,6 +89,7 @@ export default async function Shop({
           initialCategoryPath={initialCategoryPath}
           heading={t('h1')}
           intro={tShop('intro')}
+          siteLabel={siteLabel}
         />
       ) : (
         <header className="max-w-2xl">

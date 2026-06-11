@@ -10,12 +10,15 @@ import {
   isProductType,
   typeMessageKey,
 } from '@/lib/product-types'
+import PosterMat from '@/app/components/PosterMat'
 
 export interface GridPhoto {
   id: string
   slug: string
   title: string
   location: string
+  /** Lightroom caption — sub-heading on poster cards. */
+  caption?: string
   types: ProductType[]
   previewUrl: string
   fromText: string
@@ -272,6 +275,7 @@ export default function ShopGrid({
   initialCategoryPath = [],
   heading,
   intro,
+  siteLabel,
 }: {
   photos: GridPhoto[]
   categoryTree: CategoryNode[]
@@ -282,6 +286,8 @@ export default function ShopGrid({
   heading: string
   /** Shop intro paragraph, shown only on the landing. */
   intro: string
+  /** Foot line for poster cards, e.g. "WWW.GUSMCEWAN.COM". */
+  siteLabel: string
 }) {
   const t = useTranslations('shop')
   const typeLabel = useCallback(
@@ -330,11 +336,16 @@ export default function ShopGrid({
   // NavigationOverlay can't cover it. We show a spinner over the grid until the
   // first screenful of images has actually painted.
   const isFolderView = !isLanding && subCategories.length > 0
+  // Posters leaf: photo cards are rendered as full poster mats (not square tiles).
+  const isPosterLeaf = !isLanding && !isFolderView && typeFilter === 'print'
   const itemCount = isLanding ? typeCards.length : isFolderView ? subCategories.length : shown.length
   // A "first page" — enough tiles to fill the initial viewport across
   // breakpoints (5-col desktop ≈ 2.4 rows, 2-col mobile ≈ 6 rows).
   const FIRST_PAGE = 12
-  const targetCount = Math.min(itemCount, FIRST_PAGE)
+  // Poster cards don't wire into the per-image readiness probe (they reuse the
+  // shared PosterMat, not LazyImage), so skip the spinner for the poster leaf —
+  // they load progressively with native lazy-loading.
+  const targetCount = isPosterLeaf ? 0 : Math.min(itemCount, FIRST_PAGE)
   const viewKey = navPath.join('|') || '·landing'
 
   const loadedRef = useRef(0)
@@ -463,6 +474,32 @@ export default function ShopGrid({
             /* Leaf level: show photo grid */
             shown.length === 0 ? (
               <p className="text-white/40">{t('checkoutSoon')}</p>
+            ) : isPosterLeaf ? (
+              /* Posters: each card is the full poster mat as shown on the product
+                 page — the title is part of the poster, so no card caption. */
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
+                {shown.map((p, i) => {
+                  const from = `?from=${encodeURIComponent(navPath.join('|'))}`
+                  return (
+                    <Link
+                      key={p.id}
+                      href={`/shop/${p.slug}${from}`}
+                      className="block select-none transition-transform duration-300 hover:-translate-y-1"
+                      onContextMenu={(e) => e.preventDefault()}
+                    >
+                      <PosterMat
+                        src={previewSrc(p.previewUrl, 800, true)}
+                        alt={`${p.title} — ${p.location}`}
+                        title={p.title}
+                        caption={p.caption}
+                        siteLabel={siteLabel}
+                        maxWidth={600}
+                        eager={i < 4}
+                      />
+                    </Link>
+                  )
+                })}
+              </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {shown.map((p, i) => {

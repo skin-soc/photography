@@ -46,6 +46,7 @@ export default function PosterMat({
   caption,
   siteLabel,
   maxWidth,
+  eager = true,
 }: {
   src: string
   srcSet?: string
@@ -58,6 +59,8 @@ export default function PosterMat({
   /** Foot line, e.g. "WWW.GUSMCEWAN.COM". */
   siteLabel: string
   maxWidth: number
+  /** Eager-load the image (hero); pass false for below-the-fold grid cards. */
+  eager?: boolean
 }) {
   return (
     <figure
@@ -76,6 +79,7 @@ export default function PosterMat({
             sizes={sizes}
             alt={alt}
             draggable={false}
+            loading={eager ? 'eager' : 'lazy'}
             className="pointer-events-none"
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
           />
