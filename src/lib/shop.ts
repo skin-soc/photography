@@ -52,6 +52,29 @@ function photoRef(id: string, secret: string): string {
 }
 
 /**
+ * Native-WebCrypto equivalent of photoRef — identical GMP-XXXXXXX output, but on
+ * Workers `node:crypto` is polyfilled and slow, so building the catalog (~1k
+ * untitled photos ⇒ ~1k HMACs in ONE cold request) with node:crypto blew the
+ * Worker resource limit (error 1102). WebCrypto HMAC is native and fast. The key
+ * is imported once; `photoRefWeb` signs each id. SERVER-SIDE ONLY.
+ */
+async function importRefKey(secret: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret || 'dev'),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+}
+async function photoRefWeb(key: CryptoKey, id: string): Promise<string> {
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(id)))
+  let hex = ''
+  for (let i = 0; i < 4; i++) hex += sig[i].toString(16).padStart(2, '0')
+  return 'GMP-' + hex.slice(0, 7).toUpperCase()
+}
+
+/**
  * True when the Lightroom plugin wrote the camera filename as the title
  * (its fallback: title = title or remoteId).
  */
@@ -450,11 +473,12 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
     // render paths never HMAC. The plugin writes slug = slugify(title) or
     // remoteId:lower(), and title = title or remoteId, so "untitled" means the
     // slug and/or title equals the photo id.
+    const refKey = await importRefKey(ORIGIN_SECRET)
     for (const p of photos) {
       const untitledSlug = p.slug.toLowerCase() === p.id.toLowerCase()
       const untitledTitle = p.title.toLowerCase() === p.id.toLowerCase()
       if (untitledSlug || untitledTitle) {
-        const ref = photoRef(p.id, ORIGIN_SECRET) // "GMP-XXXXXXX" — one HMAC
+        const ref = await photoRefWeb(refKey, p.id) // "GMP-XXXXXXX" — native HMAC
         if (untitledSlug) p.slug = ref.toLowerCase()
         p._displayTitle = untitledTitle ? ref : p.title
       } else {
