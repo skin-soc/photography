@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "Wybrana kolekcja fotografii, dostępna jako wydruki, edycje artystyczne i pliki cyfrowe.",
+    "intro": "Wybrana kolekcja fotografii, dostępna jako plakaty, edycje artystyczne i pliki cyfrowe.",
     "filterAll": "Wszystkie",
     "from": "Od",
     "availableAs": "Dostępne jako",
     "addToCart": "Dodaj do koszyka",
     "checkoutSoon": "Płatność online już wkrótce — zajrzyj ponownie.",
     "backToShop": "Powrót do sklepu",
-    "prints": "Wydruki",
+    "prints": "Plakaty",
     "fineArt": "Wydruki artystyczne",
     "digital": "Pliki cyfrowe",
     "priceNote": "Ceny w koronach duńskich.",
@@ -111,7 +111,9 @@
     "buyNow": "Kup teraz",
     "inCart": "W koszyku",
     "added": "Dodano",
-    "sectionTitle": "Sklep {name}"
+    "sectionTitle": "Sklep {name}",
+    "browse": "Przeglądaj",
+    "alsoAvailableAs": "Dostępne także jako {name}"
   },
   "cart": {
     "emailLabel": "E-mail (do linku do pobrania)",

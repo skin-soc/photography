@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "Valikoima valokuvia, saatavana vedoksina, taide-editioina ja digitaalisina latauksina.",
+    "intro": "Valikoima valokuvia, saatavana julisteina, taide-editioina ja digitaalisina latauksina.",
     "filterAll": "Kaikki",
     "from": "Alkaen",
     "availableAs": "Saatavana",
     "addToCart": "Lisää koriin",
     "checkoutSoon": "Verkkomaksu tulee pian — käythän uudelleen.",
     "backToShop": "Takaisin kauppaan",
-    "prints": "Vedokset",
+    "prints": "Julisteet",
     "fineArt": "Taidevedokset",
     "digital": "Digitaaliset lataukset",
     "priceNote": "Hinnat Tanskan kruunuissa.",
@@ -111,7 +111,9 @@
     "buyNow": "Osta nyt",
     "inCart": "Ostoskorissa",
     "added": "Lisätty",
-    "sectionTitle": "{name}-kauppa"
+    "sectionTitle": "{name}-kauppa",
+    "browse": "Selaa",
+    "alsoAvailableAs": "Saatavilla myös muodossa {name}"
   },
   "cart": {
     "emailLabel": "Sähköposti (latauslinkkiäsi varten)",

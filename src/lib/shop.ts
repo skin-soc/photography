@@ -15,7 +15,7 @@
  */
 
 import { createHmac } from 'node:crypto'
-import { PRINT_RANGE } from '@/config/product-range'
+import { matchPosters, FINE_ART_PENDING, POSTER_MATERIAL } from '@/config/product-range'
 
 // Product-type primitives live in a client-safe module (no node:crypto), and
 // are re-exported here so existing `@/lib/shop` importers keep working.
@@ -80,6 +80,8 @@ export interface ShopProduct {
   dimensions?: { w: number; h: number }
   /** Physical paper size in centimetres — print / fine-art only. */
   printSize?: { w: number; h: number }
+  /** Material/spec descriptor shown in the picker — physical products only. */
+  material?: string
   /** File format for digital downloads. Absent on print/fine-art products. */
   format?: 'jpeg' | 'tiff'
   /**
@@ -138,13 +140,53 @@ export interface ShopPhoto {
 const ORIGIN = process.env.SHOP_ORIGIN_URL
 const ORIGIN_SECRET = process.env.SHOP_ORIGIN_SECRET ?? ''
 
-/** Physical print products — fixed (paper sizes don't depend on the photo).
- *  Labels are the variant only; the shop groups them under a type heading. */
-const PRINT_TEMPLATE: Omit<ShopProduct, 'sku'>[] = [
-  { type: 'print', label: 'A4', printSize: { w: 21, h: 29.7 }, price: 39500, currency: 'DKK' },
-  { type: 'print', label: 'A3', printSize: { w: 29.7, h: 42 }, price: 59500, currency: 'DKK' },
-  { type: 'fine-art', label: 'A2 — archival', printSize: { w: 42, h: 59.4 }, price: 149500, currency: 'DKK' },
-]
+/**
+ * Build the physical products (posters + fine art) for a photo, applying the
+ * worker-owned range. Posters are aspect-matched + resolution-gated to the
+ * photo; fine art is a single WhiteWall placeholder oriented to the photo. Used
+ * by both the live catalog and the dev mock so they behave identically.
+ */
+function physicalProducts(
+  id: string,
+  w: number,
+  h: number,
+  hasPrint: boolean,
+  hasFineArt: boolean,
+): ShopProduct[] {
+  const out: ShopProduct[] = []
+  if (hasPrint) {
+    matchPosters(w, h).forEach((s, i) => {
+      out.push({
+        sku: `${id}-poster-${i + 1}`,
+        type: 'print',
+        label: `${s.widthCm} × ${s.heightCm} cm`,
+        price: s.price,
+        currency: 'DKK',
+        printSize: { w: s.widthCm, h: s.heightCm },
+        material: POSTER_MATERIAL,
+        provider: 'prodigi',
+        providerSku: s.providerSku,
+        cost: s.cost,
+        costCurrency: 'EUR',
+      })
+    })
+  }
+  if (hasFineArt) {
+    const portrait = h > w
+    const fa = FINE_ART_PENDING
+    out.push({
+      sku: `${id}-fineart-1`,
+      type: 'fine-art',
+      label: fa.label,
+      price: fa.price,
+      currency: 'DKK',
+      printSize: portrait ? { w: fa.shortCm, h: fa.longCm } : { w: fa.longCm, h: fa.shortCm },
+      material: fa.material,
+      provider: fa.provider,
+    })
+  }
+  return out
+}
 
 /** A sized tier is only offered when the original is at least this much
  *  larger than the tier — otherwise it is barely distinct from the Master. */
@@ -249,8 +291,12 @@ function mock(
   category: string[][] = [],
   rawAvailable = false,
 ): ShopPhoto {
-  const products: ShopProduct[] = PRINT_TEMPLATE.filter((p) => offers.includes(p.type)).map(
-    (p, i) => ({ sku: `${id}-p-${i + 1}`, ...p }),
+  const products: ShopProduct[] = physicalProducts(
+    id,
+    w,
+    h,
+    offers.includes('print'),
+    offers.includes('fine-art'),
   )
   if (offers.includes('digital')) products.push(...digitalProducts(id, w, h, rawAvailable))
   return {
@@ -374,30 +420,28 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
       // and all preview fetches go through the Worker which adds the secret.
       previewUrl: `/api/preview/${p.id}`,
     }))
-    // Apply the worker-owned print/fine-art RANGE (products.json now lives with
-    // the worker — src/config/product-range.ts). We keep the origin's DIGITAL
-    // products (dimension-based, with download tokens) and replace the physical
-    // products with PRINT_RANGE entries for whichever physical types the photo is
-    // offered in (derived from the origin's products, set by Lightroom collections).
+    // Apply the worker-owned RANGE (products.json now lives with the worker —
+    // src/config/product-range.ts). Keep the origin's DIGITAL products
+    // (dimension-based, with download tokens) and replace the physical products:
+    //  • Posters (type 'print') → Prodigi PAP, ASPECT-MATCHED to the photo's
+    //    shape + orientation, resolution-gated (matchPosters).
+    //  • Fine art (type 'fine-art') → a single WhiteWall placeholder (pending),
+    //    oriented to the photo, so the line persists until WhiteWall is wired.
+    // Which physical types a photo is offered in comes from the origin's
+    // products (set by Lightroom collections).
     for (const p of photos) {
       const offered = new Set(
         p.products.filter((x) => x.type === 'print' || x.type === 'fine-art').map((x) => x.type),
       )
       if (offered.size === 0) continue
       const digital = p.products.filter((x) => x.type === 'digital')
-      const physical: ShopProduct[] = PRINT_RANGE.filter((r) => offered.has(r.type)).map((r, i) => ({
-        sku: `${p.id}-r-${i + 1}`,
-        type: r.type,
-        label: r.label,
-        price: r.price,
-        currency: r.currency,
-        printSize: r.printSize,
-        provider: r.provider,
-        providerSku: r.providerSku,
-        attributes: r.attributes,
-        cost: r.cost,
-        costCurrency: r.costCurrency,
-      }))
+      const physical = physicalProducts(
+        p.id,
+        p.width,
+        p.height,
+        offered.has('print'),
+        offered.has('fine-art'),
+      )
       p.products = [...physical, ...digital]
     }
     // Replace camera-filename slugs with GMP-based slugs so URLs are clean, and
@@ -606,7 +650,8 @@ export function productSpec(product: ShopProduct): string | null {
     return `${product.dimensions.w} × ${product.dimensions.h} px · ${fmt}`
   }
   if (product.printSize) {
-    return `${product.printSize.w} × ${product.printSize.h} cm`
+    // Posters/fine-art carry the size in the label, so the spec shows material.
+    return product.material ?? `${product.printSize.w} × ${product.printSize.h} cm`
   }
   return null
 }

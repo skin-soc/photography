@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "Ett urval fotografier, tillgängliga som tryck, konstutgåvor och digitala nedladdningar.",
+    "intro": "Ett urval fotografier, tillgängliga som affischer, konstutgåvor och digitala nedladdningar.",
     "filterAll": "Alla",
     "from": "Från",
     "availableAs": "Tillgänglig som",
     "addToCart": "Lägg i varukorg",
     "checkoutSoon": "Onlinebetalning kommer snart — kom gärna tillbaka.",
     "backToShop": "Tillbaka till butiken",
-    "prints": "Tryck",
+    "prints": "Affischer",
     "fineArt": "Konsttryck",
     "digital": "Digitala nedladdningar",
     "priceNote": "Priser i danska kronor.",
@@ -111,7 +111,9 @@
     "buyNow": "Köp nu",
     "inCart": "I varukorgen",
     "added": "Tillagd",
-    "sectionTitle": "{name}-butik"
+    "sectionTitle": "{name}-butik",
+    "browse": "Bläddra",
+    "alsoAvailableAs": "Finns även som {name}"
   },
   "cart": {
     "emailLabel": "E-post (för din nedladdningslänk)",

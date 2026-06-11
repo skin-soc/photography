@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "Une sélection de photographies, disponibles en tirages, éditions d'art et téléchargements numériques.",
+    "intro": "Une sélection de photographies, disponibles en affiches, éditions d'art et téléchargements numériques.",
     "filterAll": "Tout",
     "from": "À partir de",
     "availableAs": "Disponible en",
     "addToCart": "Ajouter au panier",
     "checkoutSoon": "Le paiement en ligne arrive bientôt — revenez nous voir.",
     "backToShop": "Retour à la boutique",
-    "prints": "Tirages",
+    "prints": "Affiches",
     "fineArt": "Tirages d'art",
     "digital": "Téléchargements",
     "priceNote": "Prix en couronnes danoises.",
@@ -111,7 +111,9 @@
     "buyNow": "Acheter",
     "inCart": "Dans le panier",
     "added": "Ajouté",
-    "sectionTitle": "Boutique {name}"
+    "sectionTitle": "Boutique {name}",
+    "browse": "Parcourir",
+    "alsoAvailableAs": "Également disponible en {name}"
   },
   "cart": {
     "emailLabel": "E-mail (pour votre lien de téléchargement)",

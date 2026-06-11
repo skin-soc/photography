@@ -79,7 +79,7 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "A selected collection of photographs, available as prints, fine art editions and digital downloads.",
+    "intro": "A selected collection of photographs, available as posters, fine art editions and digital downloads.",
     "filterAll": "All",
     "from": "From",
     "availableAs": "Available as",
@@ -89,7 +89,7 @@
     "added": "Added",
     "checkoutSoon": "Online checkout is coming soon — please check back.",
     "backToShop": "Back to shop",
-    "prints": "Prints",
+    "prints": "Posters",
     "fineArt": "Fine Art",
     "digital": "Digital Downloads",
     "priceNote": "Prices in Danish kroner.",
@@ -111,7 +111,9 @@
     "licenseCommercialDesc": "Editorial use plus advertising, marketing campaigns, packaging and large print runs — up to 500,000 copies.",
     "licenseFullCommercialDesc": "All rights, including merchandise for resale, unlimited print runs and white-label use.",
     "licensingNotePublicEvent": "Licences are granted for the specific use and copy limits stated. This image was captured at {event}, a public event in a public space. Full licensing terms available <link>here</link>.",
-    "sectionTitle": "{name} Shop"
+    "sectionTitle": "{name} Shop",
+    "browse": "Browse",
+    "alsoAvailableAs": "Also available as {name}"
   },
   "cart": {
     "emailLabel": "Email (for your download link)",

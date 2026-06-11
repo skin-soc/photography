@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "Uma coleção selecionada de fotografias, disponíveis como impressões, edições de arte e downloads digitais.",
+    "intro": "Uma coleção selecionada de fotografias, disponíveis como pósteres, edições de arte e downloads digitais.",
     "filterAll": "Tudo",
     "from": "A partir de",
     "availableAs": "Disponível como",
     "addToCart": "Adicionar ao carrinho",
     "checkoutSoon": "O pagamento online estará disponível em breve — volte a visitar-nos.",
     "backToShop": "Voltar à loja",
-    "prints": "Impressões",
+    "prints": "Pósteres",
     "fineArt": "Arte",
     "digital": "Downloads digitais",
     "priceNote": "Preços em coroas dinamarquesas.",
@@ -111,7 +111,9 @@
     "buyNow": "Comprar agora",
     "inCart": "No carrinho",
     "added": "Adicionado",
-    "sectionTitle": "Loja {name}"
+    "sectionTitle": "Loja {name}",
+    "browse": "Explorar",
+    "alsoAvailableAs": "Também disponível como {name}"
   },
   "cart": {
     "emailLabel": "E-mail (para o seu link de transferência)",

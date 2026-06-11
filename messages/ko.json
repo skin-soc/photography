@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "엄선된 사진 컬렉션으로, 프린트, 파인 아트 에디션, 디지털 다운로드로 제공됩니다.",
+    "intro": "엄선된 사진 컬렉션으로, 포스터, 파인 아트 에디션, 디지털 다운로드로 제공됩니다.",
     "filterAll": "전체",
     "from": "가격",
     "availableAs": "구매 옵션",
     "addToCart": "장바구니에 담기",
     "checkoutSoon": "온라인 결제가 곧 제공됩니다 — 다시 방문해 주세요.",
     "backToShop": "상점으로 돌아가기",
-    "prints": "프린트",
+    "prints": "포스터",
     "fineArt": "파인 아트",
     "digital": "디지털 다운로드",
     "priceNote": "가격은 덴마크 크로네 기준입니다.",
@@ -111,7 +111,9 @@
     "buyNow": "지금 구매",
     "inCart": "장바구니에 있음",
     "added": "추가됨",
-    "sectionTitle": "{name} 숍"
+    "sectionTitle": "{name} 숍",
+    "browse": "둘러보기",
+    "alsoAvailableAs": "{name}(으)로도 제공됩니다"
   },
   "cart": {
     "emailLabel": "이메일 (다운로드 링크용)",

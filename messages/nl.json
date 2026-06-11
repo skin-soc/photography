@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "Een geselecteerde collectie foto's, verkrijgbaar als prints, kunsteditie en digitale downloads.",
+    "intro": "Een geselecteerde collectie foto's, verkrijgbaar als posters, kunsteditie en digitale downloads.",
     "filterAll": "Alle",
     "from": "Vanaf",
     "availableAs": "Verkrijgbaar als",
     "addToCart": "In winkelwagen",
     "checkoutSoon": "Online afrekenen komt binnenkort — kom snel terug.",
     "backToShop": "Terug naar shop",
-    "prints": "Prints",
+    "prints": "Posters",
     "fineArt": "Kunstprints",
     "digital": "Digitale downloads",
     "priceNote": "Prijzen in Deense kronen.",
@@ -111,7 +111,9 @@
     "buyNow": "Nu kopen",
     "inCart": "In winkelwagen",
     "added": "Toegevoegd",
-    "sectionTitle": "{name}-shop"
+    "sectionTitle": "{name}-shop",
+    "browse": "Bladeren",
+    "alsoAvailableAs": "Ook verkrijgbaar als {name}"
   },
   "cart": {
     "emailLabel": "E-mail (voor je downloadlink)",

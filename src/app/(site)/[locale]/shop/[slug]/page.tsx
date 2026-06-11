@@ -6,7 +6,6 @@ import { getPhoto, productSpec, displayTitle, productLicense, isProductType, typ
 import type { ProductType } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
-import FramePreview, { type FrameColor } from '@/app/components/FramePreview'
 import LicensingLink from '@/app/components/LicensingLink'
 import { SITE_URL, BUSINESS_NAME, OG_LOCALE_MAP } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
@@ -18,11 +17,14 @@ function ProductBreadcrumb({
   path,
   title,
   typeLabel,
+  browseLabel,
 }: {
   path: string[]
   title: string
   /** Friendly label for the leading product-type token (segment 0). */
   typeLabel: (token: string) => string
+  /** Localized "Browse" root label. */
+  browseLabel: string
 }) {
   // The back button returns to exactly where the user came from — the leaf
   // collection they were browsing. The breadcrumb links cover parent navigation.
@@ -30,12 +32,12 @@ function ProductBreadcrumb({
   const backHref = path.length === 0
     ? '/shop'
     : `/shop?cat=${encodeURIComponent(path.join('|'))}`
-  const backLabel = path.length === 0 ? 'Browse' : label(path[path.length - 1], path.length - 1)
+  const backLabel = path.length === 0 ? browseLabel : label(path[path.length - 1], path.length - 1)
 
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
       <div className="hidden sm:flex items-center gap-2 text-white/40 min-w-0">
-        <Link href="/shop" className="hover:text-white transition-colors shrink-0">Browse</Link>
+        <Link href="/shop" className="hover:text-white transition-colors shrink-0">{browseLabel}</Link>
         {path.map((seg, i) => {
           const segHref = `/shop?cat=${encodeURIComponent(path.slice(0, i + 1).join('|'))}`
           return (
@@ -71,7 +73,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!photo) return {}
 
   const title = `${displayTitle(photo)} — ${photo.location}`
-  const description = `${photo.caption} Available as prints, fine art editions and digital downloads by ${BUSINESS_NAME}.`
+  const description = `${photo.caption} Available as posters, fine art editions and digital downloads by ${BUSINESS_NAME}.`
   const canonical = localizedShopUrl(locale, slug)
   const languages: Record<string, string> = {}
   for (const l of routing.locales) languages[l] = localizedShopUrl(l, slug)
@@ -103,6 +105,10 @@ export default async function ShopItem({
   const { locale, slug } = await params
   const { from } = await searchParams
   const fromPath: string[] = from ? decodeURIComponent(from).split('|') : []
+  // The leading breadcrumb token is the product type the customer came through
+  // (e.g. "print"); it leads the picker and frames the others as cross-sells.
+  const primaryType: ProductType | undefined =
+    fromPath.length > 0 && isProductType(fromPath[0]) ? fromPath[0] : undefined
   setRequestLocale(locale)
   const photo = await getPhoto(slug)
   if (!photo) notFound()
@@ -137,7 +143,7 @@ export default async function ShopItem({
   }))
 
   const schemaTypeName: Record<ProductType, string> = {
-    print: 'Print',
+    print: 'Poster',
     'fine-art': 'Fine art print',
     digital: 'Digital download',
   }
@@ -168,10 +174,15 @@ export default async function ShopItem({
   const previewW = Math.round(photo.width  * scale)
   const previewH = Math.round(photo.height * scale)
 
-  // A framed fine-art product (carries a Prodigi frame `color` attribute) drives
-  // the in-frame preview mockup; otherwise the plain white-frame image is shown.
-  const framedProduct = photo.products.find((p) => p.type === 'fine-art' && p.attributes?.color)
-  const frameColor = (framedProduct?.attributes?.color as FrameColor | undefined) ?? 'black'
+  // Poster presentation: when viewed in the Posters context, the photo wears a
+  // museum-mat white border — double width on three sides (2×21 = 42px) and a
+  // deep bottom margin (4×21 = 84px), the classic poster look. The wider side
+  // borders are offset in maxWidth so the photo itself stays the same size.
+  const posterView = primaryType === 'print'
+  const frameClass = posterView
+    ? 'border-white border-t-[42px] border-x-[42px] border-b-[84px]'
+    : 'border-white border-[21px]'
+  const frameMaxWidth = posterView ? previewW + 42 : previewW
 
   return (
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
@@ -186,6 +197,7 @@ export default async function ShopItem({
           path={fromPath}
           title={displayTitle(photo)}
           typeLabel={(token) => (isProductType(token) ? t(typeMessageKey(token)) : token)}
+          browseLabel={t('browse')}
         />
       ) : (
         <Link
@@ -198,37 +210,28 @@ export default async function ShopItem({
 
       <div className="mt-10 flex flex-col xl:flex-row gap-10 xl:gap-16 items-start">
 
-        {/* Photo — framed mockup when a framed product is offered, else the
-            default 21px white frame. (Framed preview uses the product's frame
-            colour; reacting live to the picker selection is a follow-up.) */}
-        {framedProduct ? (
-          <div className="select-none shrink-0 mx-auto xl:mx-0" style={{ maxWidth: previewW + 42, width: '100%' }}>
-            <FramePreview
-              src={`${photo.previewUrl}?max=800`}
-              alt={`${displayTitle(photo)} — ${photo.location}`}
-              frameColor={frameColor}
-            />
-          </div>
-        ) : (
-          <div className="select-none shrink-0 mx-auto xl:mx-0 border-[21px] border-white" style={{ maxWidth: previewW, width: '100%' }}>
-            <img
-              src={`${photo.previewUrl}?max=800`}
-              srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
-              sizes={`${previewW}px`}
-              alt={`${displayTitle(photo)} — ${photo.location}`}
-              width={previewW}
-              height={previewH}
-              draggable={false}
-              className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
-            />
-          </div>
-        )}
+        {/* Photo — gallery white frame (default 21px), or the wider asymmetric
+            poster mat when viewed as a Poster. Real in-situ framed mockups are a
+            future enhancement. */}
+        <div className={`select-none shrink-0 mx-auto xl:mx-0 ${frameClass}`} style={{ maxWidth: frameMaxWidth, width: '100%' }}>
+          <img
+            src={`${photo.previewUrl}?max=800`}
+            srcSet={`${photo.previewUrl}?max=400 400w, ${photo.previewUrl}?max=800 800w`}
+            sizes={`${previewW}px`}
+            alt={`${displayTitle(photo)} — ${photo.location}`}
+            width={previewW}
+            height={previewH}
+            draggable={false}
+            className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
+          />
+        </div>
 
         {/* Info column — title/caption/license now live inside the first picker card */}
         <div className="min-w-0 flex-1">
           <ShopProductPicker
             products={pickerProducts}
             photoSlug={slug}
+            primaryType={primaryType}
             rawAvailable={photo.rawAvailable ?? false}
             photoTitle={displayTitle(photo)}
             location={photo.location}

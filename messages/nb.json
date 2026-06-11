@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "Et utvalg fotografier, tilgjengelig som trykk, kunsttrykk og digitale nedlastinger.",
+    "intro": "Et utvalg fotografier, tilgjengelig som plakater, kunsttrykk og digitale nedlastinger.",
     "filterAll": "Alle",
     "from": "Fra",
     "availableAs": "Tilgjengelig som",
     "addToCart": "Legg i kurv",
     "checkoutSoon": "Nettbetaling kommer snart — kom gjerne tilbake.",
     "backToShop": "Tilbake til butikken",
-    "prints": "Trykk",
+    "prints": "Plakater",
     "fineArt": "Kunsttrykk",
     "digital": "Digitale nedlastinger",
     "priceNote": "Priser i danske kroner.",
@@ -111,7 +111,9 @@
     "buyNow": "Kjøp nå",
     "inCart": "I handlekurven",
     "added": "Lagt til",
-    "sectionTitle": "{name}-butikk"
+    "sectionTitle": "{name}-butikk",
+    "browse": "Bla gjennom",
+    "alsoAvailableAs": "Også tilgjengelig som {name}"
   },
   "cart": {
     "emailLabel": "E-post (for nedlastingslenken din)",

@@ -10,7 +10,7 @@
  */
 
 import { getCloudflareContext } from '@opennextjs/cloudflare'
-import { PRINT_RANGE } from '@/config/product-range'
+import { PRODIGI_SKUS } from '@/config/product-range'
 import { getProductDetails, getQuote, checkEuFulfilment, prodigiConfigured } from '@/lib/prodigi'
 
 interface KVLike {
@@ -62,7 +62,7 @@ export async function validateRange(): Promise<ValidationReport> {
   }
 
   const items: SkuStatus[] = []
-  for (const r of PRINT_RANGE) {
+  for (const r of PRODIGI_SKUS) {
     const s: SkuStatus = {
       providerSku: r.providerSku,
       label: r.label,
@@ -77,7 +77,7 @@ export async function validateRange(): Promise<ValidationReport> {
       await getProductDetails(r.providerSku) // throws if the SKU is gone
       s.exists = true
       const quote = await getQuote({
-        items: [{ sku: r.providerSku, copies: 1, attributes: r.attributes }],
+        items: [{ sku: r.providerSku, copies: 1 }],
         destinationCountryCode: 'NL',
         currencyCode: 'EUR',
       })

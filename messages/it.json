@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "Una selezione di fotografie, disponibili come stampe, edizioni d'arte e download digitali.",
+    "intro": "Una selezione di fotografie, disponibili come poster, edizioni d'arte e download digitali.",
     "filterAll": "Tutti",
     "from": "Da",
     "availableAs": "Disponibile come",
     "addToCart": "Aggiungi al carrello",
     "checkoutSoon": "Il pagamento online sarà presto disponibile — torna a trovarci.",
     "backToShop": "Torna allo shop",
-    "prints": "Stampe",
+    "prints": "Poster",
     "fineArt": "Stampe d'arte",
     "digital": "Download digitali",
     "priceNote": "Prezzi in corone danesi.",
@@ -111,7 +111,9 @@
     "buyNow": "Acquista ora",
     "inCart": "Nel carrello",
     "added": "Aggiunto",
-    "sectionTitle": "Shop {name}"
+    "sectionTitle": "Shop {name}",
+    "browse": "Esplora",
+    "alsoAvailableAs": "Disponibile anche come {name}"
   },
   "cart": {
     "emailLabel": "E-mail (per il tuo link di download)",

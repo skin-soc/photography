@@ -21,7 +21,7 @@ async function authed(req: NextRequest): Promise<boolean> {
 function categoryOf(type: ProductType): string {
   switch (type) {
     case 'digital': return 'Digital Downloads'
-    case 'print': return 'Prints'
+    case 'print': return 'Posters'
     case 'fine-art': return 'Fine Art'
     default: return '—'
   }

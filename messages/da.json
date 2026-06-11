@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "En udvalgt samling af fotografier, tilgængelige som tryk, kunsttryk og digitale downloads.",
+    "intro": "En udvalgt samling af fotografier, tilgængelige som plakater, kunsttryk og digitale downloads.",
     "filterAll": "Alle",
     "from": "Fra",
     "availableAs": "Fås som",
     "addToCart": "Læg i kurv",
     "checkoutSoon": "Onlinebetaling kommer snart — kom gerne tilbage.",
     "backToShop": "Tilbage til butikken",
-    "prints": "Tryk",
+    "prints": "Plakater",
     "fineArt": "Kunsttryk",
     "digital": "Digitale downloads",
     "priceNote": "Priser i danske kroner.",
@@ -111,7 +111,9 @@
     "buyNow": "Køb nu",
     "inCart": "I kurv",
     "added": "Tilføjet",
-    "sectionTitle": "{name}-shop"
+    "sectionTitle": "{name}-shop",
+    "browse": "Gennemse",
+    "alsoAvailableAs": "Fås også som {name}"
   },
   "cart": {
     "emailLabel": "E-mail (til dit downloadlink)",

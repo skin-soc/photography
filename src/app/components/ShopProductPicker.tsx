@@ -167,6 +167,7 @@ export default function ShopProductPicker({
   caption,
   licenseNote,
   previewUrl,
+  primaryType,
 }: {
   products: PickerProduct[]
   photoSlug: string
@@ -176,6 +177,10 @@ export default function ShopProductPicker({
   caption?: string
   licenseNote?: React.ReactNode
   previewUrl?: string
+  /** The product type the customer arrived through (from the shop section they
+   *  were browsing). Its group leads and keeps a plain heading; the other types
+   *  are framed as "Also available as …". Undefined ⇒ canonical order, plain. */
+  primaryType?: ProductType
 }) {
   const t = useTranslations('shop')
   const addItem = useCartStore((s) => s.addItem)
@@ -225,10 +230,22 @@ export default function ShopProductPicker({
     setTimeout(() => setCartAdded(false), 2500)
   }
 
-  const groups = TYPE_ORDER.map((type) => ({
-    type,
-    items: products.filter((p) => p.type === type),
-  })).filter((g) => g.items.length > 0)
+  // Order types canonically, but float the section the customer came through to
+  // the top so the page leads with what they were browsing.
+  const orderedTypes = primaryType
+    ? [primaryType, ...TYPE_ORDER.filter((t) => t !== primaryType)]
+    : TYPE_ORDER
+  const groups = orderedTypes
+    .map((type) => ({ type, items: products.filter((p) => p.type === type) }))
+    .filter((g) => g.items.length > 0)
+
+  // Cross-sell framing only kicks in when we know the section the customer came
+  // through AND that section is actually present on this photo.
+  const hasPrimary = primaryType != null && groups.some((g) => g.type === primaryType)
+  const groupHeading = (type: ProductType) =>
+    hasPrimary && type !== primaryType
+      ? t('alsoAvailableAs', { name: typeLabel[type] })
+      : typeLabel[type]
 
   return (
     <div className="mt-[9px] xl:mt-0">
@@ -263,7 +280,7 @@ export default function ShopProductPicker({
             {/* Shaded type header */}
             <div className="bg-white/[0.07] px-5 py-2.5">
               <h2 className="text-[12px] font-light tracking-[0.2em] uppercase text-accent">
-                {typeLabel[g.type]}
+                {groupHeading(g.type)}
               </h2>
             </div>
 

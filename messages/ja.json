@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "厳選された写真コレクション。プリント、ファインアートエディション、デジタルダウンロードでご用意しています。",
+    "intro": "厳選された写真コレクション。ポスター、ファインアートエディション、デジタルダウンロードでご用意しています。",
     "filterAll": "すべて",
     "from": "価格",
     "availableAs": "ご購入形式",
     "addToCart": "カートに追加",
     "checkoutSoon": "オンライン決済は近日公開予定です。またご覧ください。",
     "backToShop": "ショップに戻る",
-    "prints": "プリント",
+    "prints": "ポスター",
     "fineArt": "ファインアート",
     "digital": "デジタルダウンロード",
     "priceNote": "価格はデンマーク・クローネ表示です。",
@@ -111,7 +111,9 @@
     "buyNow": "今すぐ購入",
     "inCart": "カート内",
     "added": "追加しました",
-    "sectionTitle": "{name}ショップ"
+    "sectionTitle": "{name}ショップ",
+    "browse": "一覧",
+    "alsoAvailableAs": "{name}としてもご利用いただけます"
   },
   "cart": {
     "emailLabel": "メールアドレス（ダウンロードリンク用）",

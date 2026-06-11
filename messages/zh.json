@@ -79,14 +79,14 @@
     "ar": "العربية"
   },
   "shop": {
-    "intro": "精选摄影作品，提供冲印、艺术微喷与数字下载。",
+    "intro": "精选摄影作品，提供海报、艺术微喷与数字下载。",
     "filterAll": "全部",
     "from": "起价",
     "availableAs": "可选规格",
     "addToCart": "加入购物车",
     "checkoutSoon": "在线结账即将上线，敬请期待。",
     "backToShop": "返回商店",
-    "prints": "冲印",
+    "prints": "海报",
     "fineArt": "艺术微喷",
     "digital": "数字下载",
     "priceNote": "价格以丹麦克朗计。",
@@ -111,7 +111,9 @@
     "buyNow": "立即购买",
     "inCart": "已在购物车",
     "added": "已添加",
-    "sectionTitle": "{name}商店"
+    "sectionTitle": "{name}商店",
+    "browse": "浏览",
+    "alsoAvailableAs": "也可作为{name}提供"
   },
   "cart": {
     "emailLabel": "电子邮箱（用于您的下载链接）",
