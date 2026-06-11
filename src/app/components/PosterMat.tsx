@@ -25,8 +25,8 @@ const posterSerif = Cormorant_Garamond({
 /** Image area aspect — posters are cropped to this portrait ratio (height ÷ width).
  *  1.25 = 4:5 (8×10), the standard poster crop. */
 const IMAGE_RATIO = 1.25
-const MARGIN_TOP = '5%' // white above the photo (% of sheet width)
-const MARGIN_X = '5.5%' // white left/right (% of sheet width)
+const MARGIN_TOP = '1%' // white above the photo (% of sheet width)
+const MARGIN_X = '1%' // white left/right (% of sheet width)
 
 export default function PosterMat({
   src,
@@ -63,7 +63,7 @@ export default function PosterMat({
         paddingBottom: 0,
       }}
     >
-      {/* Artwork — fills the width in a fixed 1.24 portrait area. */}
+      {/* Artwork — fills the width in a fixed 1.25 portrait area. */}
       <div style={{ width: '100%', aspectRatio: `1 / ${IMAGE_RATIO}`, overflow: 'hidden' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

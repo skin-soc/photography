@@ -19,9 +19,10 @@
  * See docs/fap-print-fulfilment.md.
  */
 
-/** Closest aspect family must be within this relative ratio tolerance, else no
- *  poster is offered for that photo (e.g. extreme panoramas match nothing). */
-const ASPECT_TOLERANCE = 0.12
+/** Posters are ALWAYS a portrait sheet in this single format (decided with the
+ *  Tom Hegen reference). Every poster is offered these sizes regardless of the
+ *  source photo's own aspect — the poster mat crops it to fit. 4:5 = 8×10. */
+const POSTER_FORMAT = '4:5'
 
 /** Minimum print resolution. A size is only offered when the photo's long edge
  *  supports it at ≥ this DPI — "size of photo matters, within reason". Posters
@@ -98,38 +99,26 @@ export interface PosterSize {
 }
 
 /**
- * The poster sizes offered for a photo of (wPx × hPx), or [] when none fit.
- * Picks the single aspect family closest to the photo's ratio (within
- * ASPECT_TOLERANCE), orients each size to the photo, and drops sizes the photo
- * lacks the resolution to print at MIN_DPI.
+ * The poster sizes offered for a photo of (wPx × hPx). Posters are always the
+ * portrait POSTER_FORMAT sheet (4:5), so every poster photo gets the same sizes —
+ * the only filter is resolution: a size is dropped if the photo's long edge can't
+ * print it at MIN_DPI. The poster mat crops the photo to the portrait format, so
+ * the source photo's own aspect no longer matters.
  */
 export function matchPosters(wPx: number, hPx: number): PosterSize[] {
   if (!wPx || !hPx) return []
+  const family = POSTER_FAMILIES.find((f) => f.name === POSTER_FORMAT)
+  if (!family) return []
   const longPx = Math.max(wPx, hPx)
-  const shortPx = Math.min(wPx, hPx)
-  const ratio = longPx / shortPx
-
-  let best: AspectFamily | null = null
-  let bestDiff = Infinity
-  for (const f of POSTER_FAMILIES) {
-    const diff = Math.abs(ratio - f.ratio) / f.ratio
-    if (diff < bestDiff) {
-      bestDiff = diff
-      best = f
-    }
-  }
-  if (!best || bestDiff > ASPECT_TOLERANCE) return []
-
-  const portrait = hPx > wPx
   const maxLongCm = (longPx / MIN_DPI) * CM_PER_INCH
 
   const out: PosterSize[] = []
-  for (const s of best.sizes) {
+  for (const s of family.sizes) {
     if (s.longCm > maxLongCm) continue // photo can't support this size at MIN_DPI
     out.push({
       providerSku: s.providerSku,
-      widthCm: portrait ? s.shortCm : s.longCm,
-      heightCm: portrait ? s.longCm : s.shortCm,
+      widthCm: s.shortCm, // always portrait
+      heightCm: s.longCm,
       price: s.price,
       cost: s.cost,
     })
@@ -155,13 +144,11 @@ export const FINE_ART_PENDING = {
   material: 'Giclée · WhiteWall (coming soon)',
 }
 
-/** Flattened Prodigi SKU list for the daily validator — every poster SKU once,
- *  with its recorded cost. (Validator is Prodigi-only; WhiteWall is excluded.) */
+/** Prodigi SKU list for the daily validator — only the sizes we actually sell
+ *  (the POSTER_FORMAT family). Validator is Prodigi-only; WhiteWall excluded. */
 export const PRODIGI_SKUS: { providerSku: string; label: string; cost: number }[] =
-  POSTER_FAMILIES.flatMap((f) =>
-    f.sizes.map((s) => ({
-      providerSku: s.providerSku,
-      label: `${f.name} · ${s.shortCm}×${s.longCm}cm`,
-      cost: s.cost,
-    })),
-  )
+  (POSTER_FAMILIES.find((f) => f.name === POSTER_FORMAT)?.sizes ?? []).map((s) => ({
+    providerSku: s.providerSku,
+    label: `${POSTER_FORMAT} · ${s.shortCm}×${s.longCm}cm`,
+    cost: s.cost,
+  }))
