@@ -16,8 +16,10 @@ export type RefCurrency = 'EUR' | 'USD' | 'GBP'
 /** Units of the reference currency per 1 DKK. */
 export type Rates = Record<RefCurrency, number>
 
-/** Used only if the ECB feed is unreachable. Refresh occasionally. */
-const FALLBACK_RATES: Rates = { EUR: 0.134, USD: 0.145, GBP: 0.115 }
+/** Used only if the ECB feed is unreachable. Refresh occasionally. The EUR rate
+ *  reflects the DKK↔EUR peg (~7.46 DKK/EUR ⇒ ~0.134 EUR/DKK), so it also serves
+ *  as the dev-mock conversion for cost-plus poster pricing. */
+export const FALLBACK_RATES: Rates = { EUR: 0.134, USD: 0.145, GBP: 0.115 }
 
 const ECB_URL = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
 
@@ -74,6 +76,16 @@ export function eurToDkkOre(eurMinor: number, rates: Rates, buffer = EUR_DKK_BUF
   if (!rates.EUR) return 0
   const dkkPerEur = 1 / rates.EUR
   return Math.round(eurMinor * dkkPerEur * buffer)
+}
+
+/**
+ * Round an øre amount UP to the next whole 5 kroner (500 øre) — the shop's
+ * listing-price convention, applied to every final customer-facing price so
+ * they always end in 0 or 5 (e.g. 13472 → 13500 / "135 kr", 18862 → 19000 /
+ * "190 kr"). Rounding only ever raises the price, so the cost floor still holds.
+ */
+export function roundUpToFiveKr(ore: number): number {
+  return Math.ceil(ore / 500) * 500
 }
 
 /** Format an øre amount as a DKK price, e.g. 19500 → "195 kr." */

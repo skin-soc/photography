@@ -16,6 +16,16 @@
 
 import { createHmac } from 'node:crypto'
 import { posterOptions, FINE_ART_PENDING } from '@/config/product-range'
+import {
+  getPricing,
+  pricingStamp,
+  effectiveMarkupPct,
+  saleDiscountPct,
+  DEFAULT_PRICING,
+  type PricingConfig,
+  type DigitalBrackets,
+} from '@/lib/pricing'
+import { getRates, eurToDkkOre, roundUpToFiveKr, FALLBACK_RATES, type Rates } from '@/lib/currency'
 
 // Product-type primitives live in a client-safe module (no node:crypto), and
 // are re-exported here so existing `@/lib/shop` importers keep working.
@@ -156,6 +166,12 @@ export interface ShopPhoto {
   rawAvailable?: boolean
   /** Green-labelled in Lightroom — used as rotating hero on folder cards. */
   key?: boolean
+  /** Lightroom color label (red/yellow/green/blue/purple) or '' / undefined when
+   *  none. Drives the per-label pricing markup; red marks a photo as on sale. */
+  colorLabel?: string
+  /** Set on red-labelled photos: the discount off the normal price, whole percent
+   *  (e.g. 40 ⇒ a "−40%" sale pill). Absent when not on sale. */
+  salePct?: number
   /**
    * Capture date from EXIF — seconds since Lightroom epoch (Jan 1, 2001 UTC),
    * as written by the publish plugin. Used to sort photos chronologically.
@@ -182,16 +198,20 @@ function physicalProducts(
   h: number,
   hasPrint: boolean,
   hasFineArt: boolean,
+  pricing: PricingConfig = DEFAULT_PRICING,
+  rates: Rates = FALLBACK_RATES,
 ): ShopProduct[] {
   const out: ShopProduct[] = []
   if (hasPrint) {
     // Posters: every paper × A-size whose resolution passes for this photo.
+    // COST-PLUS — the base price is the Prodigi cost converted to DKK (with the
+    // FX buffer); the markup is then applied catalog-wide in buildCatalog.
     for (const o of posterOptions(w, h)) {
       out.push({
         sku: `${id}-${o.paper}-${o.size}`,
         type: 'print',
         label: o.size,
-        price: o.price,
+        price: eurToDkkOre(o.cost, rates),
         currency: 'DKK',
         printSize: { w: o.widthCm, h: o.heightCm },
         material: `${o.widthCm} × ${o.heightCm} cm`,
@@ -212,7 +232,7 @@ function physicalProducts(
       sku: `${id}-fineart-1`,
       type: 'fine-art',
       label: fa.label,
-      price: fa.price,
+      price: pricing.fineArt,
       currency: 'DKK',
       printSize: portrait ? { w: fa.shortCm, h: fa.longCm } : { w: fa.longCm, h: fa.shortCm },
       material: fa.material,
@@ -226,31 +246,29 @@ function physicalProducts(
  *  larger than the tier — otherwise it is barely distinct from the Master. */
 const TIER_MARGIN = 1.15
 
-/** "Master" (JPEG) price — scales with megapixels.
- *  First bracket whose `maxMP` the file falls within sets the price. */
-interface MasterBracket {
-  maxMP: number
-  price: number
-}
-const MASTER_BRACKETS: MasterBracket[] = [
-  { maxMP: 25, price: 150000 },   // 1,500 DKK
-  { maxMP: 50, price: 250000 },   // 2,500 DKK
-  { maxMP: Infinity, price: 400000 }, // 4,000 DKK
-]
-
-/** "Original" (16-bit TIFF) price — approx 2× the JPEG Master bracket. */
-const TIFF_MASTER_BRACKETS: MasterBracket[] = [
-  { maxMP: 25, price: 300000 },   // 3,000 DKK
-  { maxMP: 50, price: 500000 },   // 5,000 DKK
-  { maxMP: Infinity, price: 800000 }, // 8,000 DKK
-]
-
-function bracketPrice(w: number, h: number, brackets: MasterBracket[]): number {
+/** Full-res (Master / Original) price for a (w × h) photo from a megapixel
+ *  bracket ladder [≤25 MP, ≤50 MP, >50 MP] (DKK øre). */
+function bracketPrice(w: number, h: number, brackets: DigitalBrackets): number {
   const mp = (w * h) / 1_000_000
-  for (const b of brackets) {
-    if (mp <= b.maxMP) return b.price
+  if (mp <= 25) return brackets[0]
+  if (mp <= 50) return brackets[1]
+  return brackets[2]
+}
+
+/**
+ * The admin-set retail price for a digital tier, given the photo size. Used to
+ * re-price the origin's digital products at catalog-build time so the Prices
+ * tab governs downloads too. Unknown labels keep the origin's price.
+ */
+export function digitalPrice(label: string, w: number, h: number, pricing: PricingConfig): number | null {
+  switch (label) {
+    case 'Standard': return pricing.digital.standard
+    case 'Medium':   return pricing.digital.medium
+    case 'Pro':      return pricing.digital.pro
+    case 'Master':   return bracketPrice(w, h, pricing.digital.master)
+    case 'Original': return bracketPrice(w, h, pricing.digital.original)
+    default:         return null
   }
-  return brackets[brackets.length - 1].price
 }
 
 /**
@@ -262,9 +280,16 @@ function bracketPrice(w: number, h: number, brackets: MasterBracket[]): number {
  *
  * Product order in the picker: Standard · Medium · Pro · Master · Original.
  */
-export function digitalProducts(id: string, w: number, h: number, rawAvailable = false): ShopProduct[] {
+export function digitalProducts(
+  id: string,
+  w: number,
+  h: number,
+  rawAvailable = false,
+  pricing: PricingConfig = DEFAULT_PRICING,
+): ShopProduct[] {
   const long = Math.max(w, h)
   const out: ShopProduct[] = []
+  const d = pricing.digital
 
   // Standard — JPEG 1600px
   if (long >= 1600 * TIER_MARGIN) {
@@ -272,7 +297,7 @@ export function digitalProducts(id: string, w: number, h: number, rawAvailable =
     const scale = 1600 / long
     out.push({
       sku, type: 'digital', label: 'Standard',
-      price: 9900, currency: 'DKK', format: 'jpeg',
+      price: d.standard, currency: 'DKK', format: 'jpeg',
       dimensions: { w: Math.round(w * scale), h: Math.round(h * scale) },
       downloadToken: mockToken(sku),
     })
@@ -283,10 +308,10 @@ export function digitalProducts(id: string, w: number, h: number, rawAvailable =
     const scale = 3200 / long
     const dims = { w: Math.round(w * scale), h: Math.round(h * scale) }
     const medSku = `${id}-d-med`
-    out.push({ sku: medSku, type: 'digital', label: 'Medium', price: 29500, currency: 'DKK', format: 'jpeg', dimensions: dims, downloadToken: mockToken(medSku) })
+    out.push({ sku: medSku, type: 'digital', label: 'Medium', price: d.medium, currency: 'DKK', format: 'jpeg', dimensions: dims, downloadToken: mockToken(medSku) })
     if (rawAvailable) {
       const proSku = `${id}-d-pro`
-      out.push({ sku: proSku, type: 'digital', label: 'Pro', price: 59500, currency: 'DKK', format: 'tiff', dimensions: dims, downloadToken: mockToken(proSku) })
+      out.push({ sku: proSku, type: 'digital', label: 'Pro', price: d.pro, currency: 'DKK', format: 'tiff', dimensions: dims, downloadToken: mockToken(proSku) })
     }
   }
 
@@ -294,7 +319,7 @@ export function digitalProducts(id: string, w: number, h: number, rawAvailable =
   const masterSku = `${id}-d-master`
   out.push({
     sku: masterSku, type: 'digital', label: 'Master',
-    price: bracketPrice(w, h, MASTER_BRACKETS), currency: 'DKK', format: 'jpeg',
+    price: bracketPrice(w, h, d.master), currency: 'DKK', format: 'jpeg',
     dimensions: { w, h },
     downloadToken: mockToken(masterSku),
   })
@@ -304,7 +329,7 @@ export function digitalProducts(id: string, w: number, h: number, rawAvailable =
     const origSku = `${id}-d-original`
     out.push({
       sku: origSku, type: 'digital', label: 'Original',
-      price: bracketPrice(w, h, TIFF_MASTER_BRACKETS), currency: 'DKK', format: 'tiff',
+      price: bracketPrice(w, h, d.original), currency: 'DKK', format: 'tiff',
       dimensions: { w, h },
       downloadToken: mockToken(origSku),
     })
@@ -454,11 +479,14 @@ export async function purgeCatalogCache(): Promise<void> {
 async function buildCatalog(): Promise<ShopPhoto[]> {
   try {
     const data = await fetchRawCatalog()
-    // Cache key: the origin's generation stamp, falling back to a cheap content
-    // signature so we still memoize when `generated` is absent.
+    // Admin-editable retail pricing (KV) + FX rates (posters are cost-plus, priced
+    // in EUR→DKK). Both read once per build and folded into the cache key so a
+    // price tweak or a rate move re-prices the catalog even when `generated` hasn't.
+    const [pricing, rates] = await Promise.all([getPricing(), getRates()])
     const key =
-      data.generated ||
-      `${data.photos.length}:${data.photos[0]?.id ?? ''}:${data.photos[data.photos.length - 1]?.id ?? ''}`
+      (data.generated ||
+        `${data.photos.length}:${data.photos[0]?.id ?? ''}:${data.photos[data.photos.length - 1]?.id ?? ''}`) +
+      `|p:${pricingStamp(pricing)}|r:${rates.EUR.toFixed(5)}`
     if (_processed && _processed.key === key) return _processed.photos
     const photos = data.photos.map((p) => ({
       ...p,
@@ -476,41 +504,58 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
     //  • Fine art (type 'fine-art') → a single WhiteWall placeholder (pending),
     //    oriented to the photo, so the line persists until WhiteWall is wired.
     // Which physical types a photo is offered in comes from the origin's
-    // products (set by Lightroom collections).
+    // products (set by Lightroom collections). Digital products are kept from the
+    // origin (they carry the download tokens) but RE-PRICED from the admin table,
+    // since the Prices tab governs downloads too.
     for (const p of photos) {
       const offered = new Set(
         p.products.filter((x) => x.type === 'print' || x.type === 'fine-art').map((x) => x.type),
       )
-      if (offered.size === 0) continue
-      const digital = p.products.filter((x) => x.type === 'digital')
-      const physical = physicalProducts(
-        p.id,
-        p.width,
-        p.height,
-        offered.has('print'),
-        offered.has('fine-art'),
-      )
-      p.products = [...physical, ...digital]
-    }
-    // Replace camera-filename slugs with GMP-based slugs so URLs are clean, and
-    // precompute the display title in the SAME pass — both derive from one HMAC
-    // per untitled photo. Done here (inside the module cache) so the per-request
-    // render paths never HMAC. The plugin writes slug = slugify(title) or
-    // remoteId:lower(), and title = title or remoteId, so "untitled" means the
-    // slug and/or title equals the photo id.
-    const refKey = await importRefKey(ORIGIN_SECRET)
-    for (const p of photos) {
-      const untitledSlug = p.slug.toLowerCase() === p.id.toLowerCase()
-      const untitledTitle = p.title.toLowerCase() === p.id.toLowerCase()
-      if (untitledSlug || untitledTitle) {
-        const ref = await photoRefWeb(refKey, p.id) // "GMP-XXXXXXX" — native HMAC
-        if (untitledSlug) p.slug = ref.toLowerCase()
-        p._displayTitle = untitledTitle ? ref : p.title
-      } else {
-        p._displayTitle = p.title
+      const digital = p.products
+        .filter((x) => x.type === 'digital')
+        .map((d) => {
+          const next = digitalPrice(d.label, p.width, p.height, pricing)
+          return next == null ? d : { ...d, price: next }
+        })
+      const listProducts =
+        offered.size === 0
+          ? digital
+          : [
+              ...physicalProducts(p.id, p.width, p.height, offered.has('print'), offered.has('fine-art'), pricing, rates),
+              ...digital,
+            ]
+      // Apply the across-the-board + color-label markup to every list price, then
+      // round the FINAL customer price up to the next whole 5 kr. The photo's
+      // Lightroom color label sets the rate (red = sale deduction); net markup is
+      // ≥ 0 and rounding only raises, so prices never fall below cost.
+      const pct = effectiveMarkupPct(p.colorLabel, pricing.markup)
+      p.products = listProducts.map((pr) => ({
+        ...pr,
+        price: roundUpToFiveKr(pct === 0 ? pr.price : Math.round(pr.price * (1 + pct / 100))),
+      }))
+      // Red label ⇒ on sale: expose the discount off the normal price for the
+      // customer-facing "−X%" pill (uniform across the photo's products).
+      if (p.colorLabel === 'red') {
+        const disc = saleDiscountPct(pricing.markup)
+        if (disc > 0) p.salePct = disc
       }
     }
-    // Deduplicate slugs — appends the photo id when two photos share a slug.
+    // The public slug is the photo's GMP code — code-only, e.g. /shop/gmp-a1b2c3d.
+    // It's stable (never changes when the Lightroom title is edited, unlike a
+    // title-derived slug), uniform, unique, and matches the customer-facing GMP
+    // reference + admin lookup. SEO lives in the page metadata (title/description/
+    // canonical/hreflang/JSON-LD), not the URL words. The display title still uses
+    // the Lightroom title (GMP ref only when untitled). Both derive from one HMAC
+    // per photo; done here (inside the module cache) so render paths never HMAC.
+    const refKey = await importRefKey(ORIGIN_SECRET)
+    for (const p of photos) {
+      const ref = await photoRefWeb(refKey, p.id) // "GMP-XXXXXXX" — native HMAC
+      p.slug = ref.toLowerCase()
+      const untitledTitle = p.title.toLowerCase() === p.id.toLowerCase()
+      p._displayTitle = untitledTitle ? ref : p.title
+    }
+    // Safety net: append the photo id only on the (astronomically rare) event two
+    // photos hash to the same GMP code, so every URL stays unique.
     const seen = new Map<string, number>()
     for (const p of photos) seen.set(p.slug, (seen.get(p.slug) ?? 0) + 1)
     const counts = new Map<string, number>()

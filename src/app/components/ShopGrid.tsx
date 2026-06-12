@@ -11,6 +11,7 @@ import {
   typeMessageKey,
 } from '@/lib/product-types'
 import PosterMat from '@/app/components/PosterMat'
+import SalePill from '@/app/components/SalePill'
 
 export interface GridPhoto {
   id: string
@@ -25,6 +26,9 @@ export interface GridPhoto {
   fromApprox: string
   category: string[][]
   key?: boolean
+  /** Discount off the normal price (whole percent) when on sale — drives the
+   *  "−X%" pill. Absent when not on sale. */
+  salePct?: number
   /** Seconds since Lightroom epoch (Jan 1 2001 UTC) — used for chronological sort. */
   captureDate?: number
 }
@@ -484,9 +488,10 @@ export default function ShopGrid({
                     <Link
                       key={p.id}
                       href={`/shop/${p.slug}${from}`}
-                      className="block select-none transition-transform duration-300 hover:-translate-y-1"
+                      className="relative block select-none transition-transform duration-300 hover:-translate-y-1"
                       onContextMenu={(e) => e.preventDefault()}
                     >
+                      {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
                       <PosterMat
                         src={previewSrc(p.previewUrl, 800, true)}
                         alt={`${p.title} — ${p.location}`}
@@ -514,6 +519,7 @@ export default function ShopGrid({
                       onContextMenu={(e) => e.preventDefault()}
                     >
                       <div className="relative overflow-hidden bg-white/5 aspect-square">
+                        {p.salePct ? <SalePill pct={p.salePct} className="absolute top-2 left-2 z-10" /> : null}
                         <LazyImage
                           src={previewSrc(p.previewUrl, 800, isPhysical(typeFilter))}
                           alt={`${p.title} — ${p.location}`}

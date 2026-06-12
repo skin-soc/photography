@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react'
 import type { ReferenceLookup } from '@/lib/shop'
 import type { AdminOrder } from '@/lib/downloads'
 import { vatJurisdiction, jurisdictionLabel, type VatJurisdiction } from '@/lib/vat'
+import { SIZE_ORDER, type PaperTier } from '@/config/product-range'
+import { roundUpToFiveKr } from '@/lib/currency'
+import type { PricingConfig, PricingFloors, PricingValidationError, ColorLabel } from '@/lib/pricing'
 import Logo from '../_components/Logo'
 
-type Tab = 'products' | 'orders' | 'finances' | 'coupons' | 'settings'
+type Tab = 'products' | 'orders' | 'finances' | 'prices' | 'coupons' | 'settings'
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('products')
@@ -36,7 +39,7 @@ export default function AdminPage() {
       <main className="flex-1 w-full max-w-screen-2xl mx-auto px-6 sm:px-10 py-12 sm:py-16">
         {/* Tabs */}
         <div className="flex gap-1 mb-10 border-b border-white/10">
-          {(['products', 'orders', 'finances', 'coupons', 'settings'] as Tab[]).map((t) => (
+          {(['products', 'orders', 'finances', 'prices', 'coupons', 'settings'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -46,7 +49,7 @@ export default function AdminPage() {
                   : 'border-transparent text-white/40 hover:text-white/70'
               }`}
             >
-              {t === 'products' ? 'Product lookup' : t === 'orders' ? 'Orders' : t === 'finances' ? 'Finances' : t === 'coupons' ? 'Coupons' : 'Settings'}
+              {t === 'products' ? 'Product lookup' : t === 'orders' ? 'Orders' : t === 'finances' ? 'Finances' : t === 'prices' ? 'Prices' : t === 'coupons' ? 'Coupons' : 'Settings'}
             </button>
           ))}
         </div>
@@ -54,6 +57,7 @@ export default function AdminPage() {
         {tab === 'products' ? <ProductsTab />
           : tab === 'orders' ? <OrdersTab />
           : tab === 'finances' ? <FinancesTab />
+          : tab === 'prices' ? <PricesTab />
           : tab === 'coupons' ? <CouponsTab />
           : <SettingsTab />}
       </main>
@@ -2211,4 +2215,428 @@ function Notice({ tone, title, body }: { tone: 'error' | 'muted'; title: string;
 
 function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+// ── Prices tab ──────────────────────────────────────────────────────────────
+// Edit the retail price of every product line. A price can never be set below
+// the provider cost (the floor): the input goes red and the server refuses the
+// save. Posters seed with the proposed A-series ladder; digital downloads and
+// fine art have no provider cost so their floor is zero.
+
+/** øre → a compact kr string, e.g. 24500 → "245". */
+function oreToKr(ore: number): string {
+  const kr = ore / 100
+  return kr % 1 === 0 ? String(kr) : kr.toFixed(2)
+}
+
+/** A single price field (entered in kroner, stored in øre). Turns red and shows
+ *  the floor when the value drops below cost. */
+function PriceInput({
+  value,
+  floor,
+  onChange,
+  invalid,
+  markupPct = 0,
+}: {
+  value: number
+  floor: number
+  onChange: (ore: number) => void
+  /** Server-flagged below-cost (persists until re-saved). */
+  invalid?: boolean
+  /** General markup % — drives the live "final price to customer" preview. */
+  markupPct?: number
+}) {
+  const below = value < floor || invalid
+  const markup = floor > 0 ? Math.round(((value - floor) / floor) * 100) : null
+  // What a customer pays at the general markup (color labels adjust per photo),
+  // rounded up to the next whole 5 kr like every live listing price.
+  const finalOre = roundUpToFiveKr(markupPct === 0 ? value : Math.round(value * (1 + markupPct / 100)))
+  return (
+    <div className="flex flex-col gap-1">
+      <div className={`flex items-center h-10 rounded-md border bg-white/[0.04] px-2.5 transition-colors focus-within:border-[#931020] ${below ? 'border-[#931020]' : 'border-white/15'}`}>
+        <input
+          type="number"
+          min={0}
+          step={5}
+          value={oreToKr(value)}
+          onChange={(e) => {
+            const kr = parseFloat(e.target.value)
+            onChange(Number.isFinite(kr) ? Math.round(kr * 100) : 0)
+          }}
+          className="w-full bg-transparent text-[13px] text-white tabular-nums focus:outline-none"
+        />
+        <span className="text-[10px] font-mono-ibm text-white/30">kr</span>
+      </div>
+      {finalOre !== value && !below && (
+        <span className="text-[12px] font-medium tabular-nums text-[#b01226]">
+          → {oreToKr(finalOre)} kr
+        </span>
+      )}
+      <span className={`text-[10px] font-mono-ibm tracking-wide ${below ? 'text-[#931020]' : 'text-white/30'}`}>
+        {below
+          ? `min ${oreToKr(floor)} kr`
+          : floor > 0
+            ? `cost ${oreToKr(floor)} · +${markup}%`
+            : 'no cost'}
+      </span>
+    </div>
+  )
+}
+
+/** A plain percentage field for the markup controls. */
+function PctInput({
+  value,
+  onChange,
+  invalid,
+  prefix,
+}: {
+  value: number
+  onChange: (pct: number) => void
+  invalid?: boolean
+  /** Leading glyph, e.g. '+' for additions or '−' for the red deduction. */
+  prefix?: string
+}) {
+  return (
+    <div className={`flex items-center h-10 w-28 rounded-md border bg-white/[0.04] px-2.5 transition-colors focus-within:border-[#931020] ${invalid ? 'border-[#931020]' : 'border-white/15'}`}>
+      {prefix && <span className="text-[12px] text-white/40 pr-0.5">{prefix}</span>}
+      <input
+        type="number"
+        min={0}
+        step={1}
+        value={String(value)}
+        onChange={(e) => {
+          const n = parseFloat(e.target.value)
+          onChange(Number.isFinite(n) ? n : 0)
+        }}
+        className="w-full bg-transparent text-[13px] text-white tabular-nums focus:outline-none"
+      />
+      <span className="text-[10px] font-mono-ibm text-white/30">%</span>
+    </div>
+  )
+}
+
+/** Color-label rows for the markup section (red leads — it's the sale label). */
+const MARKUP_LABELS: { c: ColorLabel; name: string; dot: string; sale?: boolean }[] = [
+  { c: 'red', name: 'Red — on sale', dot: '#cf2d2d', sale: true },
+  { c: 'yellow', name: 'Yellow', dot: '#d9b310' },
+  { c: 'green', name: 'Green', dot: '#3a9d3a' },
+  { c: 'blue', name: 'Blue', dot: '#3b7dd8' },
+  { c: 'purple', name: 'Purple', dot: '#8e44ad' },
+]
+
+function PricesTab() {
+  const [cfg, setCfg] = useState<PricingConfig | null>(null)
+  const [floors, setFloors] = useState<PricingFloors | null>(null)
+  const [loadError, setLoadError] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  // Lines the server rejected on the last save, keyed by dotted path.
+  const [flagged, setFlagged] = useState<Set<string>>(new Set())
+
+  function load() {
+    setCfg(null)
+    setLoadError(false)
+    fetch('/api/admin/pricing')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: unknown) => {
+        const { pricing, floors } = d as { pricing: PricingConfig; floors: PricingFloors }
+        setCfg(pricing)
+        setFloors(floors)
+      })
+      .catch(() => setLoadError(true))
+  }
+  useEffect(load, [])
+
+  // Immutable nested updates.
+  const setDigital = (key: 'standard' | 'medium' | 'pro', ore: number) =>
+    setCfg((c) => (c ? { ...c, digital: { ...c.digital, [key]: ore } } : c))
+  const setBracket = (key: 'master' | 'original', i: number, ore: number) =>
+    setCfg((c) => {
+      if (!c) return c
+      const next = [...c.digital[key]] as [number, number, number]
+      next[i] = ore
+      return { ...c, digital: { ...c.digital, [key]: next } }
+    })
+
+  const setMarkupGeneral = (pct: number) =>
+    setCfg((c) => (c ? { ...c, markup: { ...c.markup, general: pct } } : c))
+  const setMarkupLabel = (color: ColorLabel, pct: number) =>
+    setCfg((c) => (c ? { ...c, markup: { ...c.markup, labels: { ...c.markup.labels, [color]: pct } } } : c))
+
+  // Client-side floor check mirrors the server, so Save is disabled before a
+  // doomed round-trip. (Posters are cost-plus, always ≥ cost — not checked.)
+  const anyBelow = (() => {
+    if (!cfg || !floors) return false
+    if (cfg.fineArt < floors.fineArt) return true
+    return false
+  })()
+
+  // Markup rules: percentages ≥ 0; the Red sale can't exceed the general markup
+  // (so a sale never dips below the list price). Mirror of validateMarkup.
+  const markupError = (() => {
+    if (!cfg) return null
+    const m = cfg.markup
+    if (m.general < 0) return 'General markup can’t be negative.'
+    for (const { c, name } of MARKUP_LABELS) if (m.labels[c] < 0) return `${name} markup can’t be negative.`
+    if (m.labels.red > m.general) return `Red sale (${m.labels.red}%) can’t exceed the general markup (${m.general}%).`
+    return null
+  })()
+
+  async function save() {
+    if (!cfg) return
+    setBusy(true)
+    setNote(null)
+    try {
+      const res = await fetch('/api/admin/pricing', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ pricing: cfg }),
+      })
+      const d = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        pricing?: PricingConfig
+        floors?: PricingFloors
+        errors?: PricingValidationError[]
+        markupErrors?: string[]
+        error?: string
+      }
+      if (res.ok && d.ok) {
+        setFlagged(new Set())
+        if (d.pricing) setCfg(d.pricing)
+        if (d.floors) setFloors(d.floors)
+        setNote('Saved. New prices apply to the catalog within ~60s.')
+      } else if ((d.errors && d.errors.length > 0) || (d.markupErrors && d.markupErrors.length > 0)) {
+        setFlagged(new Set((d.errors ?? []).map((e) => e.path)))
+        const parts: string[] = []
+        if (d.errors && d.errors.length > 0)
+          parts.push(`${d.errors.length} line${d.errors.length > 1 ? 's' : ''} below cost: ${d.errors.map((e) => e.label).join(', ')}`)
+        if (d.markupErrors && d.markupErrors.length > 0) parts.push(d.markupErrors.join(' '))
+        setNote(`Rejected — ${parts.join('. ')}.`)
+      } else {
+        setNote(d.error ?? 'Could not save.')
+      }
+    } catch {
+      setNote('Could not save.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const sectionTitle = 'text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40'
+  const tierLabel: Record<PaperTier, string> = { photographic: 'Photographic', premium: 'Premium' }
+  const tierBlurb: Record<PaperTier, string> = {
+    photographic: 'Photographic lustre · Enhanced matte',
+    premium: 'Hahnemühle Photo Rag · German Etching',
+  }
+
+  return (
+    <>
+      <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Prices</h1>
+      <p className="mt-2 text-sm text-white/45">
+        Set the markup once; it drives every price. Posters are <span className="text-white/60">cost-plus</span> (Prodigi
+        cost × markup, shown below — nothing to hand-set). Digital downloads and fine art have no
+        provider cost, so you set a base price for each and the markup applies on top; a base can’t
+        be saved below its cost floor (0 for these for now).
+      </p>
+
+      {loadError ? (
+        <div className="mt-8"><Notice tone="error" title="Couldn’t load prices" body="Is KV reachable?" /></div>
+      ) : !cfg || !floors ? (
+        <div className="flex justify-center py-16"><span className="shop-spinner" /></div>
+      ) : (
+        <>
+          {/* Markup — across-the-board + per color label */}
+          <section className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <h2 className={sectionTitle}>Markup</h2>
+            <p className="mt-1.5 text-[12px] text-white/40">
+              The general markup sets every price — applied to the <span className="text-white/60">Prodigi cost</span> for
+              posters and to the base price for digital & fine art. A photo’s Lightroom color label
+              then adjusts it: Yellow / Green / Blue / Purple add on top; <span className="text-white/60">Red puts the
+              photo on sale</span> (a deduction that can’t exceed the general markup, so a sale never
+              drops below cost/base).
+            </p>
+
+            <div className="mt-6 flex flex-wrap items-start gap-x-12 gap-y-6">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">General · all goods</span>
+                <PctInput value={cfg.markup.general} onChange={setMarkupGeneral} prefix="+" invalid={cfg.markup.general < 0} />
+              </div>
+
+              <div>
+                <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">Color label adjustment</span>
+                <div className="mt-2.5 flex flex-col gap-2.5">
+                  {MARKUP_LABELS.map(({ c, name, dot, sale }) => {
+                    const v = cfg.markup.labels[c]
+                    const net = sale ? cfg.markup.general - Math.min(v, cfg.markup.general) : cfg.markup.general + v
+                    const bad = v < 0 || (sale && v > cfg.markup.general)
+                    return (
+                      <div key={c} className="flex items-center gap-3">
+                        <span className="inline-block h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: dot }} />
+                        <span className="w-28 text-[12px] text-white/70">{name}</span>
+                        <PctInput value={v} onChange={(pct) => setMarkupLabel(c, pct)} prefix={sale ? '−' : '+'} invalid={bad} />
+                        <span className={`text-[11px] font-mono-ibm tabular-nums ${bad ? 'text-[#931020]' : 'text-white/35'}`}>
+                          {bad && sale ? `max ${cfg.markup.general}%` : `net +${Math.round(net)}%`}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Worked example — shows the per-label effect the line previews can't
+                (color labels are per-photo). Based on the Photographic A2 cost. */}
+            {(() => {
+              const base = floors.posters.photographic.A2 // cost in DKK (cost-plus base)
+              const at = (pct: number) => oreToKr(roundUpToFiveKr(Math.round(base * (1 + pct / 100))))
+              const g = cfg.markup.general
+              const greenNet = g + cfg.markup.labels.green
+              const redNet = g - Math.min(cfg.markup.labels.red, g)
+              return (
+                <div className="mt-6 border-t border-white/[0.06] pt-4 text-[12px] text-white/45">
+                  Example — Photographic A2 (cost {oreToKr(base)} kr) sells at{' '}
+                  <span className="text-[#b01226] font-medium tabular-nums">{at(g)} kr</span> general
+                  {cfg.markup.labels.green > 0 && (
+                    <> · <span className="text-[#b01226] font-medium tabular-nums">{at(greenNet)} kr</span> if green</>
+                  )}
+                  {cfg.markup.labels.red > 0 && (
+                    <> · <span className="text-[#b01226] font-medium tabular-nums">{at(redNet)} kr</span> on a red sale</>
+                  )}
+                  .
+                </div>
+              )
+            })()}
+            {markupError && <p className="mt-4 text-[12px] text-[#931020]">{markupError}</p>}
+          </section>
+
+          {/* Posters — cost-plus (read-only). Price = Prodigi cost × (1 + general
+              markup); color labels adjust per photo. No hand-set prices. */}
+          <section className="mt-8 rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <h2 className={sectionTitle}>Posters</h2>
+            <p className="mt-1.5 text-[12px] text-white/40">
+              Priced <span className="text-white/60">cost-plus</span> — each is the Prodigi cost (EUR→DKK)
+              × (1 + general markup), so they’re set entirely by the markup above. Color labels adjust
+              per photo. A size is only offered when the photo resolves it at the paper’s DPI floor.
+            </p>
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-8">
+              {(['photographic', 'premium'] as PaperTier[]).map((tier) => (
+                <div key={tier}>
+                  <div className="mb-3">
+                    <span className="text-[13px] text-white/80">{tierLabel[tier]}</span>
+                    <span className="ml-2 text-[11px] text-white/35">{tierBlurb[tier]}</span>
+                  </div>
+                  <table className="w-full text-[13px]">
+                    <thead>
+                      <tr className="text-[10px] font-mono-ibm uppercase tracking-[0.16em] text-white/35">
+                        <th className="text-left font-normal pb-1.5 w-10">Size</th>
+                        <th className="text-right font-normal pb-1.5">Cost</th>
+                        <th className="text-right font-normal pb-1.5">Sells at</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {SIZE_ORDER.map((size) => {
+                        const cost = floors.posters[tier][size]
+                        const sell = roundUpToFiveKr(Math.round(cost * (1 + cfg.markup.general / 100)))
+                        return (
+                          <tr key={size} className="border-t border-white/[0.06]">
+                            <td className="py-1.5 font-mono-ibm uppercase tracking-[0.16em] text-white/55">{size}</td>
+                            <td className="py-1.5 text-right tabular-nums text-white/40">{oreToKr(cost)} kr</td>
+                            <td className="py-1.5 text-right tabular-nums font-medium text-[#b01226]">{oreToKr(sell)} kr</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Fine art */}
+          <section className="mt-8 rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <h2 className={sectionTitle}>Fine art</h2>
+            <p className="mt-1.5 text-[12px] text-white/40">
+              WhiteWall edition — a single placeholder price until WhiteWall trade pricing is wired
+              (no cost floor yet).
+            </p>
+            <div className="mt-5 w-44">
+              <PriceInput
+                value={cfg.fineArt}
+                floor={floors.fineArt}
+                invalid={flagged.has('fineArt')}
+                markupPct={cfg.markup.general}
+                onChange={(ore) => setCfg((c) => (c ? { ...c, fineArt: ore } : c))}
+              />
+            </div>
+          </section>
+
+          {/* Digital downloads */}
+          <section className="mt-8 rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <h2 className={sectionTitle}>Digital downloads</h2>
+            <p className="mt-1.5 text-[12px] text-white/40">
+              Licensed files — no provider cost. The full-res Master (JPEG) and Original (TIFF) are
+              priced by the photo’s megapixels across three brackets.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-5">
+              <label className="flex flex-col gap-1.5 w-36">
+                <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">Standard · JPEG</span>
+                <PriceInput value={cfg.digital.standard} floor={floors.digital.standard} markupPct={cfg.markup.general} onChange={(o) => setDigital('standard', o)} />
+              </label>
+              <label className="flex flex-col gap-1.5 w-36">
+                <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">Medium · JPEG</span>
+                <PriceInput value={cfg.digital.medium} floor={floors.digital.medium} markupPct={cfg.markup.general} onChange={(o) => setDigital('medium', o)} />
+              </label>
+              <label className="flex flex-col gap-1.5 w-36">
+                <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">Pro · TIFF</span>
+                <PriceInput value={cfg.digital.pro} floor={floors.digital.pro} markupPct={cfg.markup.general} onChange={(o) => setDigital('pro', o)} />
+              </label>
+            </div>
+
+            <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
+              {(['master', 'original'] as const).map((key) => (
+                <div key={key}>
+                  <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">
+                    {key === 'master' ? 'Master · JPEG (full-res)' : 'Original · TIFF (full-res)'}
+                  </span>
+                  <div className="mt-2 grid grid-cols-3 gap-3">
+                    {(['≤25 MP', '≤50 MP', '>50 MP'] as const).map((mp, i) => (
+                      <div key={mp} className="flex flex-col gap-1">
+                        <span className="text-[10px] font-mono-ibm text-white/35">{mp}</span>
+                        <PriceInput value={cfg.digital[key][i]} floor={floors.digital[key]} markupPct={cfg.markup.general} onChange={(o) => setBracket(key, i, o)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Save bar */}
+          <div className="mt-8 flex items-center gap-5">
+            <button
+              onClick={save}
+              disabled={busy || anyBelow || !!markupError}
+              className="h-10 shrink-0 rounded-md bg-[#931020] px-6 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white hover:bg-[#a8131f] transition-colors disabled:opacity-40"
+            >
+              {busy ? 'Saving…' : 'Save prices'}
+            </button>
+            <button
+              onClick={load}
+              disabled={busy}
+              className="text-[10px] font-mono-ibm uppercase tracking-[0.18em] text-white/40 hover:text-white transition-colors disabled:opacity-40"
+            >
+              Discard changes
+            </button>
+            {anyBelow && (
+              <span className="text-[11px] text-[#931020]">One or more prices are below cost.</span>
+            )}
+            {!anyBelow && markupError && (
+              <span className="text-[11px] text-[#931020]">{markupError}</span>
+            )}
+            {note && <span className="text-[12px] text-white/55">{note}</span>}
+          </div>
+        </>
+      )}
+    </>
+  )
 }

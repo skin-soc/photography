@@ -324,11 +324,20 @@ local function writeCatalog(publishService, dataDir)
             entry.location = composeLocation(photo)
             entry.width = dim.width or 0
             entry.height = dim.height or 0
-            -- Green label marks a photo as a key/hero image used as rotating
-            -- cover on folder cards. Compare case-insensitively so custom label
-            -- names like "Green" or "green" both work.
+            -- Lightroom color label drives shop pricing markup (see the admin
+            -- Prices tab) and the key/hero selection. Normalise to the five
+            -- standard colors; custom/localised label names count as unlabelled.
+            -- Compare case-insensitively so "Green"/"green" both work.
             local labelText = (photo:getFormattedMetadata('label') or ''):lower()
-            entry.key = (labelText == 'green')
+            local colorLabel = ''
+            if labelText == 'red' or labelText == 'yellow' or labelText == 'green'
+               or labelText == 'blue' or labelText == 'purple' then
+              colorLabel = labelText
+            end
+            entry.colorLabel = colorLabel
+            -- Green label also marks a photo as a key/hero image used as the
+            -- rotating cover on folder cards.
+            entry.key = (colorLabel == 'green')
             -- Capture date as seconds since LrDate epoch (Jan 1, 2001 UTC).
             -- Used by the shop frontend to sort photos chronologically within
             -- a collection. Falls back to 0 if EXIF data is absent.

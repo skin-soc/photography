@@ -30,7 +30,7 @@ const A_SERIES: Record<string, { wMm: number; hMm: number }> = {
   A0: { wMm: 841, hMm: 1189 },
 }
 /** Smallest → largest. */
-const SIZE_ORDER = ['A4', 'A3', 'A2', 'A1', 'A0'] as const
+export const SIZE_ORDER = ['A4', 'A3', 'A2', 'A1', 'A0'] as const
 export type PosterSizeCode = (typeof SIZE_ORDER)[number]
 
 /** The photo fills this fraction of the sheet on the poster layout (the rest is
@@ -40,8 +40,14 @@ const SLOT_H_FRAC = 0.66
 
 export type PaperCode = 'PAP' | 'FAP' | 'HPR' | 'HGE'
 
+/** The two pricing ladders. Photographic + Enhanced-Matte share the standard
+ *  ladder; the two Hahnemühles share the premium one. */
+export type PaperTier = 'photographic' | 'premium'
+
 interface Paper {
   code: PaperCode
+  /** Which pricing ladder this paper sits on. */
+  tier: PaperTier
   /** Prodigi SKU family prefix, e.g. 'GLOBAL-FAP' → GLOBAL-FAP-A2. */
   prodigiPrefix: string
   /** Customer-facing paper name. */
@@ -50,25 +56,31 @@ interface Paper {
   blurb: string
   /** Minimum print resolution (DPI). Gates which sizes this paper offers. */
   minDpi: number
-  /** Provider ex-tax cost (EUR minor) per A-size. */
-  cost: Record<PosterSizeCode, number>
-  /** Retail price (DKK minor / øre) per A-size. */
-  price: Record<PosterSizeCode, number>
 }
 
-/** Photographic + Enhanced-Matte share a cost/price ladder; the two Hahnemühles
- *  share a premium one. Prices are value-priced — tune freely. */
-const PHOTO_COST = { A4: 500, A3: 700, A2: 1000, A1: 1400, A0: 2600 }
-const PHOTO_PRICE = { A4: 24500, A3: 34500, A2: 49500, A1: 69500, A0: 109500 }
-const PREMIUM_COST = { A4: 600, A3: 1200, A2: 1800, A1: 3400, A0: 6100 }
-const PREMIUM_PRICE = { A4: 39500, A3: 59500, A2: 84500, A1: 129500, A0: 199500 }
+/** Provider ex-tax cost (EUR minor) per A-size, per tier. Posters are priced
+ *  COST-PLUS: the shop sells each at this cost (converted to DKK) × (1 + markup),
+ *  so the cost is the entire pricing basis — there is no hand-set poster ladder. */
+const PHOTO_COST: Record<PosterSizeCode, number> = { A4: 500, A3: 700, A2: 1000, A1: 1400, A0: 2600 }
+const PREMIUM_COST: Record<PosterSizeCode, number> = { A4: 600, A3: 1200, A2: 1800, A1: 3400, A0: 6100 }
+
+/** Provider ex-tax cost (EUR minor) per tier × size — the cost-plus pricing basis. */
+export const POSTER_COST: Record<PaperTier, Record<PosterSizeCode, number>> = {
+  photographic: PHOTO_COST,
+  premium: PREMIUM_COST,
+}
 
 const PAPERS: Paper[] = [
-  { code: 'PAP', prodigiPrefix: 'GLOBAL-PAP', label: 'Photographic', blurb: 'Lustre photographic · 240gsm', minDpi: 240, cost: PHOTO_COST, price: PHOTO_PRICE },
-  { code: 'FAP', prodigiPrefix: 'GLOBAL-FAP', label: 'Enhanced Matte', blurb: 'Smooth matte giclée · 200gsm', minDpi: 240, cost: PHOTO_COST, price: PHOTO_PRICE },
-  { code: 'HPR', prodigiPrefix: 'GLOBAL-HPR', label: 'Hahnemühle Photo Rag', blurb: '100% cotton museum matte', minDpi: 300, cost: PREMIUM_COST, price: PREMIUM_PRICE },
-  { code: 'HGE', prodigiPrefix: 'GLOBAL-HGE', label: 'Hahnemühle German Etching', blurb: 'Textured mould-made fine-art', minDpi: 300, cost: PREMIUM_COST, price: PREMIUM_PRICE },
+  { code: 'PAP', tier: 'photographic', prodigiPrefix: 'GLOBAL-PAP', label: 'Photographic', blurb: 'Lustre photographic · 240gsm', minDpi: 240 },
+  { code: 'FAP', tier: 'photographic', prodigiPrefix: 'GLOBAL-FAP', label: 'Enhanced Matte', blurb: 'Smooth matte giclée · 200gsm', minDpi: 240 },
+  { code: 'HPR', tier: 'premium', prodigiPrefix: 'GLOBAL-HPR', label: 'Hahnemühle Photo Rag', blurb: '100% cotton museum matte', minDpi: 300 },
+  { code: 'HGE', tier: 'premium', prodigiPrefix: 'GLOBAL-HGE', label: 'Hahnemühle German Etching', blurb: 'Textured mould-made fine-art', minDpi: 300 },
 ]
+
+/** The pricing tier a paper sits on. */
+export function paperTier(code: PaperCode): PaperTier {
+  return PAPERS.find((p) => p.code === code)?.tier ?? 'photographic'
+}
 
 /** A poster option offered for a photo: one paper at one size. */
 export interface PosterOption {
@@ -80,9 +92,7 @@ export interface PosterOption {
   /** Sheet size in cm (portrait) — the printed paper. */
   widthCm: number
   heightCm: number
-  /** Retail price, DKK minor (øre). */
-  price: number
-  /** Provider ex-tax cost, EUR minor. */
+  /** Provider ex-tax cost, EUR minor — the cost-plus pricing basis. */
   cost: number
 }
 
@@ -121,8 +131,7 @@ export function posterOptions(wPx: number, hPx: number): PosterOption[] {
         providerSku: `${p.prodigiPrefix}-${size}`,
         widthCm: Math.round((a.wMm / 10) * 10) / 10,
         heightCm: Math.round((a.hMm / 10) * 10) / 10,
-        price: p.price[size],
-        cost: p.cost[size],
+        cost: POSTER_COST[p.tier][size],
       })
     }
   }
@@ -142,7 +151,12 @@ export const FINE_ART_PENDING = {
   price: 149500,
   label: 'Fine art edition',
   material: 'Giclée · WhiteWall (coming soon)',
+  /** Provider ex-tax cost (EUR minor). 0 until WhiteWall trade pricing is wired,
+   *  so the floor is effectively "any positive price". */
+  cost: 0,
 }
+/** Default fine-art retail price (DKK øre) — seeds the Prices tab. */
+export const FINE_ART_DEFAULT_PRICE = FINE_ART_PENDING.price
 
 /** Flattened Prodigi SKU list for the daily validator — every paper × size once,
  *  with its recorded cost. (Validator is Prodigi-only; WhiteWall excluded.) */
@@ -151,6 +165,6 @@ export const PRODIGI_SKUS: { providerSku: string; label: string; cost: number }[
     SIZE_ORDER.map((size) => ({
       providerSku: `${p.prodigiPrefix}-${size}`,
       label: `${p.label} · ${size}`,
-      cost: p.cost[size],
+      cost: POSTER_COST[p.tier][size],
     })),
   )

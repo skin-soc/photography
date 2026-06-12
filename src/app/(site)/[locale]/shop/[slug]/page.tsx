@@ -7,6 +7,7 @@ import type { ProductType } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
 import PosterMat from '@/app/components/PosterMat'
+import SalePill from '@/app/components/SalePill'
 import LicensingLink from '@/app/components/LicensingLink'
 import { SITE_URL, BUSINESS_NAME, OG_LOCALE_MAP } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
@@ -222,18 +223,22 @@ export default async function ShopItem({
         {/* Photo — gallery poster mat (typeset title/caption) in the Posters
             context, otherwise the simple 21px white frame. */}
         {posterView ? (
-          <PosterMat
-            src={`${photo.previewUrl}${heroQuery(800)}`}
-            srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
-            sizes={`${posterCardMaxWidth}px`}
-            alt={`${displayTitle(photo)} — ${photo.location}`}
-            title={displayTitle(photo)}
-            caption={photo.caption}
-            siteLabel={siteLabel}
-            maxWidth={posterCardMaxWidth}
-          />
+          <div className="relative shrink-0 mx-auto xl:mx-0 w-full" style={{ maxWidth: posterCardMaxWidth }}>
+            {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
+            <PosterMat
+              src={`${photo.previewUrl}${heroQuery(800)}`}
+              srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
+              sizes={`${posterCardMaxWidth}px`}
+              alt={`${displayTitle(photo)} — ${photo.location}`}
+              title={displayTitle(photo)}
+              caption={photo.caption}
+              siteLabel={siteLabel}
+              maxWidth={posterCardMaxWidth}
+            />
+          </div>
         ) : (
-          <div className="select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px]" style={{ maxWidth: previewW, width: '100%' }}>
+          <div className="relative select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px]" style={{ maxWidth: previewW, width: '100%' }}>
+            {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
             <img
               src={`${photo.previewUrl}${heroQuery(800)}`}
               srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}

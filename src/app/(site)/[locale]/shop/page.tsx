@@ -73,6 +73,7 @@ export default async function Shop({
       fromApprox: approxLine(lo.price, rates),
       category: p.category,
       key: p.key,
+      salePct: p.salePct,
       captureDate: p.captureDate,
     }
   })
