@@ -40,6 +40,7 @@ import nodemailer from 'nodemailer'
 import AdmZip from 'adm-zip'
 import { renderDownloadEmail, renderRefundEmail } from './email.js'
 import { buildInvoicePdf, buildLicensePdf, buildRefundPdf } from './invoice.js'
+import { renderPosterMaster, POSTER_SIZES } from './poster.js'
 import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
@@ -66,6 +67,9 @@ const SHARED_SECRET = process.env.SHARED_SECRET ?? ''
 const MASTERS_DIR = resolve(process.env.MASTERS_DIR ?? join(DATA_DIR, 'masters'))
 /** Generated, copyright-embedded deliverables, keyed by SKU (reusable). */
 const FULFIL_CACHE_DIR = resolve(process.env.FULFIL_CACHE_DIR ?? join(DATA_DIR, 'fulfil-cache'))
+/** Generated poster MASTERS (photo + typeset band on a white A-series sheet, no
+ *  watermark, 300 dpi), keyed by photo ref + size — the Prodigi print asset. */
+const POSTER_CACHE_DIR = resolve(process.env.POSTER_CACHE_DIR ?? join(DATA_DIR, 'poster-cache'))
 /** Download grant records, one JSON file per order id. */
 const ORDERS_DIR = resolve(process.env.ORDERS_DIR ?? join(DATA_DIR, 'orders'))
 /** Public site origin, for the download link in the email. */
@@ -248,6 +252,7 @@ function digitalProducts(id, w, h, tiers, masterBrackets, tiffMasterBrackets, ra
 
 await mkdir(CACHE_DIR, { recursive: true })
 await mkdir(FULFIL_CACHE_DIR, { recursive: true })
+await mkdir(POSTER_CACHE_DIR, { recursive: true })
 await mkdir(ORDERS_DIR, { recursive: true })
 
 const app = express()
@@ -694,6 +699,73 @@ async function resolveSource(id, format) {
   }
   return master
 }
+
+/** The poster sheet's foot line, e.g. "WWW.GUSMCEWAN.COM". */
+const POSTER_SITE_LABEL = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
+
+/**
+ * Generate-or-reuse the poster MASTER for a (photo, A-size) — the Prodigi print
+ * asset: the photo centre-cropped to 4:5 on a white A-series sheet with the
+ * typeset caption/title/website band, NO watermark, 300 dpi. Identical for every
+ * buyer of that photo+size (paper doesn't change the artwork), so cached by
+ * ref+size. Mirrors the on-screen PosterMat exactly (see poster.js).
+ */
+async function buildPosterMaster(id, size) {
+  const out = join(POSTER_CACHE_DIR, `${photoRef(id)}-${size}.jpg`)
+  if (await fileIfExists(out)) return out
+
+  const { photos } = await loadCatalog()
+  const photo = photos.find((p) => p.id === id)
+  if (!photo) {
+    const e = new Error(`no photo ${id} in catalog`)
+    e.code = 'NO_PHOTO'
+    throw e
+  }
+
+  const masterPath = await resolveSource(id, 'jpeg') // full-res edited master
+  // Untitled photos show the GMP reference as the title (mirrors the shop).
+  const titled = photo.title && photo.title.toLowerCase() !== id.toLowerCase()
+  const buf = await renderPosterMaster({
+    photo: masterPath,
+    size,
+    title: titled ? photo.title : photoRef(id),
+    caption: photo.caption || '',
+    siteLabel: POSTER_SITE_LABEL,
+  })
+
+  const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
+  try {
+    await writeFile(tmp, buf)
+    await rename(tmp, out)
+  } catch (err) {
+    await unlink(tmp).catch(() => {})
+    throw err
+  }
+  return out
+}
+
+/**
+ * Serve the poster master for a (photo, A-size). Secret-gated by the global
+ * middleware (the Worker proxies with the shared secret; later, Prodigi fetches
+ * a signed variant at order time). Generated on first request, then a plain
+ * file stream forever.
+ */
+app.get('/poster-master/:id/:size', async (req, res) => {
+  const { id, size } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id) || !POSTER_SIZES.includes(size)) {
+    return res.status(400).json({ error: 'bad request' })
+  }
+  try {
+    const path = await buildPosterMaster(id, size)
+    res.set('Cache-Control', 'public, max-age=31536000, immutable')
+    res.type('jpeg')
+    createReadStream(path).pipe(res)
+  } catch (err) {
+    const notFound = err.code === 'NO_PHOTO' || err.code === 'NO_MASTER'
+    if (!notFound) console.error('[poster-master]', id, size, err)
+    res.status(notFound ? 404 : 500).json({ error: err.message })
+  }
+})
 
 /**
  * Generate-or-reuse the copyright-embedded deliverable for a product. Cached by

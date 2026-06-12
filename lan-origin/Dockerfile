@@ -17,7 +17,10 @@ RUN apt-get update \
 COPY package.json ./
 RUN npm install --omit=dev
 
-COPY server.js email.js invoice.js logo.svg gmp.png ./
+COPY server.js email.js invoice.js poster.js logo.svg gmp.png ./
+# Fonts for the poster master compositor (Cormorant Garamond + IBM Plex Mono),
+# loaded directly by @resvg/resvg-js since librsvg ignores embedded @font-face.
+COPY fonts ./fonts
 
 ENV PORT=8787
 EXPOSE 8787
