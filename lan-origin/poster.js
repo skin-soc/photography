@@ -122,12 +122,16 @@ export async function renderPosterMaster({ photo, size, title, caption, siteLabe
     `letter-spacing="${(trackEm * font).toFixed(2)}" fill="${color}" ` +
     `xml:space="preserve">${esc(text)}</text>`
 
+  // Cormorant at 300 (Light): resvg-js 2.6.x ignores font-weight on a variable
+  // font and renders its DEFAULT instance — which for CormorantGaramond-VF is
+  // wght 300. So the print is Light; we state 300 explicitly so it stays Light
+  // even if a future resvg starts honouring the axis, and the preview matches.
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${bandH}" viewBox="0 0 ${W} ${bandH}">` +
     (caption
-      ? line(String(caption).toUpperCase(), captionBaseline, captionF, 'Cormorant Garamond', 500, CAPTION_COLOR, CAPTION_TRACK)
+      ? line(String(caption).toUpperCase(), captionBaseline, captionF, 'Cormorant Garamond', 300, CAPTION_COLOR, CAPTION_TRACK)
       : '') +
-    line(String(title).toUpperCase(), titleBaseline, titleF, 'Cormorant Garamond', 500, TITLE_COLOR, TITLE_TRACK) +
+    line(String(title).toUpperCase(), titleBaseline, titleF, 'Cormorant Garamond', 300, TITLE_COLOR, TITLE_TRACK) +
     line(siteLabel, websiteBaseline, websiteF, 'IBM Plex Mono', 300, WEBSITE_COLOR, WEBSITE_TRACK) +
     `</svg>`
 

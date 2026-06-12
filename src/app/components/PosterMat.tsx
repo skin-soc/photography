@@ -19,9 +19,12 @@
 
 import { Cormorant_Garamond } from 'next/font/google'
 
+// Weight 300 (Light) to match the printed master: resvg-js renders the variable
+// font's DEFAULT instance (wght 300) and ignores font-weight, so the print uses
+// Light — the preview must too, or the on-screen heading looks heavier than print.
 const posterSerif = Cormorant_Garamond({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['300'],
   display: 'swap',
 })
 
@@ -96,7 +99,7 @@ export default function PosterMat({
               margin: 0,
               maxWidth: '90%',
               fontSize: '1.85cqw',
-              fontWeight: 500,
+              fontWeight: 300,
               letterSpacing: '0.32em',
               textTransform: 'uppercase',
               color: '#3a3a3a',
@@ -110,7 +113,7 @@ export default function PosterMat({
           style={{
             margin: caption ? `${CAPTION_TITLE_GAP} 0 0` : 0,
             fontSize: '6cqw',
-            fontWeight: 500,
+            fontWeight: 300,
             lineHeight: 1,
             letterSpacing: '0.07em',
             textTransform: 'uppercase',
