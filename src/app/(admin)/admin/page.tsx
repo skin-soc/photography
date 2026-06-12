@@ -480,10 +480,11 @@ function CacheControls() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action }),
       })
-      const d = (await res.json().catch(() => ({}))) as { deleted?: number; error?: string }
-      setNote(res.ok
-        ? `${label} done${typeof d.deleted === 'number' ? ` (${d.deleted} cleared)` : ''}.`
-        : (d.error || 'Failed.'))
+      const d = (await res.json().catch(() => ({}))) as { deleted?: number; queued?: number; posters?: number; error?: string }
+      const detail = typeof d.queued === 'number'
+        ? ` (${d.posters} posters → ${d.queued} sizes rendering in the background)`
+        : typeof d.deleted === 'number' ? ` (${d.deleted} cleared)` : ''
+      setNote(res.ok ? `${label} done${detail}.` : (d.error || 'Failed.'))
     } catch { setNote('Failed.') } finally { setBusy(null) }
   }
 
@@ -497,6 +498,9 @@ function CacheControls() {
     { action: 'clear-fulfil', label: 'Clear deliverables', busyLabel: 'Clearing…',
       desc: 'Frees disk — files regenerate on the next download.',
       confirm: 'Clear all generated deliverables? They regenerate on next download.' },
+    { action: 'prerender-posters', label: 'Pre-render posters', busyLabel: 'Queuing…',
+      desc: 'Renders every poster print master (all qualifying A-sizes) to bulk storage, ready for Prodigi. Run after publishing or editing posters; force-refreshes existing ones.',
+      confirm: 'Pre-render all poster print masters? Force-regenerates every qualifying A-size on the NAS (a few minutes in the background).' },
   ]
 
   return (

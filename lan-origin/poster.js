@@ -78,7 +78,10 @@ export async function renderPosterMaster({ photo, size, title, caption, siteLabe
   const a = A_SERIES[size]
   if (!a) throw new Error(`unknown poster size: ${size}`)
 
-  const px = (mm) => Math.round((mm / MM_PER_INCH) * dpi)
+  // FLOOR (not round) so the sheet matches Prodigi's `printAreaSizes` exactly —
+  // they truncate mm→px (A0 = 9933×14043, A2 = 4960×7015 at 300 dpi). Pixel-exact
+  // to the lab spec; no scale-to-fit on their side.
+  const px = (mm) => Math.floor((mm / MM_PER_INCH) * dpi)
   const W = px(a.wMm)
   const H = px(a.hMm)
 

@@ -489,6 +489,26 @@ export async function adminRerenderPreviews(
   return (await res.json()) as { matched: number; deleted: number }
 }
 
+/**
+ * Kick off a background pre-render of poster print assets on the origin. The
+ * caller enumerates the qualifying (photo, size) pairs (the worker owns the
+ * resolution-gating range); the origin force-regenerates them. Returns how many
+ * were queued (the render itself runs in the background on the NAS).
+ */
+export async function adminPrerenderPosters(
+  items: { id: string; size: string }[],
+): Promise<{ queued: number } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/poster-prerender`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify({ items }),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  return (await res.json()) as { queued: number }
+}
+
 /** Clear generated deliverables (they regenerate on next download). */
 export async function adminClearFulfilCache(): Promise<{ deleted: number } | null> {
   if (!ORIGIN) return null

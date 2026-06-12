@@ -67,12 +67,14 @@ const SHARED_SECRET = process.env.SHARED_SECRET ?? ''
 const MASTERS_DIR = resolve(process.env.MASTERS_DIR ?? join(DATA_DIR, 'masters'))
 /** Generated, copyright-embedded deliverables, keyed by SKU (reusable). */
 const FULFIL_CACHE_DIR = resolve(process.env.FULFIL_CACHE_DIR ?? join(DATA_DIR, 'fulfil-cache'))
-/** Generated poster MASTERS (photo + typeset band on a white A-series sheet, no
- *  watermark, 300 dpi), keyed by photo ref + size — the Prodigi print asset.
- *  Like every deliverable it lives on BULK storage (beside the masters), NEVER on
- *  the fast SSD that holds /data — so the default is derived from MASTERS_DIR's
- *  parent, not DATA_DIR, and can't accidentally fill the SSD. */
-const POSTER_CACHE_DIR = resolve(process.env.POSTER_CACHE_DIR ?? join(dirname(MASTERS_DIR), 'poster-cache'))
+/** Poster ASSETS — the pre-rendered print masters (photo + typeset band on a
+ *  white A-series sheet, no watermark, 300 dpi), keyed by photo ref + size, the
+ *  Prodigi print asset. Pre-rendered for every qualifying size when posters are
+ *  published (see /admin/poster-prerender); the route still generates on demand
+ *  as a fallback. Like every deliverable it lives on BULK storage (beside the
+ *  masters), NEVER on the fast SSD that holds /data — the default is derived from
+ *  MASTERS_DIR's parent, not DATA_DIR, so it can't accidentally fill the SSD. */
+const POSTER_ASSETS_DIR = resolve(process.env.POSTER_ASSETS_DIR ?? join(dirname(MASTERS_DIR), 'poster-assets'))
 /** Download grant records, one JSON file per order id. */
 const ORDERS_DIR = resolve(process.env.ORDERS_DIR ?? join(DATA_DIR, 'orders'))
 /** Public site origin, for the download link in the email. */
@@ -255,7 +257,7 @@ function digitalProducts(id, w, h, tiers, masterBrackets, tiffMasterBrackets, ra
 
 await mkdir(CACHE_DIR, { recursive: true })
 await mkdir(FULFIL_CACHE_DIR, { recursive: true })
-await mkdir(POSTER_CACHE_DIR, { recursive: true })
+await mkdir(POSTER_ASSETS_DIR, { recursive: true })
 await mkdir(ORDERS_DIR, { recursive: true })
 
 const app = express()
@@ -713,9 +715,9 @@ const POSTER_SITE_LABEL = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').to
  * buyer of that photo+size (paper doesn't change the artwork), so cached by
  * ref+size. Mirrors the on-screen PosterMat exactly (see poster.js).
  */
-async function buildPosterMaster(id, size) {
-  const out = join(POSTER_CACHE_DIR, `${photoRef(id)}-${size}.jpg`)
-  if (await fileIfExists(out)) return out
+async function buildPosterMaster(id, size, force = false) {
+  const out = join(POSTER_ASSETS_DIR, `${photoRef(id)}-${size}.jpg`)
+  if (!force && (await fileIfExists(out))) return out
 
   const { photos } = await loadCatalog()
   const photo = photos.find((p) => p.id === id)
@@ -768,6 +770,37 @@ app.get('/poster-master/:id/:size', async (req, res) => {
     if (!notFound) console.error('[poster-master]', id, size, err)
     res.status(notFound ? 404 : 500).json({ error: err.message })
   }
+})
+
+/**
+ * PRE-RENDER a batch of poster assets (force-regenerate, so a republished poster
+ * with a new title/crop is refreshed). The Worker enumerates the qualifying
+ * (photo, size) pairs — it owns the resolution-gating range — and POSTs the flat
+ * list here; we render them in the BACKGROUND (sequential, to spare the NAS CPU)
+ * and return immediately. Idempotent: re-running just re-renders.
+ */
+app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req, res) => {
+  const items = Array.isArray(req.body?.items)
+    ? req.body.items.filter(
+        (x) => x && typeof x.id === 'string' && /^[A-Za-z0-9_-]+$/.test(x.id) && POSTER_SIZES.includes(x.size),
+      )
+    : []
+  res.json({ ok: true, queued: items.length })
+  // Background — never blocks the response; the Worker just kicks this off.
+  ;(async () => {
+    let done = 0
+    let failed = 0
+    for (const { id, size } of items) {
+      try {
+        await buildPosterMaster(id, size, true)
+        done += 1
+      } catch (err) {
+        failed += 1
+        console.error('[poster-prerender]', id, size, err.message)
+      }
+    }
+    console.log(`[poster-prerender] done ${done}/${items.length}` + (failed ? ` (${failed} failed)` : ''))
+  })().catch((err) => console.error('[poster-prerender] batch error:', err.message))
 })
 
 /**
@@ -1704,7 +1737,7 @@ app.post('/admin/cache/clear-fulfil', async (_req, res) => {
   try {
     // Clear both generated deliverable caches: digital derivatives AND poster
     // masters (so a layout/font change regenerates fresh on next request).
-    for (const dir of [FULFIL_CACHE_DIR, POSTER_CACHE_DIR]) {
+    for (const dir of [FULFIL_CACHE_DIR, POSTER_ASSETS_DIR]) {
       for (const name of await readdir(dir).catch(() => [])) {
         await unlink(join(dir, name)).catch(() => {})
         deleted += 1
