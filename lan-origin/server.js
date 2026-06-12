@@ -45,7 +45,7 @@ import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
 import { createReadStream } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join, resolve, dirname } from 'node:path'
 
 const PORT = Number(process.env.PORT ?? 8787)
 const DATA_DIR = resolve(process.env.DATA_DIR ?? '/data')
@@ -68,8 +68,11 @@ const MASTERS_DIR = resolve(process.env.MASTERS_DIR ?? join(DATA_DIR, 'masters')
 /** Generated, copyright-embedded deliverables, keyed by SKU (reusable). */
 const FULFIL_CACHE_DIR = resolve(process.env.FULFIL_CACHE_DIR ?? join(DATA_DIR, 'fulfil-cache'))
 /** Generated poster MASTERS (photo + typeset band on a white A-series sheet, no
- *  watermark, 300 dpi), keyed by photo ref + size — the Prodigi print asset. */
-const POSTER_CACHE_DIR = resolve(process.env.POSTER_CACHE_DIR ?? join(DATA_DIR, 'poster-cache'))
+ *  watermark, 300 dpi), keyed by photo ref + size — the Prodigi print asset.
+ *  Like every deliverable it lives on BULK storage (beside the masters), NEVER on
+ *  the fast SSD that holds /data — so the default is derived from MASTERS_DIR's
+ *  parent, not DATA_DIR, and can't accidentally fill the SSD. */
+const POSTER_CACHE_DIR = resolve(process.env.POSTER_CACHE_DIR ?? join(dirname(MASTERS_DIR), 'poster-cache'))
 /** Download grant records, one JSON file per order id. */
 const ORDERS_DIR = resolve(process.env.ORDERS_DIR ?? join(DATA_DIR, 'orders'))
 /** Public site origin, for the download link in the email. */
