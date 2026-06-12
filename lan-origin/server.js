@@ -423,11 +423,13 @@ async function buildWatermarkComposites(imgW, imgH) {
   ]
 }
 
-const previewCacheKey = (id, max, logo = true) => {
+const previewCacheKey = (id, max, logo = true, poster = false) => {
   const base = max === PREVIEW_MAX ? id : `${id}-${max}`
+  // The poster variant is centre-cropped to 4:5 portrait; it caches separately.
+  const variant = poster ? `${base}-4x5` : base
   // The no-logo variant (posters / fine art) caches separately so we never serve
   // the wrong watermark. The repeating mesh is on both; only the badge differs.
-  return logo ? `${base}.jpg` : `${base}-nologo.jpg`
+  return logo ? `${variant}.jpg` : `${variant}-nologo.jpg`
 }
 
 /**
@@ -439,8 +441,8 @@ const previewCacheKey = (id, max, logo = true) => {
  * a temp file and are renamed into place so a concurrent reader (or the warmer)
  * never sees a half-written file.
  */
-async function buildPreview(id, max, logo = true) {
-  const cached = join(CACHE_DIR, previewCacheKey(id, max, logo))
+async function buildPreview(id, max, logo = true, poster = false) {
+  const cached = join(CACHE_DIR, previewCacheKey(id, max, logo, poster))
   try {
     await stat(cached)
     return cached // already generated
@@ -453,9 +455,25 @@ async function buildPreview(id, max, logo = true) {
     return null // no clean preview from Lightroom yet
   }
 
-  const { data: resizedBuf, info: resizeInfo } = await sharp(src)
+  let { data: resizedBuf, info: resizeInfo } = await sharp(src)
     .resize(max, max, { fit: 'inside', withoutEnlargement: true })
     .toBuffer({ resolveWithObject: true })
+
+  // Poster variant: centre-crop the resized preview to the 4:5 PORTRAIT poster
+  // format — the same crop the print master uses, so preview = print. No upscale:
+  // we extract the largest centred 4:5 region that fits the resized image.
+  if (poster) {
+    const RATIO = 4 / 5 // portrait width / height
+    const { width: w, height: h } = resizeInfo
+    let cw, ch
+    if (w / h > RATIO) { ch = h; cw = Math.round(h * RATIO) } // too wide → trim sides
+    else { cw = w; ch = Math.round(w / RATIO) }               // too tall → trim top/bottom
+    const out = await sharp(resizedBuf)
+      .extract({ left: Math.round((w - cw) / 2), top: Math.round((h - ch) / 2), width: cw, height: ch })
+      .toBuffer({ resolveWithObject: true })
+    resizedBuf = out.data
+    resizeInfo = out.info
+  }
 
   // The repeating mesh is always applied; the logo badge only for digital downloads.
   const composites = [{ input: GMP_PATH, tile: true, blend: 'over' }] // mesh layer
@@ -488,9 +506,11 @@ app.get('/preview/:id', async (req, res) => {
 
   // logo=0 → posters / fine-art variant (mesh watermark only, no logo badge).
   const logo = req.query.logo !== '0'
+  // poster=1 → 4:5 portrait poster crop.
+  const poster = req.query.poster === '1'
 
   try {
-    const cached = await buildPreview(id, max, logo)
+    const cached = await buildPreview(id, max, logo, poster)
     if (!cached) return res.status(404).json({ error: 'not found' })
     res.set('Cache-Control', 'public, max-age=31536000, immutable')
     res.type('jpeg')
@@ -1562,13 +1582,18 @@ app.post('/admin/cache/rerender-previews', express.json({ limit: '4kb' }), async
     const path = Array.isArray(req.body?.path)
       ? req.body.path.filter((s) => typeof s === 'string')
       : []
+    // The picker tree is pegged to the top-tier folders (product types), which
+    // are stripped from `category`; the worker sends that type separately so we
+    // can scope the re-render to photos actually offered under it.
+    const type = typeof req.body?.type === 'string' ? req.body.type : null
 
     const { photos } = await loadCatalog()
-    const matched = path.length === 0
-      ? photos
-      : photos.filter((p) =>
-          Array.isArray(p.category) &&
-          p.category.some((c) => path.every((seg, i) => c[i] === seg)))
+    const matched = photos.filter((p) => {
+      if (type && !(p.products ?? []).some((prod) => prod.type === type)) return false
+      if (path.length === 0) return true
+      return Array.isArray(p.category) &&
+        p.category.some((c) => path.every((seg, i) => c[i] === seg))
+    })
     const idSet = new Set(matched.map((p) => p.id))
 
     // Delete every cached size for the matched ids. Cache files are `${id}.jpg`

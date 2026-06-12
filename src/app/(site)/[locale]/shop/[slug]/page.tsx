@@ -189,7 +189,10 @@ export default async function ShopItem({
   // badge — the customer is judging the print, not buying a file. The repeating
   // mesh watermark stays on every variant. Digital (and direct links) keep the logo.
   const heroNoLogo = primaryType === 'print' || primaryType === 'fine-art'
-  const heroQuery = (max: number) => `?max=${max}${heroNoLogo ? '&logo=0' : ''}`
+  // Posters request the 4:5 portrait crop (matches the print master); fine art and
+  // digital keep the full frame.
+  const heroQuery = (max: number) =>
+    `?max=${max}${heroNoLogo ? '&logo=0' : ''}${posterView ? '&poster=1' : ''}`
 
   // Foot line on the poster mat — our site, formatted like the gallery sample.
   const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`

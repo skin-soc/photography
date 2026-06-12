@@ -10,9 +10,22 @@ import type { PricingConfig, PricingFloors, PricingValidationError, ColorLabel }
 import Logo from '../_components/Logo'
 
 type Tab = 'products' | 'orders' | 'finances' | 'prices' | 'coupons' | 'settings'
+const TABS: Tab[] = ['products', 'orders', 'finances', 'prices', 'coupons', 'settings']
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<Tab>('products')
+  const [tab, setTabState] = useState<Tab>('products')
+
+  // Persist the active tab in the URL hash (e.g. #prices) so a refresh stays put
+  // instead of snapping back to Product lookup. Read on mount (client-only, so no
+  // SSR mismatch); rewrite on every switch without adding history entries.
+  useEffect(() => {
+    const h = window.location.hash.replace('#', '')
+    if ((TABS as string[]).includes(h)) setTabState(h as Tab)
+  }, [])
+  const setTab = (t: Tab) => {
+    setTabState(t)
+    window.history.replaceState(null, '', `#${t}`)
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -39,7 +52,7 @@ export default function AdminPage() {
       <main className="flex-1 w-full max-w-screen-2xl mx-auto px-6 sm:px-10 py-12 sm:py-16">
         {/* Tabs */}
         <div className="flex gap-1 mb-10 border-b border-white/10">
-          {(['products', 'orders', 'finances', 'prices', 'coupons', 'settings'] as Tab[]).map((t) => (
+          {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -534,9 +547,14 @@ function RerenderPreviews({ btn }: { btn: string }) {
     })()
   }, [])
 
+  // Top-tier folders are product-type roots; map the id to its Lightroom name.
+  const TYPE_LABEL: Record<string, string> = { digital: 'Digital Downloads', print: 'Posters', 'fine-art': 'Fine Art' }
+  const typeLabel = (t: string) => TYPE_LABEL[t] ?? t
+  const pathLabel = (path: string[]) => path.map((seg, i) => (i === 0 ? typeLabel(seg) : seg)).join(' › ')
+
   async function rerender() {
     const path = selected ? (JSON.parse(selected) as string[]) : []
-    const label = path.length ? path.join(' › ') : 'all collections'
+    const label = path.length ? pathLabel(path) : 'all collections'
     if (!window.confirm(`Re-render previews for ${label}? Cached previews are deleted and rebuilt from source.`)) return
     setBusy(true)
     setNote(null)
@@ -571,7 +589,7 @@ function RerenderPreviews({ btn }: { btn: string }) {
           <option value="">{collections === null ? 'Loading…' : `All previews (${total})`}</option>
           {collections?.map((c) => (
             <option key={JSON.stringify(c.path)} value={JSON.stringify(c.path)}>
-              {'  '.repeat(c.path.length - 1)}{c.path[c.path.length - 1]} ({c.count})
+              {'  '.repeat(c.path.length - 1)}{c.path.length > 1 ? '└ ' : ''}{c.path.length === 1 ? typeLabel(c.path[0]) : c.path[c.path.length - 1]} ({c.count})
             </option>
           ))}
         </select>

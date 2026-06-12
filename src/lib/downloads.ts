@@ -465,17 +465,24 @@ export async function adminWarmPreviews(): Promise<boolean> {
 
 /**
  * Force a re-render of watermarked previews: deletes the cached previews (for a
- * collection prefix, or all when `path` is empty) so they regenerate from the
+ * collection node, or all when `selection` is empty) so they regenerate from the
  * clean source. Returns how many photos matched and cache files were deleted.
+ *
+ * The picker tree is pegged to the top-tier folders, so `selection` is
+ * `[type, ...subjectPrefix]`. We split the product type off the front and send it
+ * to the origin as a separate filter (the origin matches the subject prefix
+ * against `category`, which has the type root stripped).
  */
 export async function adminRerenderPreviews(
-  path: string[] = [],
+  selection: string[] = [],
 ): Promise<{ matched: number; deleted: number } | null> {
   if (!ORIGIN) return null
+  const type = selection.length > 0 ? selection[0] : undefined
+  const path = selection.slice(1)
   const res = await fetch(`${ORIGIN}/admin/cache/rerender-previews`, {
     method: 'POST',
     headers: originHeaders({ 'content-type': 'application/json' }),
-    body: JSON.stringify({ path }),
+    body: JSON.stringify({ type, path }),
     cache: 'no-store',
   })
   if (!res.ok) return null

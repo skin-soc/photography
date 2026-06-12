@@ -55,6 +55,10 @@ export async function GET(
   // cache key is the full request URL, so each variant caches independently.
   const logo = request.nextUrl.searchParams.get('logo')
   if (logo === '0') upstreamUrl.searchParams.set('logo', '0')
+  // poster=1 requests the 4:5 portrait poster crop (posters only) — the same
+  // centred crop the print master uses. Caches independently via the URL key.
+  const poster = request.nextUrl.searchParams.get('poster')
+  if (poster === '1') upstreamUrl.searchParams.set('poster', '1')
 
   let upstreamRes: Response
   try {

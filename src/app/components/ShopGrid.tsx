@@ -57,9 +57,10 @@ function isPhysical(type: ProductType | null): boolean {
   return type === 'print' || type === 'fine-art'
 }
 
-/** Build a preview URL, suppressing the logo badge for physical product types. */
-function previewSrc(previewUrl: string, max: number, noLogo: boolean): string {
-  return `${previewUrl}?max=${max}${noLogo ? '&logo=0' : ''}`
+/** Build a preview URL, suppressing the logo badge for physical product types and
+ *  requesting the 4:5 poster crop in poster contexts. */
+function previewSrc(previewUrl: string, max: number, noLogo: boolean, poster = false): string {
+  return `${previewUrl}?max=${max}${noLogo ? '&logo=0' : ''}${poster ? '&poster=1' : ''}`
 }
 
 /** Hero URLs for a set of matching photos: prefer the curated green-labelled
@@ -493,7 +494,7 @@ export default function ShopGrid({
                     >
                       {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
                       <PosterMat
-                        src={previewSrc(p.previewUrl, 800, true)}
+                        src={previewSrc(p.previewUrl, 800, true, true)}
                         alt={`${p.title} — ${p.location}`}
                         title={p.title}
                         caption={p.caption}
