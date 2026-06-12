@@ -13,7 +13,8 @@
  * exact A-size in pixels — ready to hand to Prodigi as the print asset.
  */
 
-import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import sharp from 'sharp'
 import { Resvg } from '@resvg/resvg-js'
 
@@ -43,17 +44,14 @@ const TITLE_COLOR = '#111111'
 const CAPTION_COLOR = '#3a3a3a'
 const WEBSITE_COLOR = '#6a6a6a'
 
-const FONT_DIR = new URL('./fonts/', import.meta.url)
-let _fontBuffers = null
-function fontBuffers() {
-  if (!_fontBuffers) {
-    _fontBuffers = [
-      readFileSync(new URL('CormorantGaramond[wght].ttf', FONT_DIR)),
-      readFileSync(new URL('IBMPlexMono-Light.ttf', FONT_DIR)),
-    ]
-  }
-  return _fontBuffers
-}
+// Explicit font FILES for resvg (it has no fontBuffers option in 2.6.x), with
+// system fonts disabled — so the printed type is deterministic on any host and
+// never silently falls back to whatever the box happens to have installed.
+const FONT_DIR = fileURLToPath(new URL('./fonts/', import.meta.url))
+const FONT_FILES = [
+  join(FONT_DIR, 'CormorantGaramond-VF.ttf'),
+  join(FONT_DIR, 'IBMPlexMono-Light.ttf'),
+]
 
 /** Escape text for embedding in SVG. */
 function esc(s) {
@@ -133,7 +131,7 @@ export async function renderPosterMaster({ photo, size, title, caption, siteLabe
   const bandPng = new Resvg(svg, {
     fitTo: { mode: 'width', value: W },
     background: 'rgba(255,255,255,0)', // transparent — sits on the white sheet
-    font: { fontBuffers: fontBuffers(), loadSystemFonts: false, defaultFontFamily: 'Cormorant Garamond' },
+    font: { fontFiles: FONT_FILES, loadSystemFonts: false, defaultFontFamily: 'Cormorant Garamond' },
   }).render().asPng()
 
   // Compose onto the white A-series sheet.

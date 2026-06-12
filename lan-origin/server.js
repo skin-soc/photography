@@ -1699,9 +1699,13 @@ app.post('/admin/cache/rerender-previews', express.json({ limit: '4kb' }), async
 app.post('/admin/cache/clear-fulfil', async (_req, res) => {
   let deleted = 0
   try {
-    for (const name of await readdir(FULFIL_CACHE_DIR)) {
-      await unlink(join(FULFIL_CACHE_DIR, name)).catch(() => {})
-      deleted += 1
+    // Clear both generated deliverable caches: digital derivatives AND poster
+    // masters (so a layout/font change regenerates fresh on next request).
+    for (const dir of [FULFIL_CACHE_DIR, POSTER_CACHE_DIR]) {
+      for (const name of await readdir(dir).catch(() => [])) {
+        await unlink(join(dir, name)).catch(() => {})
+        deleted += 1
+      }
     }
   } catch (err) {
     return res.status(500).json({ error: err.message })

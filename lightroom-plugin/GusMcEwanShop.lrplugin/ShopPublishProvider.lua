@@ -320,6 +320,9 @@ local function writeCatalog(publishService, dataDir)
             local title = photo:getFormattedMetadata('title')
             entry.slug = slugify(title) or remoteId:lower()
             entry.title = (title and title ~= '') and title or remoteId
+            -- The real source filename WITH extension (e.g. GUS11286-Edit-3.tif),
+            -- so the admin sees exactly what kind of master a photo is.
+            entry.sourceFilename = photo:getFormattedMetadata('fileName') or remoteId
             entry.caption = photo:getFormattedMetadata('caption') or ''
             entry.location = composeLocation(photo)
             entry.width = dim.width or 0

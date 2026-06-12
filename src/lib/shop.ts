@@ -169,6 +169,9 @@ export interface ShopPhoto {
   /** Lightroom color label (red/yellow/green/blue/purple) or '' / undefined when
    *  none. Drives the per-label pricing markup; red marks a photo as on sale. */
   colorLabel?: string
+  /** Real source filename WITH extension (e.g. "GUS11286-Edit-3.tif"), as written
+   *  by the plugin — shown in admin so the master's type is obvious. */
+  sourceFilename?: string
   /** Set on red-labelled photos: the discount off the normal price, whole percent
    *  (e.g. 40 ⇒ a "−40%" sale pill). Absent when not on sale. */
   salePct?: number
@@ -603,6 +606,9 @@ export function photoTypes(photo: ShopPhoto): ProductType[] {
 export interface ReferenceLookup {
   /** Original camera filename without extension — the photo `id`. */
   filename: string
+  /** Real source filename WITH extension (e.g. "GUS11286-Edit-3.tif") when the
+   *  plugin recorded it; falls back to `filename` for catalogs from before. */
+  sourceFilename?: string
   /** Friendly title (Lightroom title, or the GMP ref when none is set). */
   displayTitle: string
   /** Public shop slug, so the admin can jump to the live product page. */
@@ -650,6 +656,7 @@ export async function lookupByReference(input: string): Promise<ReferenceLookup 
       const ext = product.format === 'tiff' ? 'tiff' : 'jpg'
       return {
         filename: photo.id,
+        sourceFilename: photo.sourceFilename,
         displayTitle: displayTitle(photo),
         slug: photo.slug,
         category: photo.category,
@@ -674,6 +681,7 @@ export async function lookupByReference(input: string): Promise<ReferenceLookup 
     if (photoRef(photo.id, ORIGIN_SECRET) === code) {
       return {
         filename: photo.id,
+        sourceFilename: photo.sourceFilename,
         displayTitle: displayTitle(photo),
         slug: photo.slug,
         category: photo.category,

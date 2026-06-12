@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import type { ReferenceLookup } from '@/lib/shop'
 import type { AdminOrder } from '@/lib/downloads'
 import { vatJurisdiction, jurisdictionLabel, type VatJurisdiction } from '@/lib/vat'
-import { SIZE_ORDER, type PaperTier } from '@/config/product-range'
+import { SIZE_ORDER, posterOptions, type PaperTier } from '@/config/product-range'
 import { roundUpToFiveKr } from '@/lib/currency'
 import type { PricingConfig, PricingFloors, PricingValidationError, ColorLabel } from '@/lib/pricing'
 import Logo from '../_components/Logo'
@@ -1067,6 +1067,10 @@ function TopProducts({ onSelect }: { onSelect: (filename: string) => void }) {
 
 function ResultCard({ result }: { result: ReferenceLookup }) {
   const matchLabel = result.matchedBy === 'product' ? 'Download token' : 'Photo reference'
+  // A-sizes the photo's resolution qualifies for — direct links to the rendered
+  // poster master (300 dpi) for each. Empty when the photo is too small for any.
+  const eligible = new Set(posterOptions(result.width, result.height).map((o) => o.size))
+  const posterSizes = SIZE_ORDER.filter((s) => eligible.has(s))
   return (
     <div className="grid gap-8 sm:grid-cols-[240px_1fr] items-start animate-[fadeIn_240ms_ease]">
       <div>
@@ -1084,7 +1088,7 @@ function ResultCard({ result }: { result: ReferenceLookup }) {
       <div>
         <h2 className="font-serif font-light text-3xl leading-tight">{result.displayTitle}</h2>
         <dl className="mt-6 divide-y divide-white/[0.07]">
-          <Row label="Original filename" value={result.filename} mono accent />
+          <Row label="Original filename" value={result.sourceFilename ?? result.filename} mono accent />
           <Row
             label="Collection"
             value={result.category.length ? result.category.map((p) => p.join('  ›  ')).join('      ') : '—'}
@@ -1103,6 +1107,29 @@ function ResultCard({ result }: { result: ReferenceLookup }) {
             </>
           )}
         </dl>
+
+        {posterSizes.length > 0 && (
+          <div className="mt-7">
+            <p className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">
+              Poster master · 300 dpi
+            </p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {posterSizes.map((s) => (
+                <a
+                  key={s}
+                  href={`/api/admin/poster-master/${result.slug}/${s}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-md border border-white/15 px-3 py-1.5 text-[11px] font-mono-ibm uppercase tracking-[0.16em] text-white/70 transition-colors hover:border-[#931020] hover:text-white"
+                  title={`Render the ${s} poster master`}
+                >
+                  {s}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         <a
           href={`/shop/${result.slug}`}
           target="_blank"
