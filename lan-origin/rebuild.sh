@@ -53,6 +53,25 @@ if ! grep -q 'PAID IN FULL' "$SOURCE/invoice.js"; then
   echo "ERROR: $SOURCE/invoice.js is STALE (no receipt/terms code) — re-sync the updated invoice.js."
   exit 1
 fi
+# Poster master compositor (poster.js): needs the fonts/ subdir, the @resvg/resvg-js
+# dep, and a Dockerfile that COPYies both. New SUBDIRECTORIES are the easy thing to
+# miss when syncing, so guard each explicitly.
+if ! [ -f "$SOURCE/poster.js" ]; then
+  echo "ERROR: $SOURCE/poster.js missing — re-sync the FULL lan-origin/ dir, then re-run."
+  exit 1
+fi
+if ! [ -d "$SOURCE/fonts" ] || ! [ -f "$SOURCE/fonts/IBMPlexMono-Light.ttf" ]; then
+  echo "ERROR: $SOURCE/fonts/ missing (poster compositor fonts) — re-sync the FULL lan-origin/ dir INCLUDING the fonts/ subdir, then re-run."
+  exit 1
+fi
+if ! grep -q '@resvg/resvg-js' "$SOURCE/package.json"; then
+  echo "ERROR: $SOURCE/package.json missing @resvg/resvg-js — re-sync the updated package.json, then re-run (npm install adds it)."
+  exit 1
+fi
+if ! grep -q 'poster.js' "$SOURCE/Dockerfile" || ! grep -q 'COPY fonts' "$SOURCE/Dockerfile"; then
+  echo "ERROR: $SOURCE/Dockerfile must COPY poster.js AND the fonts/ dir — re-sync the updated Dockerfile."
+  exit 1
+fi
 echo "==> Source check OK ($SOURCE has the new code)"
 
 # 1. Build the image. Cached by DEFAULT — the Dockerfile copies app code LAST, so
