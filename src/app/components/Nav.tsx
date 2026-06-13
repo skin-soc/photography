@@ -15,10 +15,6 @@ type NavKey = 'people' | 'places' | 'nature' | 'shop' | 'about'
 // and looks grimy on a light page — is dropped. usePathname() is locale-stripped.
 const HERO_PATHS: string[] = ['/', '/people', '/places', '/nature']
 
-const TEXT_SHADOW = {
-  textShadow: '0 1px 0 rgba(0,0,0,1), 0 1px 1px rgba(0,0,0,0.95), 0 2px 2px rgba(0,0,0,0.75)',
-}
-
 export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
   const t = useTranslations('nav')
   const pathname = usePathname()
@@ -70,7 +66,9 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
   // Transparent + over-photo shadow only when genuinely over a hero at the top.
   const overHero = HERO_PATHS.includes(pathname) && atTop
   const frosted = !overHero
-  const linkShadow = overHero ? TEXT_SHADOW : undefined
+  // Over-photo legibility shadow on the links — only while over a hero. The CSS
+  // class itself is a no-op in light themes (the dark nav text needs no shadow).
+  const heroShadow = overHero ? 'nav-hero-shadow' : ''
   // Keep the bar visible while the mobile menu is open.
   const navHidden = hidden && !open
 
@@ -110,8 +108,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
           {/* Portfolio — dropdown parent */}
           <li className="relative group">
             <span
-              className={deskLink(portfolioActive)}
-              style={linkShadow}
+              className={`${deskLink(portfolioActive)} ${heroShadow}`}
               role="button"
               tabIndex={0}
               aria-haspopup="true"
@@ -130,8 +127,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
                     <li key={href}>
                       <Link
                         href={href}
-                        style={linkShadow}
-                        className={`relative inline-block text-[11px] font-light tracking-[0.22em] uppercase pb-[5px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
+                        className={`relative inline-block text-[11px] font-light tracking-[0.22em] uppercase pb-[5px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${heroShadow} ${
                           active
                             ? 'text-foreground after:bg-[#931020]'
                             : 'text-foreground/60 hover:text-foreground after:bg-transparent hover:after:bg-[#931020]'
@@ -148,7 +144,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
 
           {topHrefs.map((href) => (
             <li key={href}>
-              <Link href={href} className={deskLink(isActive(href))} style={linkShadow}>
+              <Link href={href} className={`${deskLink(isActive(href))} ${heroShadow}`}>
                 {t(href.slice(1) as NavKey)}
               </Link>
             </li>
@@ -173,14 +169,14 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
             aria-label={t('menu')}
           >
             <span
-              className={`block h-px bg-foreground transition-all duration-300 origin-center ${overHero ? 'shadow-[0_1px_2px_rgba(0,0,0,0.6)]' : ''}`}
+              className={`block h-px bg-foreground transition-all duration-300 origin-center ${overHero ? 'nav-hero-box-shadow' : ''}`}
               style={{
                 transform: open ? 'translateY(3.5px) rotate(45deg)' : 'none',
                 opacity: open ? 1 : 0.7,
               }}
             />
             <span
-              className={`block h-px bg-foreground transition-all duration-300 origin-center ${overHero ? 'shadow-[0_1px_2px_rgba(0,0,0,0.6)]' : ''}`}
+              className={`block h-px bg-foreground transition-all duration-300 origin-center ${overHero ? 'nav-hero-box-shadow' : ''}`}
               style={{
                 transform: open ? 'translateY(-3.5px) rotate(-45deg)' : 'none',
                 opacity: open ? 1 : 0.7,

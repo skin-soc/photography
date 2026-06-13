@@ -81,6 +81,26 @@ body {
   font-family: var(--font-mono-space);
 }
 
+/* ── Nav over-hero legibility shadow ──────────────────────────────────────────
+   Applied to nav links / hamburger only while the bar sits transparent over a
+   hero photo (the component adds these classes via `overHero`). The shadow is a
+   DARK-theme aid (near-white text over imagery); in light themes the nav text is
+   dark and needs no shadow, so it's removed there. Dark is the default (matches
+   the token model); light contexts (`.light`, and `.theme-auto` under a light OS)
+   opt out. The logo keeps its own shadow regardless — handled inline. */
+.nav-hero-shadow {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 1), 0 1px 1px rgba(0, 0, 0, 0.95), 0 2px 2px rgba(0, 0, 0, 0.75);
+}
+.nav-hero-box-shadow {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.light .nav-hero-shadow { text-shadow: none; }
+.light .nav-hero-box-shadow { box-shadow: none; }
+@media (prefers-color-scheme: light) {
+  .theme-auto .nav-hero-shadow { text-shadow: none; }
+  .theme-auto .nav-hero-box-shadow { box-shadow: none; }
+}
+
 /* ── Shop loading spinner ─────────────────────────────────────────────────── */
 .shop-spinner {
   transform: rotateZ(45deg);
