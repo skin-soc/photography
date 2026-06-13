@@ -313,7 +313,7 @@ export default function ShopProductPicker({
                   {isDigital ? photoSlug.toUpperCase() : photoTitle}
                 </h1>
                 {isDigital ? (
-                  <p className="mt-4 text-[15px] font-bold text-foreground leading-relaxed">
+                  <p className="mt-4 text-[15px] font-light text-foreground leading-relaxed">
                     {photoTitle}
                   </p>
                 ) : caption ? (
