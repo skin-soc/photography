@@ -346,7 +346,13 @@ export default function CartDrawer() {
 
                     <div className="flex flex-1 items-start justify-between gap-3 py-3 pr-4 min-w-0">
                       <div className="min-w-0">
-                        <p className="truncate text-[12px] font-light text-foreground/80 leading-snug">{item.photoTitle}</p>
+                        {/* Digital downloads share the photo title across an event, so the
+                            line shows the unique download filename instead (GMP-….jpg). */}
+                        <p className="truncate text-[12px] font-light text-foreground/80 leading-snug">
+                          {item.type === 'digital' && item.downloadToken
+                            ? `${item.downloadToken}.${item.format === 'tiff' ? 'tiff' : 'jpg'}`
+                            : item.photoTitle}
+                        </p>
                         <p className="mt-0.5 text-[11px] font-light tracking-wide text-foreground/35">{item.productLabel}</p>
                       </div>
                       <div className="shrink-0 flex flex-col items-end justify-between gap-2">

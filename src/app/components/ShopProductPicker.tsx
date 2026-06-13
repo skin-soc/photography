@@ -267,6 +267,12 @@ export default function ShopProductPicker({
     .map((type) => ({ type, items: products.filter((p) => p.type === type) }))
     .filter((g) => g.items.length > 0)
 
+  // Digital-download lead: every photo in an event shares the same title, so the
+  // heading shows the unique photo code (GMP-…) and the title drops to a bold
+  // sub-line — otherwise every digital page looks identical. Posters/fine-art keep
+  // the title as the heading.
+  const isDigital = primaryType === 'digital'
+
   // Cross-sell framing only kicks in when we know the section the customer came
   // through AND that section is actually present on this photo.
   const hasPrimary = primaryType != null && groups.some((g) => g.type === primaryType)
@@ -304,13 +310,17 @@ export default function ShopProductPicker({
                   </p>
                 )}
                 <h1 className="mt-[9px] text-4xl sm:text-5xl lg:text-6xl font-mono-ibm font-[200] leading-[1.05] tracking-tight text-accent">
-                  {photoTitle}
+                  {isDigital ? photoSlug.toUpperCase() : photoTitle}
                 </h1>
-                {caption && (
+                {isDigital ? (
+                  <p className="mt-4 text-[15px] font-bold text-foreground leading-relaxed">
+                    {photoTitle}
+                  </p>
+                ) : caption ? (
                   <p className="mt-4 text-[15px] font-light italic text-foreground/50 leading-relaxed">
                     {caption}
                   </p>
-                )}
+                ) : null}
                 {licenseNote}
               </div>
             )}
