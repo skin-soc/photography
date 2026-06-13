@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import ShopGrid, { GridPhoto } from '@/app/components/ShopGrid'
 import ShopProductView from '@/app/components/ShopProductView'
 import {
@@ -12,9 +12,12 @@ import {
   buildCategoryTree,
   displayTitle,
   typeMessageKey,
+  type CategoryNode,
+  type ShopPhoto,
+  type ProductType,
 } from '@/lib/shop'
 import { typeFromUrlSlug } from '@/lib/product-types'
-import { isProductSlug, resolveShopPath } from '@/lib/shop-url'
+import { isProductSlug, resolveShopPath, categoryUrl } from '@/lib/shop-url'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import { SITE_URL, OG_LOCALE_MAP, getKeywords } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
@@ -39,6 +42,44 @@ function shopCanonical(locale: string, path: string[]): string {
   const prefix = locale === routing.defaultLocale ? '' : `/${locale}`
   const tail = path.length > 0 ? `/${path.join('/')}` : ''
   return `${SITE_URL}${prefix}/shop${tail}`
+}
+
+/**
+ * Collapse single-child folder chains: from the given subject `folders` under a
+ * product `type`, descend while each level offers exactly one folder, stopping at
+ * the first real choice (≥2 folders) or a leaf. Returns the (possibly deeper)
+ * folder path so the customer isn't clicking through one-option folders like
+ * Digital → Events → Denmark → Copenhagen.
+ */
+function collapseSingleChild(
+  tree: CategoryNode[],
+  catalog: ShopPhoto[],
+  type: ProductType,
+  folders: string[],
+): string[] {
+  const childrenAt = (p: string[]): CategoryNode[] => {
+    let level = tree
+    for (const name of p) {
+      const node = level.find((n) => n.name === name)
+      if (!node) return []
+      level = node.children
+    }
+    return level
+  }
+  // A folder is "live" for this type if some photo of the type sits anywhere under it.
+  const liveUnder = (p: string[]): boolean =>
+    catalog.some(
+      (ph) =>
+        photoTypes(ph).includes(type) &&
+        ph.category.some((c) => p.every((seg, i) => c[i] === seg)),
+    )
+  const path = [...folders]
+  for (;;) {
+    const subs = childrenAt(path).filter((child) => liveUnder([...path, child.name]))
+    if (subs.length === 1) path.push(subs[0].name)
+    else break
+  }
+  return path
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -135,6 +176,18 @@ export default async function Shop({ params }: { params: Params }) {
   // type slug or folder slug is a dead URL → 404.
   const initialCategoryPath = resolveShopPath(categoryTree, path)
   if (initialCategoryPath === null) notFound()
+
+  // Smart-skip one-option folders: within a chosen product type, descend through
+  // any single-child chain to the first real choice / leaf, then redirect there.
+  if (initialCategoryPath.length > 0) {
+    const type = initialCategoryPath[0] as ProductType
+    const folders = initialCategoryPath.slice(1)
+    const collapsed = collapseSingleChild(categoryTree, catalog, type, folders)
+    if (collapsed.length > folders.length) {
+      const prefix = locale === routing.defaultLocale ? '' : `/${locale}`
+      redirect(`${prefix}${categoryUrl([type, ...collapsed])}`)
+    }
+  }
 
   const photos: GridPhoto[] = catalog.map((p) => {
     const lo = fromPrice(p)
