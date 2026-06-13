@@ -648,7 +648,7 @@ export default function CartDrawer() {
           'hidden sm:flex',
           'fixed inset-y-0 right-0 z-[60]',
           'w-[400px] flex-col',
-          'bg-[#0d0d0d] border-l border-foreground/[0.08]',
+          'bg-bg border-l border-foreground/[0.08]',
           'transition-transform duration-300 ease-[cubic-bezier(0.32,0,0.15,1)]',
           'shadow-[-24px_0_48px_rgba(0,0,0,0.6)]',
         ].join(' ')}
@@ -666,7 +666,7 @@ export default function CartDrawer() {
           'flex sm:hidden',
           'fixed bottom-0 inset-x-0 z-[60]',
           'max-h-[88svh] flex-col',
-          'bg-[#0d0d0d] border-t border-foreground/[0.08]',
+          'bg-bg border-t border-foreground/[0.08]',
           'rounded-t-[20px]',
           'transition-transform duration-300 ease-[cubic-bezier(0.32,0,0.15,1)]',
           'shadow-[0_-24px_48px_rgba(0,0,0,0.7)]',

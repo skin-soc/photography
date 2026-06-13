@@ -10,6 +10,7 @@ import {
 } from '@stripe/react-stripe-js/checkout'
 import type { StripeElementsOptions } from '@stripe/stripe-js'
 import { stripePromise } from '@/lib/stripe-client'
+import { useResolvedTheme, type ResolvedTheme } from '@/lib/use-theme'
 
 export interface DownloadItem {
   token: string
@@ -58,44 +59,50 @@ interface CheckoutPaneProps {
   onSuccess: (downloads: DownloadItem[], hasPhysical: boolean, sessionId: string) => void
 }
 
-// ── Stripe appearance — matches site dark palette ─────────────────────────────
-const appearance: StripeElementsOptions['appearance'] = {
-  theme: 'night',
-  variables: {
-    colorPrimary: '#931020',
-    colorBackground: '#161616',
-    colorText: 'rgba(255,255,255,0.85)',
-    colorTextSecondary: 'rgba(255,255,255,0.4)',
-    colorDanger: '#f87171',
-    fontFamily: 'inherit',
-    borderRadius: '10px',
-    fontSizeBase: '13px',
-    spacingUnit: '4px',
-  },
-  rules: {
-    '.Input': {
-      border: '1px solid rgba(255,255,255,0.12)',
-      backgroundColor: '#0d0d0d',
-      boxShadow: 'none',
+// ── Stripe appearance — follows the site theme ────────────────────────────────
+// The Payment Element renders in a cross-origin iframe, so it can't read our CSS
+// variables; we hand it a concrete light/dark appearance built from the resolved
+// theme (see `useResolvedTheme`). Brand red and danger are fixed in both.
+function buildAppearance(theme: ResolvedTheme): StripeElementsOptions['appearance'] {
+  const dark = theme === 'dark'
+  return {
+    theme: dark ? 'night' : 'stripe',
+    variables: {
+      colorPrimary: '#931020',
+      colorBackground: dark ? '#161616' : '#ffffff',
+      colorText: dark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)',
+      colorTextSecondary: dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.45)',
+      colorDanger: dark ? '#f87171' : '#dc2626',
+      fontFamily: 'inherit',
+      borderRadius: '10px',
+      fontSizeBase: '13px',
+      spacingUnit: '4px',
     },
-    '.Input:focus': {
-      border: '1px solid rgba(255,255,255,0.30)',
-      boxShadow: 'none',
+    rules: {
+      '.Input': {
+        border: dark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.12)',
+        backgroundColor: dark ? '#0d0d0d' : '#fafafa',
+        boxShadow: 'none',
+      },
+      '.Input:focus': {
+        border: dark ? '1px solid rgba(255,255,255,0.30)' : '1px solid rgba(0,0,0,0.35)',
+        boxShadow: 'none',
+      },
+      '.Label': {
+        fontSize: '10px',
+        letterSpacing: '0.2em',
+        textTransform: 'uppercase',
+        color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.45)',
+      },
+      '.Tab': {
+        border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.10)',
+        backgroundColor: dark ? '#0d0d0d' : '#fafafa',
+      },
+      '.Tab--selected': {
+        border: '1px solid rgba(147,16,32,0.7)',
+      },
     },
-    '.Label': {
-      fontSize: '10px',
-      letterSpacing: '0.2em',
-      textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.35)',
-    },
-    '.Tab': {
-      border: '1px solid rgba(255,255,255,0.10)',
-      backgroundColor: '#0d0d0d',
-    },
-    '.Tab--selected': {
-      border: '1px solid rgba(147,16,32,0.7)',
-    },
-  },
+  }
 }
 
 // ── Inner form — must be inside <CheckoutElementsProvider> ────────────────────
@@ -333,10 +340,11 @@ function PaymentForm({
 
 // ── Public export — wraps form in the Checkout provider ───────────────────────
 export default function CheckoutPane(props: CheckoutPaneProps) {
+  const theme = useResolvedTheme()
   return (
     <CheckoutElementsProvider
       stripe={stripePromise}
-      options={{ clientSecret: props.clientSecret, elementsOptions: { appearance } }}
+      options={{ clientSecret: props.clientSecret, elementsOptions: { appearance: buildAppearance(theme) } }}
     >
       <PaymentForm
         hasPhysical={props.hasPhysical}

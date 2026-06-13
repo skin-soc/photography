@@ -103,7 +103,7 @@ function ParallaxImg({
   return (
     <div
       ref={wrapRef}
-      className="w-full h-full overflow-hidden bg-[#0a0a0a] select-none"
+      className="w-full h-full overflow-hidden bg-bg select-none"
       onContextMenu={e => e.preventDefault()}
       style={{
         position:   'relative',

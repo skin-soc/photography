@@ -72,7 +72,7 @@ export default function Home() {
   const topImg    = top !== null ? ALL_PLACES[top] : null
 
   return (
-    <main className="fixed inset-0 bg-black overflow-hidden">
+    <main className="fixed inset-0 bg-bg overflow-hidden">
 
       {/* SEO content — invisible to sighted users but indexable by search engines.
           Gives Google a real H1, intro paragraph and crawlable internal links on / */}
@@ -133,7 +133,9 @@ export default function Home() {
 
       {/* Centered copyright footer */}
       <div className="absolute bottom-0 left-0 right-0 py-4 text-center pointer-events-none select-none">
-        <span className="text-[9px] font-light tracking-[0.2em] uppercase text-foreground/25">
+        {/* Sits over the full-bleed photo (with vignette) in both themes, so it
+            stays white rather than following the theme foreground. */}
+        <span className="text-[9px] font-light tracking-[0.2em] uppercase text-white/25">
           {t('copyright', { year: new Date().getFullYear() })}
         </span>
       </div>

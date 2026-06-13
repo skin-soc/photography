@@ -422,7 +422,7 @@ export default function ShopGrid({
                   <Link
                     key={type}
                     href={categoryUrl([type])}
-                    className="group relative block overflow-hidden aspect-[4/3] bg-black text-left"
+                    className="group relative block overflow-hidden aspect-[4/3] bg-bg text-left"
                   >
                     <RotatingImage
                       srcs={keyUrls}
@@ -454,7 +454,7 @@ export default function ShopGrid({
                   <Link
                     key={node.name}
                     href={categoryUrl([...navPath, node.name])}
-                    className="group relative block overflow-hidden aspect-[4/3] bg-black text-left"
+                    className="group relative block overflow-hidden aspect-[4/3] bg-bg text-left"
                   >
                     <RotatingImage
                       srcs={keyUrls}
