@@ -67,14 +67,17 @@ function ProductBreadcrumb({
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
       <div className="hidden sm:flex items-center gap-2 text-foreground/40 min-w-0">
         <Link href="/shop" className="hover:text-foreground transition-colors shrink-0">{rootLabel}</Link>
-        {navPath.map((seg, i) => (
-          <span key={i} className="flex items-center gap-2 min-w-0">
+        {/* Just the product-type tier, then the item — the intermediate catalogue
+            folders (Events / Denmark / …) are English data and made the trail long
+            and bilingual. The "← <collection>" back link still returns to the leaf. */}
+        {navPath.length > 0 && (
+          <span className="flex items-center gap-2 min-w-0">
             <span className="shrink-0">/</span>
-            <Link href={categoryUrl(navPath.slice(0, i + 1))} className="hover:text-foreground transition-colors truncate">
-              {label(seg, i)}
+            <Link href={categoryUrl(navPath.slice(0, 1))} className="hover:text-foreground transition-colors truncate">
+              {label(navPath[0], 0)}
             </Link>
           </span>
-        ))}
+        )}
         <span className="flex items-center gap-2 min-w-0">
           <span className="shrink-0">/</span>
           <span className="text-foreground truncate">{title}</span>
