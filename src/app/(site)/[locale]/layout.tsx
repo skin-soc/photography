@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Space_Mono } from 'next/font/google'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -16,7 +16,7 @@ import {
   buildStructuredData,
   getKeywords,
 } from '@/i18n/seo'
-import { getShopOnline } from '@/lib/shop-settings'
+import { getShopOnline, getThemePref } from '@/lib/shop-settings'
 import '@/app/globals.css'
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -38,6 +38,20 @@ export function generateStaticParams() {
 }
 
 const RTL_LOCALES = new Set(['ar'])
+
+/** Browser-chrome colour follows the global theme. Forced light/dark get a fixed
+ *  colour; auto matches the visitor's OS. */
+export async function generateViewport(): Promise<Viewport> {
+  const theme = await getThemePref()
+  if (theme === 'light') return { themeColor: '#ffffff' }
+  if (theme === 'dark') return { themeColor: '#000000' }
+  return {
+    themeColor: [
+      { media: '(prefers-color-scheme: dark)', color: '#000000' },
+      { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    ],
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -134,10 +148,14 @@ export default async function RootLayout({
 
   const jsonLd = buildStructuredData(locale)
   const shopOnline = await getShopOnline()
+  // Global appearance: stamp the theme class on <html> server-side so there's no
+  // flash and no client script. `auto` follows the OS via CSS (.theme-auto).
+  const theme = await getThemePref()
+  const themeClass = theme === 'auto' ? 'theme-auto' : theme
 
   return (
-    <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={`${ibmPlexMono.variable} ${spaceMono.variable}`}>
-      <body className="bg-black text-white antialiased">
+    <html lang={locale} dir={RTL_LOCALES.has(locale) ? 'rtl' : 'ltr'} className={`${themeClass} ${ibmPlexMono.variable} ${spaceMono.variable}`}>
+      <body className="bg-bg text-foreground antialiased">
         {/* Render each JSON-LD object as a separate script — Next.js 15's
             deduplication logic calls parsed["@context"].toLowerCase() and
             crashes if the body is an array rather than a plain object. */}

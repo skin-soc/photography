@@ -666,6 +666,79 @@ function DiagnosticsSettings() {
  *  re-enabled; re-add <TaxRegistrations /> to SettingsTab to show it again. */
 interface TaxReg { id: string; country: string; status: string; livemode: boolean; activeFrom: number | null }
 /** Manual VAT rate — applied to DK + EU buyers; non-EU pay 0%. */
+type ThemePref = 'auto' | 'light' | 'dark'
+
+/** Global site appearance — Auto (follow visitor's OS) / Light / Dark. The root
+ *  layout reads this server-side and themes <html>. */
+function AppearanceSettings() {
+  const [theme, setTheme] = useState<ThemePref | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/admin/theme')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setTheme((d as { theme: ThemePref }).theme))
+      .catch(() => setTheme('dark'))
+  }, [])
+
+  async function save(next: ThemePref) {
+    if (next === theme) return
+    setBusy(true)
+    setNote(null)
+    const prev = theme
+    setTheme(next)
+    try {
+      const res = await fetch('/api/admin/theme', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ theme: next }),
+      })
+      if (res.ok) { setNote('Saved.') } else { setTheme(prev); setNote('Failed.') }
+    } catch { setTheme(prev); setNote('Failed.') } finally { setBusy(false) }
+  }
+
+  const options: { value: ThemePref; label: string; hint: string }[] = [
+    { value: 'auto', label: 'Auto', hint: 'Follows the visitor’s device' },
+    { value: 'light', label: 'Light', hint: 'Always light' },
+    { value: 'dark', label: 'Dark', hint: 'Always dark' },
+  ]
+
+  return (
+    <section className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] p-6">
+      <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">Appearance</h2>
+      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed">
+        Site-wide theme for the public site. <strong className="text-white/55">Auto</strong> follows each
+        visitor’s device (light/dark) preference. Applied on the server, so there’s no flash on load.
+      </p>
+      <div className="mt-5 inline-flex rounded-md border border-white/15 overflow-hidden">
+        {options.map((o, i) => (
+          <button
+            key={o.value}
+            onClick={() => save(o.value)}
+            disabled={theme === null || busy}
+            title={o.hint}
+            className={`px-5 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] transition-colors disabled:opacity-40 ${
+              i > 0 ? 'border-l border-white/15' : ''
+            } ${
+              theme === o.value
+                ? 'bg-[#931020] text-white'
+                : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+        {note && <span className="self-center pl-4 pr-1 text-[12px] text-white/55">{note}</span>}
+      </div>
+      <p className="mt-3 text-[11px] font-light text-amber-300/70 leading-relaxed">
+        Phase 1: the foundation is wired but the components aren’t recoloured yet — selecting Light or Auto
+        currently changes only the base background. The full light theme lands in a later phase.
+      </p>
+    </section>
+  )
+}
+
 function VatRateSettings() {
   const [rate, setRate] = useState<number | null>(null)
   const [draft, setDraft] = useState('')
@@ -838,6 +911,7 @@ function SettingsTab() {
       <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Settings</h1>
       <p className="mt-2 text-sm text-white/45">Studio tools and maintenance.</p>
 
+      <AppearanceSettings />
       <SaleNotifySettings />
       <VatRateSettings />
       <RefundPrefs />

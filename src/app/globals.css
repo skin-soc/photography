@@ -8,13 +8,62 @@
   --font-serif: var(--font-mono-ibm);
   --font-mono-ibm: 'IBM Plex Mono', ui-monospace, monospace;
   --font-mono-space: 'Space Mono', ui-monospace, monospace;
+
+  /* ── Theme tokens (Phase 1) ──────────────────────────────────────────────
+     Semantic colour roles, switched by the theme class the server stamps on
+     <html> (see shop-settings `getThemePref`). DARK is the :root default so an
+     unclassed render — and the whole site until the Phase 2 migration — looks
+     exactly as before. Brand red (#931020) and physical-product whites (poster
+     mat, gallery frame) are deliberately NOT tokens: they stay fixed in every
+     theme. */
+  --bg: #000;
+  --fg: #fff;
+  --muted: rgba(255, 255, 255, 0.45);
+  --hairline: rgba(255, 255, 255, 0.1);
+  color-scheme: dark;
+}
+
+/* Explicit dark (admin → Dark) — same as the :root baseline. */
+.dark {
+  --bg: #000;
+  --fg: #fff;
+  --muted: rgba(255, 255, 255, 0.45);
+  --hairline: rgba(255, 255, 255, 0.1);
+  color-scheme: dark;
+}
+
+/* Light (admin → Light). Real values, ready for the Phase 2 component
+   migration; until then only the base background/text consume them. */
+.light {
+  --bg: #fff;
+  --fg: #111;
+  --muted: #5a5a5a;
+  --hairline: rgba(0, 0, 0, 0.12);
+  color-scheme: light;
+}
+
+/* Auto (admin → Auto) — follow the visitor's OS, pure CSS, no flash. */
+.theme-auto {
+  --bg: #fff;
+  --fg: #111;
+  --muted: #5a5a5a;
+  --hairline: rgba(0, 0, 0, 0.12);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  .theme-auto {
+    --bg: #000;
+    --fg: #fff;
+    --muted: rgba(255, 255, 255, 0.45);
+    --hairline: rgba(255, 255, 255, 0.1);
+  }
 }
 
 /* Brand default font — matches the About page. This is the site-wide
    default; every page inherits it. Do not override per-page. */
 body {
-  background: #000;
-  color: #fff;
+  background: var(--bg);
+  color: var(--fg);
   overscroll-behavior: none;
   font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';

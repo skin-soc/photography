@@ -7,6 +7,10 @@ module.exports = {
   future: {
     hoverOnlyWhenSupported: true,
   },
+  // Theme is driven by the class the server stamps on <html> (`dark` / `light`
+  // / `theme-auto`) via CSS variables, so `dark:` variants aren't needed — but
+  // enable selector mode for any future per-element dark overrides.
+  darkMode: 'selector',
   theme: {
     extend: {
       fontFamily: {
@@ -15,6 +19,14 @@ module.exports = {
       colors: {
         accent: '#931020',
         'accent-bright': '#c9293f',
+        // Semantic theme tokens (Phase 1). Map to the CSS vars in globals.css so
+        // utilities like `bg-bg` / `text-foreground` / `text-muted` follow the
+        // active theme. The Phase 2 migration replaces literal black/white
+        // utilities with these.
+        bg: 'var(--bg)',
+        foreground: 'var(--fg)',
+        muted: 'var(--muted)',
+        hairline: 'var(--hairline)',
       },
     },
   },

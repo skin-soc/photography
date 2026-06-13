@@ -20,6 +20,7 @@ const DEFAULT_NOTIFY_EMAIL = 'email@gusmcewan.com'
 const REFUND_UNDOWNLOADED_DEFAULT_KEY = 'refund:undownloadedDefault'
 const VAT_RATE_KEY = 'vat:rate'
 const DEFAULT_VAT_RATE = 25
+const THEME_KEY = 'site:theme'
 
 async function settingsKV(): Promise<KVLike | undefined> {
   try {
@@ -127,5 +128,38 @@ export async function setVatRate(pct: number): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return false
   await kv.put(VAT_RATE_KEY, String(pct))
+  return true
+}
+
+// ── Site theme (light / dark / auto) ──────────────────────────────────────────
+// A single global appearance choice set by the owner in admin. The root layout
+// reads this server-side and stamps the matching class on <html>, so there's no
+// flash and no client script. `auto` follows the visitor's OS via CSS
+// `prefers-color-scheme`. Defaults to `dark` — the site's original look.
+
+export type ThemePref = 'auto' | 'light' | 'dark'
+
+function isThemePref(v: string | null): v is ThemePref {
+  return v === 'auto' || v === 'light' || v === 'dark'
+}
+
+/** Current site theme preference. Defaults to `dark` whenever unset or KV is
+ *  unavailable, so the site never loses its baseline appearance. */
+export async function getThemePref(): Promise<ThemePref> {
+  const kv = await settingsKV()
+  if (!kv) return 'dark'
+  try {
+    const raw = await kv.get(THEME_KEY)
+    return isThemePref(raw) ? raw : 'dark'
+  } catch {
+    return 'dark'
+  }
+}
+
+/** Set the site theme preference. Returns false if KV isn't available. */
+export async function setThemePref(theme: ThemePref): Promise<boolean> {
+  const kv = await settingsKV()
+  if (!kv) return false
+  await kv.put(THEME_KEY, theme)
   return true
 }
