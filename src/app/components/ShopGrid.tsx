@@ -229,20 +229,27 @@ function LazyImage({
  */
 function Breadcrumb({
   navPath,
+  backPath,
   typeLabel,
   rootLabel,
 }: {
   navPath: string[]
+  /** Skip-aware "back" target (nearest stable ancestor; empty = landing). */
+  backPath: string[]
   /** Friendly label for the leading product-type token. */
   typeLabel: (token: string) => string
   /** Localized label for the shop root (e.g. "Shop"). */
   rootLabel: string
 }) {
   if (navPath.length === 0) return null
-  const parentPath = navPath.slice(0, -1)
-  const labelFor = (path: string[]) =>
-    path.length === 1 ? typeLabel(path[0]) : path[path.length - 1]
-  const parentLabel = parentPath.length === 0 ? rootLabel : labelFor(parentPath)
+  // "Back" goes to the previous STABLE page, not the immediate parent (which may
+  // be a one-option folder that just smart-skips forward again).
+  const backLabel =
+    backPath.length === 0
+      ? rootLabel
+      : backPath.length === 1
+        ? typeLabel(backPath[0])
+        : backPath[backPath.length - 1]
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
       <div className="hidden sm:flex items-center gap-2 text-foreground/40">
@@ -269,10 +276,10 @@ function Breadcrumb({
         )}
       </div>
       <Link
-        href={categoryUrl(parentPath)}
+        href={categoryUrl(backPath)}
         className="text-[#931020] hover:text-[#b01226] transition-colors shrink-0"
       >
-        ← {parentLabel}
+        ← {backLabel}
       </Link>
     </nav>
   )
@@ -283,6 +290,7 @@ export default function ShopGrid({
   categoryTree,
   availableTypes,
   initialCategoryPath = [],
+  backPath = [],
   heading,
   intro,
   siteLabel,
@@ -292,6 +300,8 @@ export default function ShopGrid({
   availableTypes: ProductType[]
   /** Full nav path: [productType, ...subjectFolders]. Empty = landing. */
   initialCategoryPath?: string[]
+  /** Skip-aware "back" target — the nearest stable ancestor (empty = landing). */
+  backPath?: string[]
   /** Default page heading, shown on the landing (no product type chosen). */
   heading: string
   /** Shop intro paragraph, shown only on the landing. */
@@ -407,7 +417,7 @@ export default function ShopGrid({
       </header>
 
       {/* Breadcrumb (hidden on the landing) */}
-      <Breadcrumb navPath={navPath} typeLabel={typeLabel} rootLabel={t('shopRoot')} />
+      <Breadcrumb navPath={navPath} backPath={backPath} typeLabel={typeLabel} rootLabel={t('shopRoot')} />
 
       <div className="relative min-h-[50vh]">
         {/* Loading overlay — shown until the first page of images has painted */}

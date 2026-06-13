@@ -82,6 +82,25 @@ function collapseSingleChild(
   return path
 }
 
+/**
+ * Nearest strictly-shorter STABLE ancestor of a category nav-path — i.e. the
+ * previous real page in a smart-skipped trail. A prefix is stable when it doesn't
+ * itself collapse forward (so "back" never lands on a single-child folder that
+ * just redirects you down again). Returns [] for the shop landing.
+ */
+function backTarget(tree: CategoryNode[], catalog: ShopPhoto[], navPath: string[]): string[] {
+  if (navPath.length === 0) return []
+  const type = navPath[0] as ProductType
+  const folders = navPath.slice(1)
+  for (let len = folders.length - 1; len >= 0; len--) {
+    const cand = folders.slice(0, len)
+    if (collapseSingleChild(tree, catalog, type, cand).length === cand.length) {
+      return [type, ...cand]
+    }
+  }
+  return []
+}
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale, path = [] } = await params
   const productSlug = path.length > 0 && isProductSlug(path[path.length - 1]) ? path[path.length - 1] : null
@@ -210,6 +229,10 @@ export default async function Shop({ params }: { params: Params }) {
   // Poster cards (grid) carry the same foot line as the product-page poster.
   const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
 
+  // Skip-aware "back" target: the previous stable page, not the immediate parent
+  // (which may be a one-option folder that just redirects forward again).
+  const backPath = backTarget(categoryTree, catalog, initialCategoryPath)
+
   return (
     <main className="min-h-screen bg-bg text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32">
       {photos.length > 0 ? (
@@ -218,6 +241,7 @@ export default async function Shop({ params }: { params: Params }) {
           categoryTree={categoryTree}
           availableTypes={types}
           initialCategoryPath={initialCategoryPath}
+          backPath={backPath}
           heading={t('h1')}
           intro={tShop('intro')}
           siteLabel={siteLabel}
