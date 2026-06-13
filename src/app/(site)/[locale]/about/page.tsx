@@ -61,9 +61,9 @@ function ContactForm() {
     height: '36px',
     boxSizing: 'border-box',
     backgroundColor: 'transparent',
-    borderBottom: '1px solid rgba(255,255,255,0.2)',
+    borderBottom: '1px solid rgb(var(--fg) / 0.2)',
     border: 'none',
-    color: '#fff',
+    color: 'rgb(var(--fg))',
     fontSize: '13px',
     fontWeight: 300,
     letterSpacing: '0.04em',
@@ -110,7 +110,7 @@ function ContactForm() {
           fontWeight: 300,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
-          color: 'rgba(255, 255, 255, 0.55)',
+          color: 'rgb(var(--fg) / 0.55)',
         }}
       >
         {t('success')}
@@ -133,15 +133,15 @@ function ContactForm() {
           fontWeight: 300,
           letterSpacing: '0.22em',
           textTransform: 'uppercase',
-          color: status === 'sending' ? 'rgba(255,255,255,0.25)' : 'rgba(255, 255, 255, 0.55)',
+          color: status === 'sending' ? 'rgb(var(--fg) / 0.25)' : 'rgb(var(--fg) / 0.55)',
           backgroundColor: 'transparent',
           border: 'none',
           cursor: status === 'sending' ? 'default' : 'pointer',
           padding: '4px 0',
           transition: 'color 0.3s ease',
         }}
-        onMouseEnter={e => { if (status !== 'sending') e.currentTarget.style.color = '#ffffff' }}
-        onMouseLeave={e => { if (status !== 'sending') e.currentTarget.style.color = 'rgba(255, 255, 255, 0.55)' }}
+        onMouseEnter={e => { if (status !== 'sending') e.currentTarget.style.color = 'rgb(var(--fg))' }}
+        onMouseLeave={e => { if (status !== 'sending') e.currentTarget.style.color = 'rgb(var(--fg) / 0.55)' }}
       >
         {status === 'sending' ? t('sending') : t('send')}
       </button>
@@ -186,7 +186,7 @@ export default function About() {
           <p className="font-thin leading-[1.5] tracking-[0.02em] mb-5"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
-              color: 'rgba(255,255,255,0.78)',
+              color: 'rgb(var(--fg) / 0.78)',
               textAlign: 'end',
               pointerEvents: 'none'
             }}>
@@ -195,7 +195,7 @@ export default function About() {
           <p className="font-thin leading-[1.5] tracking-[0.02em] mb-5"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
-              color: 'rgba(255,255,255,0.78)',
+              color: 'rgb(var(--fg) / 0.78)',
               textAlign: 'end',
               pointerEvents: 'none'
             }}>
@@ -204,7 +204,7 @@ export default function About() {
           <p className="font-thin leading-[1.5] tracking-[0.02em]"
             style={{
               fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
-              color: 'rgba(255,255,255,0.78)',
+              color: 'rgb(var(--fg) / 0.78)',
               textAlign: 'end',
               pointerEvents: 'none'
             }}>
@@ -219,7 +219,7 @@ export default function About() {
           zIndex: 10,
           pointerEvents: 'auto'
         }}>
-          <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">{t('contactHeading')}</p>
+          <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground mb-3">{t('contactHeading')}</p>
           <p className="text-[13px] font-light tracking-[0.04em] text-foreground/70 mb-6">
             {t('contactIntro')}
           </p>

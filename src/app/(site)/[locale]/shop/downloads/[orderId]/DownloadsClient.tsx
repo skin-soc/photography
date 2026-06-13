@@ -91,7 +91,7 @@ export default function DownloadsClient({
           value={passcode}
           onChange={(e) => setPasscode(e.target.value.toUpperCase())}
           placeholder="XXXXXXXX"
-          className="w-full max-w-[280px] rounded-[12px] border border-foreground/15 bg-foreground/[0.04] px-5 py-3 font-mono-ibm text-[18px] font-[200] tracking-[0.3em] text-white placeholder:text-foreground/20 focus:border-[#931020] focus:outline-none transition-colors"
+          className="w-full max-w-[280px] rounded-[12px] border border-foreground/15 bg-foreground/[0.04] px-5 py-3 font-mono-ibm text-[18px] font-[200] tracking-[0.3em] text-foreground placeholder:text-foreground/20 focus:border-[#931020] focus:outline-none transition-colors"
         />
         {error && (
           <p className="mt-3 text-[12px] font-light text-[#931020]">{error}</p>
@@ -100,7 +100,7 @@ export default function DownloadsClient({
           <button
             type="submit"
             disabled={submitting || passcode.trim().length === 0}
-            className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white disabled:text-foreground/20 transition-colors"
+            className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-foreground disabled:text-foreground/20 transition-colors"
           >
             {submitting ? t('unlocking') : `${t('unlockDownloads')} →`}
           </button>
@@ -134,7 +134,7 @@ export default function DownloadsClient({
           <a
             href={`/api/downloads/${orderId}/${encodeURIComponent(item.sku)}`}
             download
-            className="shrink-0 text-[10px] font-light tracking-[0.18em] uppercase text-foreground/55 hover:text-white transition-colors"
+            className="shrink-0 text-[10px] font-light tracking-[0.18em] uppercase text-foreground/55 hover:text-foreground transition-colors"
           >
             {t('download')} →
           </a>
@@ -147,7 +147,7 @@ export default function DownloadsClient({
           href={`/api/downloads/${orderId}/invoice`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] font-light tracking-[0.18em] uppercase text-[#931020] hover:text-white transition-colors"
+          className="text-[10px] font-light tracking-[0.18em] uppercase text-[#931020] hover:text-foreground transition-colors"
         >
           {t('invoicePdf')} ↗
         </a>
@@ -155,7 +155,7 @@ export default function DownloadsClient({
           href={`/api/downloads/${orderId}/license`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] font-light tracking-[0.18em] uppercase text-[#931020] hover:text-white transition-colors"
+          className="text-[10px] font-light tracking-[0.18em] uppercase text-[#931020] hover:text-foreground transition-colors"
         >
           {t('licencePdf')} ↗
         </a>

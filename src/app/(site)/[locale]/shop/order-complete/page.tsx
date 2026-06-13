@@ -53,7 +53,7 @@ export default async function OrderComplete({
             <p className="text-[9px] font-light tracking-[0.22em] uppercase text-[#931020] mb-2">
               Order confirmed
             </p>
-            <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
+            <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-foreground mb-6">
               Thank you.
             </h1>
             <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-8">
@@ -75,7 +75,7 @@ export default async function OrderComplete({
                 </p>
                 <Link
                   href={`/shop/downloads/${orderId}`}
-                  className="inline-block text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white transition-colors"
+                  className="inline-block text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-foreground transition-colors"
                 >
                   Go to your downloads →
                 </Link>
@@ -102,7 +102,7 @@ export default async function OrderComplete({
             <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/40 mb-2">
               Payment
             </p>
-            <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
+            <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-foreground mb-6">
               Something went wrong.
             </h1>
             <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-8">
@@ -111,7 +111,7 @@ export default async function OrderComplete({
             </p>
             <Link
               href="/shop"
-              className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white transition-colors"
+              className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-foreground transition-colors"
             >
               Return to shop →
             </Link>

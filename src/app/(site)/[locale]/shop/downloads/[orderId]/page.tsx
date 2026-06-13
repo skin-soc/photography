@@ -44,7 +44,7 @@ export default async function DownloadsPage({ params }: { params: Params }) {
             <p className="text-[9px] font-light tracking-[0.22em] uppercase text-[#931020] mb-2">
               {t('eyebrow')}
             </p>
-            <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
+            <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-foreground mb-6">
               {t('heading')}
             </h1>
             <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-10">
@@ -60,7 +60,7 @@ export default async function DownloadsPage({ params }: { params: Params }) {
             <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/40 mb-2">
               {t('unavailableEyebrow')}
             </p>
-            <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
+            <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-foreground mb-6">
               {t('unavailableHeading')}
             </h1>
             <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-8">
@@ -68,7 +68,7 @@ export default async function DownloadsPage({ params }: { params: Params }) {
             </p>
             <Link
               href="/shop"
-              className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white transition-colors"
+              className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-foreground transition-colors"
             >
               {t('returnToShop')} →
             </Link>

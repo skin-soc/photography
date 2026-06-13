@@ -302,7 +302,7 @@ export default function CartDrawer() {
           type="button"
           onClick={handleClose}
           aria-label={t('close')}
-          className="flex items-center justify-center w-7 h-7 rounded-full text-foreground/30 hover:text-white hover:bg-foreground/[0.06] transition-colors"
+          className="flex items-center justify-center w-7 h-7 rounded-full text-foreground/30 hover:text-foreground hover:bg-foreground/[0.06] transition-colors"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
             <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -399,7 +399,7 @@ export default function CartDrawer() {
           <div className="pt-2 space-y-5">
             <div>
               <p className="text-[9px] font-light tracking-[0.22em] uppercase text-[#931020] mb-2">{t('orderConfirmed')}</p>
-              <p className="text-[22px] font-light text-white leading-tight">{t('thankYou')}</p>
+              <p className="text-[22px] font-light text-foreground leading-tight">{t('thankYou')}</p>
               <p className="mt-2 text-[12px] font-light text-foreground/40 leading-relaxed">
                 {successData.downloads.length > 0
                   ? t('successDigitalReady')
@@ -476,7 +476,7 @@ export default function CartDrawer() {
             <button
               type="button"
               onClick={handleClose}
-              className="w-full rounded-[14px] border border-foreground/15 py-3 text-[11px] font-light tracking-[0.22em] uppercase text-foreground/50 hover:text-white hover:border-foreground/35 transition-colors"
+              className="w-full rounded-[14px] border border-foreground/15 py-3 text-[11px] font-light tracking-[0.22em] uppercase text-foreground/50 hover:text-foreground hover:border-foreground/35 transition-colors"
             >
               {t('continueShopping')}
             </button>
@@ -513,13 +513,13 @@ export default function CartDrawer() {
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void verifyVat() } }}
                     placeholder={t('vatPlaceholder')}
                     spellCheck={false}
-                    className="flex-1 rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 font-[family-name:var(--font-mono-ibm)] text-[12px] tracking-wide text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
+                    className="flex-1 rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 font-[family-name:var(--font-mono-ibm)] text-[12px] tracking-wide text-foreground placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => void verifyVat()}
                     disabled={vatBusy || !vatInput.trim()}
-                    className="shrink-0 rounded-[8px] border border-foreground/15 px-3 text-[10px] font-[family-name:var(--font-mono-ibm)] uppercase tracking-[0.18em] text-foreground/70 hover:border-foreground/40 hover:text-white transition-colors disabled:opacity-40"
+                    className="shrink-0 rounded-[8px] border border-foreground/15 px-3 text-[10px] font-[family-name:var(--font-mono-ibm)] uppercase tracking-[0.18em] text-foreground/70 hover:border-foreground/40 hover:text-foreground transition-colors disabled:opacity-40"
                   >
                     {t('verify')}
                   </button>
@@ -552,7 +552,7 @@ export default function CartDrawer() {
                           value={declaredName}
                           onChange={(e) => setDeclaredName(e.target.value)}
                           placeholder={t('businessNamePlaceholder')}
-                          className="mb-2 w-full rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
+                          className="mb-2 w-full rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 text-[12px] text-foreground placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
                         />
                       )}
                     {/* Address — show VIES value, else ask for it. */}
@@ -564,7 +564,7 @@ export default function CartDrawer() {
                           onChange={(e) => setDeclaredAddress(e.target.value)}
                           placeholder={t('businessAddressPlaceholder')}
                           rows={2}
-                          className="w-full resize-none rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
+                          className="w-full resize-none rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 text-[12px] text-foreground placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
                         />
                       )}
                     <p className="mt-1.5 text-[10px] font-light text-foreground/45 leading-snug">
@@ -606,7 +606,7 @@ export default function CartDrawer() {
 
           <div className="flex items-baseline justify-between">
             <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">{t('total')}</p>
-            <p className="text-[17px] font-light text-white">{totalText}</p>
+            <p className="text-[17px] font-light text-foreground">{totalText}</p>
           </div>
 
           {intentError && (

@@ -125,3 +125,38 @@ light-mode design pass deliberately.
 - **Default is Dark → no visual change.** Components are NOT yet migrated, so
   selecting Light/Auto currently flips only the base background; the full recolour
   is Phase 2. The panel notes this.
+
+## Phase 2 — as built (2026-06-13)
+
+Tokens redefined as **RGB channel triplets** (`--bg`/`--fg`) so Tailwind's opacity
+modifier works; every `white/NN` chrome utility → `foreground/NN`, which inverts
+correctly (white-5%-on-black ⇄ black-5%-on-white).
+
+- **Swept** all numeric + bracket `*-white/NN` → `*-foreground/NN` across 21 site
+  files (~530 utilities) + the solid chrome (page mains, headings, inputs, hovers,
+  totals) in Nav, ShopGrid, ShopProductView, ShopProductPicker, CartDrawer,
+  CheckoutPane, LicensingModal, CartIcon, and the static pages (about, downloads,
+  order-complete, licensing).
+- **Inline-style whites** in the contact/help forms → tokens; their dark modal
+  panels (`#0c0c0c`) → `rgb(var(--bg))`. Shared spinner + placeholder themed.
+- **Verified** in light via KV flip: `/shop`, product, `/about`, `/licensing`,
+  `/order-complete` show no un-migrated chrome — only the intentional fixed
+  surfaces. Dark stays byte-identical.
+
+**Intentionally FIXED (not themed):** brand red `#931020`; white-on-accent button
+text + the dot-on-accent; PosterMat white paper + black typeset; the 21px gallery
+frame; ShopGrid photo-tiles (dark card + scrim + white label over imagery); image
+scrims (`from-black/NN`) and modal/nav/drawer backdrops; the homepage immersive
+full-bleed gallery (`page.tsx` stays `bg-black`) + GalleryStack captions (they sit
+over photos).
+
+**DEFERRED to Phase 3** (style a cross-origin Stripe iframe, so they need the
+client-resolved theme, not CSS vars): the Stripe Element `appearance` objects in
+`CheckoutModal.tsx` and `CheckoutPane.tsx` (incl. their `#0c0c0c`/`#0d0d0d` panels
+and `rgba(255,255,255,…)` values). Until then the checkout/payment surfaces render
+dark in light mode.
+
+**Remaining for Phase 3:** Stripe Element appearance (client-resolved light/dark);
+decide whether the homepage gallery should theme or stay immersive-black; visual +
+mobile QA in light; contrast/AA polish (e.g. the 21px frame needs a shadow to read
+on a white page).

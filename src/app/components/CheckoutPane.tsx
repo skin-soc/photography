@@ -192,7 +192,7 @@ function PaymentForm({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-4 py-3 text-[14px] text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
+          className="w-full rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-4 py-3 text-[14px] text-foreground placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
         />
       </div>
 
@@ -238,7 +238,7 @@ function PaymentForm({
               type="button"
               onClick={onRemoveCoupon}
               disabled={couponBusy}
-              className="text-[10px] font-light tracking-[0.18em] uppercase text-foreground/40 hover:text-white transition-colors disabled:opacity-40"
+              className="text-[10px] font-light tracking-[0.18em] uppercase text-foreground/40 hover:text-foreground transition-colors disabled:opacity-40"
             >
               {t('remove')}
             </button>
@@ -251,13 +251,13 @@ function PaymentForm({
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (promo.trim()) onApplyCoupon() } }}
               placeholder={t('promoCode')}
               spellCheck={false}
-              className="flex-1 rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-4 py-2.5 font-mono-ibm text-[13px] tracking-wide text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
+              className="flex-1 rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-4 py-2.5 font-mono-ibm text-[13px] tracking-wide text-foreground placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
             />
             <button
               type="button"
               onClick={onApplyCoupon}
               disabled={couponBusy || !promo.trim()}
-              className="shrink-0 rounded-[8px] border border-foreground/15 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-foreground/70 hover:border-foreground/40 hover:text-white transition-colors disabled:opacity-40"
+              className="shrink-0 rounded-[8px] border border-foreground/15 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-foreground/70 hover:border-foreground/40 hover:text-foreground transition-colors disabled:opacity-40"
             >
               {couponBusy ? '…' : t('apply')}
             </button>
@@ -299,7 +299,7 @@ function PaymentForm({
         )}
         <div className="flex items-baseline justify-between">
           <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">{t('total')}</p>
-          <p className="text-[16px] font-light text-white">{totalDisplay}</p>
+          <p className="text-[16px] font-light text-foreground">{totalDisplay}</p>
         </div>
       </div>
 

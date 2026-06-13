@@ -29,7 +29,7 @@ export default function CartIcon() {
       type="button"
       onClick={openCart}
       aria-label={label}
-      className="relative flex items-center justify-center text-foreground/70 hover:text-white transition-colors"
+      className="relative flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors"
       style={{ width: 20, height: 20 }}
     >
       {/* Bag — same weight/scale as nav text */}

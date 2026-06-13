@@ -44,8 +44,8 @@ function ContactModal({ onClose }: { onClose: () => void }) {
   const fieldStyle: React.CSSProperties = {
     display: 'block', width: '100%', padding: '4px 0 6px 0',
     backgroundColor: 'transparent', border: 'none',
-    borderBottom: '1px solid rgba(255,255,255,0.15)',
-    color: '#fff', fontSize: '13px', fontWeight: 300,
+    borderBottom: '1px solid rgb(var(--fg) / 0.15)',
+    color: 'rgb(var(--fg))', fontSize: '13px', fontWeight: 300,
     letterSpacing: '0.04em', outline: 'none', boxSizing: 'border-box',
   }
 
@@ -57,7 +57,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
     >
       <div
         className="relative w-full rounded-[20px] border border-foreground/10"
-        style={{ maxWidth: '420px', margin: '0 16px', backgroundColor: '#0c0c0c', padding: '28px 28px 24px' }}
+        style={{ maxWidth: '420px', margin: '0 16px', backgroundColor: 'rgb(var(--bg))', padding: '28px 28px 24px' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
@@ -66,22 +66,22 @@ function ContactModal({ onClose }: { onClose: () => void }) {
           style={{
             position: 'absolute', top: '16px', right: '20px',
             background: 'none', border: 'none', padding: 0,
-            cursor: 'pointer', color: 'rgba(255,255,255,0.35)',
+            cursor: 'pointer', color: 'rgb(var(--fg) / 0.35)',
             fontSize: '22px', lineHeight: 1, transition: 'color 0.2s',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#fff' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgb(var(--fg))' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgb(var(--fg) / 0.35)' }}
         >×</button>
 
-        <p style={{ fontSize: '9px', fontWeight: 300, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>
+        <p style={{ fontSize: '9px', fontWeight: 300, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgb(var(--fg) / 0.5)', marginBottom: '4px' }}>
           Gus McEwan Photography
         </p>
-        <p style={{ fontSize: '13px', fontWeight: 300, letterSpacing: '0.02em', color: 'rgba(255,255,255,0.55)', marginBottom: '22px' }}>
+        <p style={{ fontSize: '13px', fontWeight: 300, letterSpacing: '0.02em', color: 'rgb(var(--fg) / 0.55)', marginBottom: '22px' }}>
           Custom licensing &amp; enquiries
         </p>
 
         {status === 'success' ? (
-          <p style={{ fontSize: '11px', fontWeight: 300, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>
+          <p style={{ fontSize: '11px', fontWeight: 300, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgb(var(--fg) / 0.55)' }}>
             Message sent — I&apos;ll be in touch shortly.
           </p>
         ) : (
@@ -96,13 +96,13 @@ function ContactModal({ onClose }: { onClose: () => void }) {
               style={{
                 alignSelf: 'flex-start', marginTop: '6px',
                 fontSize: '9px', fontWeight: 300, letterSpacing: '0.22em', textTransform: 'uppercase',
-                color: status === 'sending' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.55)',
+                color: status === 'sending' ? 'rgb(var(--fg) / 0.25)' : 'rgb(var(--fg) / 0.55)',
                 backgroundColor: 'transparent', border: 'none',
                 cursor: status === 'sending' ? 'default' : 'pointer',
                 padding: '4px 0', transition: 'color 0.3s',
               }}
-              onMouseEnter={(e) => { if (status !== 'sending') e.currentTarget.style.color = '#fff' }}
-              onMouseLeave={(e) => { if (status !== 'sending') e.currentTarget.style.color = 'rgba(255,255,255,0.55)' }}
+              onMouseEnter={(e) => { if (status !== 'sending') e.currentTarget.style.color = 'rgb(var(--fg))' }}
+              onMouseLeave={(e) => { if (status !== 'sending') e.currentTarget.style.color = 'rgb(var(--fg) / 0.55)' }}
             >
               {status === 'sending' ? t('sending') : t('send')}
             </button>

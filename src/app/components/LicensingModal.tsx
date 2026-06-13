@@ -65,7 +65,7 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
           maxWidth: '540px',
           maxHeight: '90dvh',
           margin: '0 0',
-          backgroundColor: '#0c0c0c',
+          backgroundColor: 'rgb(var(--bg))',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -81,7 +81,7 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
           </div>
           <button
             type="button" onClick={onClose} aria-label="Close"
-            className="shrink-0 text-[20px] leading-none text-foreground/30 hover:text-white transition-colors mt-0.5"
+            className="shrink-0 text-[20px] leading-none text-foreground/30 hover:text-foreground transition-colors mt-0.5"
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >×</button>
         </div>
@@ -149,7 +149,7 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-[14px] border border-foreground/15 py-3 text-[10px] font-light tracking-[0.22em] uppercase text-foreground/55 hover:text-white hover:border-foreground/30 transition-colors"
+              className="w-full rounded-[14px] border border-foreground/15 py-3 text-[10px] font-light tracking-[0.22em] uppercase text-foreground/55 hover:text-foreground hover:border-foreground/30 transition-colors"
             >
               {t('close')}
             </button>
