@@ -112,7 +112,7 @@
     "inCart": "No carrinho",
     "added": "Adicionado",
     "sectionTitle": "Loja {name}",
-    "browse": "Loja",
+    "shopRoot": "Loja",
     "alsoAvailableAs": "Também disponível como {name}"
   },
   "cart": {

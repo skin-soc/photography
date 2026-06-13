@@ -112,7 +112,7 @@
     "licenseFullCommercialDesc": "All rights, including merchandise for resale, unlimited print runs and white-label use.",
     "licensingNotePublicEvent": "Licences are granted for the specific use and copy limits stated. This image was captured at {event}, a public event in a public space. Full licensing terms available <link>here</link>.",
     "sectionTitle": "{name} Shop",
-    "browse": "Shop",
+    "shopRoot": "Shop",
     "alsoAvailableAs": "Also available as {name}"
   },
   "cart": {

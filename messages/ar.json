@@ -112,7 +112,7 @@
     "inCart": "في السلة",
     "added": "تمت الإضافة",
     "sectionTitle": "متجر {name}",
-    "browse": "متجر",
+    "shopRoot": "متجر",
     "alsoAvailableAs": "متوفر أيضًا بصيغة {name}"
   },
   "cart": {

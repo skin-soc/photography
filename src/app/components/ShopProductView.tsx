@@ -47,7 +47,7 @@ function ProductBreadcrumb({
   navPath,
   title,
   typeLabel,
-  browseLabel,
+  rootLabel,
 }: {
   /** Derived nav-path `[productType, ...subjectFolders]`. */
   navPath: string[]
@@ -55,18 +55,18 @@ function ProductBreadcrumb({
   /** Friendly label for the leading product-type token (segment 0). */
   typeLabel: (token: string) => string
   /** Localized shop-root label (e.g. "Shop"). */
-  browseLabel: string
+  rootLabel: string
 }) {
   const label = (seg: string, i: number) => (i === 0 ? typeLabel(seg) : seg)
   // Back returns to the leaf collection this photo belongs to.
   const backHref = navPath.length === 0 ? '/shop' : categoryUrl(navPath)
   const backLabel =
-    navPath.length === 0 ? browseLabel : label(navPath[navPath.length - 1], navPath.length - 1)
+    navPath.length === 0 ? rootLabel : label(navPath[navPath.length - 1], navPath.length - 1)
 
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
       <div className="hidden sm:flex items-center gap-2 text-foreground/40 min-w-0">
-        <Link href="/shop" className="hover:text-foreground transition-colors shrink-0">{browseLabel}</Link>
+        <Link href="/shop" className="hover:text-foreground transition-colors shrink-0">{rootLabel}</Link>
         {navPath.map((seg, i) => (
           <span key={i} className="flex items-center gap-2 min-w-0">
             <span className="shrink-0">/</span>
@@ -200,7 +200,7 @@ export default async function ShopProductView({
           navPath={navPath}
           title={displayTitle(photo)}
           typeLabel={(token) => (isProductType(token) ? t(typeMessageKey(token)) : token)}
-          browseLabel={t('browse')}
+          rootLabel={t('shopRoot')}
         />
       ) : (
         <Link

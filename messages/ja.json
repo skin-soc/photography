@@ -112,7 +112,7 @@
     "inCart": "カート内",
     "added": "追加しました",
     "sectionTitle": "{name}ショップ",
-    "browse": "ショップ",
+    "shopRoot": "ショップ",
     "alsoAvailableAs": "{name}としてもご利用いただけます"
   },
   "cart": {

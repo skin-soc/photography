@@ -404,7 +404,7 @@ export default function ShopGrid({
       </header>
 
       {/* Breadcrumb (hidden on the landing) */}
-      <Breadcrumb navPath={navPath} typeLabel={typeLabel} rootLabel={t('browse')} />
+      <Breadcrumb navPath={navPath} typeLabel={typeLabel} rootLabel={t('shopRoot')} />
 
       <div className="relative min-h-[50vh]">
         {/* Loading overlay — shown until the first page of images has painted */}

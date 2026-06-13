@@ -112,7 +112,7 @@
     "inCart": "已在购物车",
     "added": "已添加",
     "sectionTitle": "{name}商店",
-    "browse": "商店",
+    "shopRoot": "商店",
     "alsoAvailableAs": "也可作为{name}提供"
   },
   "cart": {

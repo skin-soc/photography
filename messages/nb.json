@@ -112,7 +112,7 @@
     "inCart": "I handlekurven",
     "added": "Lagt til",
     "sectionTitle": "{name}-butikk",
-    "browse": "Butikk",
+    "shopRoot": "Butikk",
     "alsoAvailableAs": "Også tilgjengelig som {name}"
   },
   "cart": {

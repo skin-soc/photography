@@ -112,7 +112,7 @@
     "inCart": "W koszyku",
     "added": "Dodano",
     "sectionTitle": "Sklep {name}",
-    "browse": "Sklep",
+    "shopRoot": "Sklep",
     "alsoAvailableAs": "Dostępne także jako {name}"
   },
   "cart": {
