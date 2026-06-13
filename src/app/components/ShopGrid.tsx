@@ -542,8 +542,19 @@ export default function ShopGrid({
                           onReady={i < targetCount ? handleTileLoad : undefined}
                         />
                       </div>
-                      <p className="mt-1.5 text-[12px] font-light leading-tight text-foreground/70 truncate">{p.title}</p>
-                      <p className="text-[10px] tracking-[0.15em] uppercase text-foreground/35 truncate">{p.location}</p>
+                      {typeFilter === 'digital' ? (
+                        /* Digital downloads share titles across an event, so the
+                           card shows the unique code + "from" price, right-aligned. */
+                        <>
+                          <p className="mt-1.5 text-[11px] font-mono-ibm tracking-wide text-accent text-right truncate">{p.slug.toUpperCase()}</p>
+                          <p className="text-[10px] tracking-wide text-foreground/45 text-right truncate">{t('from')} {p.fromText}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="mt-1.5 text-[12px] font-light leading-tight text-foreground/70 truncate">{p.title}</p>
+                          <p className="text-[10px] tracking-[0.15em] uppercase text-foreground/35 truncate">{p.location}</p>
+                        </>
+                      )}
                     </Link>
                   )
                 })}
