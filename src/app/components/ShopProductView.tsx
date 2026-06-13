@@ -65,19 +65,19 @@ function ProductBreadcrumb({
 
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
-      <div className="hidden sm:flex items-center gap-2 text-white/40 min-w-0">
-        <Link href="/shop" className="hover:text-white transition-colors shrink-0">{browseLabel}</Link>
+      <div className="hidden sm:flex items-center gap-2 text-foreground/40 min-w-0">
+        <Link href="/shop" className="hover:text-foreground transition-colors shrink-0">{browseLabel}</Link>
         {navPath.map((seg, i) => (
           <span key={i} className="flex items-center gap-2 min-w-0">
             <span className="shrink-0">/</span>
-            <Link href={categoryUrl(navPath.slice(0, i + 1))} className="hover:text-white transition-colors truncate">
+            <Link href={categoryUrl(navPath.slice(0, i + 1))} className="hover:text-foreground transition-colors truncate">
               {label(seg, i)}
             </Link>
           </span>
         ))}
         <span className="flex items-center gap-2 min-w-0">
           <span className="shrink-0">/</span>
-          <span className="text-white truncate">{title}</span>
+          <span className="text-foreground truncate">{title}</span>
         </span>
       </div>
       <Link
@@ -189,7 +189,7 @@ export default async function ShopProductView({
   const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
 
   return (
-    <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
+    <main className="min-h-screen bg-bg text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
@@ -205,7 +205,7 @@ export default async function ShopProductView({
       ) : (
         <Link
           href="/shop"
-          className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35 hover:text-white/70 transition-colors"
+          className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35 hover:text-foreground/70 transition-colors"
         >
           ← {t('backToShop')}
         </Link>
@@ -257,7 +257,7 @@ export default async function ShopProductView({
             caption={photo.caption}
             previewUrl={photo.previewUrl}
             licenseNote={eventName ? (
-              <p className="mt-4 text-[11px] font-light leading-relaxed text-white/30">
+              <p className="mt-4 text-[11px] font-light leading-relaxed text-foreground/30">
                 {t.rich('licensingNotePublicEvent', {
                   event: eventName,
                   link: (chunks) => <LicensingLink>{chunks}</LicensingLink>,

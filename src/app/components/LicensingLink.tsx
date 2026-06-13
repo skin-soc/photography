@@ -11,7 +11,7 @@ export default function LicensingLink({ children }: { children: React.ReactNode 
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="underline underline-offset-2 decoration-white/20 hover:text-white/55 transition-colors"
+        className="underline underline-offset-2 decoration-white/20 hover:text-foreground/55 transition-colors"
         style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit' }}
       >
         {children}

@@ -21,7 +21,7 @@ function Section({ num, title, children }: { num: number; title: string; childre
         <span className="shrink-0 text-[10px] font-mono-ibm font-light tracking-[0.18em] text-accent-bright/80">{num}.</span>
         <h3 className="text-[10px] font-light tracking-[0.2em] uppercase text-accent-bright">{title}</h3>
       </div>
-      <div className="pl-4 border-l border-white/[0.07]">{children}</div>
+      <div className="pl-4 border-l border-foreground/[0.07]">{children}</div>
     </section>
   )
 }
@@ -39,7 +39,7 @@ function DashList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex gap-2.5 text-[12px] font-light text-white/80 leading-relaxed">
+        <li key={i} className="flex gap-2.5 text-[12px] font-light text-foreground/80 leading-relaxed">
           <span className="shrink-0 text-accent-bright/70 select-none mt-0.5">—</span>
           <span>{item}</span>
         </li>
@@ -60,7 +60,7 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
       onClick={onClose}
     >
       <div
-        className="relative w-full rounded-t-[24px] sm:rounded-[20px] border border-white/10 flex flex-col"
+        className="relative w-full rounded-t-[24px] sm:rounded-[20px] border border-foreground/10 flex flex-col"
         style={{
           maxWidth: '540px',
           maxHeight: '90dvh',
@@ -70,9 +70,9 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
         onClick={e => e.stopPropagation()}
       >
         {/* ── Sticky header ── */}
-        <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-white/[0.07] shrink-0">
+        <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-foreground/[0.07] shrink-0">
           <div>
-            <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/40">
+            <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/40">
               Gus McEwan Photography
             </p>
             <h2 className="mt-0.5 text-[13px] font-mono-ibm font-[200] tracking-tight text-accent-bright leading-snug">
@@ -81,7 +81,7 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
           </div>
           <button
             type="button" onClick={onClose} aria-label="Close"
-            className="shrink-0 text-[20px] leading-none text-white/30 hover:text-white transition-colors mt-0.5"
+            className="shrink-0 text-[20px] leading-none text-foreground/30 hover:text-white transition-colors mt-0.5"
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >×</button>
         </div>
@@ -90,7 +90,7 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
         <div className="overflow-y-auto flex-1 px-6 py-5">
 
           {/* Intro */}
-          <p className="text-[12px] font-light text-white/75 leading-relaxed mb-6">
+          <p className="text-[12px] font-light text-foreground/75 leading-relaxed mb-6">
             {t('intro')}
           </p>
 
@@ -104,14 +104,14 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
 
           {/* 2 — General Restrictions */}
           <Section num={2} title={t('s2Title')}>
-            <p className="mb-3 text-[12px] font-light text-white/75 leading-relaxed">{t('s2Intro')}</p>
+            <p className="mb-3 text-[12px] font-light text-foreground/75 leading-relaxed">{t('s2Intro')}</p>
             <DashList items={[t('s2_1'), t('s2_2'), t('s2_3'), t('s2_4'), t('s2_5')]} />
           </Section>
 
           {/* 3 — Public Event */}
           <Section num={3} title={t('s3Title')}>
-            <p className="text-[12px] font-light text-white/80 leading-relaxed">{t('s3_1')}</p>
-            <p className="mt-2.5 text-[12px] font-light text-white/80 leading-relaxed">{t('s3_2')}</p>
+            <p className="text-[12px] font-light text-foreground/80 leading-relaxed">{t('s3_1')}</p>
+            <p className="mt-2.5 text-[12px] font-light text-foreground/80 leading-relaxed">{t('s3_2')}</p>
           </Section>
 
           {/* 4 — File Delivery */}
@@ -121,22 +121,22 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
 
           {/* 5 — No Warranty */}
           <Section num={5} title={t('s5Title')}>
-            <p className="text-[12px] font-light text-white/80 leading-relaxed">{t('s5_1')}</p>
+            <p className="text-[12px] font-light text-foreground/80 leading-relaxed">{t('s5_1')}</p>
           </Section>
 
           {/* 6 — Governing Law */}
           <Section num={6} title={t('s6Title')}>
-            <p className="text-[12px] font-light text-white/80 leading-relaxed">{t('s6_1')}</p>
+            <p className="text-[12px] font-light text-foreground/80 leading-relaxed">{t('s6_1')}</p>
           </Section>
 
-          <p className="mt-7 text-[11px] font-light text-white/45 leading-relaxed">{t('s7Thanks')}</p>
+          <p className="mt-7 text-[11px] font-light text-foreground/45 leading-relaxed">{t('s7Thanks')}</p>
 
           {/* bottom padding inside scroll area */}
           <div className="h-4" />
         </div>
 
         {/* ── Sticky footer ── */}
-        <div className="shrink-0 px-6 py-4 border-t border-white/[0.07]">
+        <div className="shrink-0 px-6 py-4 border-t border-foreground/[0.07]">
           {mode === 'agree' ? (
             <button
               type="button"
@@ -149,7 +149,7 @@ export default function LicensingModal({ mode = 'view', onAgree, onClose }: Prop
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-[14px] border border-white/15 py-3 text-[10px] font-light tracking-[0.22em] uppercase text-white/55 hover:text-white hover:border-white/30 transition-colors"
+              className="w-full rounded-[14px] border border-foreground/15 py-3 text-[10px] font-light tracking-[0.22em] uppercase text-foreground/55 hover:text-white hover:border-foreground/30 transition-colors"
             >
               {t('close')}
             </button>

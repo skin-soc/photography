@@ -42,7 +42,7 @@ export default function DownloadsHelp({ orderId }: { orderId: string }) {
 
   return (
     <>
-      <p className="mt-12 text-[11px] font-light text-white/25 leading-relaxed">
+      <p className="mt-12 text-[11px] font-light text-foreground/25 leading-relaxed">
         {t.rich('footerHelp', {
           link: (chunks) => (
             <button
@@ -63,7 +63,7 @@ export default function DownloadsHelp({ orderId }: { orderId: string }) {
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative w-full rounded-[20px] border border-white/10"
+            className="relative w-full rounded-[20px] border border-foreground/10"
             style={{ maxWidth: '420px', margin: '0 16px', backgroundColor: '#0c0c0c', padding: '28px 28px 24px' }}
             onClick={(e) => e.stopPropagation()}
           >

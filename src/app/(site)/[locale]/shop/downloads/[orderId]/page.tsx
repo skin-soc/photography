@@ -30,10 +30,10 @@ export default async function DownloadsPage({ params }: { params: Params }) {
     : null
 
   return (
-    <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
+    <main className="min-h-screen bg-bg text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32">
       <Link
         href="/shop"
-        className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35 hover:text-white/70 transition-colors"
+        className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35 hover:text-foreground/70 transition-colors"
       >
         ← {t('returnToShop')}
       </Link>
@@ -47,7 +47,7 @@ export default async function DownloadsPage({ params }: { params: Params }) {
             <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
               {t('heading')}
             </h1>
-            <p className="text-[14px] font-light text-white/50 leading-relaxed mb-10">
+            <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-10">
               {t('intro', { date: expiry ?? '' })}
             </p>
 
@@ -57,13 +57,13 @@ export default async function DownloadsPage({ params }: { params: Params }) {
           </>
         ) : (
           <>
-            <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/40 mb-2">
+            <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/40 mb-2">
               {t('unavailableEyebrow')}
             </p>
             <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
               {t('unavailableHeading')}
             </h1>
-            <p className="text-[14px] font-light text-white/50 leading-relaxed mb-8">
+            <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-8">
               {t('unavailableBody')}
             </p>
             <Link

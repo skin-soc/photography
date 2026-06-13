@@ -37,7 +37,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
 
   /** Underlined desktop link style, shared by top-level links and the trigger. */
   const deskLink = (active: boolean) =>
-    `relative text-[11px] font-light tracking-[0.22em] uppercase text-white pb-[6px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
+    `relative text-[11px] font-light tracking-[0.22em] uppercase text-foreground pb-[6px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
       active ? 'after:bg-[#931020]' : 'after:bg-transparent hover:after:bg-[#931020]'
     }`
 
@@ -90,8 +90,8 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
                         style={TEXT_SHADOW}
                         className={`relative inline-block text-[11px] font-light tracking-[0.22em] uppercase pb-[5px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
                           active
-                            ? 'text-white after:bg-[#931020]'
-                            : 'text-white/60 hover:text-white after:bg-transparent hover:after:bg-[#931020]'
+                            ? 'text-foreground after:bg-[#931020]'
+                            : 'text-foreground/60 hover:text-foreground after:bg-transparent hover:after:bg-[#931020]'
                         }`}
                       >
                         {t(href.slice(1) as NavKey)}
@@ -130,14 +130,14 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
             aria-label={t('menu')}
           >
             <span
-              className="block h-px bg-white transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+              className="block h-px bg-foreground transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
               style={{
                 transform: open ? 'translateY(3.5px) rotate(45deg)' : 'none',
                 opacity: open ? 1 : 0.7,
               }}
             />
             <span
-              className="block h-px bg-white transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+              className="block h-px bg-foreground transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
               style={{
                 transform: open ? 'translateY(-3.5px) rotate(-45deg)' : 'none',
                 opacity: open ? 1 : 0.7,
@@ -151,13 +151,13 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
       {open && (
         <div
           className="fixed inset-0 z-40 flex flex-col items-start justify-center md:hidden"
-          style={{ backgroundColor: 'rgba(0,0,0,0.92)', paddingLeft: '60px' }}
+          style={{ backgroundColor: 'rgb(var(--bg) / 0.92)', paddingLeft: '60px' }}
           onClick={() => setOpen(false)}
         >
           <ul className="flex flex-col gap-6">
             {/* Portfolio — group heading + nested links */}
             <li>
-              <span className="block font-light text-white text-3xl tracking-[0.22em] uppercase mb-4">
+              <span className="block font-light text-foreground text-3xl tracking-[0.22em] uppercase mb-4">
                 {t('portfolio')}
               </span>
               <ul className="flex flex-col gap-4 ps-6">
@@ -169,8 +169,8 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
                         href={href}
                         className={`relative inline-block font-light text-3xl tracking-[0.22em] uppercase pb-[8px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
                           active
-                            ? 'text-white after:bg-[#931020]'
-                            : 'text-white/65 hover:text-white after:bg-transparent hover:after:bg-[#931020]'
+                            ? 'text-foreground after:bg-[#931020]'
+                            : 'text-foreground/65 hover:text-foreground after:bg-transparent hover:after:bg-[#931020]'
                         }`}
                         onClick={() => setOpen(false)}
                       >
@@ -188,7 +188,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
                 <li key={href}>
                   <Link
                     href={href}
-                    className={`relative inline-block font-light text-white text-3xl tracking-[0.22em] uppercase pb-[8px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
+                    className={`relative inline-block font-light text-foreground text-3xl tracking-[0.22em] uppercase pb-[8px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
                       active ? 'after:bg-[#931020]' : 'after:bg-transparent hover:after:bg-[#931020]'
                     }`}
                     onClick={() => setOpen(false)}

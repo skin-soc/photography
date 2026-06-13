@@ -114,15 +114,15 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
             <div className="shop-spinner" role="status" aria-label="Loading" />
           ) : (
             <div className="flex flex-col items-center gap-6 px-8 text-center">
-              <p className="font-[family-name:var(--font-mono-ibm)] text-sm tracking-wide text-white/70">
+              <p className="font-[family-name:var(--font-mono-ibm)] text-sm tracking-wide text-foreground/70">
                 Couldn&apos;t connect — the server may be temporarily unavailable.
               </p>
-              <p className="font-[family-name:var(--font-mono-ibm)] text-xs tracking-wide text-white/40">
+              <p className="font-[family-name:var(--font-mono-ibm)] text-xs tracking-wide text-foreground/40">
                 Please try again later.
               </p>
               <button
                 onClick={dismiss}
-                className="mt-2 border border-white/25 px-8 py-2.5 font-[family-name:var(--font-mono-ibm)] text-xs tracking-widest text-white/60 transition-colors hover:border-white/50 hover:text-white/90"
+                className="mt-2 border border-foreground/25 px-8 py-2.5 font-[family-name:var(--font-mono-ibm)] text-xs tracking-widest text-foreground/60 transition-colors hover:border-foreground/50 hover:text-foreground/90"
               >
                 GO BACK
               </button>

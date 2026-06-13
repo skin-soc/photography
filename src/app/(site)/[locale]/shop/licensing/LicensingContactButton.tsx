@@ -11,7 +11,7 @@ export default function LicensingContactButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="underline underline-offset-2 decoration-white/20 hover:text-white/80 transition-colors"
+        className="underline underline-offset-2 decoration-white/20 hover:text-foreground/80 transition-colors"
       >
         contact us
       </button>
@@ -56,7 +56,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="relative w-full rounded-[20px] border border-white/10"
+        className="relative w-full rounded-[20px] border border-foreground/10"
         style={{ maxWidth: '420px', margin: '0 16px', backgroundColor: '#0c0c0c', padding: '28px 28px 24px' }}
         onClick={(e) => e.stopPropagation()}
       >

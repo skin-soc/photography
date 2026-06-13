@@ -291,18 +291,18 @@ export default function CartDrawer() {
   const panelContent = (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07] shrink-0">
-        <p className="text-[10px] font-light tracking-[0.28em] uppercase text-white/50">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/[0.07] shrink-0">
+        <p className="text-[10px] font-light tracking-[0.28em] uppercase text-foreground/50">
           {step === 'payment' ? t('payment') : step === 'success' ? t('orderConfirmed') : t('title')}
           {step === 'cart' && items.length > 0 && (
-            <span className="ml-2 text-white/25">({items.length})</span>
+            <span className="ml-2 text-foreground/25">({items.length})</span>
           )}
         </p>
         <button
           type="button"
           onClick={handleClose}
           aria-label={t('close')}
-          className="flex items-center justify-center w-7 h-7 rounded-full text-white/30 hover:text-white hover:bg-white/[0.06] transition-colors"
+          className="flex items-center justify-center w-7 h-7 rounded-full text-foreground/30 hover:text-white hover:bg-foreground/[0.06] transition-colors"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
             <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -317,7 +317,7 @@ export default function CartDrawer() {
         {step === 'cart' && (
           <>
             {items.length === 0 ? (
-              <p className="mt-10 text-center text-[12px] font-light tracking-wide text-white/25">
+              <p className="mt-10 text-center text-[12px] font-light tracking-wide text-foreground/25">
                 {t('empty')}
               </p>
             ) : (
@@ -325,11 +325,11 @@ export default function CartDrawer() {
                 {items.map((item) => (
                   <li
                     key={item.sku}
-                    className="flex items-start gap-3 border border-white/[0.07] bg-white/[0.025] overflow-hidden"
+                    className="flex items-start gap-3 border border-foreground/[0.07] bg-foreground/[0.025] overflow-hidden"
                   >
                     {/* Thumbnail */}
                     {item.thumbnailUrl ? (
-                      <div className="shrink-0 w-[60px] h-[60px] bg-white/[0.04] overflow-hidden">
+                      <div className="shrink-0 w-[60px] h-[60px] bg-foreground/[0.04] overflow-hidden">
                         <img
                           src={`${item.thumbnailUrl}?max=120`}
                           alt=""
@@ -341,26 +341,26 @@ export default function CartDrawer() {
                         />
                       </div>
                     ) : (
-                      <div className="shrink-0 w-[60px] h-[60px] bg-white/[0.04]" />
+                      <div className="shrink-0 w-[60px] h-[60px] bg-foreground/[0.04]" />
                     )}
 
                     <div className="flex flex-1 items-start justify-between gap-3 py-3 pr-4 min-w-0">
                       <div className="min-w-0">
-                        <p className="truncate text-[12px] font-light text-white/80 leading-snug">{item.photoTitle}</p>
-                        <p className="mt-0.5 text-[11px] font-light tracking-wide text-white/35">{item.productLabel}</p>
+                        <p className="truncate text-[12px] font-light text-foreground/80 leading-snug">{item.photoTitle}</p>
+                        <p className="mt-0.5 text-[11px] font-light tracking-wide text-foreground/35">{item.productLabel}</p>
                       </div>
                       <div className="shrink-0 flex flex-col items-end justify-between gap-2">
                         <button
                           type="button"
                           onClick={() => removeItem(item.sku)}
                           aria-label={t('remove')}
-                          className="text-white/30 hover:text-white/70 transition-colors leading-none"
+                          className="text-foreground/30 hover:text-foreground/70 transition-colors leading-none"
                         >
                           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                             <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                           </svg>
                         </button>
-                        <p className="text-[12px] text-white/65">{item.priceText}</p>
+                        <p className="text-[12px] text-foreground/65">{item.priceText}</p>
                       </div>
                     </div>
                   </li>
@@ -400,7 +400,7 @@ export default function CartDrawer() {
             <div>
               <p className="text-[9px] font-light tracking-[0.22em] uppercase text-[#931020] mb-2">{t('orderConfirmed')}</p>
               <p className="text-[22px] font-light text-white leading-tight">{t('thankYou')}</p>
-              <p className="mt-2 text-[12px] font-light text-white/40 leading-relaxed">
+              <p className="mt-2 text-[12px] font-light text-foreground/40 leading-relaxed">
                 {successData.downloads.length > 0
                   ? t('successDigitalReady')
                   : t('successPhysical')}
@@ -409,16 +409,16 @@ export default function CartDrawer() {
 
             {successData.downloads.length > 0 && (
               <div className="space-y-2.5">
-                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30">{t('fileReferences')}</p>
+                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30">{t('fileReferences')}</p>
                 {successData.downloads.map((item) => (
                   <div
                     key={item.token}
-                    className="rounded-[12px] border border-white/[0.08] bg-white/[0.03] px-4 py-3.5"
+                    className="rounded-[12px] border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3.5"
                   >
                     <p className="font-[family-name:var(--font-mono-ibm)] text-[15px] font-[200] tracking-wide text-[#931020]">
                       {item.token}.{item.format === 'tiff' ? 'tiff' : 'jpg'}
                     </p>
-                    <p className="mt-0.5 text-[10px] font-light tracking-wide text-white/30">
+                    <p className="mt-0.5 text-[10px] font-light tracking-wide text-foreground/30">
                       {item.label} · {item.format === 'tiff' ? '16-bit TIFF' : 'JPEG'}
                     </p>
                   </div>
@@ -431,7 +431,7 @@ export default function CartDrawer() {
                 {issueState === 'issuing' ? (
                   <div className="flex flex-col items-center gap-2 py-3">
                     <span className="shop-spinner" />
-                    <span className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('preparingDownloads')}</span>
+                    <span className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">{t('preparingDownloads')}</span>
                   </div>
                 ) : (
                   <a
@@ -441,7 +441,7 @@ export default function CartDrawer() {
                     {t('goToDownloads')} →
                   </a>
                 )}
-                <p className="text-[10px] font-light text-white/30 leading-relaxed text-center">
+                <p className="text-[10px] font-light text-foreground/30 leading-relaxed text-center">
                   {issueState === 'error'
                     ? t('issueErrorHelp')
                     : t('downloadsUnlockedHint')}
@@ -450,15 +450,15 @@ export default function CartDrawer() {
             )}
 
             {successData.downloads.length > 0 && issuedPasscode && (
-              <div className="rounded-[12px] border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 space-y-1.5">
-                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30">{t('saveAccess')}</p>
-                <p className="text-[10px] font-light text-white/40 leading-relaxed">
+              <div className="rounded-[12px] border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3.5 space-y-1.5">
+                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30">{t('saveAccess')}</p>
+                <p className="text-[10px] font-light text-foreground/40 leading-relaxed">
                   {t('saveAccessHint')}
                 </p>
-                <p className="font-[family-name:var(--font-mono-ibm)] text-[11px] text-white/60 break-all">
+                <p className="font-[family-name:var(--font-mono-ibm)] text-[11px] text-foreground/60 break-all">
                   /{locale}/shop/downloads/{successData.orderId}
                 </p>
-                <p className="text-[11px] text-white/50">
+                <p className="text-[11px] text-foreground/50">
                   {t('passcodeLabel')}:{' '}
                   <span className="font-[family-name:var(--font-mono-ibm)] text-[#e0566a] tracking-[0.2em]">
                     {issuedPasscode}
@@ -468,15 +468,15 @@ export default function CartDrawer() {
             )}
 
             {successData.hasPhysical && (
-              <div className="rounded-[12px] border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
-                <p className="text-[11px] font-light text-white/45 leading-relaxed">{t('physicalConfirm')}</p>
+              <div className="rounded-[12px] border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3.5">
+                <p className="text-[11px] font-light text-foreground/45 leading-relaxed">{t('physicalConfirm')}</p>
               </div>
             )}
 
             <button
               type="button"
               onClick={handleClose}
-              className="w-full rounded-[14px] border border-white/15 py-3 text-[11px] font-light tracking-[0.22em] uppercase text-white/50 hover:text-white hover:border-white/35 transition-colors"
+              className="w-full rounded-[14px] border border-foreground/15 py-3 text-[11px] font-light tracking-[0.22em] uppercase text-foreground/50 hover:text-white hover:border-foreground/35 transition-colors"
             >
               {t('continueShopping')}
             </button>
@@ -486,7 +486,7 @@ export default function CartDrawer() {
 
       {/* Footer — only on cart step when items present */}
       {step === 'cart' && items.length > 0 && (
-        <div className="border-t border-white/[0.07] px-5 py-5 space-y-3.5 shrink-0">
+        <div className="border-t border-foreground/[0.07] px-5 py-5 space-y-3.5 shrink-0">
           {/* B2B — subtle business/VAT toggle (validated via VIES). */}
           <div className="space-y-2.5">
             <button
@@ -496,10 +496,10 @@ export default function CartDrawer() {
               onClick={() => { const next = !b2b; setB2b(next); if (!next) { setVatCheck(null); setVatConfirmed(false) } }}
               className="flex items-center gap-2.5 text-left select-none cursor-pointer"
             >
-              <span className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${b2b ? 'border-[#931020] bg-[#931020]' : 'border-white/30'}`}>
+              <span className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${b2b ? 'border-[#931020] bg-[#931020]' : 'border-foreground/30'}`}>
                 {b2b && <span className="h-1.5 w-1.5 rounded-[1px] bg-white" />}
               </span>
-              <span className="text-[11px] font-light tracking-wide text-white/45 hover:text-white/70 transition-colors">
+              <span className="text-[11px] font-light tracking-wide text-foreground/45 hover:text-foreground/70 transition-colors">
                 {t('b2bToggle')}
               </span>
             </button>
@@ -513,13 +513,13 @@ export default function CartDrawer() {
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void verifyVat() } }}
                     placeholder={t('vatPlaceholder')}
                     spellCheck={false}
-                    className="flex-1 rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 font-[family-name:var(--font-mono-ibm)] text-[12px] tracking-wide text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+                    className="flex-1 rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 font-[family-name:var(--font-mono-ibm)] text-[12px] tracking-wide text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => void verifyVat()}
                     disabled={vatBusy || !vatInput.trim()}
-                    className="shrink-0 rounded-[8px] border border-white/15 px-3 text-[10px] font-[family-name:var(--font-mono-ibm)] uppercase tracking-[0.18em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
+                    className="shrink-0 rounded-[8px] border border-foreground/15 px-3 text-[10px] font-[family-name:var(--font-mono-ibm)] uppercase tracking-[0.18em] text-foreground/70 hover:border-foreground/40 hover:text-white transition-colors disabled:opacity-40"
                   >
                     {t('verify')}
                   </button>
@@ -528,15 +528,15 @@ export default function CartDrawer() {
                 {vatBusy && (
                   <div className="flex flex-col items-center gap-2 py-3">
                     <span className="shop-spinner" />
-                    <span className="text-[10px] font-light tracking-[0.18em] uppercase text-white/35">{t('checkingVies')}</span>
+                    <span className="text-[10px] font-light tracking-[0.18em] uppercase text-foreground/35">{t('checkingVies')}</span>
                   </div>
                 )}
 
                 {vatCheck && (vatCheck.status === 'valid' ? (
                   <div className="rounded-[8px] border border-emerald-400/30 bg-emerald-400/[0.05] px-3 py-2.5">
-                    <p className="text-[9px] font-light tracking-[0.18em] uppercase text-white/30 mb-1">{t('vatValid')}</p>
+                    <p className="text-[9px] font-light tracking-[0.18em] uppercase text-foreground/30 mb-1">{t('vatValid')}</p>
                     {(needName || needAddress) && (
-                      <p className="mt-1 mb-2 text-[10px] font-light text-white/45 leading-snug">
+                      <p className="mt-1 mb-2 text-[10px] font-light text-foreground/45 leading-snug">
                         {needName && needAddress
                           ? t('viesWithholdsBoth', { country: vatCheck.countryCode })
                           : needName
@@ -546,28 +546,28 @@ export default function CartDrawer() {
                     )}
                     {/* Name — show VIES value, else ask for it. */}
                     {vatCheck.name
-                      ? <p className="text-[12px] text-white/85">{vatCheck.name}</p>
+                      ? <p className="text-[12px] text-foreground/85">{vatCheck.name}</p>
                       : (
                         <input
                           value={declaredName}
                           onChange={(e) => setDeclaredName(e.target.value)}
                           placeholder={t('businessNamePlaceholder')}
-                          className="mb-2 w-full rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+                          className="mb-2 w-full rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
                         />
                       )}
                     {/* Address — show VIES value, else ask for it. */}
                     {vatCheck.address
-                      ? <p className="mt-0.5 text-[10px] font-light text-white/45 leading-snug whitespace-pre-line">{vatCheck.address}</p>
+                      ? <p className="mt-0.5 text-[10px] font-light text-foreground/45 leading-snug whitespace-pre-line">{vatCheck.address}</p>
                       : (
                         <textarea
                           value={declaredAddress}
                           onChange={(e) => setDeclaredAddress(e.target.value)}
                           placeholder={t('businessAddressPlaceholder')}
                           rows={2}
-                          className="w-full resize-none rounded-[8px] border border-white/15 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+                          className="w-full resize-none rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
                         />
                       )}
-                    <p className="mt-1.5 text-[10px] font-light text-white/45 leading-snug">
+                    <p className="mt-1.5 text-[10px] font-light text-foreground/45 leading-snug">
                       {vatCheck.countryCode === 'DK'
                         ? t('dkBusinessVat')
                         : t('reverseChargeInfo')}
@@ -580,10 +580,10 @@ export default function CartDrawer() {
                       onClick={() => setVatConfirmed((v) => !v)}
                       className="mt-2.5 flex items-start gap-2 text-left select-none cursor-pointer"
                     >
-                      <span className={`mt-0.5 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${vatConfirmed ? 'border-emerald-400 bg-emerald-400/80' : 'border-white/35'}`}>
+                      <span className={`mt-0.5 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${vatConfirmed ? 'border-emerald-400 bg-emerald-400/80' : 'border-foreground/35'}`}>
                         {vatConfirmed && <span className="h-1.5 w-1.5 rounded-[1px] bg-[#0d0d0d]" />}
                       </span>
-                      <span className="text-[11px] font-light text-white/70">{t('confirmBusiness')}</span>
+                      <span className="text-[11px] font-light text-foreground/70">{t('confirmBusiness')}</span>
                     </button>
                     {!vatConfirmed && (
                       <p className="mt-1.5 text-[10px] font-light text-amber-300/70">{t('tickToConfirm')}</p>
@@ -605,7 +605,7 @@ export default function CartDrawer() {
           </div>
 
           <div className="flex items-baseline justify-between">
-            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('total')}</p>
+            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">{t('total')}</p>
             <p className="text-[17px] font-light text-white">{totalText}</p>
           </div>
 
@@ -648,7 +648,7 @@ export default function CartDrawer() {
           'hidden sm:flex',
           'fixed inset-y-0 right-0 z-[60]',
           'w-[400px] flex-col',
-          'bg-[#0d0d0d] border-l border-white/[0.08]',
+          'bg-[#0d0d0d] border-l border-foreground/[0.08]',
           'transition-transform duration-300 ease-[cubic-bezier(0.32,0,0.15,1)]',
           'shadow-[-24px_0_48px_rgba(0,0,0,0.6)]',
         ].join(' ')}
@@ -666,7 +666,7 @@ export default function CartDrawer() {
           'flex sm:hidden',
           'fixed bottom-0 inset-x-0 z-[60]',
           'max-h-[88svh] flex-col',
-          'bg-[#0d0d0d] border-t border-white/[0.08]',
+          'bg-[#0d0d0d] border-t border-foreground/[0.08]',
           'rounded-t-[20px]',
           'transition-transform duration-300 ease-[cubic-bezier(0.32,0,0.15,1)]',
           'shadow-[0_-24px_48px_rgba(0,0,0,0.7)]',
@@ -674,7 +674,7 @@ export default function CartDrawer() {
         style={{ transform: isOpen ? 'translateY(0)' : 'translateY(100%)' }}
       >
         <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-8 h-[3px] rounded-full bg-white/20" />
+          <div className="w-8 h-[3px] rounded-full bg-foreground/20" />
         </div>
         {panelContent}
       </div>

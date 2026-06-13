@@ -133,7 +133,7 @@ export default function Home() {
 
       {/* Centered copyright footer */}
       <div className="absolute bottom-0 left-0 right-0 py-4 text-center pointer-events-none select-none">
-        <span className="text-[9px] font-light tracking-[0.2em] uppercase text-white/25">
+        <span className="text-[9px] font-light tracking-[0.2em] uppercase text-foreground/25">
           {t('copyright', { year: new Date().getFullYear() })}
         </span>
       </div>

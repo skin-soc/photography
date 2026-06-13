@@ -182,7 +182,7 @@ function PaymentForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {/* Email — optional; used to send the download link + passcode. */}
       <div>
-        <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-white/35">
+        <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">
           {t('emailLabel')}
         </p>
         <input
@@ -192,14 +192,14 @@ function PaymentForm({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-[8px] border border-white/15 bg-white/[0.04] px-4 py-3 text-[14px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+          className="w-full rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-4 py-3 text-[14px] text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
         />
       </div>
 
       {/* Shipping address — only for physical items */}
       {hasPhysical && (
         <div>
-          <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-white/35">
+          <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">
             {t('shippingAddress')}
           </p>
           <ShippingAddressElement />
@@ -208,7 +208,7 @@ function PaymentForm({
 
       {/* Payment method */}
       <div>
-        <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-white/35">
+        <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">
           {t('paymentDetails')}
         </p>
         <PaymentElement
@@ -228,7 +228,7 @@ function PaymentForm({
       <div>
         {appliedCoupon ? (
           <div className="flex items-center justify-between rounded-[8px] border border-[#931020]/40 bg-[#931020]/[0.06] px-4 py-2.5">
-            <span className="text-[12px] font-light text-white/70">
+            <span className="text-[12px] font-light text-foreground/70">
               <span className="font-mono-ibm tracking-wide">{appliedCoupon}</span>
               {summary && summary.discountMinor > 0 && (
                 <> · <span className="text-[#931020]">−{summary.discount}</span></>
@@ -238,7 +238,7 @@ function PaymentForm({
               type="button"
               onClick={onRemoveCoupon}
               disabled={couponBusy}
-              className="text-[10px] font-light tracking-[0.18em] uppercase text-white/40 hover:text-white transition-colors disabled:opacity-40"
+              className="text-[10px] font-light tracking-[0.18em] uppercase text-foreground/40 hover:text-white transition-colors disabled:opacity-40"
             >
               {t('remove')}
             </button>
@@ -251,13 +251,13 @@ function PaymentForm({
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (promo.trim()) onApplyCoupon() } }}
               placeholder={t('promoCode')}
               spellCheck={false}
-              className="flex-1 rounded-[8px] border border-white/15 bg-white/[0.04] px-4 py-2.5 font-mono-ibm text-[13px] tracking-wide text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors"
+              className="flex-1 rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-4 py-2.5 font-mono-ibm text-[13px] tracking-wide text-white placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
             />
             <button
               type="button"
               onClick={onApplyCoupon}
               disabled={couponBusy || !promo.trim()}
-              className="shrink-0 rounded-[8px] border border-white/15 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
+              className="shrink-0 rounded-[8px] border border-foreground/15 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-foreground/70 hover:border-foreground/40 hover:text-white transition-colors disabled:opacity-40"
             >
               {couponBusy ? '…' : t('apply')}
             </button>
@@ -276,29 +276,29 @@ function PaymentForm({
       )}
 
       {/* Order summary — our own figures (subtotal / discount / VAT / total). */}
-      <div className="border-t border-white/[0.07] pt-4 space-y-1.5">
+      <div className="border-t border-foreground/[0.07] pt-4 space-y-1.5">
         {summary && (summary.vatMinor > 0 || summary.discountMinor > 0) && (
           <div className="flex items-baseline justify-between">
-            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('subtotal')}</p>
-            <p className="text-[12px] font-light text-white/45">{summary.subtotal}</p>
+            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/25">{t('subtotal')}</p>
+            <p className="text-[12px] font-light text-foreground/45">{summary.subtotal}</p>
           </div>
         )}
         {summary && summary.discountMinor > 0 && (
           <div className="flex items-baseline justify-between">
-            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">{t('discount')}</p>
+            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/25">{t('discount')}</p>
             <p className="text-[12px] font-light text-[#931020]">−{summary.discount}</p>
           </div>
         )}
         {summary && summary.vatMinor > 0 && (
           <div className="flex items-baseline justify-between">
-            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/25">
+            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/25">
               {t('vat')}{summary.vatRate ? ` (${summary.vatRate}%)` : ''}
             </p>
-            <p className="text-[12px] font-light text-white/45">{summary.vat}</p>
+            <p className="text-[12px] font-light text-foreground/45">{summary.vat}</p>
           </div>
         )}
         <div className="flex items-baseline justify-between">
-          <p className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35">{t('total')}</p>
+          <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">{t('total')}</p>
           <p className="text-[16px] font-light text-white">{totalDisplay}</p>
         </div>
       </div>
@@ -323,7 +323,7 @@ function PaymentForm({
         type="button"
         onClick={onBack}
         disabled={state === 'loading'}
-        className="text-center text-[10px] font-light tracking-[0.18em] uppercase text-white/25 hover:text-white/55 transition-colors disabled:pointer-events-none"
+        className="text-center text-[10px] font-light tracking-[0.18em] uppercase text-foreground/25 hover:text-foreground/55 transition-colors disabled:pointer-events-none"
       >
         ← {t('backToCart')}
       </button>

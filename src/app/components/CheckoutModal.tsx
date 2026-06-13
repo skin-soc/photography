@@ -144,7 +144,7 @@ export default function CheckoutModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full sm:max-w-[440px] sm:mx-4 rounded-t-[24px] sm:rounded-[20px] border border-white/10"
+        className="relative w-full sm:max-w-[440px] sm:mx-4 rounded-t-[24px] sm:rounded-[20px] border border-foreground/10"
         style={{ backgroundColor: '#0c0c0c', padding: '28px 28px 24px', maxHeight: '90dvh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >

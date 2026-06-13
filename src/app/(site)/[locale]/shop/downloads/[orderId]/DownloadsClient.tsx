@@ -76,10 +76,10 @@ export default function DownloadsClient({
   if (!unlocked) {
     return (
       <form onSubmit={submit} className="mt-2">
-        <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30 mb-4">
+        <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30 mb-4">
           {t('enterPasscode')}
         </p>
-        <p className="text-[13px] font-light text-white/50 leading-relaxed mb-5">
+        <p className="text-[13px] font-light text-foreground/50 leading-relaxed mb-5">
           {t('passcodePrompt')}
         </p>
         <input
@@ -91,7 +91,7 @@ export default function DownloadsClient({
           value={passcode}
           onChange={(e) => setPasscode(e.target.value.toUpperCase())}
           placeholder="XXXXXXXX"
-          className="w-full max-w-[280px] rounded-[12px] border border-white/15 bg-white/[0.04] px-5 py-3 font-mono-ibm text-[18px] font-[200] tracking-[0.3em] text-white placeholder:text-white/20 focus:border-[#931020] focus:outline-none transition-colors"
+          className="w-full max-w-[280px] rounded-[12px] border border-foreground/15 bg-foreground/[0.04] px-5 py-3 font-mono-ibm text-[18px] font-[200] tracking-[0.3em] text-white placeholder:text-foreground/20 focus:border-[#931020] focus:outline-none transition-colors"
         />
         {error && (
           <p className="mt-3 text-[12px] font-light text-[#931020]">{error}</p>
@@ -100,7 +100,7 @@ export default function DownloadsClient({
           <button
             type="submit"
             disabled={submitting || passcode.trim().length === 0}
-            className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white disabled:text-white/20 transition-colors"
+            className="text-[10px] font-light tracking-[0.22em] uppercase text-[#931020] hover:text-white disabled:text-foreground/20 transition-colors"
           >
             {submitting ? t('unlocking') : `${t('unlockDownloads')} →`}
           </button>
@@ -111,30 +111,30 @@ export default function DownloadsClient({
 
   return (
     <div className="space-y-3 mt-2">
-      <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30 mb-4">
+      <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30 mb-4">
         {t('yourFiles')}
       </p>
       {items.map((item) => (
         <div
           key={item.sku}
-          className="flex items-center justify-between gap-4 rounded-[16px] border border-white/10 bg-white/[0.04] px-6 py-5"
+          className="flex items-center justify-between gap-4 rounded-[16px] border border-foreground/10 bg-foreground/[0.04] px-6 py-5"
         >
           <div className="min-w-0">
             <p className="font-mono-ibm text-[18px] font-[400] tracking-wide text-[#931020] truncate">
               {item.filename}
             </p>
-            <p className="mt-1 text-[11px] font-light tracking-wide text-white/30">
+            <p className="mt-1 text-[11px] font-light tracking-wide text-foreground/30">
               {item.label} — {item.format === 'tiff' ? '16-bit TIFF' : 'JPEG'}
               {item.dimensions ? ` · ${item.dimensions.w} × ${item.dimensions.h} px` : ''}
               {item.bytes ? ` · ${formatBytes(item.bytes)}` : (
-                <span className="italic text-white/20"> · preparing…</span>
+                <span className="italic text-foreground/20"> · preparing…</span>
               )}
             </p>
           </div>
           <a
             href={`/api/downloads/${orderId}/${encodeURIComponent(item.sku)}`}
             download
-            className="shrink-0 text-[10px] font-light tracking-[0.18em] uppercase text-white/55 hover:text-white transition-colors"
+            className="shrink-0 text-[10px] font-light tracking-[0.18em] uppercase text-foreground/55 hover:text-white transition-colors"
           >
             {t('download')} →
           </a>

@@ -213,14 +213,14 @@ export default function About() {
         </div>
 
         {/* Contact */}
-        <div className="md:w-[45%] md:ps-12 md:border-s md:border-white/10" style={{
+        <div className="md:w-[45%] md:ps-12 md:border-s md:border-foreground/10" style={{
           flex: '0 0 45%',
           position: 'relative',
           zIndex: 10,
           pointerEvents: 'auto'
         }}>
           <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white mb-3">{t('contactHeading')}</p>
-          <p className="text-[13px] font-light tracking-[0.04em] text-white/70 mb-6">
+          <p className="text-[13px] font-light tracking-[0.04em] text-foreground/70 mb-6">
             {t('contactIntro')}
           </p>
           <ContactForm />

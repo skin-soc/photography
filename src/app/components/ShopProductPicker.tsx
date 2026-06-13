@@ -101,7 +101,7 @@ function RawRequestModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full rounded-[20px] border border-white/10"
+        className="relative w-full rounded-[20px] border border-foreground/10"
         style={{ maxWidth: '420px', margin: '0 16px', backgroundColor: '#0c0c0c', padding: '28px 28px 24px' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -293,11 +293,11 @@ export default function ShopProductPicker({
             ? posterPapers.find((x) => x.code === selectedPaper)?.blurb
             : undefined
           return (
-          <div key={g.type} className="overflow-hidden rounded-[20px] border border-white/10">
+          <div key={g.type} className="overflow-hidden rounded-[20px] border border-foreground/10">
 
             {/* Title section — rendered inside the first card only */}
             {groupIndex === 0 && (
-              <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
+              <div className="px-5 pt-5 pb-4 border-b border-foreground/[0.06]">
                 {location && (
                   <p className="text-[10px] tracking-[0.3em] uppercase text-accent/80 mb-1.5">
                     {location}
@@ -307,7 +307,7 @@ export default function ShopProductPicker({
                   {photoTitle}
                 </h1>
                 {caption && (
-                  <p className="mt-4 text-[15px] font-light italic text-white/50 leading-relaxed">
+                  <p className="mt-4 text-[15px] font-light italic text-foreground/50 leading-relaxed">
                     {caption}
                   </p>
                 )}
@@ -316,7 +316,7 @@ export default function ShopProductPicker({
             )}
 
             {/* Shaded type header */}
-            <div className="bg-white/[0.07] px-5 py-2.5">
+            <div className="bg-foreground/[0.07] px-5 py-2.5">
               <h2 className="text-[12px] font-light tracking-[0.2em] uppercase text-accent">
                 {groupHeading(g.type)}
               </h2>
@@ -324,7 +324,7 @@ export default function ShopProductPicker({
 
             {/* Paper chooser (posters only) */}
             {isPoster && (
-              <div className="px-5 pt-4 pb-3 border-b border-white/[0.06]">
+              <div className="px-5 pt-4 pb-3 border-b border-foreground/[0.06]">
                 <div className="flex flex-wrap gap-2">
                   {posterPapers.map((pp) => {
                     const on = pp.code === selectedPaper
@@ -336,7 +336,7 @@ export default function ShopProductPicker({
                         className={`rounded-full px-3 py-1.5 text-[11px] tracking-[0.04em] transition-colors ${
                           on
                             ? 'bg-accent/90 text-white'
-                            : 'border border-white/15 text-white/55 hover:border-white/35 hover:text-white/80'
+                            : 'border border-foreground/15 text-foreground/55 hover:border-foreground/35 hover:text-foreground/80'
                         }`}
                       >
                         {pp.label}
@@ -345,13 +345,13 @@ export default function ShopProductPicker({
                   })}
                 </div>
                 {paperBlurb && (
-                  <p className="mt-2 text-[11px] font-light text-white/35">{paperBlurb}</p>
+                  <p className="mt-2 text-[11px] font-light text-foreground/35">{paperBlurb}</p>
                 )}
               </div>
             )}
 
             {/* Selectable options */}
-            <div className="divide-y divide-white/[0.07]">
+            <div className="divide-y divide-foreground/[0.07]">
               {items.map((p) => {
                 const on = p.sku === selectedSku
                 const isTiff = p.format === 'tiff'
@@ -364,14 +364,14 @@ export default function ShopProductPicker({
                     aria-checked={on}
                     onClick={() => setSelectedSku(p.sku)}
                     className={`flex w-full items-start gap-3 px-5 py-4 text-left transition-colors cursor-pointer select-none ${
-                      on ? 'bg-accent/[0.14]' : 'hover:bg-white/[0.03]'
+                      on ? 'bg-accent/[0.14]' : 'hover:bg-foreground/[0.03]'
                     }`}
                   >
                     {/* Radio indicator */}
                     <span className="flex h-[22px] shrink-0 items-center">
                       <span
                         className={`grid h-3.5 w-3.5 place-items-center rounded-[3px] border transition-colors ${
-                          on ? 'border-accent bg-accent' : 'border-white/35'
+                          on ? 'border-accent bg-accent' : 'border-foreground/35'
                         }`}
                       >
                         {on && <span className="h-1.5 w-1.5 rounded-[1px] bg-white" />}
@@ -381,7 +381,7 @@ export default function ShopProductPicker({
                     <span className="flex-1 min-w-0">
                       {/* Label row */}
                       <span className="flex items-center gap-2">
-                        <span className="block text-[15px] leading-[22px] text-white/85">{p.label}</span>
+                        <span className="block text-[15px] leading-[22px] text-foreground/85">{p.label}</span>
                         {isTiff && (
                           <span className="rounded px-1.5 py-0.5 text-[9px] font-light tracking-[0.14em] uppercase"
                             style={{ backgroundColor: 'rgba(147,16,32,0.25)', color: 'rgba(200,80,90,0.9)' }}>
@@ -392,12 +392,12 @@ export default function ShopProductPicker({
 
                       {/* Spec */}
                       {p.spec && (
-                        <span className="mt-1 block text-[12px] font-light tracking-wide text-white/60">{p.spec}</span>
+                        <span className="mt-1 block text-[12px] font-light tracking-wide text-foreground/60">{p.spec}</span>
                       )}
 
                       {/* Download token */}
                       {p.downloadToken && (
-                        <span className="mt-1 block truncate font-mono-ibm text-[11px] tracking-wide text-white/30">
+                        <span className="mt-1 block truncate font-mono-ibm text-[11px] tracking-wide text-foreground/30">
                           {p.downloadToken}.{p.format === 'tiff' ? 'tiff' : 'jpg'}
                         </span>
                       )}
@@ -405,7 +405,7 @@ export default function ShopProductPicker({
                       {/* License label + info toggle */}
                       {p.license && (
                         <span className="mt-1 flex items-center gap-1.5">
-                          <span className="text-[10px] tracking-[0.12em] uppercase text-white/25">
+                          <span className="text-[10px] tracking-[0.12em] uppercase text-foreground/25">
                             {t(LICENSE_I18N[p.license] as Parameters<typeof t>[0])}
                           </span>
                           <button
@@ -424,15 +424,15 @@ export default function ShopProductPicker({
 
                       {/* Accordion — license description */}
                       {infoOpen && p.license && (
-                        <p className="mt-2 mb-1 text-[11px] font-light text-white/40 leading-relaxed pr-2">
+                        <p className="mt-2 mb-1 text-[11px] font-light text-foreground/40 leading-relaxed pr-2">
                           {t(LICENSE_DESC_I18N[p.license] as Parameters<typeof t>[0])}
                         </p>
                       )}
                     </span>
 
                     <span className="shrink-0 text-right">
-                      <span className="block leading-[22px] text-white">{p.priceText}</span>
-                      <span className="mt-0.5 block text-[11px] text-white/40">≈ {p.approxText}</span>
+                      <span className="block leading-[22px] text-foreground">{p.priceText}</span>
+                      <span className="mt-0.5 block text-[11px] text-foreground/40">≈ {p.approxText}</span>
                     </span>
                   </div>
                 )
@@ -443,9 +443,9 @@ export default function ShopProductPicker({
                 <button
                   type="button"
                   onClick={() => setRawModalOpen(true)}
-                  className="flex w-full items-center gap-3 px-5 py-4 transition-colors hover:bg-white/[0.03]"
+                  className="flex w-full items-center gap-3 px-5 py-4 transition-colors hover:bg-foreground/[0.03]"
                 >
-                  <span className="flex-1 text-left text-[13px] text-white/55">{t('rawOnRequest')}</span>
+                  <span className="flex-1 text-left text-[13px] text-foreground/55">{t('rawOnRequest')}</span>
                   <span className="text-[13px] text-accent">→</span>
                 </button>
               )}
@@ -479,8 +479,8 @@ export default function ShopProductPicker({
           title={alreadyInCart ? t('inCart') : t('addToCart')}
           className={`flex items-center justify-center gap-2 rounded-[20px] border py-3.5 text-[11px] font-light tracking-[0.18em] uppercase transition-colors ${
             alreadyInCart
-              ? 'border-white/15 text-white/30 cursor-default'
-              : 'border-white/20 text-white/55 hover:border-white/40 hover:text-white/80 cursor-pointer'
+              ? 'border-foreground/15 text-foreground/30 cursor-default'
+              : 'border-foreground/20 text-foreground/55 hover:border-foreground/40 hover:text-foreground/80 cursor-pointer'
           }`}
         >
           {alreadyInCart && cartAdded ? (
@@ -503,7 +503,7 @@ export default function ShopProductPicker({
       </div>
 
       {/* Tax disclosure — prices are exclusive of VAT, applied at checkout */}
-      <p className="mt-3 text-center text-[10px] font-light tracking-[0.16em] uppercase text-white/30">
+      <p className="mt-3 text-center text-[10px] font-light tracking-[0.16em] uppercase text-foreground/30">
         {t('priceExclVat')}
       </p>
 

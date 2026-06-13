@@ -158,7 +158,7 @@ export default async function Shop({ params }: { params: Params }) {
   const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
 
   return (
-    <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
+    <main className="min-h-screen bg-bg text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32">
       {photos.length > 0 ? (
         <ShopGrid
           photos={photos}
@@ -172,7 +172,7 @@ export default async function Shop({ params }: { params: Params }) {
       ) : (
         <header className="max-w-2xl">
           <h1 className="text-4xl md:text-5xl font-light">{t('h1')}</h1>
-          <p className="mt-4 text-white/60 leading-relaxed">{tShop('checkoutSoon')}</p>
+          <p className="mt-4 text-foreground/60 leading-relaxed">{tShop('checkoutSoon')}</p>
         </header>
       )}
     </main>

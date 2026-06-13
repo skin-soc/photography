@@ -9,61 +9,54 @@
   --font-mono-ibm: 'IBM Plex Mono', ui-monospace, monospace;
   --font-mono-space: 'Space Mono', ui-monospace, monospace;
 
-  /* ── Theme tokens (Phase 1) ──────────────────────────────────────────────
-     Semantic colour roles, switched by the theme class the server stamps on
-     <html> (see shop-settings `getThemePref`). DARK is the :root default so an
-     unclassed render — and the whole site until the Phase 2 migration — looks
-     exactly as before. Brand red (#931020) and physical-product whites (poster
-     mat, gallery frame) are deliberately NOT tokens: they stay fixed in every
-     theme. */
-  --bg: #000;
-  --fg: #fff;
-  --muted: rgba(255, 255, 255, 0.45);
-  --hairline: rgba(255, 255, 255, 0.1);
+  /* ── Theme tokens ────────────────────────────────────────────────────────
+     Two semantic roles — page background and foreground — as RGB CHANNEL
+     TRIPLETS (not hex), so Tailwind's opacity modifier works: `text-foreground`,
+     `bg-foreground/5`, `border-foreground/10`, … This is the whole trick of the
+     migration — every old `white/NN` chrome utility becomes `foreground/NN` and
+     inverts correctly (white-5%-on-black ⇄ black-5%-on-white).
+
+     Switched by the theme class the server stamps on <html> (see shop-settings
+     `getThemePref`). DARK is the :root default. Brand red (#931020), image
+     scrims (`from-black/NN`) and physical-product whites (poster mat, gallery
+     frame) are deliberately NOT tokens — they stay fixed in every theme. */
+  --bg: 0 0 0;
+  --fg: 255 255 255;
   color-scheme: dark;
 }
 
 /* Explicit dark (admin → Dark) — same as the :root baseline. */
 .dark {
-  --bg: #000;
-  --fg: #fff;
-  --muted: rgba(255, 255, 255, 0.45);
-  --hairline: rgba(255, 255, 255, 0.1);
+  --bg: 0 0 0;
+  --fg: 255 255 255;
   color-scheme: dark;
 }
 
-/* Light (admin → Light). Real values, ready for the Phase 2 component
-   migration; until then only the base background/text consume them. */
+/* Light (admin → Light). */
 .light {
-  --bg: #fff;
-  --fg: #111;
-  --muted: #5a5a5a;
-  --hairline: rgba(0, 0, 0, 0.12);
+  --bg: 255 255 255;
+  --fg: 17 17 17;
   color-scheme: light;
 }
 
 /* Auto (admin → Auto) — follow the visitor's OS, pure CSS, no flash. */
 .theme-auto {
-  --bg: #fff;
-  --fg: #111;
-  --muted: #5a5a5a;
-  --hairline: rgba(0, 0, 0, 0.12);
+  --bg: 255 255 255;
+  --fg: 17 17 17;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
   .theme-auto {
-    --bg: #000;
-    --fg: #fff;
-    --muted: rgba(255, 255, 255, 0.45);
-    --hairline: rgba(255, 255, 255, 0.1);
+    --bg: 0 0 0;
+    --fg: 255 255 255;
   }
 }
 
 /* Brand default font — matches the About page. This is the site-wide
    default; every page inherits it. Do not override per-page. */
 body {
-  background: var(--bg);
-  color: var(--fg);
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
   overscroll-behavior: none;
   font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
@@ -95,7 +88,7 @@ body {
   border-radius: 50%;
   width: 48px;
   height: 48px;
-  color: #fff;
+  color: rgb(var(--fg));
   position: relative;
 }
 .shop-spinner::before,
@@ -112,7 +105,7 @@ body {
 }
 .shop-spinner::before {
   transform: rotateX(70deg);
-  color: #fff;
+  color: rgb(var(--fg));
 }
 .shop-spinner::after {
   color: #931020;
@@ -132,7 +125,7 @@ body {
 }
 
 input::placeholder, textarea::placeholder {
-  color: rgba(255,255,255,0.4);
+  color: rgb(var(--fg) / 0.4);
 }
 
 /* ── Admin tools ──────────────────────────────────────────────────────────── */

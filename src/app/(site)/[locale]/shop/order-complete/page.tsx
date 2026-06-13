@@ -39,10 +39,10 @@ export default async function OrderComplete({
   const orderId = paid ? (session?.metadata?.orderCode ?? null) : null
 
   return (
-    <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
+    <main className="min-h-screen bg-bg text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32">
       <Link
         href="/shop"
-        className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35 hover:text-white/70 transition-colors"
+        className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35 hover:text-foreground/70 transition-colors"
       >
         ← Back to shop
       </Link>
@@ -56,18 +56,18 @@ export default async function OrderComplete({
             <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
               Thank you.
             </h1>
-            <p className="text-[14px] font-light text-white/50 leading-relaxed mb-8">
+            <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-8">
               {downloadItems.length > 0
                 ? 'Your payment was received. We’ve emailed you a passcode — use it on the download page below to get your files.'
                 : 'Your payment was received. A confirmation email is on its way.'}
             </p>
 
             {downloadItems.length > 0 && orderId && (
-              <div className="rounded-[16px] border border-white/10 bg-white/[0.04] px-6 py-6 mb-8">
-                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30 mb-3">
+              <div className="rounded-[16px] border border-foreground/10 bg-foreground/[0.04] px-6 py-6 mb-8">
+                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30 mb-3">
                   Digital downloads
                 </p>
-                <p className="text-[13px] font-light text-white/50 leading-relaxed mb-5">
+                <p className="text-[13px] font-light text-foreground/50 leading-relaxed mb-5">
                   {downloadItems.length === 1
                     ? '1 file is ready.'
                     : `${downloadItems.length} files are ready.`}{' '}
@@ -83,29 +83,29 @@ export default async function OrderComplete({
             )}
 
             {hasPhysical && (
-              <div className="rounded-[16px] border border-white/10 bg-white/[0.04] px-6 py-5 mb-8">
-                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/30 mb-2">
+              <div className="rounded-[16px] border border-foreground/10 bg-foreground/[0.04] px-6 py-5 mb-8">
+                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30 mb-2">
                   Shipping
                 </p>
-                <p className="text-[13px] font-light text-white/50 leading-relaxed">
+                <p className="text-[13px] font-light text-foreground/50 leading-relaxed">
                   Your print order is being prepared. You will receive a shipping confirmation once dispatched.
                 </p>
               </div>
             )}
 
-            <p className="text-[11px] font-light text-white/25 leading-relaxed">
+            <p className="text-[11px] font-light text-foreground/25 leading-relaxed">
               If you have any questions, use the contact form on this site.
             </p>
           </>
         ) : (
           <>
-            <p className="text-[9px] font-light tracking-[0.22em] uppercase text-white/40 mb-2">
+            <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/40 mb-2">
               Payment
             </p>
             <h1 className="text-4xl font-mono-ibm font-[200] leading-tight tracking-tight text-white mb-6">
               Something went wrong.
             </h1>
-            <p className="text-[14px] font-light text-white/50 leading-relaxed mb-8">
+            <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-8">
               Your payment was not completed. No charge has been made. Please try again or
               contact us if the problem persists.
             </p>

@@ -40,12 +40,12 @@ export default async function LicensingPage({ params }: { params: Params }) {
   setRequestLocale(locale)
 
   return (
-    <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
+    <main className="min-h-screen bg-bg text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32">
 
       {/* Back link */}
       <Link
         href="/shop"
-        className="text-[10px] font-light tracking-[0.22em] uppercase text-white/35 hover:text-white/70 transition-colors"
+        className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35 hover:text-foreground/70 transition-colors"
       >
         ← Shop
       </Link>
@@ -59,10 +59,10 @@ export default async function LicensingPage({ params }: { params: Params }) {
         <h1 className="mt-2 text-4xl md:text-5xl font-mono-ibm font-[200] leading-[1.1] tracking-tight text-accent">
           Licensing Terms &amp; Usage Rights
         </h1>
-        <div className="mt-6 h-px bg-white/[0.10]" />
+        <div className="mt-6 h-px bg-foreground/[0.10]" />
 
         {/* Intro */}
-        <p className="mt-6 text-[14px] font-light text-white/55 leading-relaxed">
+        <p className="mt-6 text-[14px] font-light text-foreground/55 leading-relaxed">
           By purchasing and downloading any digital file from this site, you agree to the following terms.
           This is a non-exclusive, non-transferable license to use the purchased digital image file strictly
           as outlined below. All rights not expressly granted remain with Gus McEwan Photography.
@@ -95,14 +95,14 @@ export default async function LicensingPage({ params }: { params: Params }) {
             'Suitable for large-scale campaigns, products, or resale of derivative works (subject to the restrictions below).',
           ]} />
 
-          <p className="mt-2 text-[12px] font-light text-white/35 leading-relaxed italic">
+          <p className="mt-2 text-[12px] font-light text-foreground/35 leading-relaxed italic">
             RAW files are available on request for an additional fee and are subject to separate terms.
           </p>
         </Section>
 
         {/* ── 2. General Restrictions ──────────────────────────────────────── */}
         <Section num="2" title="General Restrictions">
-          <p className="mb-4 text-[13px] font-light text-white/45 leading-relaxed">
+          <p className="mb-4 text-[13px] font-light text-foreground/45 leading-relaxed">
             The following restrictions apply to all license tiers. You may not:
           </p>
           <DashList items={[
@@ -116,13 +116,13 @@ export default async function LicensingPage({ params }: { params: Params }) {
 
         {/* ── 3. Public Event & Personality Rights ─────────────────────────── */}
         <Section num="3" title="Public Event & Personality Rights Notice">
-          <p className="text-[13px] font-light text-white/55 leading-relaxed">
+          <p className="text-[13px] font-light text-foreground/55 leading-relaxed">
             Many images on this site were captured at public events (such as Copenhagen Pride) in public
             spaces. While photography at such events is generally permitted, the use of images featuring
             identifiable individuals may be subject to personality rights, privacy laws, or
             right-of-publicity rules in your jurisdiction.
           </p>
-          <p className="mt-3 text-[13px] font-light text-white/55 leading-relaxed">
+          <p className="mt-3 text-[13px] font-light text-foreground/55 leading-relaxed">
             You are responsible for ensuring that your intended use complies with all applicable local laws
             regarding the rights of any people depicted. This license does not grant you permission to use
             any person&apos;s likeness in a manner that violates their personality or privacy rights.
@@ -140,7 +140,7 @@ export default async function LicensingPage({ params }: { params: Params }) {
 
         {/* ── 5. No Warranty ───────────────────────────────────────────────── */}
         <Section num="5" title="No Warranty & Limitation of Liability">
-          <p className="text-[13px] font-light text-white/55 leading-relaxed">
+          <p className="text-[13px] font-light text-foreground/55 leading-relaxed">
             The images are provided &ldquo;as is.&rdquo; While every effort is made to deliver
             high-quality files, Gus McEwan Photography makes no warranties regarding fitness for a
             particular purpose beyond the license granted. Liability is limited to the purchase price
@@ -150,7 +150,7 @@ export default async function LicensingPage({ params }: { params: Params }) {
 
         {/* ── 6. Governing Law ─────────────────────────────────────────────── */}
         <Section num="6" title="Governing Law">
-          <p className="text-[13px] font-light text-white/55 leading-relaxed">
+          <p className="text-[13px] font-light text-foreground/55 leading-relaxed">
             These terms are governed by the laws of Denmark. Any disputes shall be resolved in the
             courts of Denmark.
           </p>
@@ -158,11 +158,11 @@ export default async function LicensingPage({ params }: { params: Params }) {
 
         {/* ── 7. Contact & Custom Licenses ─────────────────────────────────── */}
         <Section num="7" title="Contact & Custom Licenses">
-          <p className="text-[13px] font-light text-white/55 leading-relaxed">
+          <p className="text-[13px] font-light text-foreground/55 leading-relaxed">
             For custom licensing, bulk purchases, extended rights, or RAW file requests, please{' '}
             <LicensingContactButton />.
           </p>
-          <p className="mt-6 text-[12px] font-light text-white/25 leading-relaxed">
+          <p className="mt-6 text-[12px] font-light text-foreground/25 leading-relaxed">
             Thank you for supporting independent photography.
           </p>
         </Section>
@@ -189,11 +189,11 @@ function Section({
         <span className="shrink-0 text-[10px] font-mono-ibm font-light tracking-[0.2em] text-accent/50">
           {num}.
         </span>
-        <h2 className="text-[11px] font-light tracking-[0.22em] uppercase text-white/60">
+        <h2 className="text-[11px] font-light tracking-[0.22em] uppercase text-foreground/60">
           {title}
         </h2>
       </div>
-      <div className="pl-5 border-l border-white/[0.07]">
+      <div className="pl-5 border-l border-foreground/[0.07]">
         {children}
       </div>
     </section>
@@ -213,7 +213,7 @@ function DashList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2.5">
       {items.map((item, i) => (
-        <li key={i} className="flex gap-3 text-[13px] font-light text-white/55 leading-relaxed">
+        <li key={i} className="flex gap-3 text-[13px] font-light text-foreground/55 leading-relaxed">
           <span className="shrink-0 text-accent/50 mt-0.5 select-none">—</span>
           <span>{item}</span>
         </li>

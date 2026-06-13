@@ -19,14 +19,11 @@ module.exports = {
       colors: {
         accent: '#931020',
         'accent-bright': '#c9293f',
-        // Semantic theme tokens (Phase 1). Map to the CSS vars in globals.css so
-        // utilities like `bg-bg` / `text-foreground` / `text-muted` follow the
-        // active theme. The Phase 2 migration replaces literal black/white
-        // utilities with these.
-        bg: 'var(--bg)',
-        foreground: 'var(--fg)',
-        muted: 'var(--muted)',
-        hairline: 'var(--hairline)',
+        // Semantic theme tokens. CSS vars are RGB channel triplets, so the
+        // opacity modifier works: `bg-bg`, `text-foreground`, `bg-foreground/5`,
+        // `border-foreground/10`, … all follow the active theme and invert.
+        bg: 'rgb(var(--bg) / <alpha-value>)',
+        foreground: 'rgb(var(--fg) / <alpha-value>)',
       },
     },
   },

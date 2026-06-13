@@ -242,8 +242,8 @@ function Breadcrumb({
   const parentLabel = parentPath.length === 0 ? 'Browse' : labelFor(parentPath)
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
-      <div className="hidden sm:flex items-center gap-2 text-white/40">
-        <Link href="/shop" className="hover:text-white transition-colors">
+      <div className="hidden sm:flex items-center gap-2 text-foreground/40">
+        <Link href="/shop" className="hover:text-foreground transition-colors">
           Browse
         </Link>
         {navPath.map((seg, i) => (
@@ -253,8 +253,8 @@ function Breadcrumb({
               href={categoryUrl(navPath.slice(0, i + 1))}
               className={
                 i === navPath.length - 1
-                  ? 'text-white'
-                  : 'hover:text-white transition-colors'
+                  ? 'text-foreground'
+                  : 'hover:text-foreground transition-colors'
               }
             >
               {i === 0 ? typeLabel(seg) : seg}
@@ -396,7 +396,7 @@ export default function ShopGrid({
           {typeFilter ? t('sectionTitle', { name: t(typeMessageKey(typeFilter)) }) : heading}
         </h1>
         {isLanding && (
-          <p className="mt-4 max-w-2xl text-white/60 leading-relaxed">{intro}</p>
+          <p className="mt-4 max-w-2xl text-foreground/60 leading-relaxed">{intro}</p>
         )}
       </header>
 
@@ -414,7 +414,7 @@ export default function ShopGrid({
         <div className={ready ? 'opacity-100 transition-opacity duration-300' : 'opacity-0 pointer-events-none'}>
           {isLanding ? (
             /* Landing: one card per product type — Fine Art · Prints · Digital */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-foreground/5">
               {typeCards.map((type, idx) => {
                 const count = countInType(photos, type)
                 const keyUrls = keyPhotosForType(photos, type)
@@ -445,7 +445,7 @@ export default function ShopGrid({
             </div>
           ) : isFolderView ? (
             /* Has sub-categories: always show folder cards, never the photo grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-foreground/5">
               {subCategories.map((node, nodeIdx) => {
                 const nodePath = [...subjectPath, node.name]
                 const count = countInCategory(photos, nodePath, typeFilter)
@@ -478,7 +478,7 @@ export default function ShopGrid({
           ) : (
             /* Leaf level: show photo grid */
             shown.length === 0 ? (
-              <p className="text-white/40">{t('checkoutSoon')}</p>
+              <p className="text-foreground/40">{t('checkoutSoon')}</p>
             ) : isPosterLeaf ? (
               /* Posters: each card is the full poster mat as shown on the product
                  page — the title is part of the poster, so no card caption. */
@@ -516,7 +516,7 @@ export default function ShopGrid({
                       className="group block select-none"
                       onContextMenu={(e) => e.preventDefault()}
                     >
-                      <div className="relative overflow-hidden bg-white/5 aspect-square">
+                      <div className="relative overflow-hidden bg-foreground/5 aspect-square">
                         {p.salePct ? <SalePill pct={p.salePct} className="absolute top-2 left-2 z-10" /> : null}
                         <LazyImage
                           src={previewSrc(p.previewUrl, 800, isPhysical(typeFilter))}
@@ -526,8 +526,8 @@ export default function ShopGrid({
                           onReady={i < targetCount ? handleTileLoad : undefined}
                         />
                       </div>
-                      <p className="mt-1.5 text-[12px] font-light leading-tight text-white/70 truncate">{p.title}</p>
-                      <p className="text-[10px] tracking-[0.15em] uppercase text-white/35 truncate">{p.location}</p>
+                      <p className="mt-1.5 text-[12px] font-light leading-tight text-foreground/70 truncate">{p.title}</p>
+                      <p className="text-[10px] tracking-[0.15em] uppercase text-foreground/35 truncate">{p.location}</p>
                     </Link>
                   )
                 })}
