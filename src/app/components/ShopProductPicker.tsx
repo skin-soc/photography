@@ -477,7 +477,7 @@ export default function ShopProductPicker({
           <svg width="11" height="16" viewBox="0 0 11 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M6.5 1L1 9h4.5L4.5 15 10 7H5.5L6.5 1Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
           </svg>
-          {t('buyNow')} — {selected.priceText}
+          {t('buyNow')}
         </button>
 
         {/* Add to Cart — secondary */}
