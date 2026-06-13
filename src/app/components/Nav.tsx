@@ -152,7 +152,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
 
           {shopOnline && (
             <li>
-              <CartIcon />
+              <CartIcon overHero={overHero} />
             </li>
           )}
           <li>
@@ -162,7 +162,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
 
         {/* Mobile cart + hamburger */}
         <div className="md:hidden flex items-center gap-4">
-          {shopOnline && <CartIcon />}
+          {shopOnline && <CartIcon overHero={overHero} />}
           <button
             className="flex flex-col justify-center gap-[7px] w-8 h-8 shrink-0"
             onClick={() => setOpen((o) => !o)}

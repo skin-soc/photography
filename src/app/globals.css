@@ -94,11 +94,17 @@ body {
 .nav-hero-box-shadow {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
+/* SVG icons (cart) — the drop-shadow translation of the text shadow. */
+.nav-hero-drop-shadow {
+  filter: drop-shadow(0 1px 0px rgba(0, 0, 0, 0.6)) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
 .light .nav-hero-shadow { text-shadow: none; }
 .light .nav-hero-box-shadow { box-shadow: none; }
+.light .nav-hero-drop-shadow { filter: none; }
 @media (prefers-color-scheme: light) {
   .theme-auto .nav-hero-shadow { text-shadow: none; }
   .theme-auto .nav-hero-box-shadow { box-shadow: none; }
+  .theme-auto .nav-hero-drop-shadow { filter: none; }
 }
 
 /* ── Shop loading spinner ─────────────────────────────────────────────────── */
