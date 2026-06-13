@@ -176,3 +176,13 @@ dark in light mode.
 **Still open (polish / QA — needs eyeballs in light):** the 21px gallery frame
 (fine-art/digital hero) needs a shadow to read on white; portfolio-page caption
 legibility over a light letterbox; full mobile QA in light; contrast/AA pass.
+
+## Post-Phase-3 tweaks
+
+- **Default theme is now `auto`** (was `dark` during the migration). `getThemePref()`
+  returns `auto` when KV is unset, so a fresh/prod deploy follows the visitor's OS.
+  The theme is a single global value applied server-side to `<html>`, so it's
+  identical on mobile and desktop — `auto` is the only mode that varies per device
+  (via `prefers-color-scheme`). The 21px digital/fine-art frame got its drop shadow.
+- **Nav:** headroom scroll (hide down / frosted reveal up); nav items carry no
+  shadow in any theme — only the logo, and only while transparent over a hero.

@@ -143,16 +143,16 @@ function isThemePref(v: string | null): v is ThemePref {
   return v === 'auto' || v === 'light' || v === 'dark'
 }
 
-/** Current site theme preference. Defaults to `dark` whenever unset or KV is
- *  unavailable, so the site never loses its baseline appearance. */
+/** Current site theme preference. Defaults to `auto` (follow the visitor's OS)
+ *  whenever unset or KV is unavailable. */
 export async function getThemePref(): Promise<ThemePref> {
   const kv = await settingsKV()
-  if (!kv) return 'dark'
+  if (!kv) return 'auto'
   try {
     const raw = await kv.get(THEME_KEY)
-    return isThemePref(raw) ? raw : 'dark'
+    return isThemePref(raw) ? raw : 'auto'
   } catch {
-    return 'dark'
+    return 'auto'
   }
 }
 

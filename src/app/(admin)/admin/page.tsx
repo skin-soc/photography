@@ -679,7 +679,7 @@ function AppearanceSettings() {
     fetch('/api/admin/theme')
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setTheme((d as { theme: ThemePref }).theme))
-      .catch(() => setTheme('dark'))
+      .catch(() => setTheme('auto'))
   }, [])
 
   async function save(next: ThemePref) {
