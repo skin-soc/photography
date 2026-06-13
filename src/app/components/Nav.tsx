@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import LocaleSwitcher from './LocaleSwitcher'
@@ -8,6 +8,12 @@ import CartIcon from './CartIcon'
 
 const portfolioHrefs = ['/people', '/places', '/nature'] as const
 type NavKey = 'people' | 'places' | 'nature' | 'shop' | 'about'
+
+// Pages with a full-bleed hero/gallery under the nav. Only here does the bar go
+// transparent over the photo and keep the over-photo text-shadow; everywhere else
+// (content pages) it's frosted, so the shadow — which only helps over imagery,
+// and looks grimy on a light page — is dropped. usePathname() is locale-stripped.
+const HERO_PATHS: string[] = ['/', '/people', '/places', '/nature']
 
 const TEXT_SHADOW = {
   textShadow: '0 1px 0 rgba(0,0,0,1), 0 1px 1px rgba(0,0,0,0.95), 0 2px 2px rgba(0,0,0,0.75)',
@@ -32,8 +38,41 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
     return false
   })
 
+  // ── Headroom scroll behaviour ────────────────────────────────────────────
+  // Hide the bar on scroll DOWN, reveal it (frosted) on scroll UP. At the very
+  // top of a hero page it's transparent over the photo; otherwise it's frosted.
+  const [hidden, setHidden] = useState(false)
+  const [atTop, setAtTop] = useState(true)
+  const lastY = useRef(0)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      const top = y < 8
+      setAtTop(top)
+      if (top) { setHidden(false); lastY.current = y; return }
+      const dy = y - lastY.current
+      if (Math.abs(dy) > 4) {
+        // Hide only once we're clear of the top; reveal on any upward move.
+        if (dy > 0 && y > 80) setHidden(true)
+        else if (dy < 0) setHidden(false)
+        lastY.current = y
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
   const portfolioActive = portfolioHrefs.some(isActive)
+
+  // Transparent + over-photo shadow only when genuinely over a hero at the top.
+  const overHero = HERO_PATHS.includes(pathname) && atTop
+  const frosted = !overHero
+  const linkShadow = overHero ? TEXT_SHADOW : undefined
+  // Keep the bar visible while the mobile menu is open.
+  const navHidden = hidden && !open
 
   /** Underlined desktop link style, shared by top-level links and the trigger. */
   const deskLink = (active: boolean) =>
@@ -44,8 +83,12 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
   return (
     <>
       <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
-        style={{ padding: '3vw 6vw' }}
+        className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-[transform,background-color,border-color] duration-300 ease-out ${
+          frosted
+            ? 'bg-bg/80 backdrop-blur-md border-b border-foreground/10'
+            : 'bg-transparent border-b border-transparent'
+        }`}
+        style={{ padding: '3vw 6vw', transform: navHidden ? 'translateY(-120%)' : 'translateY(0)' }}
       >
         <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
           <img
@@ -56,8 +99,8 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
               height: '46px',
               width: 'auto',
               // The SVG is already brand-red (#931020); just a subtle shadow for
-              // legibility over hero images.
-              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))',
+              // legibility over hero images — dropped once the bar is frosted.
+              filter: overHero ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' : 'none',
             }}
           />
         </Link>
@@ -68,7 +111,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
           <li className="relative group">
             <span
               className={deskLink(portfolioActive)}
-              style={TEXT_SHADOW}
+              style={linkShadow}
               role="button"
               tabIndex={0}
               aria-haspopup="true"
@@ -87,7 +130,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
                     <li key={href}>
                       <Link
                         href={href}
-                        style={TEXT_SHADOW}
+                        style={linkShadow}
                         className={`relative inline-block text-[11px] font-light tracking-[0.22em] uppercase pb-[5px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
                           active
                             ? 'text-foreground after:bg-[#931020]'
@@ -105,7 +148,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
 
           {topHrefs.map((href) => (
             <li key={href}>
-              <Link href={href} className={deskLink(isActive(href))} style={TEXT_SHADOW}>
+              <Link href={href} className={deskLink(isActive(href))} style={linkShadow}>
                 {t(href.slice(1) as NavKey)}
               </Link>
             </li>
@@ -130,14 +173,14 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
             aria-label={t('menu')}
           >
             <span
-              className="block h-px bg-foreground transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+              className={`block h-px bg-foreground transition-all duration-300 origin-center ${overHero ? 'shadow-[0_1px_2px_rgba(0,0,0,0.6)]' : ''}`}
               style={{
                 transform: open ? 'translateY(3.5px) rotate(45deg)' : 'none',
                 opacity: open ? 1 : 0.7,
               }}
             />
             <span
-              className="block h-px bg-foreground transition-all duration-300 origin-center shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+              className={`block h-px bg-foreground transition-all duration-300 origin-center ${overHero ? 'shadow-[0_1px_2px_rgba(0,0,0,0.6)]' : ''}`}
               style={{
                 transform: open ? 'translateY(-3.5px) rotate(-45deg)' : 'none',
                 opacity: open ? 1 : 0.7,
