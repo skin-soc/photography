@@ -230,7 +230,7 @@ export default async function ShopProductView({
             />
           </div>
         ) : (
-          <div className="relative select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px]" style={{ maxWidth: previewW, width: '100%' }}>
+          <div className="relative select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px] shadow-[0_28px_64px_-26px_rgba(0,0,0,0.6)]" style={{ maxWidth: previewW, width: '100%' }}>
             {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
             <img
               src={`${photo.previewUrl}${heroQuery(800)}`}
