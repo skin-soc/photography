@@ -230,21 +230,24 @@ function LazyImage({
 function Breadcrumb({
   navPath,
   typeLabel,
+  rootLabel,
 }: {
   navPath: string[]
   /** Friendly label for the leading product-type token. */
   typeLabel: (token: string) => string
+  /** Localized label for the shop root (e.g. "Shop"). */
+  rootLabel: string
 }) {
   if (navPath.length === 0) return null
   const parentPath = navPath.slice(0, -1)
   const labelFor = (path: string[]) =>
     path.length === 1 ? typeLabel(path[0]) : path[path.length - 1]
-  const parentLabel = parentPath.length === 0 ? 'Browse' : labelFor(parentPath)
+  const parentLabel = parentPath.length === 0 ? rootLabel : labelFor(parentPath)
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
       <div className="hidden sm:flex items-center gap-2 text-foreground/40">
         <Link href="/shop" className="hover:text-foreground transition-colors">
-          Browse
+          {rootLabel}
         </Link>
         {navPath.map((seg, i) => (
           <span key={i} className="flex items-center gap-2">
@@ -401,7 +404,7 @@ export default function ShopGrid({
       </header>
 
       {/* Breadcrumb (hidden on the landing) */}
-      <Breadcrumb navPath={navPath} typeLabel={typeLabel} />
+      <Breadcrumb navPath={navPath} typeLabel={typeLabel} rootLabel={t('browse')} />
 
       <div className="relative min-h-[50vh]">
         {/* Loading overlay — shown until the first page of images has painted */}

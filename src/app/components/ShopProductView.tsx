@@ -54,7 +54,7 @@ function ProductBreadcrumb({
   title: string
   /** Friendly label for the leading product-type token (segment 0). */
   typeLabel: (token: string) => string
-  /** Localized "Browse" root label. */
+  /** Localized shop-root label (e.g. "Shop"). */
   browseLabel: string
 }) {
   const label = (seg: string, i: number) => (i === 0 ? typeLabel(seg) : seg)

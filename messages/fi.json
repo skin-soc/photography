@@ -112,7 +112,7 @@
     "inCart": "Ostoskorissa",
     "added": "Lisätty",
     "sectionTitle": "{name}-kauppa",
-    "browse": "Selaa",
+    "browse": "Kauppa",
     "alsoAvailableAs": "Saatavilla myös muodossa {name}"
   },
   "cart": {
