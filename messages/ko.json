@@ -26,7 +26,7 @@
     },
     "shop": {
       "title": "상점",
-      "h1": "파인아트, 포스터 & 다운로드 샵",
+      "h1": "파인아트, 포스터 & 다운로드 상점",
       "description": "Gus McEwan의 파인 아트 프린트와 디지털 다운로드를 구매하세요 — 코펜하겐, 런던 등에서 촬영한 인물, 풍경, 여행 사진의 엄선된 컬렉션입니다."
     }
   },
@@ -111,7 +111,7 @@
     "buyNow": "지금 구매",
     "inCart": "장바구니에 있음",
     "added": "추가됨",
-    "sectionTitle": "{name} 숍",
+    "sectionTitle": "{name} 상점",
     "shopRoot": "상점",
     "alsoAvailableAs": "{name}(으)로도 제공됩니다"
   },
