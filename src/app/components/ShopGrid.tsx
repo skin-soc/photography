@@ -543,11 +543,17 @@ export default function ShopGrid({
                         />
                       </div>
                       {typeFilter === 'digital' ? (
-                        /* Digital downloads share titles across an event, so the
-                           card shows the unique code + "from" price, right-aligned. */
+                        /* Digital: title/location on the left (as before), with the
+                           unique code + "from" price added on the right of each row. */
                         <>
-                          <p className="mt-1.5 text-[11px] font-mono-ibm tracking-wide text-accent text-right truncate">{p.slug.toUpperCase()}</p>
-                          <p className="text-[10px] tracking-wide text-foreground/45 text-right truncate">{t('from')} {p.fromText}</p>
+                          <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                            <p className="min-w-0 text-[12px] font-light leading-tight text-foreground/70 truncate">{p.title}</p>
+                            <p className="shrink-0 text-[11px] font-mono-ibm tracking-wide text-accent">{p.slug.toUpperCase()}</p>
+                          </div>
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className="min-w-0 text-[10px] tracking-[0.15em] uppercase text-foreground/35 truncate">{p.location}</p>
+                            <p className="shrink-0 text-[10px] tracking-wide text-foreground/45">{t('from')} {p.fromText}</p>
+                          </div>
                         </>
                       ) : (
                         <>
