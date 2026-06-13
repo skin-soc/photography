@@ -1,54 +1,80 @@
-import type { Metadata } from 'next'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getPhoto, productSpec, displayTitle, productLicense, isProductType, typeMessageKey } from '@/lib/shop'
-import type { ProductType } from '@/lib/shop'
+import {
+  productSpec,
+  displayTitle,
+  productLicense,
+  isProductType,
+  typeMessageKey,
+  type ShopPhoto,
+  type ProductType,
+} from '@/lib/shop'
+import { categoryUrl } from '@/lib/shop-url'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
 import PosterMat from '@/app/components/PosterMat'
 import SalePill from '@/app/components/SalePill'
 import LicensingLink from '@/app/components/LicensingLink'
-import { SITE_URL, BUSINESS_NAME, OG_LOCALE_MAP } from '@/i18n/seo'
-import { routing } from '@/i18n/routing'
+import { SITE_URL, BUSINESS_NAME } from '@/i18n/seo'
 
-type Params = Promise<{ locale: string; slug: string }>
-type SearchParams = Promise<{ from?: string }>
+/**
+ * The product detail page for a single photo, rendered by the shop catch-all
+ * route when the URL's last segment is a product slug (`gmp-…`).
+ *
+ * Browse context is NOT carried in the URL (the product slug stays flat and
+ * canonical); instead the breadcrumb + "back" target are DERIVED from the
+ * photo's own data — its primary product type and its first subject collection.
+ * That keeps every product reachable at one stable URL while still giving a
+ * correct, deep-link-safe breadcrumb on a hard refresh.
+ */
+
+/** Presentation priority for a product reached via a flat (context-free) slug.
+ *  Posters lead — they're the dominant line and the poster mat is the strongest
+ *  hero, so a shared/refreshed product link shows the poster by default; fine
+ *  art then digital fall back when posters aren't offered. (Distinct from
+ *  `PRODUCT_TYPE_ORDER`, which orders the landing tiers.) */
+const PRESENTATION_ORDER: ProductType[] = ['print', 'fine-art', 'digital']
+
+/** The product type the page leads with: the first of {@link PRESENTATION_ORDER}
+ *  the photo is actually offered in. Drives the hero (poster mat vs frame) and
+ *  the derived breadcrumb. */
+function primaryTypeOf(photo: ShopPhoto): ProductType | undefined {
+  const offered = new Set(photo.products.map((p) => p.type))
+  return PRESENTATION_ORDER.find((t) => offered.has(t))
+}
 
 function ProductBreadcrumb({
-  path,
+  navPath,
   title,
   typeLabel,
   browseLabel,
 }: {
-  path: string[]
+  /** Derived nav-path `[productType, ...subjectFolders]`. */
+  navPath: string[]
   title: string
   /** Friendly label for the leading product-type token (segment 0). */
   typeLabel: (token: string) => string
   /** Localized "Browse" root label. */
   browseLabel: string
 }) {
-  // The back button returns to exactly where the user came from — the leaf
-  // collection they were browsing. The breadcrumb links cover parent navigation.
   const label = (seg: string, i: number) => (i === 0 ? typeLabel(seg) : seg)
-  const backHref = path.length === 0
-    ? '/shop'
-    : `/shop?cat=${encodeURIComponent(path.join('|'))}`
-  const backLabel = path.length === 0 ? browseLabel : label(path[path.length - 1], path.length - 1)
+  // Back returns to the leaf collection this photo belongs to.
+  const backHref = navPath.length === 0 ? '/shop' : categoryUrl(navPath)
+  const backLabel =
+    navPath.length === 0 ? browseLabel : label(navPath[navPath.length - 1], navPath.length - 1)
 
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
       <div className="hidden sm:flex items-center gap-2 text-white/40 min-w-0">
         <Link href="/shop" className="hover:text-white transition-colors shrink-0">{browseLabel}</Link>
-        {path.map((seg, i) => {
-          const segHref = `/shop?cat=${encodeURIComponent(path.slice(0, i + 1).join('|'))}`
-          return (
-            <span key={i} className="flex items-center gap-2 min-w-0">
-              <span className="shrink-0">/</span>
-              <Link href={segHref} className="hover:text-white transition-colors truncate">{label(seg, i)}</Link>
-            </span>
-          )
-        })}
+        {navPath.map((seg, i) => (
+          <span key={i} className="flex items-center gap-2 min-w-0">
+            <span className="shrink-0">/</span>
+            <Link href={categoryUrl(navPath.slice(0, i + 1))} className="hover:text-white transition-colors truncate">
+              {label(seg, i)}
+            </Link>
+          </span>
+        ))}
         <span className="flex items-center gap-2 min-w-0">
           <span className="shrink-0">/</span>
           <span className="text-white truncate">{title}</span>
@@ -64,56 +90,21 @@ function ProductBreadcrumb({
   )
 }
 
-function localizedShopUrl(locale: string, slug: string): string {
-  const prefix = locale === routing.defaultLocale ? '' : `/${locale}`
-  return `${SITE_URL}${prefix}/shop/${slug}`
-}
-
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { locale, slug } = await params
-  const photo = await getPhoto(slug)
-  if (!photo) return {}
-
-  const title = `${displayTitle(photo)} — ${photo.location}`
-  const description = `${photo.caption} Available as posters, fine art editions and digital downloads by ${BUSINESS_NAME}.`
-  const canonical = localizedShopUrl(locale, slug)
-  const languages: Record<string, string> = {}
-  for (const l of routing.locales) languages[l] = localizedShopUrl(l, slug)
-  languages['x-default'] = `${SITE_URL}/shop/${slug}`
-
-  return {
-    title,
-    description,
-    alternates: { canonical, languages },
-    openGraph: {
-      title: `${title} | ${BUSINESS_NAME}`,
-      description,
-      url: canonical,
-      type: 'website',
-      locale: OG_LOCALE_MAP[locale] ?? 'en_GB',
-      images: [{ url: photo.previewUrl, width: photo.width, height: photo.height, alt: title }],
-    },
-    twitter: { card: 'summary_large_image', title, description, images: [photo.previewUrl] },
-  }
-}
-
-export default async function ShopItem({
-  params,
-  searchParams,
+export default async function ShopProductView({
+  locale,
+  photo,
 }: {
-  params: Params
-  searchParams: SearchParams
+  locale: string
+  photo: ShopPhoto
 }) {
-  const { locale, slug } = await params
-  const { from } = await searchParams
-  const fromPath: string[] = from ? decodeURIComponent(from).split('|') : []
-  // The leading breadcrumb token is the product type the customer came through
-  // (e.g. "print"); it leads the picker and frames the others as cross-sells.
-  const primaryType: ProductType | undefined =
-    fromPath.length > 0 && isProductType(fromPath[0]) ? fromPath[0] : undefined
-  setRequestLocale(locale)
-  const photo = await getPhoto(slug)
-  if (!photo) notFound()
+  const slug = photo.slug
+  const primaryType = primaryTypeOf(photo)
+  // Breadcrumb trail derived from the photo: its leading type + first subject
+  // collection. (A photo can sit in several collections; the first is canonical
+  // for orientation — the deep navigation is via the breadcrumb links.)
+  const navPath: string[] = primaryType
+    ? [primaryType, ...(photo.category[0] ?? [])]
+    : []
 
   const t = await getTranslations({ locale, namespace: 'shop' })
   const rates = await getRates()
@@ -181,13 +172,13 @@ export default async function ShopItem({
 
   // Poster presentation: in the Posters context the photo is shown on a white
   // gallery mat with the title + caption typeset below (PosterMat). Everything
-  // else (fine art, digital, direct links) uses the simple 21px gallery frame.
+  // else (fine art, digital) uses the simple 21px gallery frame.
   const posterView = primaryType === 'print'
   const posterCardMaxWidth = Math.min(previewW + 40, 600)
 
   // Physical (poster / fine-art) contexts preview the artwork WITHOUT the logo
   // badge — the customer is judging the print, not buying a file. The repeating
-  // mesh watermark stays on every variant. Digital (and direct links) keep the logo.
+  // mesh watermark stays on every variant. Digital keeps the logo.
   const heroNoLogo = primaryType === 'print' || primaryType === 'fine-art'
   // Posters request the 4:5 portrait crop (matches the print master); fine art and
   // digital keep the full frame.
@@ -201,13 +192,12 @@ export default async function ShopItem({
     <main className="min-h-screen bg-black text-white px-[6vw] pt-[calc(6vw+128px)] pb-32">
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
-      {fromPath.length > 0 ? (
+      {navPath.length > 0 ? (
         <ProductBreadcrumb
-          path={fromPath}
+          navPath={navPath}
           title={displayTitle(photo)}
           typeLabel={(token) => (isProductType(token) ? t(typeMessageKey(token)) : token)}
           browseLabel={t('browse')}

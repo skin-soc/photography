@@ -49,6 +49,7 @@ export default function PosterMat({
   siteLabel,
   maxWidth,
   eager = true,
+  grayscaleHover = false,
 }: {
   src: string
   srcSet?: string
@@ -63,6 +64,9 @@ export default function PosterMat({
   maxWidth: number
   /** Eager-load the image (hero); pass false for below-the-fold grid cards. */
   eager?: boolean
+  /** Grid use: render the photo B&W, returning to colour on hover. The parent
+   *  must be a `group`. `hoverOnlyWhenSupported` keeps it B&W on touch (no hover). */
+  grayscaleHover?: boolean
 }) {
   return (
     <figure
@@ -81,7 +85,9 @@ export default function PosterMat({
             alt={alt}
             draggable={false}
             loading={eager ? 'eager' : 'lazy'}
-            className="pointer-events-none"
+            className={`pointer-events-none transition-[filter] duration-700 ease-out ${
+              grayscaleHover ? 'grayscale group-hover:grayscale-0' : ''
+            }`}
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
           />
         </div>

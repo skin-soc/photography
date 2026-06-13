@@ -12,6 +12,7 @@ import {
 } from '@/lib/product-types'
 import PosterMat from '@/app/components/PosterMat'
 import SalePill from '@/app/components/SalePill'
+import { categoryUrl } from '@/lib/shop-url'
 
 export interface GridPhoto {
   id: string
@@ -229,12 +230,10 @@ function LazyImage({
 function Breadcrumb({
   navPath,
   typeLabel,
-  onNavigate,
 }: {
   navPath: string[]
   /** Friendly label for the leading product-type token. */
   typeLabel: (token: string) => string
-  onNavigate: (path: string[]) => void
 }) {
   if (navPath.length === 0) return null
   const parentPath = navPath.slice(0, -1)
@@ -244,14 +243,14 @@ function Breadcrumb({
   return (
     <nav className="flex items-center justify-between gap-2 text-[11px] tracking-[0.18em] uppercase mb-8">
       <div className="hidden sm:flex items-center gap-2 text-white/40">
-        <button onClick={() => onNavigate([])} className="hover:text-white transition-colors">
+        <Link href="/shop" className="hover:text-white transition-colors">
           Browse
-        </button>
+        </Link>
         {navPath.map((seg, i) => (
           <span key={i} className="flex items-center gap-2">
             <span>/</span>
-            <button
-              onClick={() => onNavigate(navPath.slice(0, i + 1))}
+            <Link
+              href={categoryUrl(navPath.slice(0, i + 1))}
               className={
                 i === navPath.length - 1
                   ? 'text-white'
@@ -259,16 +258,16 @@ function Breadcrumb({
               }
             >
               {i === 0 ? typeLabel(seg) : seg}
-            </button>
+            </Link>
           </span>
         ))}
       </div>
-      <button
-        onClick={() => onNavigate(parentPath)}
+      <Link
+        href={categoryUrl(parentPath)}
         className="text-[#931020] hover:text-[#b01226] transition-colors shrink-0"
       >
         ← {parentLabel}
-      </button>
+      </Link>
     </nav>
   )
 }
@@ -300,8 +299,9 @@ export default function ShopGrid({
     [t],
   )
 
-  // The top tier of the tree is the product type; the rest is the subject path.
-  const [navPath, setNavPath] = useState<string[]>(initialCategoryPath)
+  // The browse position is the URL path (resolved to real folder names by the
+  // server); navigation is via real <Link>s, so refresh/share land here exactly.
+  const navPath = initialCategoryPath
   const typeFilter: ProductType | null =
     navPath.length > 0 && isProductType(navPath[0]) ? navPath[0] : null
   const subjectPath = typeFilter ? navPath.slice(1) : []
@@ -401,7 +401,7 @@ export default function ShopGrid({
       </header>
 
       {/* Breadcrumb (hidden on the landing) */}
-      <Breadcrumb navPath={navPath} typeLabel={typeLabel} onNavigate={setNavPath} />
+      <Breadcrumb navPath={navPath} typeLabel={typeLabel} />
 
       <div className="relative min-h-[50vh]">
         {/* Loading overlay — shown until the first page of images has painted */}
@@ -419,10 +419,10 @@ export default function ShopGrid({
                 const count = countInType(photos, type)
                 const keyUrls = keyPhotosForType(photos, type)
                 return (
-                  <button
+                  <Link
                     key={type}
-                    onClick={() => setNavPath([type])}
-                    className="group relative overflow-hidden aspect-[4/3] bg-black text-left"
+                    href={categoryUrl([type])}
+                    className="group relative block overflow-hidden aspect-[4/3] bg-black text-left"
                   >
                     <RotatingImage
                       srcs={keyUrls}
@@ -439,7 +439,7 @@ export default function ShopGrid({
                         </p>
                       )}
                     </div>
-                  </button>
+                  </Link>
                 )
               })}
             </div>
@@ -451,10 +451,10 @@ export default function ShopGrid({
                 const count = countInCategory(photos, nodePath, typeFilter)
                 const keyUrls = keyPhotosForFolder(photos, nodePath, typeFilter)
                 return (
-                  <button
+                  <Link
                     key={node.name}
-                    onClick={() => setNavPath([...navPath, node.name])}
-                    className="group relative overflow-hidden aspect-[4/3] bg-black text-left"
+                    href={categoryUrl([...navPath, node.name])}
+                    className="group relative block overflow-hidden aspect-[4/3] bg-black text-left"
                   >
                     <RotatingImage
                       srcs={keyUrls}
@@ -471,7 +471,7 @@ export default function ShopGrid({
                         </p>
                       )}
                     </div>
-                  </button>
+                  </Link>
                 )
               })}
             </div>
@@ -484,12 +484,11 @@ export default function ShopGrid({
                  page — the title is part of the poster, so no card caption. */
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
                 {shown.map((p, i) => {
-                  const from = `?from=${encodeURIComponent(navPath.join('|'))}`
                   return (
                     <Link
                       key={p.id}
-                      href={`/shop/${p.slug}${from}`}
-                      className="relative block select-none transition-transform duration-300 hover:-translate-y-1"
+                      href={`/shop/${p.slug}`}
+                      className="group relative block select-none transition-transform duration-300 hover:-translate-y-1"
                       onContextMenu={(e) => e.preventDefault()}
                     >
                       {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
@@ -501,6 +500,7 @@ export default function ShopGrid({
                         siteLabel={siteLabel}
                         maxWidth={600}
                         eager={i < 4}
+                        grayscaleHover
                       />
                     </Link>
                   )
@@ -509,13 +509,10 @@ export default function ShopGrid({
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {shown.map((p, i) => {
-                  const from = navPath.length > 0
-                    ? `?from=${encodeURIComponent(navPath.join('|'))}`
-                    : ''
                   return (
                     <Link
                       key={p.id}
-                      href={`/shop/${p.slug}${from}`}
+                      href={`/shop/${p.slug}`}
                       className="group block select-none"
                       onContextMenu={(e) => e.preventDefault()}
                     >

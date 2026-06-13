@@ -21,3 +21,24 @@ export function isProductType(seg: string): seg is ProductType {
 export function typeMessageKey(type: ProductType): 'fineArt' | 'prints' | 'digital' {
   return type === 'fine-art' ? 'fineArt' : type === 'print' ? 'prints' : 'digital'
 }
+
+/** Customer-facing URL slug for a product type — the first path segment of a
+ *  shop category URL, e.g. `print` → `/shop/posters`. Stable English slugs
+ *  (locale-independent) so a shared link resolves the same in any language.
+ *  Note: digital stays `digital` (not `downloads`) to avoid colliding with the
+ *  post-purchase delivery route `/shop/downloads/<orderCode>`. */
+export function typeUrlSlug(type: ProductType): string {
+  return type === 'print' ? 'posters' : type === 'fine-art' ? 'fine-art' : 'digital'
+}
+
+/** Reverse of {@link typeUrlSlug}: a URL segment back to a product type, or
+ *  null when the segment isn't a known type slug. */
+export function typeFromUrlSlug(slug: string): ProductType | null {
+  return slug === 'posters'
+    ? 'print'
+    : slug === 'fine-art'
+      ? 'fine-art'
+      : slug === 'digital'
+        ? 'digital'
+        : null
+}
