@@ -249,21 +249,24 @@ function Breadcrumb({
         <Link href="/shop" className="hover:text-foreground transition-colors">
           {rootLabel}
         </Link>
-        {navPath.map((seg, i) => (
-          <span key={i} className="flex items-center gap-2">
+        {/* Type tier, then the current folder only — intermediate folders are
+            dropped to keep the trail short (matches the product page). The
+            "← parent" link still steps up one level. */}
+        <span className="flex items-center gap-2">
+          <span>/</span>
+          <Link
+            href={categoryUrl([navPath[0]])}
+            className={navPath.length === 1 ? 'text-foreground' : 'hover:text-foreground transition-colors'}
+          >
+            {typeLabel(navPath[0])}
+          </Link>
+        </span>
+        {navPath.length > 1 && (
+          <span className="flex items-center gap-2">
             <span>/</span>
-            <Link
-              href={categoryUrl(navPath.slice(0, i + 1))}
-              className={
-                i === navPath.length - 1
-                  ? 'text-foreground'
-                  : 'hover:text-foreground transition-colors'
-              }
-            >
-              {i === 0 ? typeLabel(seg) : seg}
-            </Link>
+            <span className="text-foreground">{navPath[navPath.length - 1]}</span>
           </span>
-        ))}
+        )}
       </div>
       <Link
         href={categoryUrl(parentPath)}
