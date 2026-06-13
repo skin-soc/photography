@@ -66,9 +66,6 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
   // Transparent + over-photo shadow only when genuinely over a hero at the top.
   const overHero = HERO_PATHS.includes(pathname) && atTop
   const frosted = !overHero
-  // Over-photo legibility shadow on the links — only while over a hero. The CSS
-  // class itself is a no-op in light themes (the dark nav text needs no shadow).
-  const heroShadow = overHero ? 'nav-hero-shadow' : ''
   // Keep the bar visible while the mobile menu is open.
   const navHidden = hidden && !open
 
@@ -108,7 +105,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
           {/* Portfolio — dropdown parent */}
           <li className="relative group">
             <span
-              className={`${deskLink(portfolioActive)} ${heroShadow}`}
+              className={deskLink(portfolioActive)}
               role="button"
               tabIndex={0}
               aria-haspopup="true"
@@ -127,7 +124,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
                     <li key={href}>
                       <Link
                         href={href}
-                        className={`relative inline-block text-[11px] font-light tracking-[0.22em] uppercase pb-[5px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${heroShadow} ${
+                        className={`relative inline-block text-[11px] font-light tracking-[0.22em] uppercase pb-[5px] transition-colors after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-[calc(100%_-_0.22em)] after:transition-colors ${
                           active
                             ? 'text-foreground after:bg-[#931020]'
                             : 'text-foreground/60 hover:text-foreground after:bg-transparent hover:after:bg-[#931020]'
@@ -144,7 +141,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
 
           {topHrefs.map((href) => (
             <li key={href}>
-              <Link href={href} className={`${deskLink(isActive(href))} ${heroShadow}`}>
+              <Link href={href} className={deskLink(isActive(href))}>
                 {t(href.slice(1) as NavKey)}
               </Link>
             </li>
@@ -152,7 +149,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
 
           {shopOnline && (
             <li>
-              <CartIcon overHero={overHero} />
+              <CartIcon />
             </li>
           )}
           <li>
@@ -162,21 +159,21 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
 
         {/* Mobile cart + hamburger */}
         <div className="md:hidden flex items-center gap-4">
-          {shopOnline && <CartIcon overHero={overHero} />}
+          {shopOnline && <CartIcon />}
           <button
             className="flex flex-col justify-center gap-[7px] w-8 h-8 shrink-0"
             onClick={() => setOpen((o) => !o)}
             aria-label={t('menu')}
           >
             <span
-              className={`block h-px bg-foreground transition-all duration-300 origin-center ${overHero ? 'nav-hero-box-shadow' : ''}`}
+              className="block h-px bg-foreground transition-all duration-300 origin-center"
               style={{
                 transform: open ? 'translateY(3.5px) rotate(45deg)' : 'none',
                 opacity: open ? 1 : 0.7,
               }}
             />
             <span
-              className={`block h-px bg-foreground transition-all duration-300 origin-center ${overHero ? 'nav-hero-box-shadow' : ''}`}
+              className="block h-px bg-foreground transition-all duration-300 origin-center"
               style={{
                 transform: open ? 'translateY(-3.5px) rotate(-45deg)' : 'none',
                 opacity: open ? 1 : 0.7,
