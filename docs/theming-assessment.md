@@ -156,7 +156,23 @@ client-resolved theme, not CSS vars): the Stripe Element `appearance` objects in
 and `rgba(255,255,255,…)` values). Until then the checkout/payment surfaces render
 dark in light mode.
 
-**Remaining for Phase 3:** Stripe Element appearance (client-resolved light/dark);
-decide whether the homepage gallery should theme or stay immersive-black; visual +
-mobile QA in light; contrast/AA polish (e.g. the 21px frame needs a shadow to read
-on a white page).
+## Phase 3 — as built (2026-06-13)
+
+- **Stripe Element follows the theme.** New `src/lib/use-theme.ts` `useResolvedTheme()`
+  resolves the `<html>` class to a concrete `light`|`dark` (`theme-auto` → matchMedia,
+  reactive). `CheckoutPane` builds a light/dark Stripe `appearance` from it (the
+  Element is a cross-origin iframe — concrete colours, not CSS vars).
+- **No black loading/surface bg in light** (standing rule [[theme-loading-no-black]]):
+  homepage main, ShopGrid photo-tile load bg, GalleryStack wrapper (`#0a0a0a`),
+  ShopSpinner, nav loading veil → `bg-bg`; cart drawer panels (`#0d0d0d`),
+  contact-modal panels (`#0c0c0c`), LocaleSwitcher dropdown → bg token. Homepage
+  copyright stays white (over the photo).
+- **Homepage decision:** themed (`bg-bg`) — the photo is `object-cover` so the bg
+  only shows as a load flash, now light-mode-correct. The fullscreen image lightbox
+  stays a deliberate dark viewer.
+- **Dead code:** `CheckoutModal.tsx` is unused (not imported); left in place, flagged
+  for separate removal.
+
+**Still open (polish / QA — needs eyeballs in light):** the 21px gallery frame
+(fine-art/digital hero) needs a shadow to read on white; portfolio-page caption
+legibility over a light letterbox; full mobile QA in light; contrast/AA pass.
