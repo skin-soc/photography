@@ -146,23 +146,50 @@ export default async function ShopProductView({
     'fine-art': 'Fine art print',
     digital: 'Digital download',
   }
+  const productUrl = `${SITE_URL}/shop/${photo.slug}`
+  const productImage = photo.previewUrl.startsWith('http')
+    ? photo.previewUrl
+    : `${SITE_URL}${photo.previewUrl}`
+  // Prices are minor units; the offer spans poster / fine-art / digital tiers, so
+  // an AggregateOffer (low–high range) drives the "from kr X" rich-result display.
+  const prices = photo.products.map((p) => p.price)
+  const currency = photo.products[0]?.currency ?? 'DKK'
+  const priceValidUntil = `${new Date().getFullYear() + 1}-12-31`
+  const seller = { '@type': 'Organization', name: BUSINESS_NAME, url: SITE_URL }
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: `${displayTitle(photo)} — ${photo.location}`,
     description: photo.caption,
-    image: photo.previewUrl.startsWith('http')
-      ? photo.previewUrl
-      : `${SITE_URL}${photo.previewUrl}`,
+    image: [productImage],
+    url: productUrl,
+    sku: photo.id,
     brand: { '@type': 'Brand', name: BUSINESS_NAME },
-    offers: photo.products.map((p) => ({
-      '@type': 'Offer',
-      sku: p.sku,
-      name: `${schemaTypeName[p.type]} — ${p.label}`,
-      price: (p.price / 100).toFixed(2),
-      priceCurrency: p.currency,
+    offers: {
+      '@type': 'AggregateOffer',
+      priceCurrency: currency,
+      lowPrice: (Math.min(...prices) / 100).toFixed(2),
+      highPrice: (Math.max(...prices) / 100).toFixed(2),
+      offerCount: photo.products.length,
       availability: 'https://schema.org/InStock',
-    })),
+      itemCondition: 'https://schema.org/NewCondition',
+      priceValidUntil,
+      url: productUrl,
+      seller,
+      // Per-variant offers nested so each SKU/price is still expressed.
+      offers: photo.products.map((p) => ({
+        '@type': 'Offer',
+        sku: p.sku,
+        name: `${schemaTypeName[p.type]} — ${p.label}`,
+        price: (p.price / 100).toFixed(2),
+        priceCurrency: p.currency,
+        availability: 'https://schema.org/InStock',
+        itemCondition: 'https://schema.org/NewCondition',
+        priceValidUntil,
+        url: productUrl,
+        seller,
+      })),
+    },
   }
 
   // Calculate actual preview dimensions (longest edge capped at 800px).

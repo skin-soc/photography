@@ -147,7 +147,22 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const type = typeSlug ? typeFromUrlSlug(typeSlug) : null
   const title = type ? shop('sectionTitle', { name: shop(typeMessageKey(type)) }) : t('title')
   const description = t('description')
-  const heroImage = `${SITE_URL}/images/gallery/PL00003.webp`
+  // Lead the social/search preview with a green-labelled hero (Lightroom's "use
+  // this one") for the chosen type, falling back to a portfolio image.
+  let heroImage = `${SITE_URL}/images/gallery/PL00003.webp`
+  let heroW = 3200
+  let heroH = 2132
+  try {
+    const catalog = await getCatalog()
+    const pool = type ? catalog.filter((p) => photoTypes(p).includes(type)) : catalog
+    const hero = pool.find((p) => p.key) ?? pool[0]
+    if (hero) {
+      heroImage = hero.previewUrl.startsWith('http') ? hero.previewUrl : `${SITE_URL}${hero.previewUrl}`
+      const s = Math.min(800 / hero.width, 800 / hero.height, 1)
+      heroW = Math.round(hero.width * s)
+      heroH = Math.round(hero.height * s)
+    }
+  } catch { /* keep the portfolio fallback */ }
   const alternateLocales = Object.entries(OG_LOCALE_MAP)
     .filter(([l]) => l !== locale)
     .map(([, og]) => og)
@@ -164,7 +179,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       type: 'website',
       locale: OG_LOCALE_MAP[locale] ?? 'en_GB',
       alternateLocale: alternateLocales,
-      images: [{ url: heroImage, width: 3200, height: 2132, alt: t('h1') }],
+      images: [{ url: heroImage, width: heroW, height: heroH, alt: t('h1') }],
     },
     twitter: { card: 'summary_large_image', title, description, images: [heroImage] },
   }
