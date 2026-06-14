@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { ReferenceLookup, AssetInfo } from '@/lib/shop'
-import type { AdminOrder } from '@/lib/downloads'
+import type { AdminOrder, AssetAudit as AssetAuditData } from '@/lib/downloads'
 import { vatJurisdiction, jurisdictionLabel, type VatJurisdiction } from '@/lib/vat'
 import { SIZE_ORDER, type PaperTier } from '@/config/product-range'
 import { roundUpToFiveKr } from '@/lib/currency'
@@ -606,6 +606,132 @@ function RerenderPreviews({ btn }: { btn: string }) {
   )
 }
 
+/** Reconcile masters + poster assets against the catalog: find masters missed on
+ *  export, and orphaned masters / poster assets left by deleted photos. */
+function AssetAudit() {
+  const [audit, setAudit] = useState<AssetAuditData | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
+
+  async function run() {
+    setBusy('audit'); setNote(null)
+    try {
+      const res = await fetch('/api/admin/asset-audit')
+      if (res.ok) setAudit((await res.json()) as AssetAuditData)
+      else setNote('Audit failed — is the origin reachable?')
+    } catch { setNote('Audit failed.') } finally { setBusy(null) }
+  }
+
+  async function prune(scope: 'poster-assets' | 'masters', confirmMsg?: string) {
+    if (confirmMsg && !window.confirm(confirmMsg)) return
+    setBusy(scope); setNote(null)
+    try {
+      const res = await fetch('/api/admin/asset-audit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ scope }),
+      })
+      const d = (await res.json().catch(() => ({}))) as { deleted?: number; total?: number; error?: string }
+      if (res.ok) {
+        setNote(`Deleted ${d.deleted ?? 0} of ${d.total ?? 0}.`)
+        const r = await fetch('/api/admin/asset-audit')
+        if (r.ok) setAudit((await r.json()) as AssetAuditData)
+      } else setNote(d.error || 'Prune failed.')
+    } catch { setNote('Prune failed.') } finally { setBusy(null) }
+  }
+
+  const btn = 'shrink-0 h-10 rounded-md border border-white/15 px-4 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40'
+  const danger = 'shrink-0 h-10 rounded-md border border-[#931020]/60 px-4 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#931020] hover:bg-[#931020] hover:text-white transition-colors disabled:opacity-40'
+  const Tally = ({ n }: { n: number }) => (
+    <span className={`font-mono-ibm ${n > 0 ? 'text-[#c9293f]' : 'text-emerald-300/80'}`}>{n}</span>
+  )
+
+  return (
+    <section className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] p-6">
+      <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">Asset audit</h2>
+      <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed">
+        Reconcile the NAS against the catalog: photos whose <strong className="text-white/55">master was
+        missed on export</strong>, plus <strong className="text-white/55">orphaned</strong> masters and
+        pre-rendered poster assets left behind by deleted photos.
+      </p>
+
+      <div className="mt-5 flex items-center gap-3">
+        <button onClick={run} disabled={busy !== null} className={btn}>
+          {busy === 'audit' ? 'Auditing…' : audit ? 'Re-run audit' : 'Run audit'}
+        </button>
+        {note && <span className="text-[12px] text-white/55">{note}</span>}
+      </div>
+
+      {audit && (
+        <div className="mt-6 space-y-5 text-[13px]">
+          <p className="text-white/45">Catalog: <span className="font-mono-ibm text-white/70">{audit.catalogCount}</span> photos</p>
+
+          {/* Missing masters */}
+          <div>
+            <p className="text-[11px] font-mono-ibm uppercase tracking-[0.2em] text-white/45">
+              Missing masters · <Tally n={audit.missingMasters.length} />
+            </p>
+            {audit.missingMasters.length > 0 && (
+              <ul className="mt-2 max-h-44 overflow-auto space-y-1 font-mono-ibm text-[12px] text-white/60">
+                {audit.missingMasters.slice(0, 200).map((m) => (
+                  <li key={m.id}>
+                    <span className="text-[#c9293f]">{m.ref}</span> · {m.title || m.id} ·{' '}
+                    <span className="text-white/40">needs {m.needs.join(' + ')}</span>
+                  </li>
+                ))}
+                {audit.missingMasters.length > 200 && <li className="text-white/30">…and {audit.missingMasters.length - 200} more</li>}
+              </ul>
+            )}
+            <p className="mt-1 text-[11px] text-white/30">Re-export masters from Lightroom for these.</p>
+          </div>
+
+          {/* Orphan poster assets */}
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-[11px] font-mono-ibm uppercase tracking-[0.2em] text-white/45">
+                Orphaned poster assets · <Tally n={audit.orphanPosterAssets.length} />
+              </p>
+              {audit.orphanPosterAssets.length > 0 && (
+                <button onClick={() => prune('poster-assets')} disabled={busy !== null} className={btn}>
+                  {busy === 'poster-assets' ? 'Pruning…' : 'Prune'}
+                </button>
+              )}
+            </div>
+            {audit.orphanPosterAssets.length > 0 && (
+              <ul className="mt-2 max-h-32 overflow-auto font-mono-ibm text-[11px] text-white/40">
+                {audit.orphanPosterAssets.slice(0, 100).map((n) => <li key={n}>{n}</li>)}
+              </ul>
+            )}
+          </div>
+
+          {/* Orphan masters */}
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-[11px] font-mono-ibm uppercase tracking-[0.2em] text-white/45">
+                Orphaned masters · <Tally n={audit.orphanMasters.length} />
+              </p>
+              {audit.orphanMasters.length > 0 && (
+                <button
+                  onClick={() => prune('masters', `Delete ${audit.orphanMasters.length} orphaned master file(s)? These have no catalog entry. This frees disk but is irreversible.`)}
+                  disabled={busy !== null}
+                  className={danger}
+                >
+                  {busy === 'masters' ? 'Pruning…' : 'Prune'}
+                </button>
+              )}
+            </div>
+            {audit.orphanMasters.length > 0 && (
+              <ul className="mt-2 max-h-32 overflow-auto font-mono-ibm text-[11px] text-white/40">
+                {audit.orphanMasters.slice(0, 100).map((n) => <li key={n}>{n}</li>)}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
 /** Send a test email + purge expired grants. */
 function DiagnosticsSettings() {
   const [busy, setBusy] = useState<'email' | 'purge' | null>(null)
@@ -916,6 +1042,7 @@ function SettingsTab() {
       <VatRateSettings />
       <RefundPrefs />
       <CacheControls />
+      <AssetAudit />
       <DiagnosticsSettings />
       {/* Tax registrations panel hidden — VAT is now calculated manually (see
           VatRateSettings), so Stripe Tax registrations don't drive checkout.

@@ -859,6 +859,91 @@ app.get('/admin/master/:id/:format', async (req, res) => {
 })
 
 /**
+ * Reconcile the masters + poster-asset folders against the live catalog:
+ *  - missingMasters: catalog photos lacking a REQUIRED master (JPEG always; TIFF
+ *    when rawAvailable) — i.e. a master missed during export.
+ *  - orphanMasters: master files with no catalog photo (deleted-but-left-behind).
+ *  - orphanPosterAssets: pre-rendered poster files whose photo is gone or no
+ *    longer offered as a poster.
+ */
+async function auditAssets() {
+  const { photos } = await loadCatalog()
+  const refToPhoto = new Map()  // GMP ref -> photo (master/asset naming)
+  const idSet = new Set()       // legacy camera-filename ids
+  const posterRefs = new Set()  // refs of photos still offered as posters
+  for (const p of photos) {
+    const ref = photoRef(p.id)
+    refToPhoto.set(ref, p)
+    idSet.add(p.id)
+    if ((p.products ?? []).some((pr) => pr.type === 'print')) posterRefs.add(ref)
+  }
+
+  // 1) Missing masters — every photo needs a JPEG; rawAvailable also needs a TIFF.
+  const missingMasters = []
+  for (const p of photos) {
+    const needs = []
+    if (!(await findMaster(p.id, 'jpeg'))) needs.push('jpeg')
+    if (p.rawAvailable && !(await findMaster(p.id, 'tiff'))) needs.push('tiff')
+    if (needs.length) missingMasters.push({ id: p.id, ref: photoRef(p.id), slug: p.slug, title: p.title || '', needs })
+  }
+
+  // 2) Orphan masters — master files for no catalog photo.
+  const orphanMasters = []
+  for (const name of await readdir(MASTERS_DIR).catch(() => [])) {
+    if (!/\.(jpe?g|tiff?)$/i.test(name)) continue
+    const base = name.replace(/\.(jpe?g|tiff?)$/i, '')
+    if (!refToPhoto.has(base) && !idSet.has(base)) orphanMasters.push(name)
+  }
+
+  // 3) Orphan poster assets — <ref>-<size>.jpg whose ref isn't a current poster.
+  const orphanPosterAssets = []
+  for (const name of await readdir(POSTER_ASSETS_DIR).catch(() => [])) {
+    if (!name.toLowerCase().endsWith('.jpg')) continue
+    const m = name.match(/^(.+)-([A-Za-z0-9]+)\.jpg$/i)
+    if (!m || !POSTER_SIZES.includes(m[2]) || !posterRefs.has(m[1])) orphanPosterAssets.push(name)
+  }
+
+  return { catalogCount: photos.length, missingMasters, orphanMasters, orphanPosterAssets }
+}
+
+/** Asset audit — read-only reconciliation report. Secret-gated. */
+app.get('/admin/asset-audit', async (_req, res) => {
+  try {
+    res.json(await auditAssets())
+  } catch (err) {
+    console.error('[asset-audit]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/**
+ * Prune the orphans of one scope (recomputed here, never trusting a client list).
+ * `poster-assets` is always safe (derived, regenerable). `masters` deletes the
+ * deliverable source for photos no longer in the catalog — gated behind an
+ * explicit admin confirm in the UI.
+ */
+app.post('/admin/asset-prune', express.json({ limit: '4kb' }), async (req, res) => {
+  const scope = req.body?.scope
+  if (scope !== 'poster-assets' && scope !== 'masters') {
+    return res.status(400).json({ error: 'bad scope' })
+  }
+  try {
+    const audit = await auditAssets()
+    const names = scope === 'masters' ? audit.orphanMasters : audit.orphanPosterAssets
+    const dir = scope === 'masters' ? MASTERS_DIR : POSTER_ASSETS_DIR
+    let deleted = 0
+    for (const name of names) {
+      if (name.includes('/') || name.includes('\\') || name.includes('..')) continue
+      await unlink(join(dir, name)).then(() => { deleted += 1 }).catch(() => {})
+    }
+    res.json({ ok: true, scope, deleted, total: names.length })
+  } catch (err) {
+    console.error('[asset-prune]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/**
  * Generate-or-reuse the copyright-embedded deliverable for a product. Cached by
  * SKU (the output is identical for every buyer of that SKU). Returns the cached
  * path plus the customer-facing filename and content type.

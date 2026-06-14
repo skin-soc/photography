@@ -521,6 +521,40 @@ export async function adminClearFulfilCache(): Promise<{ deleted: number } | nul
   return (await res.json()) as { deleted: number }
 }
 
+export interface AssetAudit {
+  catalogCount: number
+  /** Catalog photos missing a required master (JPEG always; TIFF when rawAvailable). */
+  missingMasters: { id: string; ref: string; slug: string; title: string; needs: string[] }[]
+  /** Master files with no catalog photo. */
+  orphanMasters: string[]
+  /** Pre-rendered poster files whose photo is gone or no longer a poster. */
+  orphanPosterAssets: string[]
+}
+
+/** Reconcile masters + poster assets against the catalog (read-only report). */
+export async function adminAssetAudit(): Promise<AssetAudit | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/asset-audit`, { headers: originHeaders(), cache: 'no-store' })
+  if (!res.ok) return null
+  return (await res.json()) as AssetAudit
+}
+
+/** Delete the orphans of one scope. `poster-assets` is safe; `masters` removes the
+ *  deliverable source for deleted photos (confirm in the UI first). */
+export async function adminAssetPrune(
+  scope: 'poster-assets' | 'masters',
+): Promise<{ deleted: number; total: number } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/asset-prune`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify({ scope }),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  return (await res.json()) as { deleted: number; total: number }
+}
+
 /** Send a branded test download email (origin uses MAIL_FROM if no `to`). */
 export async function adminSendTestEmail(to?: string): Promise<{ ok: boolean; to?: string; error?: string }> {
   if (!ORIGIN) return { ok: false, error: 'origin not configured' }
