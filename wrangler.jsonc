@@ -21,7 +21,8 @@
     "preview": {
       "name": "photography-preview",
       "vars": {
-        "SHOP_ORIGIN_URL": "https://valhalla.gusmcewan.com"
+        "SHOP_ORIGIN_URL": "https://valhalla.gusmcewan.com",
+        "SHOP_PREVIEW_BASE_URL": "https://loki.gusmcewan.com"
       },
       "kv_namespaces": [
         { "binding": "SHOP_SETTINGS", "id": "8a07bbf434824d53b510c8fa3b9a18f7" }
