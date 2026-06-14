@@ -190,6 +190,19 @@ const ORIGIN = process.env.SHOP_ORIGIN_URL
 const ORIGIN_SECRET = process.env.SHOP_ORIGIN_SECRET ?? ''
 
 /**
+ * Public, cacheable host for watermarked previews (e.g. https://img.gusmcewan.com),
+ * served straight from a Cloudflare-proxied tunnel hostname with a Cache Rule —
+ * NO Worker invocation and NO shared secret (previews are low-res, watermarked,
+ * public-by-design, and already publicly fetchable via /api/preview today).
+ *
+ * When UNSET, previewUrl falls back to the /api/preview Worker proxy, so the site
+ * keeps working before/without cutover. Flip it on by setting SHOP_PREVIEW_BASE_URL
+ * only AFTER the DNS host + Cache Rule exist. Masters/catalog/orders are never
+ * affected — they stay secret-gated on the private origin.
+ */
+const PREVIEW_BASE = (process.env.SHOP_PREVIEW_BASE_URL ?? '').replace(/\/+$/, '')
+
+/**
  * Build the physical products (posters + fine art) for a photo, applying the
  * worker-owned range. Posters are aspect-matched + resolution-gated to the
  * photo; fine art is a single WhiteWall placeholder oriented to the photo. Used
@@ -495,9 +508,10 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
       ...p,
       category: p.category ?? [],
       key: p.key ?? false,
-      // Rewrite to a local proxy route — the browser never sees the origin URL,
-      // and all preview fetches go through the Worker which adds the secret.
-      previewUrl: `/api/preview/${p.id}`,
+      // Public previews: the cacheable host when configured (served from the edge,
+      // no Worker), else the /api/preview Worker proxy. The same ?max/&logo/&poster
+      // query the components append works identically against both.
+      previewUrl: PREVIEW_BASE ? `${PREVIEW_BASE}/preview/${p.id}` : `/api/preview/${p.id}`,
     }))
     // Apply the worker-owned RANGE (products.json now lives with the worker —
     // src/config/product-range.ts). Keep the origin's DIGITAL products

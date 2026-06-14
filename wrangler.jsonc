@@ -11,9 +11,6 @@
     "binding": "ASSETS",
     "directory": ".open-next/assets"
   },
-  "images": {
-    "binding": "IMAGES"
-  },
   "kv_namespaces": [
     { "binding": "SHOP_SETTINGS", "id": "8a07bbf434824d53b510c8fa3b9a18f7" }
   ],
@@ -25,9 +22,6 @@
       "name": "photography-preview",
       "vars": {
         "SHOP_ORIGIN_URL": "https://valhalla.gusmcewan.com"
-      },
-      "images": {
-        "binding": "IMAGES"
       },
       "kv_namespaces": [
         { "binding": "SHOP_SETTINGS", "id": "8a07bbf434824d53b510c8fa3b9a18f7" }
