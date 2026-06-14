@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { ReferenceLookup } from '@/lib/shop'
+import type { ReferenceLookup, AssetInfo } from '@/lib/shop'
 import type { AdminOrder } from '@/lib/downloads'
 import { vatJurisdiction, jurisdictionLabel, type VatJurisdiction } from '@/lib/vat'
-import { SIZE_ORDER, posterOptions, type PaperTier } from '@/config/product-range'
+import { SIZE_ORDER, type PaperTier } from '@/config/product-range'
 import { roundUpToFiveKr } from '@/lib/currency'
 import type { PricingConfig, PricingFloors, PricingValidationError, ColorLabel } from '@/lib/pricing'
 import Logo from '../_components/Logo'
@@ -973,7 +973,7 @@ function SettingsTab() {
 // ── Products tab ──────────────────────────────────────────────────────────────
 
 type LookupResponse =
-  | { found: true; result: ReferenceLookup }
+  | { found: true; result: ReferenceLookup; assets: AssetInfo | null }
   | { found: false }
   | { error: string }
 
@@ -1003,6 +1003,7 @@ function ProductsTab() {
   }
 
   const result = data && 'found' in data && data.found ? data.result : null
+  const assets = data && 'found' in data && data.found ? data.assets : null
   const notFound = data && 'found' in data && !data.found
   const errored = data && 'error' in data
 
@@ -1060,7 +1061,7 @@ function ProductsTab() {
         {!loading && notFound && (
           <Notice tone="muted" title="No match" body="No product in the catalogue matches that code. Check for typos." />
         )}
-        {!loading && result && <ResultCard result={result} />}
+        {!loading && result && <ResultCard result={result} assets={assets} />}
       </div>
 
       <TopProducts
@@ -1143,12 +1144,18 @@ function TopProducts({ onSelect }: { onSelect: (filename: string) => void }) {
   )
 }
 
-function ResultCard({ result }: { result: ReferenceLookup }) {
+const LABEL_COLOR: Record<string, string> = {
+  red: '#dc2626', yellow: '#eab308', green: '#16a34a', blue: '#2563eb', purple: '#9333ea',
+}
+
+function ResultCard({ result, assets }: { result: ReferenceLookup; assets: AssetInfo | null }) {
   const matchLabel = result.matchedBy === 'product' ? 'Download token' : 'Photo reference'
-  // A-sizes the photo's resolution qualifies for — direct links to the rendered
-  // poster master (300 dpi) for each. Empty when the photo is too small for any.
-  const eligible = new Set(posterOptions(result.width, result.height).map((o) => o.size))
-  const posterSizes = SIZE_ORDER.filter((s) => eligible.has(s))
+  const isPoster = result.types.includes('print')
+  const isDigital = result.types.includes('digital')
+  const posterSizes = SIZE_ORDER.filter((s) => assets?.posterSizes.includes(s))
+  const label = result.colorLabel?.trim() ?? ''
+  const assetLink =
+    'rounded-md border border-white/15 px-3 py-1.5 text-[11px] font-mono-ibm uppercase tracking-[0.16em] text-white/70 transition-colors hover:border-[#931020] hover:text-white'
   return (
     <div className="grid gap-8 sm:grid-cols-[240px_1fr] items-start animate-[fadeIn_240ms_ease]">
       <div>
@@ -1172,6 +1179,20 @@ function ResultCard({ result }: { result: ReferenceLookup }) {
             value={result.category.length ? result.category.map((p) => p.join('  ›  ')).join('      ') : '—'}
           />
           <Row label="Dimensions" value={`${result.width} × ${result.height} px`} mono />
+          {/* Colour label — Lightroom label, drives the per-label pricing markup. */}
+          <div className="grid grid-cols-[140px_1fr] gap-4 py-3.5">
+            <dt className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 pt-0.5">Colour label</dt>
+            <dd className="text-[15px] text-white/90">
+              {label ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: LABEL_COLOR[label] ?? '#888' }} />
+                  {cap(label)}
+                </span>
+              ) : (
+                <span className="text-white/40">None</span>
+              )}
+            </dd>
+          </div>
           {result.product && (
             <>
               <Row
@@ -1186,25 +1207,60 @@ function ResultCard({ result }: { result: ReferenceLookup }) {
           )}
         </dl>
 
-        {posterSizes.length > 0 && (
+        {/* Pre-rendered posters — POSTERS ONLY, and only those already rendered
+            on the NAS (links never trigger a render). */}
+        {isPoster && (
           <div className="mt-7">
             <p className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">
-              Poster master · 300 dpi
+              Pre-rendered posters · 300 dpi
             </p>
-            <div className="mt-2.5 flex flex-wrap gap-2">
-              {posterSizes.map((s) => (
-                <a
-                  key={s}
-                  href={`/api/admin/poster-master/${result.slug}/${s}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-md border border-white/15 px-3 py-1.5 text-[11px] font-mono-ibm uppercase tracking-[0.16em] text-white/70 transition-colors hover:border-[#931020] hover:text-white"
-                  title={`Render the ${s} poster master`}
-                >
-                  {s}
-                </a>
-              ))}
-            </div>
+            {posterSizes.length > 0 ? (
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {posterSizes.map((s) => (
+                  <a
+                    key={s}
+                    href={`/api/admin/poster-master/${result.slug}/${s}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={assetLink}
+                    title={`Open the pre-rendered ${s} poster`}
+                  >
+                    {s}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-[12px] font-light text-white/40">
+                None pre-rendered yet — run <span className="text-white/60">Settings → Pre-render posters</span>.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Master files — DIGITAL DOWNLOADS only; whichever masters exist. */}
+        {isDigital && (
+          <div className="mt-7">
+            <p className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">
+              Master files
+            </p>
+            {assets?.masters.jpeg || assets?.masters.tiff ? (
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {assets.masters.jpeg && (
+                  <a href={`/api/admin/master/${result.slug}/jpeg`} target="_blank" rel="noreferrer" className={assetLink} title="Open the JPEG master">
+                    Master · JPEG
+                  </a>
+                )}
+                {assets.masters.tiff && (
+                  <a href={`/api/admin/master/${result.slug}/tiff`} target="_blank" rel="noreferrer" className={assetLink} title="Open the TIFF original">
+                    Original · TIFF
+                  </a>
+                )}
+              </div>
+            ) : (
+              <p className="mt-2 text-[12px] font-light text-white/40">
+                No master found on the NAS — re-publish this photo.
+              </p>
+            )}
           </div>
         )}
 

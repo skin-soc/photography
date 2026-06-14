@@ -45,7 +45,7 @@ import { exiftool } from 'exiftool-vendored'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile, writeFile, mkdir, stat, readdir, unlink, copyFile, rename } from 'node:fs/promises'
 import { createReadStream } from 'node:fs'
-import { join, resolve, dirname } from 'node:path'
+import { join, resolve, dirname, basename } from 'node:path'
 
 const PORT = Number(process.env.PORT ?? 8787)
 const DATA_DIR = resolve(process.env.DATA_DIR ?? '/data')
@@ -705,6 +705,20 @@ async function resolveSource(id, format) {
   return master
 }
 
+/** Locate a master of an EXACT bit depth (no cross-format fallback) — for the
+ *  admin "show whichever masters exist" links. Returns the path or null. */
+async function findMaster(id, format) {
+  const ref = photoRef(id)
+  if (format === 'tiff') {
+    return (await fileIfExists(join(MASTERS_DIR, `${ref}.tif`)))
+      ?? (await fileIfExists(join(MASTERS_DIR, `${id}.tif`)))
+      ?? (await fileIfExists(join(MASTERS_DIR, `${id}.tiff`)))
+  }
+  return (await fileIfExists(join(MASTERS_DIR, `${ref}.jpg`)))
+    ?? (await fileIfExists(join(MASTERS_DIR, `${id}.jpg`)))
+    ?? (await fileIfExists(join(MASTERS_DIR, `${id}.jpeg`)))
+}
+
 /** The poster sheet's foot line, e.g. "WWW.GUSMCEWAN.COM". */
 const POSTER_SITE_LABEL = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
 
@@ -801,6 +815,47 @@ app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req
     }
     console.log(`[poster-prerender] done ${done}/${items.length}` + (failed ? ` (${failed} failed)` : ''))
   })().catch((err) => console.error('[poster-prerender] batch error:', err.message))
+})
+
+/**
+ * Admin asset info for a photo — which poster A-sizes are ALREADY pre-rendered
+ * (present in POSTER_ASSETS_DIR) and which masters exist (in MASTERS_DIR). Lets
+ * the admin Product lookup link only to assets that actually exist, never
+ * triggering a render. Secret-gated by the global middleware.
+ */
+app.get('/admin/asset-info/:id', async (req, res) => {
+  const { id } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'bad id' })
+  const ref = photoRef(id)
+  const posterSizes = []
+  for (const size of POSTER_SIZES) {
+    if (await fileIfExists(join(POSTER_ASSETS_DIR, `${ref}-${size}.jpg`))) posterSizes.push(size)
+  }
+  res.json({
+    posterSizes,
+    masters: {
+      jpeg: Boolean(await findMaster(id, 'jpeg')),
+      tiff: Boolean(await findMaster(id, 'tiff')),
+    },
+  })
+})
+
+/**
+ * Admin master download — stream a photo's edited master (JPEG) or original
+ * (TIFF) straight from MASTERS_DIR, exact bit depth (404 if that format isn't
+ * present). Secret-gated; the Worker proxies it behind the admin session.
+ */
+app.get('/admin/master/:id/:format', async (req, res) => {
+  const { id, format } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'bad id' })
+  if (format !== 'jpeg' && format !== 'tiff') return res.status(400).json({ error: 'bad format' })
+  const path = await findMaster(id, format)
+  if (!path) return res.status(404).json({ error: `no ${format} master for ${id}` })
+  const isTiff = /\.tiff?$/i.test(path)
+  res.set('Content-Type', isTiff ? 'image/tiff' : 'image/jpeg')
+  res.set('Content-Disposition', `inline; filename="${basename(path)}"`)
+  res.set('Cache-Control', 'private, no-store')
+  createReadStream(path).pipe(res)
 })
 
 /**

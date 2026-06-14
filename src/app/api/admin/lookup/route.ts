@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { ADMIN_COOKIE, verifySessionToken } from '@/lib/admin-auth'
-import { lookupByReference } from '@/lib/shop'
+import { lookupByReference, fetchAssetInfo } from '@/lib/shop'
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(ADMIN_COOKIE)?.value
@@ -18,5 +18,8 @@ export async function GET(request: NextRequest) {
   const result = await lookupByReference(q)
   if (!result) return NextResponse.json({ found: false })
 
-  return NextResponse.json({ found: true, result })
+  // Which posters are pre-rendered + which masters exist (origin filesystem).
+  const assets = await fetchAssetInfo(result.filename)
+
+  return NextResponse.json({ found: true, result, assets })
 }

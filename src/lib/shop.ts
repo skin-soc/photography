@@ -619,6 +619,11 @@ export interface ReferenceLookup {
   previewUrl: string
   width: number
   height: number
+  /** Product types this photo is offered in — drives which admin asset links
+   *  show (posters → poster prints; digital → master files). */
+  types: ProductType[]
+  /** Lightroom colour label (red/yellow/green/blue/purple) or '' / undefined. */
+  colorLabel?: string
   /** How the typed code resolved. */
   matchedBy: 'photo' | 'product'
   /** Set when the code was a per-product download token. */
@@ -663,6 +668,8 @@ export async function lookupByReference(input: string): Promise<ReferenceLookup 
         previewUrl: photo.previewUrl,
         width: photo.width,
         height: photo.height,
+        types: photoTypes(photo),
+        colorLabel: photo.colorLabel,
         matchedBy: 'product',
         product: {
           sku: product.sku,
@@ -688,12 +695,40 @@ export async function lookupByReference(input: string): Promise<ReferenceLookup 
         previewUrl: photo.previewUrl,
         width: photo.width,
         height: photo.height,
+        types: photoTypes(photo),
+        colorLabel: photo.colorLabel,
         matchedBy: 'photo',
       }
     }
   }
 
   return null
+}
+
+export interface AssetInfo {
+  /** Poster A-sizes ALREADY pre-rendered on the NAS (no rendering triggered). */
+  posterSizes: string[]
+  /** Which master files exist for the photo. */
+  masters: { jpeg: boolean; tiff: boolean }
+}
+
+/**
+ * Ask the origin which poster assets / masters exist for a photo id — backs the
+ * admin Product lookup's "link to pre-rendered posters / masters" UI. Returns
+ * null if the origin is unreachable. SERVER-SIDE ONLY (origin secret).
+ */
+export async function fetchAssetInfo(id: string): Promise<AssetInfo | null> {
+  if (!ORIGIN) return null
+  try {
+    const res = await fetch(`${ORIGIN}/admin/asset-info/${encodeURIComponent(id)}`, {
+      headers: { 'x-shop-secret': ORIGIN_SECRET },
+      cache: 'no-store',
+    })
+    if (!res.ok) return null
+    return (await res.json()) as AssetInfo
+  } catch {
+    return null
+  }
 }
 
 /** The distinct product types offered anywhere in the catalog, in canonical
