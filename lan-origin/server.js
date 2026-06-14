@@ -36,6 +36,11 @@
 import express from 'express'
 import compression from 'compression'
 import sharp from 'sharp'
+// One libvips thread per sharp operation. We process images in PARALLEL (the
+// warmer runs WARM_CONCURRENCY jobs at once), so per-op multithreading would just
+// thrash — single-threaded jobs × WARM_CONCURRENCY cleanly map onto the container's
+// dedicated cores (see the cpus limit in docker-compose.yml).
+sharp.concurrency(1)
 import nodemailer from 'nodemailer'
 import AdmZip from 'adm-zip'
 import { renderDownloadEmail, renderRefundEmail } from './email.js'
@@ -566,7 +571,9 @@ app.get('/preview/:id', async (req, res) => {
 // Sizes mirror what the grid/product pages request (the full 800 + the 400 used
 // by srcSet). Throttled so warming never starves live requests.
 const WARM_SIZES = [...new Set([PREVIEW_MAX, 400].filter((n) => n > 0 && n <= PREVIEW_MAX))]
-const WARM_CONCURRENCY = Math.max(1, Number(process.env.WARM_CONCURRENCY ?? 3))
+// Default to 5 parallel jobs — matches the 5 dedicated cores (docker-compose
+// cpus: "5") with sharp.concurrency(1), so a warm sweep keeps all 5 cores busy.
+const WARM_CONCURRENCY = Math.max(1, Number(process.env.WARM_CONCURRENCY ?? 5))
 let _warming = false
 
 /**
@@ -857,8 +864,9 @@ app.get('/poster-master/:id/:size', async (req, res) => {
  * PRE-RENDER a batch of poster assets (force-regenerate, so a republished poster
  * with a new title/crop is refreshed). The Worker enumerates the qualifying
  * (photo, size) pairs — it owns the resolution-gating range — and POSTs the flat
- * list here; we render them in the BACKGROUND (sequential, to spare the NAS CPU)
- * and return immediately. Idempotent: re-running just re-renders.
+ * list here; we render them in the BACKGROUND (WARM_CONCURRENCY jobs at once, to
+ * fill the container's dedicated cores) and return immediately. Idempotent:
+ * re-running just re-renders.
  */
 app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req, res) => {
   const items = Array.isArray(req.body?.items)
@@ -868,18 +876,27 @@ app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req
     : []
   res.json({ ok: true, queued: items.length })
   // Background — never blocks the response; the Worker just kicks this off.
+  // WARM_CONCURRENCY jobs in parallel (single-threaded each) to use the dedicated
+  // cores; each poster master is a large 300-dpi render.
   ;(async () => {
     let done = 0
     let failed = 0
-    for (const { id, size } of items) {
-      try {
-        await buildPosterMaster(id, size, true)
-        done += 1
-      } catch (err) {
-        failed += 1
-        console.error('[poster-prerender]', id, size, err.message)
+    let cursor = 0
+    const worker = async () => {
+      for (;;) {
+        const idx = cursor++
+        if (idx >= items.length) return
+        const { id, size } = items[idx]
+        try {
+          await buildPosterMaster(id, size, true)
+          done += 1
+        } catch (err) {
+          failed += 1
+          console.error('[poster-prerender]', id, size, err.message)
+        }
       }
     }
+    await Promise.all(Array.from({ length: Math.min(WARM_CONCURRENCY, items.length || 1) }, worker))
     console.log(`[poster-prerender] done ${done}/${items.length}` + (failed ? ` (${failed} failed)` : ''))
   })().catch((err) => console.error('[poster-prerender] batch error:', err.message))
 })
