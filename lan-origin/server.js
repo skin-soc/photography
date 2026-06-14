@@ -270,6 +270,12 @@ app.use(compression())
 /** Shared-secret gate — every route except /healthz requires the header. */
 app.use((req, res, next) => {
   if (req.path === '/healthz') return next()
+  // Watermarked previews are public-by-design (low-res, repeating mesh + logo
+  // badge) and the same content is already publicly fetchable via the Worker's
+  // /api/preview route. We serve them from a Cloudflare-proxied, cache-ruled
+  // hostname with NO Worker in the path, so they cannot carry the shared secret.
+  // Only this exact shape is exempt; catalog/masters/orders/admin stay gated.
+  if (/^\/preview\/[A-Za-z0-9_-]+$/.test(req.path)) return next()
   // Signed, time-limited direct-download URLs bypass the header gate so the
   // browser streams the file straight from here (never through the Worker,
   // which would exhaust its CPU budget on large files).
@@ -860,8 +866,10 @@ app.get('/admin/master/:id/:format', async (req, res) => {
 
 /**
  * Reconcile the masters + poster-asset folders against the live catalog:
- *  - missingMasters: catalog photos lacking a REQUIRED master (JPEG always; TIFF
- *    when rawAvailable) — i.e. a master missed during export.
+ *  - missingMasters: catalog photos with NO usable master at all (neither JPEG nor
+ *    TIFF), plus rawAvailable photos missing the real TIFF the Original/Pro tiers
+ *    promise — i.e. a master missed during export. A poster/JPEG photo that holds
+ *    only a TIFF (or vice-versa) is fully fulfillable and is not flagged.
  *  - orphanMasters: master files with no catalog photo (deleted-but-left-behind).
  *  - orphanPosterAssets: pre-rendered poster files whose photo is gone or no
  *    longer offered as a poster.
@@ -878,12 +886,19 @@ async function auditAssets() {
     if ((p.products ?? []).some((pr) => pr.type === 'print')) posterRefs.add(ref)
   }
 
-  // 1) Missing masters — every photo needs a JPEG; rawAvailable also needs a TIFF.
+  // 1) Missing masters. Fulfilment resolves a source as (jpg ?? tif) — both poster
+  //    rendering and digital derivatives accept EITHER bit depth — so a photo only
+  //    truly lacks a master when NEITHER exists. rawAvailable is the one case that
+  //    promises a real TIFF (the Original/Pro tiers), so it gets its own check; a
+  //    poster/JPEG-only photo holding just a TIFF master is fully fulfillable and
+  //    must NOT be flagged.
   const missingMasters = []
   for (const p of photos) {
     const needs = []
-    if (!(await findMaster(p.id, 'jpeg'))) needs.push('jpeg')
-    if (p.rawAvailable && !(await findMaster(p.id, 'tiff'))) needs.push('tiff')
+    const hasJpeg = Boolean(await findMaster(p.id, 'jpeg'))
+    const hasTiff = Boolean(await findMaster(p.id, 'tiff'))
+    if (!hasJpeg && !hasTiff) needs.push('master')
+    if (p.rawAvailable && !hasTiff) needs.push('tiff')
     if (needs.length) missingMasters.push({ id: p.id, ref: photoRef(p.id), slug: p.slug, title: p.title || '', needs })
   }
 
