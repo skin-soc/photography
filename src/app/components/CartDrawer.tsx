@@ -331,7 +331,7 @@ export default function CartDrawer() {
                     {item.thumbnailUrl ? (
                       <div className="shrink-0 w-[60px] h-[60px] bg-foreground/[0.04] overflow-hidden">
                         <img
-                          src={`${item.thumbnailUrl}?max=120`}
+                          src={`${item.thumbnailUrl}${item.thumbnailUrl.includes('?') ? '&' : '?'}max=120`}
                           alt=""
                           aria-hidden="true"
                           width={60}

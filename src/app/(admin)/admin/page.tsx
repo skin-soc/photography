@@ -494,7 +494,7 @@ function CacheControls() {
     { action: 'refresh-catalog', label: 'Refresh catalog', busyLabel: 'Refreshing…',
       desc: 'Forces an immediate refresh. A republished Lightroom export otherwise appears within ~60s on its own.' },
     { action: 'warm-previews', label: 'Warm previews', busyLabel: 'Warming…',
-      desc: 'Re-renders any missing watermarked previews.' },
+      desc: 'Builds any missing watermarked previews (every size + poster/no-logo variant) and primes the loki edge cache, so the first visitor anywhere gets a cache hit.' },
     { action: 'clear-fulfil', label: 'Clear deliverables', busyLabel: 'Clearing…',
       desc: 'Frees disk — files regenerate on the next download.',
       confirm: 'Clear all generated deliverables? They regenerate on next download.' },
@@ -568,9 +568,9 @@ function RerenderPreviews({ btn }: { btn: string }) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'rerender-previews', path }),
       })
-      const d = (await res.json().catch(() => ({}))) as { matched?: number; deleted?: number; error?: string }
+      const d = (await res.json().catch(() => ({}))) as { matched?: number; deleted?: number; previewVersion?: number; error?: string }
       setNote(res.ok
-        ? `Re-rendering ${d.matched ?? 0} photo${d.matched === 1 ? '' : 's'} (${d.deleted ?? 0} cached preview${d.deleted === 1 ? '' : 's'} cleared) — rebuilding in the background.`
+        ? `Re-rendering ${d.matched ?? 0} photo${d.matched === 1 ? '' : 's'} (${d.deleted ?? 0} cached preview${d.deleted === 1 ? '' : 's'} cleared) — rebuilding + re-priming the edge in the background${d.previewVersion ? ` (cache v${d.previewVersion})` : ''}.`
         : (d.error || 'Failed.'))
     } catch { setNote('Failed.') } finally { setBusy(false) }
   }
@@ -1288,7 +1288,7 @@ function ResultCard({ result, assets }: { result: ReferenceLookup; assets: Asset
       <div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`${result.previewUrl}?max=600`}
+          src={`${result.previewUrl}&max=600`}
           alt={result.displayTitle}
           className="w-full rounded-lg border border-white/10 bg-white/[0.03] shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
         />

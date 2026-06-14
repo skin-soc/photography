@@ -186,7 +186,8 @@ export default async function ShopProductView({
   // Posters request the 4:5 portrait crop (matches the print master); fine art and
   // digital keep the full frame.
   const heroQuery = (max: number) =>
-    `?max=${max}${heroNoLogo ? '&logo=0' : ''}${posterView ? '&poster=1' : ''}`
+    // previewUrl already carries `?v=<version>`, so append with `&`.
+    `&max=${max}${heroNoLogo ? '&logo=0' : ''}${posterView ? '&poster=1' : ''}`
 
   // Foot line on the poster mat — our site, formatted like the gallery sample.
   const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`

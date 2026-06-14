@@ -54,6 +54,10 @@ const PREVIEWS_DIR = resolve(process.env.PREVIEWS_DIR ?? join(DATA_DIR, 'preview
 const CACHE_DIR = resolve(process.env.CACHE_DIR ?? join(DATA_DIR, 'preview-cache'))
 const PRODUCTS_PATH = resolve(process.env.PRODUCTS_PATH ?? join(DATA_DIR, 'products.json'))
 const PUBLIC_URL = (process.env.PUBLIC_URL ?? '').replace(/\/$/, '')
+// Public, cacheable preview host (loki) — used to PRIME the Cloudflare edge cache
+// during warming. Unset → edge priming is skipped (origin disk warming still runs).
+const PREVIEW_PUBLIC_BASE = (process.env.PREVIEW_PUBLIC_BASE ?? '').replace(/\/+$/, '')
+const PREVIEW_VERSION_PATH = resolve(process.env.PREVIEW_VERSION_PATH ?? join(DATA_DIR, 'preview-version'))
 const PREVIEW_MAX = Number(process.env.PREVIEW_MAX ?? 800)
 const SHARED_SECRET = process.env.SHARED_SECRET ?? ''
 
@@ -260,6 +264,23 @@ await mkdir(FULFIL_CACHE_DIR, { recursive: true })
 await mkdir(POSTER_ASSETS_DIR, { recursive: true })
 await mkdir(ORDERS_DIR, { recursive: true })
 
+// Monotonic preview-cache version. The Worker appends it to every preview URL as
+// `?v=`, and loki's Cache Rule includes the query string in the cache key — so
+// bumping it busts the immutable/1yr edge cache for ALL previews at once. Bumped
+// whenever previews are re-rendered/re-watermarked. Persisted across restarts.
+let _previewVersion = 1
+try {
+  const n = parseInt((await readFile(PREVIEW_VERSION_PATH, 'utf8')).trim(), 10)
+  if (Number.isFinite(n) && n > 0) _previewVersion = n
+} catch { /* default 1; the file is created on first bump */ }
+const previewVersion = () => _previewVersion
+async function bumpPreviewVersion() {
+  _previewVersion += 1
+  await writeFile(PREVIEW_VERSION_PATH, String(_previewVersion))
+    .catch((err) => console.error('[preview-version] persist failed:', err.message))
+  return _previewVersion
+}
+
 const app = express()
 app.disable('x-powered-by')
 // Gzip responses — catalog.json is ~2MB JSON and the tunnel upstream is slow
@@ -379,7 +400,9 @@ app.get('/catalog.json', async (_req, res) => {
   try {
     const catalog = await loadCatalog()
     res.set('Cache-Control', 'public, max-age=300')
-    res.json(catalog)
+    // previewVersion drives the `?v=` cache-buster the Worker appends to preview
+    // URLs — bumped on re-render so loki's edge cache refreshes.
+    res.json({ ...catalog, previewVersion: previewVersion() })
   } catch (err) {
     console.error('[catalog]', err)
     res.status(500).json({ error: 'catalog unavailable' })
@@ -546,50 +569,87 @@ const WARM_SIZES = [...new Set([PREVIEW_MAX, 400].filter((n) => n > 0 && n <= PR
 const WARM_CONCURRENCY = Math.max(1, Number(process.env.WARM_CONCURRENCY ?? 3))
 let _warming = false
 
-async function warmPreviewCache() {
+/**
+ * The (logo, poster) preview variants a photo is actually shown in, by product
+ * type — MUST mirror what ShopGrid / ShopProductView request so warming covers
+ * every on-screen image (not just the digital one). digital → logo badge; poster
+ * (print) → no logo + 4:5 crop; fine-art → no logo, full frame.
+ */
+function previewVariants(types) {
+  const out = []
+  if (types.includes('digital'))   out.push({ logo: true,  poster: false })
+  if (types.includes('print'))     out.push({ logo: false, poster: true  })
+  if (types.includes('fine-art'))  out.push({ logo: false, poster: false })
+  if (out.length === 0)            out.push({ logo: true,  poster: false }) // safe default
+  return out
+}
+
+/** The loki URL for a built variant, carrying the current cache-buster. */
+function edgePreviewUrl(id, max, logo, poster, ver) {
+  const qs = `max=${max}${logo ? '' : '&logo=0'}${poster ? '&poster=1' : ''}&v=${ver}`
+  return `${PREVIEW_PUBLIC_BASE}/preview/${id}?${qs}`
+}
+
+/**
+ * Warm the preview caches. Catalog-driven, so it builds exactly the variants each
+ * photo is sold in. Two layers:
+ *  - origin DISK cache (always): `buildPreview` for any missing variant.
+ *  - loki EDGE cache (when primeEdge && PREVIEW_PUBLIC_BASE set): fetch each
+ *    variant through loki so even the first global visitor gets a HIT. Best-effort
+ *    and gated to manual warms / re-renders so the frequent fs.watch auto-sweep
+ *    only fills the cheap disk cache.
+ */
+async function warmPreviewCache(primeEdge = false) {
   if (_warming) return
   _warming = true
   try {
-    let files
+    let photos
     try {
-      files = await readdir(PREVIEWS_DIR)
+      ;({ photos } = await loadCatalog())
     } catch (err) {
-      console.warn('[warm] cannot read previews dir:', err.message)
+      console.warn('[warm] cannot load catalog:', err.message)
       return
     }
-    const ids = files
-      .filter((f) => f.toLowerCase().endsWith('.jpg'))
-      .map((f) => f.slice(0, -4))
     const jobs = []
-    for (const id of ids) for (const max of WARM_SIZES) jobs.push({ id, max })
+    for (const p of photos) {
+      const types = [...new Set((p.products ?? []).map((pr) => pr.type))]
+      for (const max of WARM_SIZES)
+        for (const v of previewVariants(types))
+          jobs.push({ id: p.id, max, logo: v.logo, poster: v.poster })
+    }
     if (jobs.length === 0) return
 
-    let cursor = 0
-    let built = 0
-    let failed = 0
+    const ver = previewVersion()
+    const doPrime = primeEdge && Boolean(PREVIEW_PUBLIC_BASE)
+    let cursor = 0, built = 0, failed = 0, primed = 0
     const started = Date.now()
     const run = async () => {
       for (;;) {
         const idx = cursor++
         if (idx >= jobs.length) return
-        const { id, max } = jobs[idx]
+        const { id, max, logo, poster } = jobs[idx]
+        let ok = true
         try {
-          await stat(join(CACHE_DIR, previewCacheKey(id, max)))
-          continue // already cached — skip cheaply
-        } catch { /* needs building */ }
-        try {
-          await buildPreview(id, max)
-          built++
-        } catch (err) {
-          failed++
-          console.error('[warm]', id, max, err.message)
+          await stat(join(CACHE_DIR, previewCacheKey(id, max, logo, poster)))
+        } catch {
+          try { await buildPreview(id, max, logo, poster); built++ }
+          catch (err) { ok = false; failed++; console.error('[warm]', id, max, err.message) }
+        }
+        // Prime loki's edge for this exact variant. The origin's own GET reaches
+        // the CF edge: a miss pulls from here (populating the edge + tiered upper
+        // tier), a hit is cheap. Draining the body ensures the entry is stored.
+        if (ok && doPrime) {
+          try {
+            const r = await fetch(edgePreviewUrl(id, max, logo, poster, ver))
+            if (r.ok) { primed++; await r.arrayBuffer().catch(() => {}) }
+          } catch { /* best-effort — the disk cache already backs this variant */ }
         }
       }
     }
     await Promise.all(Array.from({ length: WARM_CONCURRENCY }, run))
-    if (built || failed) {
+    if (built || failed || primed) {
       const secs = ((Date.now() - started) / 1000).toFixed(1)
-      console.log(`[warm] generated ${built} preview(s)${failed ? `, ${failed} failed` : ''} in ${secs}s`)
+      console.log(`[warm] built ${built}, primed ${primed}${failed ? `, ${failed} failed` : ''} in ${secs}s (v${ver})`)
     }
   } finally {
     _warming = false
@@ -611,9 +671,10 @@ try {
   console.warn('[warm] preview dir watch unavailable:', err.message)
 }
 
-/** Manually kick a warm sweep (secret-gated like everything else). */
+/** Manually kick a warm sweep (secret-gated like everything else). Manual warms
+ *  also prime the loki edge cache, not just the origin disk. */
 app.post('/admin/warm', (_req, res) => {
-  scheduleWarm(0)
+  warmPreviewCache(true).catch((err) => console.error('[warm] manual sweep failed:', err.message))
   res.json({ ok: true })
 })
 
@@ -1829,8 +1890,8 @@ app.post('/admin/orders/purge-expired', async (_req, res) => {
 
 /** Warm the watermarked-preview cache (re-render any missing previews). */
 app.post('/admin/cache/warm-previews', async (_req, res) => {
-  warmPreviewCache().catch((err) => console.error('[warm] manual sweep failed:', err.message))
-  res.json({ ok: true, started: true })
+  warmPreviewCache(true).catch((err) => console.error('[warm] manual sweep failed:', err.message))
+  res.json({ ok: true, started: true, previewVersion: previewVersion() })
 })
 
 /**
@@ -1878,9 +1939,13 @@ app.post('/admin/cache/rerender-previews', express.json({ limit: '4kb' }), async
       deleted += 1
     }
 
-    // Rebuild in the background (same throttled warmer that fills missing ones).
-    warmPreviewCache().catch((err) => console.error('[warm] rerender sweep failed:', err.message))
-    res.json({ ok: true, matched: idSet.size, deleted, started: true })
+    // Bump the cache-buster so loki's immutable edge entries for the OLD render
+    // are abandoned (their `?v=` no longer matches) — without this, re-rendered
+    // previews would be masked by the year-long edge cache. Then rebuild the disk
+    // cache AND re-prime the edge at the new version.
+    const newVersion = await bumpPreviewVersion()
+    warmPreviewCache(true).catch((err) => console.error('[warm] rerender sweep failed:', err.message))
+    res.json({ ok: true, matched: idSet.size, deleted, started: true, previewVersion: newVersion })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

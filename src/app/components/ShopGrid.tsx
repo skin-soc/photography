@@ -61,7 +61,8 @@ function isPhysical(type: ProductType | null): boolean {
 /** Build a preview URL, suppressing the logo badge for physical product types and
  *  requesting the 4:5 poster crop in poster contexts. */
 function previewSrc(previewUrl: string, max: number, noLogo: boolean, poster = false): string {
-  return `${previewUrl}?max=${max}${noLogo ? '&logo=0' : ''}${poster ? '&poster=1' : ''}`
+  // previewUrl already carries `?v=<version>`, so further params append with `&`.
+  return `${previewUrl}&max=${max}${noLogo ? '&logo=0' : ''}${poster ? '&poster=1' : ''}`
 }
 
 /** Hero URLs for a set of matching photos: prefer the curated green-labelled

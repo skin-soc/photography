@@ -411,6 +411,9 @@ const MOCK_CATALOG: ShopPhoto[] = [
 
 interface RawCatalog {
   generated?: string
+  /** Monotonic preview-cache version from the origin. Appended to preview URLs as
+   *  `?v=` so a re-render busts loki's immutable edge cache. */
+  previewVersion?: number
   photos: ShopPhoto[]
 }
 
@@ -499,19 +502,24 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
     // in EUR→DKK). Both read once per build and folded into the cache key so a
     // price tweak or a rate move re-prices the catalog even when `generated` hasn't.
     const [pricing, rates] = await Promise.all([getPricing(), getRates()])
+    // Cache-buster appended to every preview URL; a re-render bumps it on the
+    // origin, so folding it into the key re-processes the catalog (new ?v=) the
+    // moment the origin reports a new version.
+    const previewVer = data.previewVersion ?? 1
     const key =
       (data.generated ||
         `${data.photos.length}:${data.photos[0]?.id ?? ''}:${data.photos[data.photos.length - 1]?.id ?? ''}`) +
-      `|p:${pricingStamp(pricing)}|r:${rates.EUR.toFixed(5)}`
+      `|p:${pricingStamp(pricing)}|r:${rates.EUR.toFixed(5)}|v:${previewVer}`
     if (_processed && _processed.key === key) return _processed.photos
     const photos = data.photos.map((p) => ({
       ...p,
       category: p.category ?? [],
       key: p.key ?? false,
       // Public previews: the cacheable host when configured (served from the edge,
-      // no Worker), else the /api/preview Worker proxy. The same ?max/&logo/&poster
-      // query the components append works identically against both.
-      previewUrl: PREVIEW_BASE ? `${PREVIEW_BASE}/preview/${p.id}` : `/api/preview/${p.id}`,
+      // no Worker), else the /api/preview Worker proxy. Carries the `?v=` cache-
+      // buster; components append further params with `&max=…`. A re-render bumps
+      // the version, changing the URL so loki's immutable edge cache is bypassed.
+      previewUrl: (PREVIEW_BASE ? `${PREVIEW_BASE}/preview/${p.id}` : `/api/preview/${p.id}`) + `?v=${previewVer}`,
     }))
     // Apply the worker-owned RANGE (products.json now lives with the worker —
     // src/config/product-range.ts). Keep the origin's DIGITAL products
