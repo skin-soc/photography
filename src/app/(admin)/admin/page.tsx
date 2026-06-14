@@ -857,10 +857,6 @@ function AppearanceSettings() {
         ))}
         {note && <span className="self-center pl-4 pr-1 text-[12px] text-white/55">{note}</span>}
       </div>
-      <p className="mt-3 text-[11px] font-light text-amber-300/70 leading-relaxed">
-        Phase 1: the foundation is wired but the components aren’t recoloured yet — selecting Light or Auto
-        currently changes only the base background. The full light theme lands in a later phase.
-      </p>
     </section>
   )
 }
