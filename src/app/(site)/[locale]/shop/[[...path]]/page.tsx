@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound, redirect } from 'next/navigation'
-import ShopGrid, { GridPhoto } from '@/app/components/ShopGrid'
+import ShopGrid from '@/app/components/ShopGrid'
 import ShopProductView from '@/app/components/ShopProductView'
 import {
   getCatalog,
   getPhoto,
-  fromPrice,
+  catalogVersion,
   photoTypes,
   availableTypes,
   buildCategoryTree,
@@ -18,7 +18,7 @@ import {
 } from '@/lib/shop'
 import { typeFromUrlSlug } from '@/lib/product-types'
 import { isProductSlug, resolveShopPath, categoryUrl } from '@/lib/shop-url'
-import { getRates, formatDKK, approxLine } from '@/lib/currency'
+import { landingTypeCards, shopFolderCards } from '@/lib/shop-cards'
 import { SITE_URL, OG_LOCALE_MAP, getKeywords } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
 
@@ -202,9 +202,13 @@ export default async function Shop({ params }: { params: Params }) {
   const tShop = await getTranslations({ locale, namespace: 'shop' })
 
   const catalog = await getCatalog()
-  const rates = await getRates()
   const categoryTree = buildCategoryTree(catalog)
   const types = availableTypes(catalog)
+  // The grid's photo tiles are fetched client-side from the edge-cached
+  // /api/shop/catalog?v=… (see ShopGrid). We only need the version here to
+  // cache-bust that fetch — the heavy per-photo serialization stays out of this
+  // server response, which is what was blowing the Worker CPU limit (error 1102).
+  const version = catalogVersion()
 
   // Resolve the URL slug path to a real nav-path (real folder names). An unknown
   // type slug or folder slug is a dead URL → 404.
@@ -223,24 +227,6 @@ export default async function Shop({ params }: { params: Params }) {
     }
   }
 
-  const photos: GridPhoto[] = catalog.map((p) => {
-    const lo = fromPrice(p)
-    return {
-      id: p.id,
-      slug: p.slug,
-      title: displayTitle(p),
-      location: p.location,
-      caption: p.caption,
-      types: photoTypes(p),
-      previewUrl: p.previewUrl,
-      fromText: formatDKK(lo.price),
-      fromApprox: approxLine(lo.price, rates),
-      category: p.category,
-      key: p.key,
-      salePct: p.salePct,
-      captureDate: p.captureDate,
-    }
-  })
   // Poster cards (grid) carry the same foot line as the product-page poster.
   const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
 
@@ -248,12 +234,22 @@ export default async function Shop({ params }: { params: Params }) {
   // (which may be a one-option folder that just redirects forward again).
   const backPath = backTarget(categoryTree, catalog, initialCategoryPath)
 
+  // Navigation cards (landing product-type cards + category folder cards) are
+  // rendered server-side — they're small (counts + a few hero URLs) so they cost
+  // nothing like the full tile list. Only an actual photo collection (a leaf,
+  // `isLeaf`) fetches the catalog client-side. This keeps browsing instant while
+  // the heavy per-photo work stays off the Worker (no error 1102).
+  const landingCards = initialCategoryPath.length === 0 ? landingTypeCards(catalog, types) : null
+  const folder = shopFolderCards(catalog, categoryTree, initialCategoryPath)
+
   return (
     <main className="min-h-screen bg-bg text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32">
-      {photos.length > 0 ? (
+      {catalog.length > 0 ? (
         <ShopGrid
-          photos={photos}
-          categoryTree={categoryTree}
+          catalogVersion={version}
+          landingCards={landingCards}
+          folderCards={folder.cards}
+          isLeaf={folder.isLeaf}
           availableTypes={types}
           initialCategoryPath={initialCategoryPath}
           backPath={backPath}

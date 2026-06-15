@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import type { CategoryNode } from '@/lib/shop'
 import {
   type ProductType,
   PRODUCT_TYPE_ORDER,
@@ -13,6 +12,7 @@ import {
 import PosterMat from '@/app/components/PosterMat'
 import SalePill from '@/app/components/SalePill'
 import { categoryUrl } from '@/lib/shop-url'
+import type { TypeCard, FolderCard } from '@/lib/shop-cards'
 
 export interface GridPhoto {
   id: string
@@ -77,18 +77,6 @@ function heroUrls(matching: GridPhoto[], noLogo: boolean): string[] {
 /** Hero photos of a product type — rotating hero on type cards. */
 function keyPhotosForType(photos: GridPhoto[], type: ProductType): string[] {
   return heroUrls(photos.filter((p) => p.types.includes(type)), isPhysical(type))
-}
-
-/** Hero photos within a subject folder (optionally constrained to a type). */
-function keyPhotosForFolder(
-  photos: GridPhoto[],
-  folderPath: string[],
-  type: ProductType | null,
-): string[] {
-  return heroUrls(
-    photos.filter((p) => matchesCategory(p, folderPath) && (type === null || p.types.includes(type))),
-    isPhysical(type),
-  )
 }
 
 function RotatingImage({
@@ -159,13 +147,6 @@ function RotatingImage({
       ))}
     </div>
   )
-}
-
-function countInCategory(photos: GridPhoto[], path: string[], typeFilter: ProductType | null): number {
-  return photos
-    .filter((p) => matchesCategory(p, path))
-    .filter((p) => typeFilter === null || p.types.includes(typeFilter))
-    .length
 }
 
 /** Photos offered in a product type, anywhere in the catalog. */
@@ -287,8 +268,10 @@ function Breadcrumb({
 }
 
 export default function ShopGrid({
-  photos,
-  categoryTree,
+  catalogVersion,
+  landingCards = null,
+  folderCards = [],
+  isLeaf = false,
   availableTypes,
   initialCategoryPath = [],
   backPath = [],
@@ -296,8 +279,15 @@ export default function ShopGrid({
   intro,
   siteLabel,
 }: {
-  photos: GridPhoto[]
-  categoryTree: CategoryNode[]
+  /** Opaque catalog version — cache-busts the client fetch of the photo tiles. */
+  catalogVersion: string
+  /** Server-rendered landing product-type cards — present only on the landing,
+   *  so entering the shop needs no client catalog fetch. */
+  landingCards?: TypeCard[] | null
+  /** Server-rendered sub-folder cards for a category view (empty on a leaf). */
+  folderCards?: FolderCard[]
+  /** True when this view is an actual photo collection (tiles are client-fetched). */
+  isLeaf?: boolean
   availableTypes: ProductType[]
   /** Full nav path: [productType, ...subjectFolders]. Empty = landing. */
   initialCategoryPath?: string[]
@@ -316,6 +306,36 @@ export default function ShopGrid({
     [t],
   )
 
+  // Photo tiles are fetched client-side from the edge-cached catalog endpoint
+  // (the page no longer inlines the whole catalog — that blew the Worker CPU
+  // limit). Only a LEAF collection needs the tile list; landing + folder views
+  // render from server-passed cards and never fetch. The catalog is fetched ONCE
+  // per version and kept across navigation — moving folder↔leaf or going back
+  // never re-fetches or clears it, so revisits are instant.
+  const [photos, setPhotos] = useState<GridPhoto[]>([])
+  const fetchedVersion = useRef<string | null>(null)
+  const [catalogLoading, setCatalogLoading] = useState(false)
+  useEffect(() => {
+    if (!isLeaf) return                                    // non-leaf needs no photos
+    if (fetchedVersion.current === catalogVersion) return  // already have this catalog
+    let cancelled = false
+    setCatalogLoading(true)
+    fetch(`/api/shop/catalog?v=${encodeURIComponent(catalogVersion)}`)
+      .then((r) =>
+        r.ok
+          ? (r.json() as Promise<{ photos?: GridPhoto[] }>)
+          : Promise.reject(new Error(`HTTP ${r.status}`)),
+      )
+      .then((d) => {
+        if (cancelled) return
+        setPhotos(d.photos ?? [])
+        fetchedVersion.current = catalogVersion
+        setCatalogLoading(false)
+      })
+      .catch(() => { if (!cancelled) setCatalogLoading(false) })
+    return () => { cancelled = true }
+  }, [isLeaf, catalogVersion])
+
   // The browse position is the URL path (resolved to real folder names by the
   // server); navigation is via real <Link>s, so refresh/share land here exactly.
   const navPath = initialCategoryPath
@@ -324,26 +344,17 @@ export default function ShopGrid({
   const subjectPath = typeFilter ? navPath.slice(1) : []
   const isLanding = navPath.length === 0
 
-  // The product-type cards shown on the landing, in publish-tree order.
+  // The product-type cards shown on the landing, in publish-tree order. Prefer
+  // the server-rendered cards (instant, no fetch); fall back to computing from
+  // fetched photos if they weren't passed.
   const typeCards = PRODUCT_TYPE_ORDER.filter((tp) => availableTypes.includes(tp))
-
-  const currentNode: CategoryNode | null = (() => {
-    if (subjectPath.length === 0) return null
-    let node = categoryTree.find((n) => n.name === subjectPath[0]) ?? null
-    for (let i = 1; i < subjectPath.length && node; i++) {
-      node = node.children.find((c) => c.name === subjectPath[i]) ?? null
-    }
-    return node
-  })()
-
-  // Subject folders at the current level — only those that actually hold photos
-  // of the selected product type (so e.g. Fine Art hides folders with no fine-art).
-  const subCategories: CategoryNode[] = (
-    subjectPath.length === 0 ? categoryTree : (currentNode?.children ?? [])
-  )
-    .filter((node) => countInCategory(photos, [...subjectPath, node.name], typeFilter) > 0)
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const landingItems: TypeCard[] =
+    landingCards ??
+    typeCards.map((type) => ({
+      type,
+      count: countInType(photos, type),
+      heroSrcs: keyPhotosForType(photos, type),
+    }))
 
   const shown = photos
     .filter((p) => matchesCategory(p, subjectPath))
@@ -353,56 +364,20 @@ export default function ShopGrid({
     // (covers mock data and any catalog written before this fix was deployed).
     .sort((a, b) => (a.captureDate ?? 0) - (b.captureDate ?? 0))
 
-  // ── First-page loading overlay ───────────────────────────────────────────
-  // Grid navigation is entirely client-side (no route change), so the global
-  // NavigationOverlay can't cover it. We show a spinner over the grid until the
-  // first screenful of images has actually painted.
-  const isFolderView = !isLanding && subCategories.length > 0
+  const isFolderView = !isLanding && !isLeaf
   // Posters leaf: photo cards are rendered as full poster mats (not square tiles).
-  const isPosterLeaf = !isLanding && !isFolderView && typeFilter === 'print'
-  const itemCount = isLanding ? typeCards.length : isFolderView ? subCategories.length : shown.length
-  // A "first page" — enough tiles to fill the initial viewport across
-  // breakpoints (5-col desktop ≈ 2.4 rows, 2-col mobile ≈ 6 rows).
-  const FIRST_PAGE = 12
-  // Poster cards don't wire into the per-image readiness probe (they reuse the
-  // shared PosterMat, not LazyImage), so skip the spinner for the poster leaf —
-  // they load progressively with native lazy-loading.
-  const targetCount = isPosterLeaf ? 0 : Math.min(itemCount, FIRST_PAGE)
+  const isPosterLeaf = isLeaf && typeFilter === 'print'
+  // Changes when the view changes — re-arms each image's fade-in (LazyImage /
+  // RotatingImage) so a persisting tile re-reveals on a filter/category change.
   const viewKey = navPath.join('|') || '·landing'
+  // Eager-load roughly the first screenful of tiles; the rest lazy-load.
+  const EAGER = 12
 
-  const loadedRef = useRef(0)
-  const targetRef = useRef(targetCount)
-  targetRef.current = targetCount
-  const [ready, setReady] = useState(targetCount === 0)
-  const [showSpinner, setShowSpinner] = useState(false)
-
-  // Reset readiness synchronously when the view changes (before children
-  // commit), so tile reports for the new view count from zero.
-  const prevKeyRef = useRef(viewKey)
-  if (prevKeyRef.current !== viewKey) {
-    prevKeyRef.current = viewKey
-    loadedRef.current = 0
-    setReady(targetCount === 0)
-  }
-
-  const handleTileLoad = useCallback(() => {
-    loadedRef.current += 1
-    if (loadedRef.current >= targetRef.current) setReady(true)
-  }, [])
-
-  // Delay the spinner slightly so instant (cached) transitions never flash it.
-  useEffect(() => {
-    if (ready) { setShowSpinner(false); return }
-    const id = setTimeout(() => setShowSpinner(true), 180)
-    return () => clearTimeout(id)
-  }, [viewKey, ready])
-
-  // Safety net: never trap the spinner if an image stalls or never loads.
-  useEffect(() => {
-    if (ready) return
-    const id = setTimeout(() => setReady(true), 8000)
-    return () => clearTimeout(id)
-  }, [viewKey, ready])
+  // The spinner shows ONLY while a leaf is genuinely fetching its tile data (the
+  // first visit, before any photos exist). Cards (landing/folder) and already-
+  // fetched leaves render immediately; each image then fades itself in as it
+  // loads, so ready content is never hidden behind an all-or-nothing reveal.
+  const showSpinner = isLeaf && catalogLoading && photos.length === 0
 
   return (
     <>
@@ -421,40 +396,28 @@ export default function ShopGrid({
       <Breadcrumb navPath={navPath} backPath={backPath} typeLabel={typeLabel} rootLabel={t('shopRoot')} />
 
       <div className="relative min-h-[50vh]">
-        {/* Loading overlay — shown until the first page of images has painted */}
-        {showSpinner && !ready && (
+        {/* Spinner — only while a leaf is fetching its tiles (first visit). */}
+        {showSpinner && (
           <div className="absolute inset-0 z-10 flex items-start justify-center pt-24">
             <div className="shop-spinner" role="status" aria-label="Loading" />
           </div>
         )}
 
-        <div className={ready ? 'opacity-100 transition-opacity duration-300' : 'opacity-0 pointer-events-none'}>
+        <div>
           {isLanding ? (
             /* Landing: one card per product type — Fine Art · Prints · Digital */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-foreground/5">
-              {typeCards.map((type, idx) => {
-                const count = countInType(photos, type)
-                const keyUrls = keyPhotosForType(photos, type)
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 bg-foreground/5">
+              {landingItems.map(({ type, heroSrcs }, idx) => {
                 return (
                   <Link
                     key={type}
                     href={categoryUrl([type])}
                     className="group relative block overflow-hidden aspect-[4/3] bg-bg text-left"
                   >
-                    <RotatingImage
-                      srcs={keyUrls}
-                      delay={idx * 700}
-                      gen={viewKey}
-                      onReady={idx < targetCount ? handleTileLoad : undefined}
-                    />
+                    <RotatingImage srcs={heroSrcs} delay={idx * 700} gen={viewKey} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/65 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 p-6 z-10">
-                      <p className="text-2xl font-light text-white">{t(typeMessageKey(type))}</p>
-                      {count > 0 && (
-                        <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-accent/70">
-                          {count} {count === 1 ? 'photo' : 'photos'}
-                        </p>
-                      )}
+                      <p className="text-2xl font-light text-accent">{t(typeMessageKey(type))}</p>
                     </div>
                   </Link>
                 )
@@ -462,31 +425,19 @@ export default function ShopGrid({
             </div>
           ) : isFolderView ? (
             /* Has sub-categories: always show folder cards, never the photo grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[6px] bg-foreground/5">
-              {subCategories.map((node, nodeIdx) => {
-                const nodePath = [...subjectPath, node.name]
-                const count = countInCategory(photos, nodePath, typeFilter)
-                const keyUrls = keyPhotosForFolder(photos, nodePath, typeFilter)
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 bg-foreground/5">
+              {folderCards.map((folder, nodeIdx) => {
+                const { name, heroSrcs, path: folderPath } = folder
                 return (
                   <Link
-                    key={node.name}
-                    href={categoryUrl([...navPath, node.name])}
+                    key={name}
+                    href={categoryUrl(folderPath)}
                     className="group relative block overflow-hidden aspect-[4/3] bg-bg text-left"
                   >
-                    <RotatingImage
-                      srcs={keyUrls}
-                      delay={nodeIdx * 700}
-                      gen={viewKey}
-                      onReady={nodeIdx < targetCount ? handleTileLoad : undefined}
-                    />
+                    <RotatingImage srcs={heroSrcs} delay={nodeIdx * 700} gen={viewKey} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/65 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 p-6 z-10">
-                      <p className="text-xl font-light text-white">{node.name}</p>
-                      {count > 0 && (
-                        <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-accent/70">
-                          {count} {count === 1 ? 'photo' : 'photos'}
-                        </p>
-                      )}
+                      <p className="text-xl font-light text-accent">{name}</p>
                     </div>
                   </Link>
                 )
@@ -538,9 +489,8 @@ export default function ShopGrid({
                         <LazyImage
                           src={previewSrc(p.previewUrl, 800, isPhysical(typeFilter))}
                           alt={`${p.title} — ${p.location}`}
-                          eager={i < targetCount}
+                          eager={i < EAGER}
                           gen={viewKey}
-                          onReady={i < targetCount ? handleTileLoad : undefined}
                         />
                       </div>
                       {typeFilter === 'digital' ? (

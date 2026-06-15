@@ -468,6 +468,14 @@ async function fetchRawCatalog(): Promise<RawCatalog> {
   return JSON.parse(new TextDecoder().decode(buf)) as RawCatalog
 }
 
+/** Opaque version of the currently-processed catalog (its cache key — changes
+ *  when photos, pricing, rates or the preview version change). Call after
+ *  `getCatalog()` has run; used to cache-bust the client-fetched grid catalog
+ *  (`/api/shop/catalog?v=…`). Empty string before the first build. */
+export function catalogVersion(): string {
+  return _processed?.key ?? ''
+}
+
 /** Fetch the full catalog of sellable photos. Deduped (one in-flight build) and
  *  cached both at the edge (raw fetch) and in-isolate (processed result). */
 export async function getCatalog(): Promise<ShopPhoto[]> {

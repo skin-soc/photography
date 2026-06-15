@@ -17,6 +17,7 @@ interface PaymentData {
   downloadItems: DownloadItem[]
   currency: string
   billingCountry: string | null
+  shippingDefaultCountry?: string | null
   summary: CheckoutSummary | null
   /** The coupon the session was created with: applied code, or an error reason. */
   coupon: { code: string; error: string | null } | null
@@ -384,6 +385,7 @@ export default function CartDrawer() {
             hasPhysical={paymentData.hasPhysical}
             downloadItems={paymentData.downloadItems}
             billingCountry={paymentData.billingCountry}
+            shippingDefaultCountry={paymentData.shippingDefaultCountry}
             totalText={totalText}
             summary={paymentData.summary}
             reverseCharge={paymentData.reverseCharge}

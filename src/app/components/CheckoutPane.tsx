@@ -40,6 +40,10 @@ interface CheckoutPaneProps {
   downloadItems: DownloadItem[]
   /** Buyer country from IP — set on the session for tax, no address form needed. */
   billingCountry: string | null
+  /** Country to seed the shipping form with (buyer's IP country if we ship there,
+   *  else DK). Stops the element defaulting to GB, whose address autocomplete
+   *  collapses the form to a single line. */
+  shippingDefaultCountry?: string | null
   totalText: string
   summary: CheckoutSummary | null
   /** B2B: VAT reverse-charged (0%) for a validated EU business — show a note. */
@@ -344,7 +348,33 @@ export default function CheckoutPane(props: CheckoutPaneProps) {
   return (
     <CheckoutElementsProvider
       stripe={stripePromise}
-      options={{ clientSecret: props.clientSecret, elementsOptions: { appearance: buildAppearance(theme) } }}
+      options={{
+        clientSecret: props.clientSecret,
+        elementsOptions: { appearance: buildAppearance(theme) },
+        // Seed the shipping country with the buyer's own (from IP). Otherwise the
+        // Shipping Address Element defaults to GB (browser locale), whose Stripe
+        // address autocomplete collapses the form to a single "Address" search line
+        // — so the buyer only sees address line 1. The element exposes no default-
+        // country option in Custom Checkout, so we prefill via the checkout SDK's
+        // defaultValues; line1 must be a string, so the rest is seeded empty.
+        ...(props.shippingDefaultCountry
+          ? {
+              defaultValues: {
+                shippingAddress: {
+                  name: '',
+                  address: {
+                    line1: '',
+                    line2: '',
+                    city: '',
+                    state: '',
+                    postal_code: '',
+                    country: props.shippingDefaultCountry,
+                  },
+                },
+              },
+            }
+          : {}),
+      }}
     >
       <PaymentForm
         hasPhysical={props.hasPhysical}

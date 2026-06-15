@@ -23,6 +23,12 @@ import { formatDKK } from '@/lib/currency'
 
 interface RequestItem { sku: string }
 
+/** Countries we ship physical orders to — the Shipping Address Element's allowed
+ *  list, and the set the buyer's IP country must be in to seed the form's
+ *  default country (otherwise we fall back to DK, the home market). */
+const SHIPPING_COUNTRIES: Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[] =
+  ['DK', 'GB', 'DE', 'FR', 'NL', 'SE', 'NO', 'US', 'CA', 'AU', 'JP']
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as {
@@ -220,11 +226,7 @@ export async function POST(req: Request) {
       // the country (from IP) client-side via updateBillingAddress instead of
       // showing an address form. Physical orders still collect a shipping address.
       ...(hasPhysical
-        ? {
-            shipping_address_collection: {
-              allowed_countries: ['GB', 'DK', 'DE', 'FR', 'NL', 'SE', 'NO', 'US', 'CA', 'AU', 'JP'],
-            },
-          }
+        ? { shipping_address_collection: { allowed_countries: SHIPPING_COUNTRIES } }
         : {}),
       return_url: `${new URL(req.url).origin}/${locale}/shop/order-complete?session_id={CHECKOUT_SESSION_ID}`,
       metadata,
@@ -247,6 +249,13 @@ export async function POST(req: Request) {
       hasPhysical,
       currency,
       billingCountry: country,
+      // Default country for the Shipping Address Element (buyer's IP country when we
+      // ship there, else DK). The element otherwise defaults to GB from the browser
+      // locale — an address-autocomplete country, which renders Stripe's condensed
+      // single-line "Address" search instead of the full form, so the buyer appears
+      // to only get address line 1. We seed this via the checkout SDK's
+      // defaultValues.shippingAddress (see CheckoutPane).
+      shippingDefaultCountry: country && (SHIPPING_COUNTRIES as string[]).includes(country) ? country : 'DK',
       reverseCharge: outcome.reverseCharge,
       businessName: business?.name ?? null,
       summary: {
