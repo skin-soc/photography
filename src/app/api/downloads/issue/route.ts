@@ -19,6 +19,8 @@ import {
   originConfigured,
   signOrder,
   cookieName,
+  extractOrderLines,
+  describeOrderLines,
 } from '@/lib/downloads'
 import { getInvoiceTerms } from '@/lib/terms'
 
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
   let session: Stripe.Checkout.Session
   try {
     session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['payment_intent.latest_charge'],
+      expand: ['payment_intent.latest_charge', 'line_items.data.price.product'],
     })
   } catch {
     return NextResponse.json({ error: 'not found' }, { status: 404 })
@@ -78,6 +80,11 @@ export async function POST(req: NextRequest) {
   const locale = session.metadata?.locale || 'en'
   const paidAt = charge?.created ? charge.created * 1000 : (session.created ? session.created * 1000 : null)
   const paymentMethod = charge?.payment_method_details?.type ?? null
+  // Full itemised + enriched order + shipping, same as the webhook (mixed-order
+  // invoice) — this route usually wins the race, so it must record them.
+  const raw = extractOrderLines(session)
+  const shipping = raw.shipping
+  const lineItems = await describeOrderLines(raw.lineItems)
 
   let passcode: string | null = null
   try {
@@ -87,6 +94,8 @@ export async function POST(req: NextRequest) {
       email: session.customer_details?.email ?? null,
       locale,
       items,
+      lineItems,
+      shipping,
       livemode: session.livemode,
       amount: session.amount_total,
       currency: session.currency,

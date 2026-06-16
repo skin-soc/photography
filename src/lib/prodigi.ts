@@ -43,9 +43,35 @@ async function prodigiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }).finally(() => clearTimeout(timer))
   if (!res.ok) {
     const body = await res.text().catch(() => '')
-    throw new Error(`prodigi ${path} responded ${res.status}: ${body.slice(0, 300)}`)
+    throw new Error(`prodigi ${path} responded ${res.status}: ${summariseProdigiError(body)}`)
   }
   return res.json() as Promise<T>
+}
+
+/** Collapse a Prodigi error body into a short, human line for the admin card.
+ *  Validation errors come back as
+ *  `{ outcome, failures: { "recipient.address.stateOrCounty": [{ code, providedValue }] } }`
+ *  — we render that as `ValidationFailed — recipient.address.stateOrCounty: MustNotBeEmptyOrWhitespace`
+ *  instead of dumping the raw JSON (incl. the noisy traceParent). Falls back to a
+ *  trimmed slice of the body when it isn't the shape we expect. */
+function summariseProdigiError(body: string): string {
+  try {
+    const j = JSON.parse(body) as {
+      outcome?: string
+      failures?: Record<string, Array<{ code?: string }>>
+      message?: string
+    }
+    const fields = j.failures
+      ? Object.entries(j.failures)
+          .map(([field, errs]) => `${field}: ${(errs ?? []).map((e) => e?.code).filter(Boolean).join(', ') || 'invalid'}`)
+          .join('; ')
+      : ''
+    const head = j.outcome || j.message || 'error'
+    const out = fields ? `${head} — ${fields}` : head
+    return out.slice(0, 300)
+  } catch {
+    return body.slice(0, 300)
+  }
 }
 
 /** Parse a Prodigi money string ("48.00") to minor units (cents/øre). */
@@ -206,4 +232,91 @@ export interface RoutingCheck {
 export function checkEuFulfilment(quote: ProdigiQuote): RoutingCheck {
   const offending = quote.fulfilments.filter((f) => !isEU(f.countryCode))
   return { ok: offending.length === 0 && quote.fulfilments.length > 0, offending }
+}
+
+// ── Order creation (POST /orders) ─────────────────────────────────────────────
+
+export interface ProdigiRecipient {
+  name: string
+  email?: string | null
+  address: {
+    line1: string
+    line2?: string | null
+    townOrCity: string
+    stateOrCounty?: string | null
+    postalOrZipCode: string
+    /** ISO-2 country code. */
+    countryCode: string
+  }
+}
+
+export interface ProdigiOrderItem {
+  /** Prodigi product SKU (e.g. 'GLOBAL-PAP-A4'). */
+  sku: string
+  copies: number
+  attributes?: Record<string, string>
+  /** Print assets — each a publicly-fetchable URL Prodigi pulls the file from. */
+  assets: { printArea: string; url: string }[]
+  sizing?: string
+  /** Our own line reference (the shop SKU), echoed back for reconciliation. */
+  merchantReference?: string
+}
+
+export interface ProdigiOrderResult {
+  /** Prodigi order id (ord_…). */
+  id: string
+  /** Production stage, e.g. 'InProgress'. */
+  stage: string
+  /** Creation outcome, e.g. 'Created' | 'CreatedWithIssues'. */
+  outcome: string
+  mode: 'sandbox' | 'live'
+}
+
+interface CreateOrderResponse {
+  outcome: string
+  order: { id: string; status?: { stage?: string } }
+}
+
+/**
+ * Submit an order to Prodigi (`POST /orders`). Idempotent on `merchantReference`
+ * (our order code) via the Idempotency-Key header, so webhook retries never
+ * double-order. Sandbox vs live follows the API key. Per the standing rule the
+ * live key stays parked — this is exercised on sandbox only for now (no Stripe
+ * Issuing funding step; that's a live-only concern).
+ */
+export async function createOrder(input: {
+  merchantReference: string
+  recipient: ProdigiRecipient
+  items: ProdigiOrderItem[]
+  shippingMethod?: string
+  /** Per-order CloudEvents callback (status updates) — token-secured by us. */
+  callbackUrl?: string
+  metadata?: Record<string, string>
+}): Promise<ProdigiOrderResult> {
+  const body = {
+    merchantReference: input.merchantReference,
+    shippingMethod: input.shippingMethod ?? 'Budget',
+    recipient: input.recipient,
+    items: input.items.map((i) => ({
+      sku: i.sku,
+      copies: i.copies,
+      sizing: i.sizing ?? 'fillPrintArea',
+      attributes: i.attributes ?? {},
+      assets: i.assets,
+      ...(i.merchantReference ? { merchantReference: i.merchantReference } : {}),
+    })),
+    ...(input.callbackUrl ? { callbackUrl: input.callbackUrl } : {}),
+    ...(input.metadata ? { metadata: input.metadata } : {}),
+  }
+  const d = await prodigiFetch<CreateOrderResponse>('/orders', {
+    method: 'POST',
+    headers: { 'Idempotency-Key': input.merchantReference },
+    body: JSON.stringify(body),
+  })
+  return {
+    id: d.order.id,
+    stage: d.order.status?.stage ?? 'Unknown',
+    outcome: d.outcome,
+    mode: prodigiMode(),
+  }
 }

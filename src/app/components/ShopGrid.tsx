@@ -316,8 +316,12 @@ export default function ShopGrid({
   const fetchedVersion = useRef<string | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
   useEffect(() => {
-    if (!isLeaf) return                                    // non-leaf needs no photos
-    if (fetchedVersion.current === catalogVersion) return  // already have this catalog
+    // No server connection needed for this view (a card view, or a leaf whose
+    // catalog we already hold) — make sure the spinner is cleared.
+    if (!isLeaf || fetchedVersion.current === catalogVersion) {
+      setCatalogLoading(false)
+      return
+    }
     let cancelled = false
     setCatalogLoading(true)
     fetch(`/api/shop/catalog?v=${encodeURIComponent(catalogVersion)}`)
@@ -373,11 +377,12 @@ export default function ShopGrid({
   // Eager-load roughly the first screenful of tiles; the rest lazy-load.
   const EAGER = 12
 
-  // The spinner shows ONLY while a leaf is genuinely fetching its tile data (the
-  // first visit, before any photos exist). Cards (landing/folder) and already-
-  // fetched leaves render immediately; each image then fades itself in as it
-  // loads, so ready content is never hidden behind an all-or-nothing reveal.
-  const showSpinner = isLeaf && catalogLoading && photos.length === 0
+  // The spinner shows whenever a connection to the server is in flight — i.e.
+  // while a leaf is fetching its tile catalog. Card views (landing/folder) and
+  // already-fetched leaves never fetch, so they render immediately; each image
+  // then fades itself in as it loads (no all-or-nothing reveal that hides ready
+  // content).
+  const showSpinner = catalogLoading
 
   return (
     <>

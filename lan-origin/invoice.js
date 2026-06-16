@@ -55,6 +55,7 @@ try {
 // Fonts are subset by fontkit, so embedding stays small despite the big sources.
 const NOTO_REGULAR = '/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf'
 const NOTO_BOLD = '/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf'
+const NOTO_ITALIC = '/usr/share/fonts/truetype/noto/NotoSans-Italic.ttf'
 const HAS_NOTO = existsSync(NOTO_REGULAR) && existsSync(NOTO_BOLD)
 const CJK_REGULAR = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
 const CJK_BOLD = '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc'
@@ -120,7 +121,7 @@ function uiLocale(grant, override) {
 /** Shared two-line footer: business name · CVR · VAT · address (grey) + brand
  *  wordmark (red, letter-spaced), anchored above the bottom margin so it never
  *  spills onto another page. `testBanner`, when set, prints a red TEST notice. */
-function drawSellerFooter(doc, { FN, left, right, testBanner }) {
+function drawSellerFooter(doc, { FN, left, right, testBanner, pageLabel }) {
   const bottomLimit = doc.page.height - doc.page.margins.bottom
   const line2Y = bottomLimit - 14
   const line1Y = line2Y - 11
@@ -134,6 +135,13 @@ function drawSellerFooter(doc, { FN, left, right, testBanner }) {
   )
   if (testBanner) {
     doc.fillColor('#cc3344').fontSize(9).text(testBanner, left, line1Y - 14, { width: right - left, align: 'center', lineBreak: false, characterSpacing: 0 })
+  }
+  // Page label (multi-page only) — right-aligned on the wordmark baseline, which
+  // is already safely in-bounds, so it never triggers an extra blank page.
+  if (pageLabel) {
+    doc.font(FN).fillColor('#999999').fontSize(8).text(
+      pageLabel, left, line2Y, { width: right - left, align: 'right', lineBreak: false },
+    )
   }
 }
 
@@ -203,24 +211,28 @@ function drawPaidStamp(doc, text, rightEdge, cy, FB) {
 function useFonts(doc, loc) {
   const FN = 'body'
   const FB = 'bold'
+  const FI = 'italic'
   const cjk = CJK_PS[loc]
   try {
     if (cjk && existsSync(CJK_REGULAR)) {
       doc.registerFont(FN, CJK_REGULAR, `${cjk}-Regular`)
       doc.registerFont(FB, existsSync(CJK_BOLD) ? CJK_BOLD : CJK_REGULAR, `${cjk}-${existsSync(CJK_BOLD) ? 'Bold' : 'Regular'}`)
-      return { FN, FB }
+      doc.registerFont(FI, CJK_REGULAR, `${cjk}-Regular`) // CJK has no italic
+      return { FN, FB, FI }
     }
     if (HAS_NOTO) {
       doc.registerFont(FN, NOTO_REGULAR)
       doc.registerFont(FB, NOTO_BOLD)
-      return { FN, FB }
+      doc.registerFont(FI, existsSync(NOTO_ITALIC) ? NOTO_ITALIC : NOTO_REGULAR)
+      return { FN, FB, FI }
     }
   } catch (err) {
     console.warn('[invoice] font registration failed, using Helvetica:', err.message)
   }
   doc.registerFont(FN, 'Helvetica')
   doc.registerFont(FB, 'Helvetica-Bold')
-  return { FN, FB }
+  doc.registerFont(FI, 'Helvetica-Oblique')
+  return { FN, FB, FI }
 }
 
 /**
@@ -232,14 +244,14 @@ function useFonts(doc, loc) {
 export function buildInvoicePdf(grant, priceBySku, langOverride) {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: 'A4', margin: 56 })
+      const doc = new PDFDocument({ size: 'A4', margin: 56, bufferPages: true })
       const chunks = []
       doc.on('data', (c) => chunks.push(c))
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
 
       const loc = uiLocale(grant, langOverride)
-      const { FN, FB } = useFonts(doc, loc)
+      const { FN, FB, FI } = useFonts(doc, loc)
       const t = INVOICE_STRINGS[loc]
 
       const currency = grant.currency || 'DKK'
@@ -251,8 +263,13 @@ export function buildInvoicePdf(grant, priceBySku, langOverride) {
       const methodLabel = paymentLabel(grant.paymentMethod, loc)
       const paidOn = fmtDate(grant.paidAt || grant.invoiceDate || grant.createdAt, loc)
 
+      // Prefer the full charged order (digital + physical) captured at checkout —
+      // each line's net is post-discount, so the lines sum to the net subtotal by
+      // construction (this is what makes a MIXED order add up). Fall back to the
+      // legacy downloads-only path (priced via priceBySku) for older orders.
+      const charged = Array.isArray(grant.lineItems) && grant.lineItems.length ? grant.lineItems : null
       const items = Array.isArray(grant.items) ? grant.items : []
-      const haveAllPrices = items.every((i) => priceBySku && priceBySku.get(i.sku) != null)
+      const haveAllPrices = !charged && items.every((i) => priceBySku && priceBySku.get(i.sku) != null)
       const lineNet = (i) => (priceBySku ? Number(priceBySku.get(i.sku) || 0) : 0)
       const catalogSum = haveAllPrices ? items.reduce((s, i) => s + lineNet(i), 0) : net
       const discount = haveAllPrices ? Math.max(0, catalogSum - net) : 0
@@ -297,45 +314,105 @@ export function buildInvoicePdf(grant, priceBySku, langOverride) {
           String(grant.businessAddress).split(/\s*,\s*|\n/).filter(Boolean).forEach((l) => doc.text(l))
         }
         if (grant.vatId) doc.fillColor(muted).fontSize(9).text(`${t.vat} ${grant.vatId}`)
+      } else if (grant.shipping && grant.shipping.name) {
+        // Consumer order with a checkout name + address: bill to the person at
+        // their address; the email drops to a secondary line.
+        doc.text(grant.shipping.name)
+        const a = grant.shipping.address || {}
+        const addrLines = [
+          a.line1,
+          a.line2,
+          [a.postalCode, a.city].filter(Boolean).join(' '),
+          a.state,
+          a.country,
+        ].filter(Boolean)
+        if (addrLines.length) {
+          doc.fillColor(muted).fontSize(9)
+          addrLines.forEach((l) => doc.text(l))
+        }
+        if (grant.email) doc.fillColor(muted).fontSize(9).text(grant.email)
       } else {
         doc.text(grant.email || t.customer)
       }
 
-      // ── Line items table ──
-      y = 220
-      doc.font(FB).fontSize(9).fillColor(muted)
-      doc.text(t.description, left, y)
-      doc.text(t.amount, left, y, { align: 'right' })
-      y += 6
-      doc.moveTo(left, y + 8).lineTo(right, y + 8).strokeColor('#dddddd').stroke()
-      y += 16
+      // ── Line items table — flows below Bill To and paginates ──
+      const amountX = left + 250
+      const descW = 360
+      // Stop rows above the footer (seller line + wordmark live in the last ~30pt).
+      const contentBottom = () => doc.page.height - doc.page.margins.bottom - 34
+      const drawItemsHeader = (yy) => {
+        doc.font(FB).fontSize(9).fillColor(muted)
+        doc.text(t.description, left, yy)
+        doc.text(t.amount, left, yy, { align: 'right' })
+        doc.moveTo(left, yy + 14).lineTo(right, yy + 14).strokeColor('#dddddd').stroke()
+        return yy + 22
+      }
+      // Start the table below the taller of Bill To / the right-hand meta block.
+      y = drawItemsHeader(Math.max(doc.y, 150) + 26)
 
-      doc.font(FN).fontSize(10).fillColor(ink)
-      for (const i of items) {
-        doc.text(i.label || i.sku, left, y, { width: 340 })
-        if (haveAllPrices) doc.text(money(lineNet(i), currency, loc), left, y, { align: 'right' })
-        y = doc.y + 6
+      // Draw one line: bold-free main label + amount, then an optional muted
+      // sub-line (paper · size, or format · px) with the filename in italics.
+      const drawLine = (label, amount, detail, filename) => {
+        doc.font(FN).fontSize(10)
+        const mainH = doc.heightOfString(label, { width: descW })
+        const subH = detail || filename ? 13 : 0
+        if (y + mainH + subH > contentBottom()) {
+          doc.addPage()
+          y = drawItemsHeader(doc.page.margins.top + 8)
+        }
+        const rowTop = y
+        doc.font(FN).fontSize(10).fillColor(ink)
+        doc.text(label, left, rowTop, { width: descW })
+        const labelBottom = doc.y
+        if (amount) doc.text(amount, left, rowTop, { align: 'right' })
+        y = Math.max(labelBottom, doc.y)
+        if (detail || filename) {
+          y += 1
+          doc.fontSize(8.5)
+          if (detail) doc.font(FN).fillColor(muted).text(detail, left + 10, y, { width: descW, continued: !!filename })
+          if (filename) {
+            doc.font(FI).fillColor('#888888')
+              .text(`${detail ? '   ' : ''}(${filename})`, detail ? undefined : left + 10, detail ? undefined : y, { width: descW })
+          }
+          y = doc.y
+        }
+        y += 9
       }
 
-      // ── Totals ──
+      if (charged) {
+        for (const i of charged) {
+          const qty = Number(i.qty) || 1
+          const label = (qty > 1 ? `${qty} × ` : '') + (i.label || i.sku)
+          drawLine(label, money(Number(i.net) || 0, currency, loc), i.detail || null, i.filename || null)
+        }
+      } else {
+        for (const i of items) {
+          drawLine(i.label || i.sku, haveAllPrices ? money(lineNet(i), currency, loc) : '', null, null)
+        }
+      }
+
+      // ── Totals — kept together; pushed to a new page if they wouldn't fit ──
+      const totalsH = 18 + (discount > 0 ? 16 : 0) + 16 + 16 + 20 + 16 + 16 + 70
+      if (y + totalsH > contentBottom()) {
+        doc.addPage()
+        y = doc.page.margins.top + 8
+      }
       y += 6
       doc.moveTo(left, y).lineTo(right, y).strokeColor('#dddddd').stroke()
       y += 12
       const totalRow = (label, value, bold) => {
         doc.font(bold ? FB : FN).fontSize(bold ? 11 : 10).fillColor(ink)
         // Label gets the whole left half and never wraps — long localized labels
-        // (Russian "Промежуточный итог (нетто)", German "Zwischensumme (netto)",
-        // …) would otherwise spill onto a second line and collide with the next
-        // row. Right-aligned to clear the value column.
+        // would otherwise spill onto a second line and collide with the next row.
         doc.text(label, left, y, { width: 360, align: 'right', lineBreak: false })
-        doc.text(value, left + 250, y, { width: right - (left + 250), align: 'right' })
+        doc.text(value, amountX, y, { width: right - amountX, align: 'right' })
         y += bold ? 20 : 16
       }
       if (discount > 0) totalRow(t.discount, `−${money(discount, currency, loc)}`)
       totalRow(t.subtotal, money(net, currency, loc))
       totalRow(grant.reverseCharge ? `${t.vat} (${t.reverseChargeShort})` : `${t.vat} (${ratePct}%)`, money(vat, currency, loc))
       totalRow(t.total, money(gross, currency, loc), true)
-      // Receipt: the order was paid in full, so nothing is outstanding.
+      // Receipt: paid in full, so nothing is outstanding.
       totalRow(t.amountPaid, money(gross, currency, loc))
       totalRow(t.balanceDue, money(0, currency, loc))
 
@@ -343,10 +420,9 @@ export function buildInvoicePdf(grant, priceBySku, langOverride) {
       y += 12
       const stampCy = y + 18
       drawPaidStamp(doc, t.paidInFull, right - 8, stampCy, FB)
-      // Payment caption beneath the stamp (not rotated).
       const capY = stampCy + 28
       doc.font(FN).fontSize(8).fillColor(muted)
-        .text(`${t.paid} ${paidOn}${methodLabel ? ` · ${methodLabel}` : ''}`, left + 250, capY, { width: right - (left + 250), align: 'right' })
+        .text(`${t.paid} ${paidOn}${methodLabel ? ` · ${methodLabel}` : ''}`, amountX, capY, { width: right - amountX, align: 'right' })
       y = capY + 16
 
       // ── VAT notes ──
@@ -361,9 +437,17 @@ export function buildInvoicePdf(grant, priceBySku, langOverride) {
         doc.text(t.outsideEu, left, y, { width: right - left })
       }
 
-      // ── Footer ──
-      drawSellerFooter(doc, { FN, left, right, testBanner: isTest ? t.testBanner : null })
-
+      // ── Footer on EVERY page (+ page numbers when the order runs to two) ──
+      const range = doc.bufferedPageRange()
+      for (let i = 0; i < range.count; i++) {
+        doc.switchToPage(range.start + i)
+        drawSellerFooter(doc, {
+          FN, left, right,
+          testBanner: isTest ? t.testBanner : null,
+          pageLabel: range.count > 1 ? `${i + 1} / ${range.count}` : null,
+        })
+      }
+      doc.flushPages()
       doc.end()
     } catch (err) {
       reject(err)
@@ -384,14 +468,14 @@ export function buildRefundPdf(grant, priceBySku, langOverride) {
 
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: 'A4', margin: 56 })
+      const doc = new PDFDocument({ size: 'A4', margin: 56, bufferPages: true })
       const chunks = []
       doc.on('data', (c) => chunks.push(c))
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
 
       const loc = uiLocale(grant, langOverride)
-      const { FN, FB } = useFonts(doc, loc)
+      const { FN, FB, FI } = useFonts(doc, loc)
       const t = INVOICE_STRINGS[loc]
       const rt = REFUND_STRINGS[loc] || REFUND_STRINGS.en
 
@@ -404,14 +488,22 @@ export function buildRefundPdf(grant, priceBySku, langOverride) {
       const isTest = grant.livemode !== true
       const refundOn = fmtDate(grant.creditDate || grant.refundedAt || Date.now(), loc)
 
+      // Prefer the full charged order (digital + physical) for richer, reconciling
+      // credit lines — same source as the invoice (paper/size, format/px/file).
+      // Fall back to the legacy downloads-only path priced via priceBySku.
+      const charged = Array.isArray(grant.lineItems) && grant.lineItems.length ? grant.lineItems : null
       const items = Array.isArray(grant.items) ? grant.items : []
-      const havePrices = items.every((i) => priceBySku && priceBySku.get(i.sku) != null)
+      const havePrices = !charged && items.every((i) => priceBySku && priceBySku.get(i.sku) != null)
       const lineNet = (i) => (priceBySku ? Number(priceBySku.get(i.sku) || 0) : 0)
-      // Which lines to show: a whole-line-item refund lists its skus; a full
+      // Which lines to credit: a whole-line-item refund lists its skus; a full
       // refund lists everything; an arbitrary partial shows a single Refund line.
       const skus = Array.isArray(grant.revokedSkus) ? grant.revokedSkus : []
-      const lineItems = skus.length ? items.filter((i) => skus.includes(i.sku))
-        : isFull ? items : null
+      const creditLines = charged
+        ? (skus.length ? charged.filter((i) => skus.includes(i.sku)) : isFull ? charged : null)
+        : null
+      const legacyLines = !charged
+        ? (skus.length ? items.filter((i) => skus.includes(i.sku)) : isFull ? items : null)
+        : null
 
       const left = doc.page.margins.left
       const right = doc.page.width - doc.page.margins.right
@@ -450,40 +542,97 @@ export function buildRefundPdf(grant, priceBySku, langOverride) {
           String(grant.businessAddress).split(/\s*,\s*|\n/).filter(Boolean).forEach((l) => doc.text(l))
         }
         if (grant.vatId) doc.fillColor(muted).fontSize(9).text(`${t.vat} ${grant.vatId}`)
+      } else if (grant.shipping && grant.shipping.name) {
+        // Consumer order with a checkout name + address: bill to the person at
+        // their address; the email drops to a secondary line.
+        doc.text(grant.shipping.name)
+        const a = grant.shipping.address || {}
+        const addrLines = [
+          a.line1,
+          a.line2,
+          [a.postalCode, a.city].filter(Boolean).join(' '),
+          a.state,
+          a.country,
+        ].filter(Boolean)
+        if (addrLines.length) {
+          doc.fillColor(muted).fontSize(9)
+          addrLines.forEach((l) => doc.text(l))
+        }
+        if (grant.email) doc.fillColor(muted).fontSize(9).text(grant.email)
       } else {
         doc.text(grant.email || t.customer)
       }
 
-      // ── Line items (credit — negative) ──
-      y = 220
-      doc.font(FB).fontSize(9).fillColor(muted)
-      doc.text(t.description, left, y)
-      doc.text(t.amount, left, y, { align: 'right' })
-      y += 6
-      doc.moveTo(left, y + 8).lineTo(right, y + 8).strokeColor('#dddddd').stroke()
-      y += 16
+      // ── Line items (credit — negative) — flows below Bill To and paginates ──
+      const amountX = left + 250
+      const descW = 360
+      // Stop rows above the footer (seller line + wordmark live in the last ~30pt).
+      const contentBottom = () => doc.page.height - doc.page.margins.bottom - 34
+      const drawItemsHeader = (yy) => {
+        doc.font(FB).fontSize(9).fillColor(muted)
+        doc.text(t.description, left, yy)
+        doc.text(t.amount, left, yy, { align: 'right' })
+        doc.moveTo(left, yy + 14).lineTo(right, yy + 14).strokeColor('#dddddd').stroke()
+        return yy + 22
+      }
+      y = drawItemsHeader(Math.max(doc.y, 150) + 26)
 
-      doc.font(FN).fontSize(10).fillColor(ink)
-      if (lineItems && havePrices) {
-        for (const i of lineItems) {
-          doc.text(i.label || i.sku, left, y, { width: 340 })
-          doc.text(`−${money(lineNet(i), currency, loc)}`, left, y, { align: 'right' })
-          y = doc.y + 6
+      // One credit line: main label + negative amount, then an optional muted
+      // sub-line (paper · size, or format · px) with the filename in italics.
+      const drawLine = (label, amount, detail, filename) => {
+        doc.font(FN).fontSize(10)
+        const mainH = doc.heightOfString(label, { width: descW })
+        const subH = detail || filename ? 13 : 0
+        if (y + mainH + subH > contentBottom()) {
+          doc.addPage()
+          y = drawItemsHeader(doc.page.margins.top + 8)
         }
-      } else {
-        doc.text(rt.refundLine, left, y, { width: 340 })
-        doc.text(`−${money(refundNet, currency, loc)}`, left, y, { align: 'right' })
-        y = doc.y + 6
+        const rowTop = y
+        doc.font(FN).fontSize(10).fillColor(ink)
+        doc.text(label, left, rowTop, { width: descW })
+        const labelBottom = doc.y
+        if (amount) doc.text(amount, left, rowTop, { align: 'right' })
+        y = Math.max(labelBottom, doc.y)
+        if (detail || filename) {
+          y += 1
+          doc.fontSize(8.5)
+          if (detail) doc.font(FN).fillColor(muted).text(detail, left + 10, y, { width: descW, continued: !!filename })
+          if (filename) {
+            doc.font(FI).fillColor('#888888')
+              .text(`${detail ? '   ' : ''}(${filename})`, detail ? undefined : left + 10, detail ? undefined : y, { width: descW })
+          }
+          y = doc.y
+        }
+        y += 9
       }
 
-      // ── Totals (all negative) ──
+      if (creditLines) {
+        for (const i of creditLines) {
+          const qty = Number(i.qty) || 1
+          const label = (qty > 1 ? `${qty} × ` : '') + (i.label || i.sku)
+          drawLine(label, `−${money(Number(i.net) || 0, currency, loc)}`, i.detail || null, i.filename || null)
+        }
+      } else if (legacyLines && havePrices) {
+        for (const i of legacyLines) {
+          drawLine(i.label || i.sku, `−${money(lineNet(i), currency, loc)}`, null, null)
+        }
+      } else {
+        drawLine(rt.refundLine, `−${money(refundNet, currency, loc)}`, null, null)
+      }
+
+      // ── Totals (all negative) — kept together; pushed to a new page if needed ──
+      const totalsH = 16 + 16 + 20 + 70
+      if (y + totalsH > contentBottom()) {
+        doc.addPage()
+        y = doc.page.margins.top + 8
+      }
       y += 6
       doc.moveTo(left, y).lineTo(right, y).strokeColor('#dddddd').stroke()
       y += 12
       const totalRow = (label, value, bold) => {
         doc.font(bold ? FB : FN).fontSize(bold ? 11 : 10).fillColor(ink)
         doc.text(label, left, y, { width: 360, align: 'right', lineBreak: false })
-        doc.text(value, left + 250, y, { width: right - (left + 250), align: 'right' })
+        doc.text(value, amountX, y, { width: right - amountX, align: 'right' })
         y += bold ? 20 : 16
       }
       totalRow(t.subtotal, `−${money(refundNet, currency, loc)}`)
@@ -496,11 +645,19 @@ export function buildRefundPdf(grant, priceBySku, langOverride) {
       drawPaidStamp(doc, isFull ? rt.refundedFull : rt.refundedPartial, right - 8, stampCy, FB)
       const capY = stampCy + 28
       doc.font(FN).fontSize(8).fillColor(muted)
-        .text(`${rt.refundDate}: ${refundOn}`, left + 250, capY, { width: right - (left + 250), align: 'right' })
+        .text(`${rt.refundDate}: ${refundOn}`, amountX, capY, { width: right - amountX, align: 'right' })
 
-      // ── Footer ──
-      drawSellerFooter(doc, { FN, left, right, testBanner: isTest ? t.testBanner : null })
-
+      // ── Footer on EVERY page (+ page numbers when the note runs to two) ──
+      const range = doc.bufferedPageRange()
+      for (let i = 0; i < range.count; i++) {
+        doc.switchToPage(range.start + i)
+        drawSellerFooter(doc, {
+          FN, left, right,
+          testBanner: isTest ? t.testBanner : null,
+          pageLabel: range.count > 1 ? `${i + 1} / ${range.count}` : null,
+        })
+      }
+      doc.flushPages()
       doc.end()
     } catch (err) {
       reject(err)

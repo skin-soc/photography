@@ -10,6 +10,8 @@
  */
 
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import type Stripe from 'stripe'
+import type { ShopProduct } from '@/lib/shop'
 
 const ORIGIN = process.env.SHOP_ORIGIN_URL ?? ''
 const ORIGIN_SECRET = process.env.SHOP_ORIGIN_SECRET ?? ''
@@ -21,6 +23,119 @@ export interface DownloadItem {
   format: 'jpeg' | 'tiff'
   label: string
   slug: string
+}
+
+/** One charged order line (digital or physical), net of discount. */
+export interface OrderLine {
+  sku: string
+  /** Primary description (photo title — paper/tier), built from the catalog. */
+  label: string
+  qty: number
+  net: number
+  /** Muted sub-line: physical → "21 × 29.7 cm · paper blurb"; digital →
+   *  "JPEG · 6626 × 8282 px". Absent when the sku can't be resolved. */
+  detail?: string | null
+  /** Digital deliverable filename (e.g. GMP-THOR-ECHNZ.jpg) — shown in italic
+   *  parentheses on the invoice for audit. Absent for physical lines. */
+  filename?: string | null
+}
+
+/**
+ * Enrich raw charged lines (sku + Stripe description + net) with a fuller,
+ * catalog-derived description: the paper/variant for posters, and the format +
+ * pixel dimensions + deliverable filename for digital downloads. Falls back to
+ * the Stripe label when a sku can't be resolved. Used by both fulfilment routes
+ * before the invoice is built.
+ */
+export async function describeOrderLines(lines: OrderLine[]): Promise<OrderLine[]> {
+  if (lines.length === 0) return lines
+  const { getCatalog, displayTitle } = await import('@/lib/shop')
+  const catalog = await getCatalog()
+  const idx = new Map<string, { product: ShopProduct; title: string }>()
+  for (const photo of catalog) {
+    for (const p of photo.products) idx.set(p.sku, { product: p, title: displayTitle(photo) })
+  }
+  return lines.map((l) => {
+    const hit = idx.get(l.sku)
+    if (!hit) return l
+    const p = hit.product
+    if (p.type === 'digital') {
+      const fmt = p.format === 'tiff' ? '16-bit TIFF' : 'JPEG'
+      const dims = p.dimensions ? `${p.dimensions.w} × ${p.dimensions.h} px` : null
+      const ext = p.format === 'tiff' ? 'tiff' : 'jpg'
+      return {
+        ...l,
+        label: `${hit.title} — ${p.label}`,
+        detail: [fmt, dims].filter(Boolean).join(' · ') || null,
+        filename: p.downloadToken ? `${p.downloadToken}.${ext}` : null,
+      }
+    }
+    // Physical (poster / fine art): paper + size up front, cm + blurb beneath.
+    const size = p.label || (p.providerSku ? p.providerSku.split('-').pop() : null)
+    const paper = p.paperLabel || p.material || 'Print'
+    const cm = p.printSize ? `${p.printSize.w} × ${p.printSize.h} cm` : null
+    return {
+      ...l,
+      label: `${hit.title} — ${paper}${size ? ` (${size})` : ''}`,
+      detail: [cm, p.paperBlurb].filter(Boolean).join(' · ') || null,
+      filename: null,
+    }
+  })
+}
+
+/** Shipping recipient collected at checkout (physical orders). */
+export interface OrderShipping {
+  name: string | null
+  address: {
+    line1: string | null
+    line2: string | null
+    city: string | null
+    state: string | null
+    postalCode: string | null
+    country: string | null
+  }
+}
+
+/**
+ * Build the itemised order lines (net, excluding the VAT line) + the shipping
+ * name/address from a paid Checkout Session. Requires the session retrieved with
+ * `line_items.data.price.product` expanded. Shared by the webhook and the
+ * synchronous issue route so an order records identically whichever wins the
+ * race. The checkout bakes any coupon into the per-line nets and adds a single
+ * VAT line (sku 'vat', dropped here), so the lines reconcile to the order net.
+ */
+export function extractOrderLines(session: Stripe.Checkout.Session): {
+  lineItems: OrderLine[]
+  shipping: OrderShipping | null
+} {
+  const lineItems: OrderLine[] = (session.line_items?.data ?? [])
+    .map((li) => {
+      const prod = li.price?.product
+      const sku = typeof prod === 'object' && prod && 'metadata' in prod ? prod.metadata?.sku ?? '' : ''
+      return { sku, label: li.description ?? '', qty: li.quantity ?? 1, net: li.amount_subtotal ?? 0 }
+    })
+    .filter((l) => l.sku !== 'vat')
+
+  const ship =
+    session.collected_information?.shipping_details ??
+    (session as unknown as { shipping_details?: { name?: string | null; address?: Stripe.Address | null } })
+      .shipping_details ??
+    null
+  const shipping: OrderShipping | null = ship
+    ? {
+        name: ship.name ?? null,
+        address: {
+          line1: ship.address?.line1 ?? null,
+          line2: ship.address?.line2 ?? null,
+          city: ship.address?.city ?? null,
+          state: ship.address?.state ?? null,
+          postalCode: ship.address?.postal_code ?? null,
+          country: ship.address?.country ?? null,
+        },
+      }
+    : null
+
+  return { lineItems, shipping }
 }
 
 /** Item as surfaced to the download page (no secrets). */
@@ -159,6 +274,13 @@ export async function issueGrant(input: {
   reverseCharge?: boolean
   /** VIES consultation number — audit proof of the VAT check. */
   vatConsultation?: string | null
+  /** All charged order lines (digital + physical), net of discount — drives the
+   *  itemised, mixed-order invoice. Reconciles to the order net by construction
+   *  (the checkout bakes any coupon into the per-line nets). */
+  lineItems?: OrderLine[]
+  /** Shipping name + address collected at checkout (physical orders) — the
+   *  invoice "Bill To" and the Prodigi recipient. */
+  shipping?: OrderShipping | null
 }): Promise<{ passcode: string | null }> {
   if (!ORIGIN) return { passcode: null }
   const res = await fetch(`${ORIGIN}/orders`, {
@@ -172,6 +294,88 @@ export async function issueGrant(input: {
   }
   const data = (await res.json().catch(() => ({}))) as { passcode?: string }
   return { passcode: data.passcode ?? null }
+}
+
+/** Token for the public poster-asset URL — HMAC over (photoId, size, orderCode),
+ *  verified by the origin. Bound to the order so a URL can't be reused for
+ *  another. */
+export function posterAssetToken(photoId: string, size: string, orderCode: string): string {
+  return createHmac('sha256', ORIGIN_SECRET || 'dev')
+    .update(`${photoId}:${size}:${orderCode}`)
+    .digest('hex')
+    .slice(0, 32)
+}
+
+/** Public, token-gated URL Prodigi fetches the print-ready poster MASTER from.
+ *  Headerless (Prodigi can't send our secret), so it's secured by the per-order
+ *  token above. Served by the origin's `/fulfil/poster/:id/:size` endpoint. */
+export function posterAssetUrl(photoId: string, size: string, orderCode: string): string {
+  const u = new URL(`${ORIGIN}/fulfil/poster/${encodeURIComponent(photoId)}/${encodeURIComponent(size)}`)
+  u.searchParams.set('o', orderCode)
+  u.searchParams.set('t', posterAssetToken(photoId, size, orderCode))
+  return u.toString()
+}
+
+/** One shipment's tracking, surfaced from a Prodigi status callback. */
+export interface FulfilmentTracking {
+  carrier?: string | null
+  number?: string | null
+  url?: string | null
+}
+
+/** Token for the Prodigi status-callback URL — HMAC over the order code. Prodigi
+ *  callbacks are unauthenticated (no signature), so the only thing securing the
+ *  endpoint is this unguessable per-order token in the URL we hand them. */
+export function prodigiCallbackToken(orderCode: string): string {
+  return createHmac('sha256', ORIGIN_SECRET || 'dev')
+    .update(`prodigi-callback:${orderCode}`)
+    .digest('hex')
+    .slice(0, 32)
+}
+
+/** Constant-time check of a callback token against the order code. */
+export function verifyProdigiCallback(orderCode: string, token: string): boolean {
+  const expected = prodigiCallbackToken(orderCode)
+  if (!token || token.length !== expected.length) return false
+  try {
+    return timingSafeEqual(Buffer.from(token), Buffer.from(expected))
+  } catch {
+    return false
+  }
+}
+
+/** Public callback URL Prodigi POSTs CloudEvents status updates to. `base` is the
+ *  Worker's own public origin (derived from the inbound request), since the
+ *  callback hits the Worker, not the LAN origin. */
+export function prodigiCallbackUrl(base: string, orderCode: string): string {
+  const u = new URL('/api/webhook/prodigi', base)
+  u.searchParams.set('o', orderCode)
+  u.searchParams.set('t', prodigiCallbackToken(orderCode))
+  return u.toString()
+}
+
+/** Persist a fulfilment (Prodigi order) result onto the order, for the admin
+ *  card + status tracking. Best-effort — never throws. `tracking` (from a status
+ *  callback) is only sent when present; the origin keeps any prior value. */
+export async function recordFulfilment(
+  orderId: string,
+  data: {
+    provider: string
+    prodigiId: string | null
+    stage: string
+    outcome: string
+    mode: string
+    error?: string | null
+    tracking?: FulfilmentTracking[] | null
+  },
+): Promise<void> {
+  if (!ORIGIN) return
+  await fetch(`${ORIGIN}/orders/${encodeURIComponent(orderId)}/fulfilment`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify(data),
+    cache: 'no-store',
+  }).catch(() => {})
 }
 
 /** Fetch the order's invoice PDF from the origin (regenerated from the grant).
@@ -344,6 +548,19 @@ export interface AdminOrder {
   revoked?: boolean
   /** SKUs refunded (and access-revoked) by an undownloaded-only refund. */
   revokedSkus?: string[]
+  /** Shipping recipient + full itemised order + Prodigi fulfilment (physical). */
+  shipping?: OrderShipping | null
+  lineItems?: OrderLine[] | null
+  fulfilment?: {
+    provider: string
+    prodigiId: string | null
+    stage: string | null
+    outcome: string | null
+    mode: string | null
+    error?: string | null
+    tracking?: FulfilmentTracking[] | null
+    updatedAt?: number
+  } | null
 }
 
 /** Look up orders by order code or buyer email. */

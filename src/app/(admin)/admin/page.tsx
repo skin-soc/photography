@@ -2391,6 +2391,51 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         {(order.buyerCountry || order.buyerIp) && (
           <Row label="VAT evidence" value={`${order.buyerCountry ?? '—'}${order.buyerIp ? ` · ${order.buyerIp}` : ''}`} mono />
         )}
+        {order.shipping?.name && (
+          <Row
+            label="Ship to"
+            value={[
+              order.shipping.name,
+              order.shipping.address?.line1,
+              [order.shipping.address?.postalCode, order.shipping.address?.city].filter(Boolean).join(' '),
+              order.shipping.address?.country,
+            ].filter(Boolean).join(', ')}
+          />
+        )}
+        {order.fulfilment && (
+          <Row
+            label="Prodigi"
+            value={[
+              order.fulfilment.stage || order.fulfilment.outcome || '—',
+              order.fulfilment.mode,
+              order.fulfilment.prodigiId,
+              order.fulfilment.error,
+            ].filter(Boolean).join(' · ')}
+            mono
+            accent
+          />
+        )}
+        {order.fulfilment?.tracking && order.fulfilment.tracking.length > 0 && (
+          <div className="grid grid-cols-[140px_1fr] gap-4 py-3.5">
+            <dt className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 pt-0.5">Tracking</dt>
+            <dd className="font-mono-ibm text-sm text-white/90 break-all space-y-1">
+              {order.fulfilment.tracking.map((t, i) => {
+                const text = [t.carrier, t.number].filter(Boolean).join(' · ') || t.url || '—'
+                return (
+                  <div key={i}>
+                    {t.url ? (
+                      <a href={t.url} target="_blank" rel="noreferrer" className="text-[#931020] underline">
+                        {text}
+                      </a>
+                    ) : (
+                      text
+                    )}
+                  </div>
+                )
+              })}
+            </dd>
+          </div>
+        )}
         {order.refundedAmount != null && (
           <Row
             label="Refunded"

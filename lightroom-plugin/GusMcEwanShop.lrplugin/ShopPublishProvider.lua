@@ -93,6 +93,28 @@ local function idFromFilename(filename)
   return base
 end
 
+-- A RAW shot and its JPEG sibling share a filename, so they share ONE shop id
+-- (one product, sold once). But Lightroom keeps a single published record per
+-- *remote id* per collection, so giving both siblings the same remote id leaves
+-- one of them perpetually stuck in "to publish". We therefore make the remote id
+-- unique per catalog photo — the RAW sibling is suffixed '~raw' — while keeping
+-- the shop id (used for previews/, masters/ and catalog.json) filename-based and
+-- shared. '~' can never appear in a shop id (idFromFilename only emits %w/-/_),
+-- so the shop id is always recoverable as the text before it.
+
+--- The Lightroom remote id for a photo: its shop id, '~raw'-suffixed for the RAW
+--- sibling so it never collides with its JPEG.
+local function remoteIdFor(shopId, isRaw)
+  return isRaw and (shopId .. '~raw') or shopId
+end
+
+--- The shop id encoded in a remote id (text before the '~' marker). Back-
+--- compatible with plain ids written by earlier plugin versions.
+local function shopIdFromRemoteId(remoteId)
+  if not remoteId then return nil end
+  return remoteId:match('^([^~]+)') or remoteId
+end
+
 --- "City, Country" from whatever IPTC location fields are filled.
 local function composeLocation(photo)
   local parts = {}
@@ -288,7 +310,10 @@ local function writeCatalog(publishService, dataDir)
   activeCatalog:withReadAccessDo(function()
     for _, tc in ipairs(typed) do
       for _, publishedPhoto in ipairs(tc.collection:getPublishedPhotos()) do
-        local remoteId = publishedPhoto:getRemoteId()
+        -- The catalog/preview/master identity is the SHOP id; a RAW sibling's
+        -- '~raw'-suffixed remote id maps back to the same shop id, so the pair
+        -- collapses into one entry (rawAvailable flips true below).
+        local remoteId = shopIdFromRemoteId(publishedPhoto:getRemoteId())
         local photo = publishedPhoto:getPhoto()
         if remoteId and not photo:getRawMetadata('isVideo') then
           local fmt = photo:getRawMetadata('fileFormat')
@@ -426,7 +451,7 @@ local function gatherMasterPhotos(publishService, mastersDir, secret)
   LrApplication.activeCatalog():withReadAccessDo(function()
     for _, tc in ipairs(typed) do
       for _, pubPhoto in ipairs(tc.collection:getPublishedPhotos()) do
-        local id = pubPhoto:getRemoteId()
+        local id = shopIdFromRemoteId(pubPhoto:getRemoteId())
         local photo = pubPhoto:getPhoto()
         if id and not photo:getRawMetadata('isVideo') then
           local fmt = photo:getRawMetadata('fileFormat')
@@ -752,6 +777,9 @@ function provider.processRenderedPhotos(functionContext, exportContext)
       else
         local fmt = photo:getRawMetadata('fileFormat')
         local isRaw = (fmt == 'RAW' or fmt == 'DNG')
+        -- Unique remote id per catalog photo (RAW sibling '~raw'-suffixed) so BOTH
+        -- siblings clear the publish queue; the shop id (`id`) stays shared.
+        local remoteId = remoteIdFor(id, isRaw)
 
         -- This photo changed — drop its stale masters (named by GMP ref) so
         -- "Export masters" remakes them.
@@ -769,10 +797,10 @@ function provider.processRenderedPhotos(functionContext, exportContext)
             rendition:uploadFailed('Could not copy preview: ' .. tostring(copyErr))
           else
             if not isRaw then jpegPreviewed[id] = true end
-            rendition:recordPublishedPhotoId(id)
+            rendition:recordPublishedPhotoId(remoteId)
           end
         else
-          rendition:recordPublishedPhotoId(id)
+          rendition:recordPublishedPhotoId(remoteId)
         end
       end
     else
@@ -796,33 +824,51 @@ function provider.processRenderedPhotos(functionContext, exportContext)
 end
 
 --- Remove a photo's preview and masters when it leaves a published collection.
+--- Preview/master files are keyed by SHOP id and shared by a RAW+JPEG pair, so a
+--- file is only deleted once NO published photo with that shop id remains in the
+--- service — otherwise removing one sibling would orphan the other's images.
 function provider.deletePhotosFromPublishedCollection(publishSettings, arrayOfPhotoIds, deletedCallback)
   local dataDir = publishSettings.shopDataDir
-  for _, photoId in ipairs(arrayOfPhotoIds) do
-    if dataDir and dataDir ~= '' then
-      local previewPath = LrPathUtils.child(
-        LrPathUtils.child(dataDir, 'previews'), photoId .. '.jpg')
-      if LrFileUtils.exists(previewPath) then
-        LrFileUtils.delete(previewPath)
-      end
-      -- Remove the download masters (named by GMP ref) too.
-      deleteMasters(mastersDirFor(publishSettings), Sha256.gmpRef(photoId, publishSettings.sharedSecret))
+  -- Tell Lightroom the photos are gone first (independent of file cleanup).
+  for _, photoId in ipairs(arrayOfPhotoIds) do deletedCallback(photoId) end
+  if not (dataDir and dataDir ~= '') then return end
+
+  -- Best-effort: resolve the live service, find which shop ids are STILL
+  -- published anywhere in it, then delete the shared files for the removed shop
+  -- ids that no longer have any (sibling) photo keeping them alive — and rebuild
+  -- catalog.json so removed photos don't linger as ghost entries.
+  pcall(function()
+    local services = LrApplication.activeCatalog():getPublishServices('com.gusmcewan.shop')
+    local service = services and services[1]
+
+    local stillPublished = {}
+    if service then
+      local typed = gatherTypedCollections(service)
+      LrApplication.activeCatalog():withReadAccessDo(function()
+        for _, tc in ipairs(typed) do
+          for _, pp in ipairs(tc.collection:getPublishedPhotos()) do
+            local sid = shopIdFromRemoteId(pp:getRemoteId())
+            if sid then stillPublished[sid] = true end
+          end
+        end
+      end)
     end
-    deletedCallback(photoId)
-  end
-  -- Rebuild catalog.json NOW so removed photos don't linger as ghost entries —
-  -- their previews + masters were just deleted above, which would otherwise leave
-  -- the catalog pointing at missing files (broken thumbnails in the shop). The
-  -- live publish service is resolved by toolkit id. Best-effort (pcall): if it
-  -- can't be resolved here, the catalog still rebuilds on the next Publish.
-  if dataDir and dataDir ~= '' then
-    pcall(function()
-      local services = LrApplication.activeCatalog():getPublishServices('com.gusmcewan.shop')
-      if services and #services > 0 then
-        writeCatalog(services[1], dataDir)
+
+    local previewsDir = LrPathUtils.child(dataDir, 'previews')
+    local mastersDir = mastersDirFor(publishSettings)
+    local handled = {}
+    for _, photoId in ipairs(arrayOfPhotoIds) do
+      local sid = shopIdFromRemoteId(photoId)
+      if sid and not handled[sid] and not stillPublished[sid] then
+        handled[sid] = true
+        local previewPath = LrPathUtils.child(previewsDir, sid .. '.jpg')
+        if LrFileUtils.exists(previewPath) then LrFileUtils.delete(previewPath) end
+        deleteMasters(mastersDir, Sha256.gmpRef(sid, publishSettings.sharedSecret))
       end
-    end)
-  end
+    end
+
+    if service then writeCatalog(service, dataDir) end
+  end)
 end
 
 return provider

@@ -1,6 +1,8 @@
 import type Stripe from 'stripe'
 import { stripe, cryptoProvider } from '@/lib/stripe-server'
-import { issueGrant, resolveDownloadItems, originConfigured, markRefund, notifyOwnerSale } from '@/lib/downloads'
+import { issueGrant, resolveDownloadItems, originConfigured, markRefund, notifyOwnerSale, extractOrderLines, describeOrderLines, recordFulfilment, prodigiCallbackUrl } from '@/lib/downloads'
+import { submitProdigiOrder } from '@/lib/prodigi-fulfil'
+import { prodigiMode } from '@/lib/prodigi'
 import { getSaleNotify } from '@/lib/shop-settings'
 import { redeemCoupon } from '@/lib/coupons'
 import { getInvoiceTerms } from '@/lib/terms'
@@ -11,16 +13,23 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? ''
  *  code, so the synchronous issue route and this webhook can't double-fulfil.
  *  Re-retrieves the session with the charge expanded to read the card-issuer
  *  country (second VAT location evidence). */
-async function fulfilSession(sessionId: string): Promise<void> {
+async function fulfilSession(sessionId: string, workerBase: string): Promise<void> {
   const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: ['payment_intent.latest_charge'],
+    expand: ['payment_intent.latest_charge', 'line_items.data.price.product'],
   })
   const orderCode = session.metadata?.orderCode
   if (!orderCode) {
     throw new Error(`missing orderCode on session ${session.id}`)
   }
   const items = await resolveDownloadItems((session.metadata?.skus ?? '').split(','))
-  if (items.length === 0 || !originConfigured()) return
+  if (!originConfigured()) return
+
+  // Full itemised order (digital + physical, reconciling to the net) + the
+  // collected shipping name/address — for the mixed-order invoice + Prodigi.
+  // Enrich each line with the catalog description (paper/size, format/px/file).
+  const raw = extractOrderLines(session)
+  const shipping = raw.shipping
+  const lineItems = await describeOrderLines(raw.lineItems)
 
   const pi = session.payment_intent
   const paymentId = typeof pi === 'string' ? pi : pi?.id ?? ''
@@ -42,6 +51,10 @@ async function fulfilSession(sessionId: string): Promise<void> {
     email: session.customer_details?.email ?? null,
     locale,
     items,
+    // Full itemised order (digital + physical) for the invoice, and the
+    // collected shipping name/address for Bill To + Prodigi fulfilment.
+    lineItems,
+    shipping,
     livemode: session.livemode,
     amount: session.amount_total,
     currency: session.currency,
@@ -65,6 +78,42 @@ async function fulfilSession(sessionId: string): Promise<void> {
     vatConsultation: session.metadata?.vatConsultation ?? null,
   })
   console.log('[stripe] download grant issued for', orderCode)
+
+  // Physical items → submit to Prodigi (sandbox). Best-effort: a failure is
+  // logged + recorded on the order, NOT escalated to a 500 (the grant is already
+  // issued; the print order can be retried). createOrder is idempotent on the
+  // order code, so webhook retries never double-order.
+  try {
+    const result = await submitProdigiOrder({
+      orderCode,
+      lineItems,
+      shipping,
+      email: session.customer_details?.email ?? null,
+      // Prodigi POSTs CloudEvents status updates here; secured by a per-order
+      // token (their callbacks carry no signature). Worker origin, not the LAN one.
+      callbackUrl: prodigiCallbackUrl(workerBase, orderCode),
+    })
+    if (result) {
+      await recordFulfilment(orderCode, {
+        provider: 'prodigi',
+        prodigiId: result.id,
+        stage: result.stage,
+        outcome: result.outcome,
+        mode: result.mode,
+      })
+      console.log('[prodigi] order created for', orderCode, result.id, `(${result.mode})`)
+    }
+  } catch (err) {
+    console.error('[prodigi] order submission failed for', orderCode, err)
+    await recordFulfilment(orderCode, {
+      provider: 'prodigi',
+      prodigiId: null,
+      stage: 'Failed',
+      outcome: 'error',
+      mode: prodigiMode(),
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
 
   // Count one coupon redemption on the authoritative (webhook) fulfilment only —
   // the synchronous issue route deliberately doesn't, so a code isn't double-counted.
@@ -103,7 +152,9 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session
     if (session.payment_status === 'paid') {
       try {
-        await fulfilSession(session.id)
+        // The inbound (Stripe) request hits this Worker's public host, so its
+        // origin is the right base for the Prodigi callback URL we register.
+        await fulfilSession(session.id, new URL(req.url).origin)
       } catch (err) {
         // Return 500 so Stripe retries — issuing is idempotent on the order code.
         console.error('[stripe] failed to issue download grant:', err)

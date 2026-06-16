@@ -138,6 +138,20 @@ function verifyFileSig(orderId, sku, exp, sig) {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
+/** Verify the per-order print-asset token — Prodigi fetches the poster master
+ *  headerless (it can't send the shared secret), so the URL is secured by a
+ *  token bound to (photo id, A-size, order code). Same secret as the gate. */
+function verifyAssetToken(id, size, orderCode, token) {
+  if (!id || !size || !orderCode || !token) return false
+  const expected = createHmac('sha256', SHARED_SECRET || 'dev')
+    .update(`${id}:${size}:${orderCode}`)
+    .digest('hex')
+    .slice(0, 32)
+  const a = Buffer.from(String(token))
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
 /** Customer-facing PHOTO reference — GMP-XXXXXXX from the photo id. The Lightroom
  *  plugin names master files by this, so the deliverable store carries the shop
  *  reference rather than raw camera filenames. */
@@ -310,6 +324,12 @@ app.use((req, res, next) => {
     m &&
     verifyFileSig(decodeURIComponent(m[1]), decodeURIComponent(m[2]), req.query.exp, req.query.sig)
   ) {
+    return next()
+  }
+  // Token-gated print-asset URL — Prodigi pulls the poster master headerless, so
+  // it's secured by the per-order token (bound to photo+size+order) instead.
+  const a = req.path.match(/^\/fulfil\/poster\/([^/]+)\/([^/]+)$/)
+  if (a && verifyAssetToken(decodeURIComponent(a[1]), decodeURIComponent(a[2]), req.query.o, req.query.t)) {
     return next()
   }
   if (SHARED_SECRET && req.get('x-shop-secret') !== SHARED_SECRET) {
@@ -861,6 +881,29 @@ app.get('/poster-master/:id/:size', async (req, res) => {
 })
 
 /**
+ * Public, token-gated poster master for Prodigi. Same render as /poster-master,
+ * but Prodigi fetches it headerless (it can't send the shared secret), so the
+ * URL carries a per-order token verified in the gate. This is the print asset we
+ * hand Prodigi at order time.
+ */
+app.get('/fulfil/poster/:id/:size', async (req, res) => {
+  const { id, size } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id) || !POSTER_SIZES.includes(size)) {
+    return res.status(400).json({ error: 'bad request' })
+  }
+  try {
+    const path = await buildPosterMaster(id, size)
+    res.set('Cache-Control', 'public, max-age=31536000, immutable')
+    res.type('jpeg')
+    createReadStream(path).pipe(res)
+  } catch (err) {
+    const notFound = err.code === 'NO_PHOTO' || err.code === 'NO_MASTER'
+    if (!notFound) console.error('[fulfil-poster]', id, size, err)
+    res.status(notFound ? 404 : 500).json({ error: err.message })
+  }
+})
+
+/**
  * PRE-RENDER a batch of poster assets (force-regenerate, so a republished poster
  * with a new title/crop is refreshed). The Worker enumerates the qualifying
  * (photo, size) pairs — it owns the resolution-gating range — and POSTs the flat
@@ -1368,8 +1411,11 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
   const { orderId, paymentId, email, locale, items,
           livemode, amount, currency, taxAmount, taxCountry, cardCountry,
           buyerIp, buyerCountry, paidAt, paymentMethod, terms,
-          vatId, businessName, businessAddress, reverseCharge, vatConsultation } = req.body ?? {}
-  if (!orderId || !orderPath(orderId) || !Array.isArray(items) || items.length === 0) {
+          vatId, businessName, businessAddress, reverseCharge, vatConsultation,
+          lineItems, shipping } = req.body ?? {}
+  // `items` (downloads) may be empty for a physical-only order — those still
+  // record (invoice + Prodigi). Require a valid order id + an items array.
+  if (!orderId || !orderPath(orderId) || !Array.isArray(items)) {
     return res.status(400).json({ error: 'invalid order' })
   }
 
@@ -1405,6 +1451,36 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
       businessAddress: businessAddress ? String(businessAddress) : null,
       reverseCharge: reverseCharge === true,
       vatConsultation: vatConsultation ? String(vatConsultation) : null,
+      // Full itemised order (digital + physical) for the mixed-order invoice —
+      // each line's net reconciles to the order net by construction. Shipping
+      // name/address (physical) drives the invoice "Bill To" + Prodigi recipient.
+      lineItems: Array.isArray(lineItems)
+        ? lineItems.map((l) => ({
+            sku: String(l.sku || ''),
+            label: String(l.label || ''),
+            qty: Number(l.qty) || 1,
+            net: Number(l.net) || 0,
+            detail: l.detail ? String(l.detail) : null,
+            filename: l.filename ? String(l.filename) : null,
+          }))
+        : null,
+      shipping: shipping && typeof shipping === 'object'
+        ? {
+            name: shipping.name ? String(shipping.name) : null,
+            address: shipping.address && typeof shipping.address === 'object'
+              ? {
+                  line1: shipping.address.line1 ? String(shipping.address.line1) : null,
+                  line2: shipping.address.line2 ? String(shipping.address.line2) : null,
+                  city: shipping.address.city ? String(shipping.address.city) : null,
+                  state: shipping.address.state ? String(shipping.address.state) : null,
+                  postalCode: shipping.address.postalCode ? String(shipping.address.postalCode) : null,
+                  country: shipping.address.country ? String(shipping.address.country) : null,
+                }
+              : null,
+          }
+        : null,
+      // Prodigi fulfilment result — filled in by POST /orders/:id/fulfilment.
+      fulfilment: null,
       createdAt: now,
       expiresAt: now + LINK_TTL_MS,
       emailed: false,
@@ -1461,6 +1537,62 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
   // Return the passcode so the shop can show it on the success screen — vital
   // when the buyer gave no email (their only way back to the downloads later).
   res.json({ ok: true, emailed: grant.emailed, passcode: grant.passcode })
+})
+
+// ── Per-order mutex ───────────────────────────────────────────────────────────
+// The origin is a single Node process, so an in-memory promise chain per order is
+// enough to serialize read-modify-write sequences that have more than one caller.
+// Without it, the admin Refund action and the charge.refunded webhook both hit
+// /admin/orders/:id/refund near-simultaneously, both read the grant before either
+// writes, and so BOTH send the credit-note email (and could double-burn a live
+// credit-note number). The Prodigi create + status callback race the fulfilment
+// record the same way. Wrapping those handlers makes each a critical section.
+const orderLocks = new Map()
+async function withOrderLock(orderId, fn) {
+  while (orderLocks.has(orderId)) {
+    try { await orderLocks.get(orderId) } catch { /* prior holder's error isn't ours */ }
+  }
+  let release
+  const held = new Promise((r) => { release = r })
+  orderLocks.set(orderId, held)
+  try {
+    return await fn()
+  } finally {
+    orderLocks.delete(orderId)
+    release()
+  }
+}
+
+/** Record the Prodigi fulfilment result on an order (admin card + tracking).
+ *  Secret-gated by the global middleware (the Worker calls it after ordering). */
+app.post('/orders/:orderId/fulfilment', express.json({ limit: '8kb' }), async (req, res) => {
+ await withOrderLock(req.params.orderId, async () => {
+  const grant = await readGrant(req.params.orderId)
+  if (!grant) return res.status(404).json({ error: 'not found' })
+  const { provider, prodigiId, stage, outcome, mode, error, tracking } = req.body ?? {}
+  // Merge over any prior fulfilment so a later status callback (which may omit
+  // fields) updates stage/tracking without wiping the id/mode set at creation.
+  const prev = grant.fulfilment && typeof grant.fulfilment === 'object' ? grant.fulfilment : {}
+  const cleanTracking = Array.isArray(tracking)
+    ? tracking.slice(0, 12).map((t) => ({
+        carrier: t && t.carrier ? String(t.carrier).slice(0, 120) : null,
+        number: t && t.number ? String(t.number).slice(0, 120) : null,
+        url: t && t.url ? String(t.url).slice(0, 400) : null,
+      }))
+    : null
+  grant.fulfilment = {
+    provider: provider ? String(provider) : (prev.provider || 'prodigi'),
+    prodigiId: prodigiId ? String(prodigiId) : (prev.prodigiId ?? null),
+    stage: stage ? String(stage) : (prev.stage ?? null),
+    outcome: outcome ? String(outcome) : (prev.outcome ?? null),
+    mode: mode ? String(mode) : (prev.mode ?? null),
+    error: error ? String(error).slice(0, 500) : (prev.error ?? null),
+    tracking: cleanTracking ?? prev.tracking ?? null,
+    updatedAt: Date.now(),
+  }
+  await writeFile(orderPath(req.params.orderId), JSON.stringify(grant, null, 2)).catch(() => {})
+  res.json({ ok: true })
+ })
 })
 
 /** Non-secret order metadata for the download page (no passcode, no files). */
@@ -1624,6 +1756,10 @@ function adminOrderView(grant, priceBySku) {
     businessAddress: grant.businessAddress ?? null,
     reverseCharge: grant.reverseCharge ?? false,
     vatConsultation: grant.vatConsultation ?? null,
+    // Shipping recipient + Prodigi fulfilment status (physical orders).
+    shipping: grant.shipping ?? null,
+    fulfilment: grant.fulfilment ?? null,
+    lineItems: grant.lineItems ?? null,
     invoiceNumber: grant.invoiceNumber ?? null,
     invoiceDate: grant.invoiceDate ?? null,
     creditNumber: grant.creditNumber ?? null,
@@ -1795,6 +1931,7 @@ app.post('/admin/orders/:orderId/extend', async (req, res) => {
  *  button). A FULL refund revokes download access; a partial one just records
  *  the refunded amount for the admin's books. */
 app.post('/admin/orders/:orderId/refund', express.json({ limit: '4kb' }), async (req, res) => {
+ await withOrderLock(req.params.orderId, async () => {
   const grant = await readGrant(req.params.orderId)
   if (!grant) return res.status(404).json({ error: 'not found' })
   const { amountRefunded, fullyRefunded, revokedSkus } = req.body ?? {}
@@ -1849,6 +1986,7 @@ app.post('/admin/orders/:orderId/refund', express.json({ limit: '4kb' }), async 
     refundUnmatched: grant.refundUnmatched,
     creditNumber: grant.creditNumber ?? null,
   })
+ })
 })
 
 /** Serve the order's refund credit-note PDF, or 404 if not refunded. */
