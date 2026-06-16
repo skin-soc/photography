@@ -19,5 +19,5 @@ return {
     file = 'ShopPublishProvider.lua',
   },
 
-  VERSION = { major = 0, minor = 5, revision = 2, build = 9 },
+  VERSION = { major = 0, minor = 5, revision = 4, build = 12 },
 }

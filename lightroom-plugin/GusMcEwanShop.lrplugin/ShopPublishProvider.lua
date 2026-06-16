@@ -489,6 +489,140 @@ local function gatherMasterPhotos(publishService, mastersDir, secret)
 end
 
 --==================================================================--
+-- Diagnostics
+--==================================================================--
+
+--- Collisions among `collections`: a filename-derived SHOP id held by >1 distinct
+--- photo of the SAME class (two RAWs, or two JPEGs). A RAW+JPEG pair is fine (it's
+--- one product, '~raw' keeps their remote ids distinct); two same-named RAWs (or
+--- two JPEGs) is NOT — they'd map to one shop product, and Lightroom keeps one
+--- published record per id, so the extras stay stuck in the queue forever. Shows
+--- the FULL PATHS because the colliding files share a name but live in different
+--- folders, so the path is the only way to tell them apart. `getPhotos` is used
+--- (not getPublishedPhotos) so not-yet-published stuck photos are still seen.
+--- Returns a sorted array of { id = shopId, paths = { fullPath, … } }.
+local function gatherCollisions(collections)
+  local byShop, seen = {}, {}
+  LrApplication.activeCatalog():withReadAccessDo(function()
+    for _, collection in ipairs(collections) do
+      for _, photo in ipairs(collection:getPhotos()) do
+        local lid = photo.localIdentifier
+        if not seen[lid] and not photo:getRawMetadata('isVideo') then
+          seen[lid] = true
+          local fname = photo:getFormattedMetadata('fileName') or ''
+          local sid = idFromFilename(fname)
+          local fmt = photo:getRawMetadata('fileFormat')
+          local isRaw = (fmt == 'RAW' or fmt == 'DNG')
+          local path = photo:getRawMetadata('path') or fname
+          local e = byShop[sid]
+          if not e then e = { raw = {}, jpeg = {} }; byShop[sid] = e end
+          local bucket = isRaw and e.raw or e.jpeg
+          bucket[#bucket + 1] = path
+        end
+      end
+    end
+  end)
+  local out = {}
+  for sid, e in pairs(byShop) do
+    if #e.raw > 1 or #e.jpeg > 1 then
+      local paths = {}
+      for _, p in ipairs(e.jpeg) do paths[#paths + 1] = p end
+      for _, p in ipairs(e.raw) do paths[#paths + 1] = p end
+      out[#out + 1] = { id = sid, paths = paths }
+    end
+  end
+  table.sort(out, function(a, b) return a.id < b.id end)
+  return out
+end
+
+--- The collection objects of every typed bucket in the service.
+local function serviceCollections(publishService)
+  local cols = {}
+  for _, tc in ipairs(gatherTypedCollections(publishService)) do
+    cols[#cols + 1] = tc.collection
+  end
+  return cols
+end
+
+--- Human-readable warning for a collision list (full paths), or nil if none.
+local function collisionWarning(collisions)
+  if #collisions == 0 then return nil end
+  local n = #collisions
+  local lines = {
+    (n == 1 and '1 photo could not publish' or (n .. ' photos could not publish'))
+      .. ' — a duplicate filename.',
+    '',
+    'Each of these names is shared by two different files (same name, different',
+    'folders). They map to ONE shop product, so the extra stays stuck in the',
+    'publish queue. Rename the files so each name is unique, then publish again:',
+    '',
+  }
+  for i = 1, math.min(n, 20) do
+    lines[#lines + 1] = '• ' .. collisions[i].id
+    for _, p in ipairs(collisions[i].paths) do lines[#lines + 1] = '      ' .. p end
+  end
+  if n > 20 then lines[#lines + 1] = '… and ' .. (n - 20) .. ' more.' end
+  return table.concat(lines, '\n')
+end
+
+--- Read-only health report for the publish service: totals, the remote-id scheme
+--- actually stored (plain vs '~raw' — confirms which plugin version Lightroom is
+--- running), and any duplicate-filename collisions (full paths). Returns a string.
+local function diagnoseService(publishService)
+  local typed = gatherTypedCollections(publishService)
+  local seenPhoto = {}           -- localIdentifier -> true (collections overlap)
+  local total, rawN, jpegN = 0, 0, 0
+  local plainIds, rawSuffixIds = 0, 0
+
+  LrApplication.activeCatalog():withReadAccessDo(function()
+    for _, tc in ipairs(typed) do
+      for _, photo in ipairs(tc.collection:getPhotos()) do
+        local lid = photo.localIdentifier
+        if not seenPhoto[lid] and not photo:getRawMetadata('isVideo') then
+          seenPhoto[lid] = true
+          total = total + 1
+          local fmt = photo:getRawMetadata('fileFormat')
+          if fmt == 'RAW' or fmt == 'DNG' then rawN = rawN + 1 else jpegN = jpegN + 1 end
+        end
+      end
+      for _, pp in ipairs(tc.collection:getPublishedPhotos()) do
+        local rid = pp:getRemoteId()
+        if rid then
+          if rid:find('~raw', 1, true) then rawSuffixIds = rawSuffixIds + 1
+          else plainIds = plainIds + 1 end
+        end
+      end
+    end
+  end)
+
+  local collisions = gatherCollisions(serviceCollections(publishService))
+
+  local lines = {
+    'Publish-service health',
+    '',
+    'Photos (deduped): ' .. total .. '   RAW: ' .. rawN .. '   JPEG/other: ' .. jpegN,
+    'Stored remote ids — plain: ' .. plainIds .. '   ~raw-suffixed: ' .. rawSuffixIds,
+    '',
+  }
+  if rawN > 0 and rawSuffixIds == 0 then
+    lines[#lines + 1] = '⚠  RAW photos are published but NO remote id is ~raw-suffixed.'
+    lines[#lines + 1] = '   The decoupled-id code is NOT the version Lightroom is running —'
+    lines[#lines + 1] = '   fully QUIT and relaunch Lightroom (a Reload won’t do it), then'
+    lines[#lines + 1] = '   select all → Mark to Republish → Publish.'
+    lines[#lines + 1] = ''
+  end
+  if #collisions == 0 then
+    lines[#lines + 1] = 'No duplicate-filename collisions. ✓'
+  else
+    lines[#lines + 1] = #collisions .. ' DUPLICATE-FILENAME COLLISION(S) — rename so each is'
+    lines[#lines + 1] = 'unique (same name, different folders shown):'
+    lines[#lines + 1] = ''
+    lines[#lines + 1] = collisionWarning(collisions)
+  end
+  return table.concat(lines, '\n')
+end
+
+--==================================================================--
 -- Publish service provider
 --==================================================================--
 
@@ -726,6 +860,29 @@ function provider.sectionsForTopOfDialog(f, propertyTable)
           end,
         },
       },
+      f:row {
+        spacing = f:control_spacing(),
+        f:push_button {
+          title = 'Diagnose publish health',
+          tooltip = 'Read-only: report photo counts, the stored remote-id scheme (confirms the plugin version Lightroom is running), and any duplicate-filename collisions that keep photos stuck.',
+          action = function()
+            LrTasks.startAsyncTask(function()
+              -- Resolve the service directly so this works right after a restart,
+              -- before any publish has cached a reference.
+              local svc = cachedPublishService
+              if not svc then
+                local services = LrApplication.activeCatalog():getPublishServices('com.gusmcewan.shop')
+                svc = services and services[1]
+              end
+              if not svc then
+                LrDialogs.message('Gus McEwan Shop', 'No Gus McEwan Shop publish service found.', 'info')
+                return
+              end
+              LrDialogs.message('Gus McEwan Shop — diagnostics', diagnoseService(svc), 'info')
+            end)
+          end,
+        },
+      },
     },
   }
 end
@@ -821,6 +978,19 @@ function provider.processRenderedPhotos(functionContext, exportContext)
   -- even when only one collection was just published.
   local total = writeCatalog(exportContext.publishService, dataDir)
   progress:setCaption('catalog.json updated — ' .. total .. ' photos for sale')
+
+  -- Warn about duplicate filenames in THIS collection — two files sharing a name
+  -- (Lightroom keeps one published record per id) leave the extras permanently
+  -- stuck in the queue. Scoped to the published collection (where the clash bites
+  -- and it's cheap); the "Diagnose publish health" button audits the whole shop.
+  -- The pop-up names the full paths so they can be told apart and renamed.
+  local collection = exportContext.publishedCollection
+  if collection then
+    local warn = collisionWarning(gatherCollisions({ collection }))
+    if warn then
+      LrDialogs.message('Gus McEwan Shop — duplicate filenames', warn, 'warning')
+    end
+  end
 end
 
 --- Remove a photo's preview and masters when it leaves a published collection.
