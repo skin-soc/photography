@@ -2,7 +2,7 @@
  * Print product RANGE — the curated provider SKUs we sell and the logic that
  * offers them per photo. Lives WITH the worker (no NAS dependency).
  *
- * POSTERS → Prodigi, A-series sheets (A4–A0) on FOUR papers the customer chooses:
+ * POSTERS → Prodigi, A-series sheets (A3–A0) on FOUR papers the customer chooses:
  *   PAP Photographic · FAP Enhanced-Matte · HPR Hahnemühle Photo Rag ·
  *   HGE Hahnemühle German Etching.
  * Every poster is a portrait A-series sheet with the photo + title typeset on it
@@ -23,14 +23,13 @@ const MM_PER_INCH = 25.4
 
 /** A-series sheet sizes (portrait, mm) — the printed paper. */
 const A_SERIES: Record<string, { wMm: number; hMm: number }> = {
-  A4: { wMm: 210, hMm: 297 },
   A3: { wMm: 297, hMm: 420 },
   A2: { wMm: 420, hMm: 594 },
   A1: { wMm: 594, hMm: 841 },
   A0: { wMm: 841, hMm: 1189 },
 }
-/** Smallest → largest. */
-export const SIZE_ORDER = ['A4', 'A3', 'A2', 'A1', 'A0'] as const
+/** Smallest → largest. (A4 dropped — too small/"home-print" for the shop.) */
+export const SIZE_ORDER = ['A3', 'A2', 'A1', 'A0'] as const
 export type PosterSizeCode = (typeof SIZE_ORDER)[number]
 
 /** The photo fills this fraction of the sheet on the poster layout (the rest is
@@ -61,8 +60,8 @@ interface Paper {
 /** Provider ex-tax cost (EUR minor) per A-size, per tier. Posters are priced
  *  COST-PLUS: the shop sells each at this cost (converted to DKK) × (1 + markup),
  *  so the cost is the entire pricing basis — there is no hand-set poster ladder. */
-const PHOTO_COST: Record<PosterSizeCode, number> = { A4: 500, A3: 700, A2: 1000, A1: 1400, A0: 2600 }
-const PREMIUM_COST: Record<PosterSizeCode, number> = { A4: 600, A3: 1200, A2: 1800, A1: 3400, A0: 6100 }
+const PHOTO_COST: Record<PosterSizeCode, number> = { A3: 700, A2: 1000, A1: 1400, A0: 2600 }
+const PREMIUM_COST: Record<PosterSizeCode, number> = { A3: 1200, A2: 1800, A1: 3400, A0: 6100 }
 
 /** Provider ex-tax cost (EUR minor) per tier × size — the cost-plus pricing basis. */
 export const POSTER_COST: Record<PaperTier, Record<PosterSizeCode, number>> = {

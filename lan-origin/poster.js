@@ -59,8 +59,10 @@ function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]))
 }
 
-/** The list of A-sizes this module can render. */
-export const POSTER_SIZES = Object.keys(A_SERIES)
+/** A-sizes OFFERED for sale (drives the pre-render enumeration). A4 is dropped
+ *  from the shop (too small / "home-print"), so it is not pre-rendered — but
+ *  A_SERIES still carries it so any legacy A4 order can be rendered on demand. */
+export const POSTER_SIZES = ['A3', 'A2', 'A1', 'A0']
 
 /**
  * Render the poster master for a photo. Returns a JPEG Buffer at the exact
