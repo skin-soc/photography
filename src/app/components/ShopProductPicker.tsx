@@ -28,7 +28,21 @@ export interface PickerProduct {
   paperLabel?: string
   /** Short paper descriptor. */
   paperBlurb?: string
+  // ── Fine-art variant (fine art only) — family, then frame colour, then size. ──
+  family?: string
+  familyLabel?: string
+  frameColor?: string
+  frameColors?: string[]
 }
+
+/** Frame-colour swatch fills (the dot shown next to the colour name). */
+const FRAME_SWATCH: Record<string, string> = {
+  black: '#1c1c1c',
+  white: '#f2f2f0',
+  natural: '#c8a36e',
+  'dark grey': '#4b4b4b',
+}
+const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 const TYPE_ORDER: ProductType[] = ['print', 'fine-art', 'digital']
 
@@ -225,6 +239,43 @@ export default function ShopProductPicker({
     if (next) setSelectedSku(next.sku)
   }
 
+  // Fine art: a family chooser (canvas / framed), then frame colour, then the
+  // sizes for that photo. Family + colour are baked into the SKU.
+  const fineArtFamilies: { code: string; label: string }[] = []
+  for (const p of products) {
+    if (p.type === 'fine-art' && p.family && !fineArtFamilies.some((x) => x.code === p.family)) {
+      fineArtFamilies.push({ code: p.family, label: p.familyLabel ?? p.family })
+    }
+  }
+  const firstFa = products.find((p) => p.type === 'fine-art' && p.family)
+  const familyColors = (fam: string | null) =>
+    products.find((p) => p.type === 'fine-art' && p.family === fam)?.frameColors ?? []
+  const [selectedFamily, setSelectedFamily] = useState<string | null>(firstFa?.family ?? null)
+  const [selectedColor, setSelectedColor] = useState<string | null>(
+    () => familyColors(firstFa?.family ?? null)[0] ?? null,
+  )
+  // Re-point selectedSku to the (family, colour) variant, keeping size if it exists.
+  function repointFineArt(fam: string | null, color: string | null) {
+    const cur = products.find((p) => p.sku === selectedSku)
+    const match = (label?: string) =>
+      products.find(
+        (p) => p.type === 'fine-art' && p.family === fam && p.frameColor === color && (label == null || p.label === label),
+      )
+    const next = match(cur?.type === 'fine-art' ? cur?.label : undefined) ?? match()
+    if (next) setSelectedSku(next.sku)
+  }
+  function selectFamily(fam: string) {
+    setSelectedFamily(fam)
+    const colors = familyColors(fam)
+    const color = colors.includes(selectedColor ?? '') ? selectedColor : colors[0] ?? null
+    setSelectedColor(color)
+    repointFineArt(fam, color)
+  }
+  function selectColor(color: string) {
+    setSelectedColor(color)
+    repointFineArt(selectedFamily, color)
+  }
+
   const [rawModalOpen, setRawModalOpen] = useState(false)
   const [expandedSku, setExpandedSku] = useState<string | null>(null)
 
@@ -237,7 +288,11 @@ export default function ShopProductPicker({
       sku: selected.sku,
       photoSlug,
       photoTitle,
-      productLabel: selected.paper ? `${selected.label} · ${selected.paperLabel}` : selected.label,
+      productLabel: selected.paper
+        ? `${selected.label} · ${selected.paperLabel}`
+        : selected.family
+          ? `${selected.familyLabel} · ${selected.label} · ${titleCase(selected.frameColor ?? '')}`
+          : selected.label,
       price: selected.price,
       currency: selected.currency,
       priceText: selected.priceText,
@@ -292,12 +347,16 @@ export default function ShopProductPicker({
           // Posters: a paper chooser, then only the sizes that pass for this photo
           // on the chosen paper. Other types: the plain option list.
           const isPoster = g.type === 'print' && posterPapers.length > 0
+          const isFineArt = g.type === 'fine-art' && fineArtFamilies.length > 0
           const items = isPoster && selectedPaper
             ? g.items.filter((p) => p.paper === selectedPaper)
-            : g.items
+            : isFineArt
+              ? g.items.filter((p) => p.family === selectedFamily && p.frameColor === selectedColor)
+              : g.items
           const paperBlurb = isPoster
             ? posterPapers.find((x) => x.code === selectedPaper)?.blurb
             : undefined
+          const faColors = isFineArt ? familyColors(selectedFamily) : []
           return (
           <div key={g.type} className="overflow-hidden rounded-[20px] border border-foreground/10">
 
@@ -356,6 +415,59 @@ export default function ShopProductPicker({
                 </div>
                 {paperBlurb && (
                   <p className="mt-2 text-[11px] font-light text-foreground/35">{paperBlurb}</p>
+                )}
+              </div>
+            )}
+
+            {/* Fine-art chooser: family (canvas / framed), then frame colour */}
+            {isFineArt && (
+              <div className="px-5 pt-4 pb-3 border-b border-foreground/[0.06] space-y-3">
+                {fineArtFamilies.length > 1 && (
+                  <div className="flex flex-wrap gap-2">
+                    {fineArtFamilies.map((fa) => {
+                      const on = fa.code === selectedFamily
+                      return (
+                        <button
+                          key={fa.code}
+                          type="button"
+                          onClick={() => selectFamily(fa.code)}
+                          className={`rounded-full px-3 py-1.5 text-[11px] tracking-[0.04em] transition-colors ${
+                            on
+                              ? 'bg-accent/90 text-white'
+                              : 'border border-foreground/15 text-foreground/55 hover:border-foreground/35 hover:text-foreground/80'
+                          }`}
+                        >
+                          {fa.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                {faColors.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] tracking-[0.18em] uppercase text-foreground/35 mr-1">{t('frameColour')}</span>
+                    {faColors.map((c) => {
+                      const on = c === selectedColor
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => selectColor(c)}
+                          aria-label={titleCase(c)}
+                          aria-pressed={on}
+                          className={`flex items-center gap-1.5 rounded-full py-1 pl-1 pr-2.5 text-[11px] tracking-[0.03em] transition-colors border ${
+                            on ? 'border-accent text-foreground/90' : 'border-foreground/12 text-foreground/50 hover:border-foreground/30'
+                          }`}
+                        >
+                          <span
+                            className="h-3.5 w-3.5 rounded-full border border-foreground/20"
+                            style={{ backgroundColor: FRAME_SWATCH[c] ?? '#888' }}
+                          />
+                          {titleCase(c)}
+                        </button>
+                      )
+                    })}
+                  </div>
                 )}
               </div>
             )}

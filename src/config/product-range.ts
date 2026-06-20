@@ -137,33 +137,203 @@ export function posterOptions(wPx: number, hPx: number): PosterOption[] {
   return out
 }
 
+// ── FINE ART → Prodigi (EU/NL-only), value-priced (cost-plus at the catalog markup) ──
+//
+// Two families, both produced in the Netherlands (verified per-variant on the
+// Prodigi sandbox 2026-06-20; see docs/fine-art-prodigi-options.xlsx):
+//   • Float-framed canvas  GLOBAL-FRA-CAN-*  (frame colour choice, ImageWrap edge)
+//   • Classic framed+mount GLOBAL-CFPM-*     (frame colour choice, snow-white mount)
+// Curated to LARGE statement sizes only. Like posters these are COST-PLUS — the base
+// price is the Prodigi cost → DKK (with FX buffer); the catalog markup is applied in
+// buildCatalog. Offered aspect-matched to the photo (√2 / A-series is the primary
+// shape; 2:3 and 3:4 are offered within an 8% crop tolerance; 1:1 only for ~square
+// photos), and resolution-gated at a fine-art DPI floor.
+
+/** Aspect family of a fine-art size, as long ÷ short. */
+type FineArtAspect = '1:1' | '3:4' | '2:3' | 'A'
+const ASPECT_RATIO: Record<FineArtAspect, number> = { '1:1': 1, '3:4': 4 / 3, '2:3': 3 / 2, A: Math.SQRT2 }
+
+export type FineArtFamily = 'canvas' | 'framed'
+
+interface FineArtSize {
+  /** Prodigi size token, e.g. '16X24' or 'A2'. */
+  size: string
+  aspect: FineArtAspect
+  /** Print/canvas size in cm, PORTRAIT (short × long). */
+  shortCm: number
+  longCm: number
+  /** Prodigi ex-tax cost, EUR minor — the cost-plus pricing basis. */
+  cost: number
+}
+
+interface FineArtFamilyDef {
+  family: FineArtFamily
+  /** Customer-facing family name. */
+  label: string
+  /** Short spec descriptor shown under the size. */
+  blurb: string
+  /** Prodigi SKU family prefix, e.g. 'GLOBAL-FRA-CAN'. */
+  prodigiPrefix: string
+  /** Frame colours offered to the customer (Prodigi `color` attribute values). */
+  frameColors: string[]
+  /** Minimum print resolution (DPI) — gates which sizes a photo can fill. Canvas is
+   *  viewed at distance so tolerates less; framed prints are inspected closer. */
+  minDpi: number
+  /** Fixed Prodigi attributes baked onto every order line for this family. */
+  fixedAttributes: Record<string, string>
+  sizes: FineArtSize[]
+}
+
+const FINE_ART_FAMILIES: FineArtFamilyDef[] = [
+  {
+    family: 'canvas',
+    label: 'Float-framed canvas',
+    blurb: 'Gallery canvas in a floating frame · 400gsm',
+    prodigiPrefix: 'GLOBAL-FRA-CAN',
+    frameColors: ['black', 'white', 'natural'],
+    minDpi: 150,
+    fixedAttributes: { wrap: 'ImageWrap' },
+    sizes: [
+      { size: '16X24', aspect: '2:3', shortCm: 40.6, longCm: 61.0, cost: 6400 },
+      { size: '24X36', aspect: '2:3', shortCm: 61.0, longCm: 91.4, cost: 10000 },
+      { size: '30X45', aspect: '2:3', shortCm: 76.2, longCm: 114.3, cost: 12200 },
+      { size: '40X60', aspect: '2:3', shortCm: 101.6, longCm: 152.4, cost: 18500 },
+      { size: '30X40', aspect: '3:4', shortCm: 76.2, longCm: 101.6, cost: 11600 },
+      { size: '36X48', aspect: '3:4', shortCm: 91.4, longCm: 121.9, cost: 12800 },
+      { size: '40X40', aspect: '1:1', shortCm: 101.6, longCm: 101.6, cost: 12500 },
+      { size: 'A2', aspect: 'A', shortCm: 42.0, longCm: 59.4, cost: 6400 },
+      { size: 'A1', aspect: 'A', shortCm: 59.4, longCm: 84.1, cost: 9200 },
+      { size: 'A0', aspect: 'A', shortCm: 84.1, longCm: 118.9, cost: 12500 },
+    ],
+  },
+  {
+    family: 'framed',
+    label: 'Framed & mounted print',
+    blurb: 'EMA 200gsm giclée · snow-white mount · acrylic',
+    prodigiPrefix: 'GLOBAL-CFPM',
+    frameColors: ['black', 'white', 'natural', 'dark grey'],
+    minDpi: 200,
+    fixedAttributes: { mount: '2.4mm', mountColor: 'Snow white', glaze: 'Acrylic / Perspex' },
+    sizes: [
+      { size: '18X24', aspect: '3:4', shortCm: 45.7, longCm: 61.0, cost: 5400 },
+      { size: '24X36', aspect: '2:3', shortCm: 61.0, longCm: 91.4, cost: 8000 },
+      { size: 'A2', aspect: 'A', shortCm: 42.0, longCm: 59.4, cost: 5200 },
+      { size: '20X28', aspect: 'A', shortCm: 50.8, longCm: 71.1, cost: 6000 },
+      { size: 'A1', aspect: 'A', shortCm: 59.4, longCm: 84.1, cost: 7500 },
+    ],
+  },
+]
+
+/** Max linear crop (fraction) we'll silently apply to fit a photo to a size's aspect.
+ *  8% admits the √2-primary plan: a √2 master fills A-series exactly and 2:3/3:4 with
+ *  ~5.7% crop, while excluding 1:1 (≈29%). A 4:3 master gets 3:4 + A (not 2:3 at 11%). */
+const FINE_ART_CROP_TOLERANCE = 0.08
+
+/** A fine-art option offered for a photo: one family at one size (frame colour is a
+ *  customer choice carried in `frameColors`, defaulting to the first). */
+export interface FineArtOption {
+  family: FineArtFamily
+  familyLabel: string
+  blurb: string
+  size: string
+  aspect: FineArtAspect
+  providerSku: string
+  /** Print/canvas size in cm, oriented to the photo. */
+  widthCm: number
+  heightCm: number
+  /** Provider ex-tax cost, EUR minor — the cost-plus pricing basis. */
+  cost: number
+  /** Frame colours the customer can pick (first is the default). */
+  frameColors: string[]
+  /** Fixed Prodigi attributes for the order line (wrap / mount / glaze …). */
+  fixedAttributes: Record<string, string>
+}
+
+/** Linear crop fraction to fit a photo of ratio `rPhoto` (long÷short) into `rTarget`. */
+function cropFraction(rPhoto: number, rTarget: number): number {
+  return 1 - Math.min(rPhoto, rTarget) / Math.max(rPhoto, rTarget)
+}
+
+/** Does (wPx × hPx), once centre-cropped to aspect `rTarget` (long÷short), still meet
+ *  `minDpi` over the cm size (short × long, unoriented)? No upscaling. */
+function fineArtResolves(wPx: number, hPx: number, shortCm: number, longCm: number, rTarget: number, minDpi: number): boolean {
+  const reqShort = (shortCm / MM_PER_INCH) * 10 * minDpi // cm→in (×10/25.4) × dpi
+  const reqLong = (longCm / MM_PER_INCH) * 10 * minDpi
+  const sShort = Math.min(wPx, hPx)
+  const sLong = Math.max(wPx, hPx)
+  const rPhoto = sLong / sShort
+  // Largest centred crop of the photo at the target aspect.
+  const [cropShort, cropLong] = rPhoto >= rTarget ? [sShort, sShort * rTarget] : [sLong / rTarget, sLong]
+  return cropShort >= reqShort && cropLong >= reqLong
+}
+
 /**
- * Fine-art placeholder — WhiteWall is not wired yet, so the line is kept alive
- * with a single stand-in edition (oriented to the photo) at the prior A2 price.
- * Replace with real WhiteWall SKUs + trade pricing when API access lands.
+ * The fine-art options offered for a photo of (wPx × hPx): every family × size whose
+ * aspect is within the crop tolerance of the photo AND whose print area resolves at
+ * the family's DPI floor. cm sizes are oriented to the photo. Ordered family-major,
+ * size ascending (as listed). Empty when the photo is too small / wrong shape.
+ */
+export function fineArtOptions(wPx: number, hPx: number): FineArtOption[] {
+  if (!wPx || !hPx) return []
+  const portrait = hPx >= wPx
+  const rPhoto = Math.max(wPx, hPx) / Math.min(wPx, hPx)
+  const out: FineArtOption[] = []
+  for (const fam of FINE_ART_FAMILIES) {
+    for (const s of fam.sizes) {
+      const rTarget = ASPECT_RATIO[s.aspect]
+      if (cropFraction(rPhoto, rTarget) > FINE_ART_CROP_TOLERANCE) continue
+      if (!fineArtResolves(wPx, hPx, s.shortCm, s.longCm, rTarget, fam.minDpi)) continue
+      out.push({
+        family: fam.family,
+        familyLabel: fam.label,
+        blurb: fam.blurb,
+        size: s.size,
+        aspect: s.aspect,
+        providerSku: `${fam.prodigiPrefix}-${s.size}`,
+        widthCm: portrait ? s.shortCm : s.longCm,
+        heightCm: portrait ? s.longCm : s.shortCm,
+        cost: s.cost,
+        frameColors: fam.frameColors,
+        fixedAttributes: fam.fixedAttributes,
+      })
+    }
+  }
+  return out
+}
+
+/**
+ * Deprecated fine-art placeholder — superseded by {@link fineArtOptions} (real
+ * Prodigi range, 2026-06-20). Kept only so the admin Prices-tab "Fine art" base
+ * field + its cost floor keep compiling until that field is retired; the live
+ * catalog no longer prices fine art from it.
  */
 export const FINE_ART_PENDING = {
-  provider: 'whitewall' as const,
-  /** Unoriented short × long cm (A2). */
+  provider: 'prodigi' as const,
   shortCm: 42,
   longCm: 59.4,
   price: 149500,
   label: 'Fine art edition',
-  material: 'Giclée · WhiteWall (coming soon)',
-  /** Provider ex-tax cost (EUR minor). 0 until WhiteWall trade pricing is wired,
-   *  so the floor is effectively "any positive price". */
+  material: 'Giclée',
   cost: 0,
 }
 /** Default fine-art retail price (DKK øre) — seeds the Prices tab. */
 export const FINE_ART_DEFAULT_PRICE = FINE_ART_PENDING.price
 
-/** Flattened Prodigi SKU list for the daily validator — every paper × size once,
- *  with its recorded cost. (Validator is Prodigi-only; WhiteWall excluded.) */
-export const PRODIGI_SKUS: { providerSku: string; label: string; cost: number }[] =
-  PAPERS.flatMap((p) =>
+/** Flattened Prodigi SKU list for the daily validator — posters (paper × size) plus
+ *  every fine-art family × size, each with its recorded cost. */
+export const PRODIGI_SKUS: { providerSku: string; label: string; cost: number }[] = [
+  ...PAPERS.flatMap((p) =>
     SIZE_ORDER.map((size) => ({
       providerSku: `${p.prodigiPrefix}-${size}`,
       label: `${p.label} · ${size}`,
       cost: POSTER_COST[p.tier][size],
     })),
-  )
+  ),
+  ...FINE_ART_FAMILIES.flatMap((f) =>
+    f.sizes.map((s) => ({
+      providerSku: `${f.prodigiPrefix}-${s.size}`,
+      label: `${f.label} · ${s.size}`,
+      cost: s.cost,
+    })),
+  ),
+]

@@ -15,7 +15,7 @@
  */
 
 import { createHmac } from 'node:crypto'
-import { posterOptions, FINE_ART_PENDING } from '@/config/product-range'
+import { posterOptions, fineArtOptions } from '@/config/product-range'
 import {
   getPricing,
   pricingStamp,
@@ -122,6 +122,16 @@ export interface ShopProduct {
   paperLabel?: string
   /** Short paper descriptor, e.g. 'Smooth matte giclée · 200gsm'. */
   paperBlurb?: string
+  // ── Fine-art variant (fine art only) — family + frame colour are baked into the
+  //    SKU (like poster paper), so they ride to fulfilment with no extra plumbing. ──
+  /** Fine-art family, e.g. 'canvas' | 'framed'. */
+  family?: string
+  /** Customer-facing family name, e.g. 'Float-framed canvas'. */
+  familyLabel?: string
+  /** This product's frame colour (also in `attributes.color`). */
+  frameColor?: string
+  /** All frame colours offered for this family (for the swatch chooser). */
+  frameColors?: string[]
   /** File format for digital downloads. Absent on print/fine-art products. */
   format?: 'jpeg' | 'tiff'
   /**
@@ -204,9 +214,10 @@ const PREVIEW_BASE = (process.env.SHOP_PREVIEW_BASE_URL ?? '').replace(/\/+$/, '
 
 /**
  * Build the physical products (posters + fine art) for a photo, applying the
- * worker-owned range. Posters are aspect-matched + resolution-gated to the
- * photo; fine art is a single WhiteWall placeholder oriented to the photo. Used
- * by both the live catalog and the dev mock so they behave identically.
+ * worker-owned range. Both are aspect-matched + resolution-gated to the photo
+ * and COST-PLUS — the base price is the Prodigi cost in DKK (the catalog markup
+ * is applied later in buildCatalog). Used by both the live catalog and the dev
+ * mock so they behave identically.
  */
 function physicalProducts(
   id: string,
@@ -214,7 +225,6 @@ function physicalProducts(
   h: number,
   hasPrint: boolean,
   hasFineArt: boolean,
-  pricing: PricingConfig = DEFAULT_PRICING,
   rates: Rates = FALLBACK_RATES,
 ): ShopProduct[] {
   const out: ShopProduct[] = []
@@ -242,18 +252,34 @@ function physicalProducts(
     }
   }
   if (hasFineArt) {
-    const portrait = h > w
-    const fa = FINE_ART_PENDING
-    out.push({
-      sku: `${id}-fineart-1`,
-      type: 'fine-art',
-      label: fa.label,
-      price: pricing.fineArt,
-      currency: 'DKK',
-      printSize: portrait ? { w: fa.shortCm, h: fa.longCm } : { w: fa.longCm, h: fa.shortCm },
-      material: fa.material,
-      provider: fa.provider,
-    })
+    // Fine art: every family × size whose aspect + resolution suit this photo.
+    // COST-PLUS like posters — base price is the Prodigi cost in DKK (with FX
+    // buffer); the catalog markup is applied in buildCatalog. Frame colour is a
+    // customer choice (defaults to the first), so one product per family × size.
+    for (const o of fineArtOptions(w, h)) {
+      // One SKU per frame colour (colour is part of the variant, like poster paper),
+      // so the chosen colour reaches Prodigi via the SKU's baked `attributes.color`.
+      for (const color of o.frameColors) {
+        out.push({
+          sku: `${id}-${o.family}-${o.size}-${color.replace(/\s+/g, '')}`,
+          type: 'fine-art',
+          label: `${o.widthCm} × ${o.heightCm} cm`,
+          price: eurToDkkOre(o.cost, rates),
+          currency: 'DKK',
+          printSize: { w: o.widthCm, h: o.heightCm },
+          material: `${o.widthCm} × ${o.heightCm} cm · ${o.blurb}`,
+          family: o.family,
+          familyLabel: o.familyLabel,
+          frameColor: color,
+          frameColors: o.frameColors,
+          provider: 'prodigi',
+          providerSku: o.providerSku,
+          attributes: { ...o.fixedAttributes, color },
+          cost: o.cost,
+          costCurrency: 'EUR',
+        })
+      }
+    }
   }
   return out
 }
@@ -554,7 +580,7 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
         offered.size === 0
           ? digital
           : [
-              ...physicalProducts(p.id, p.width, p.height, offered.has('print'), offered.has('fine-art'), pricing, rates),
+              ...physicalProducts(p.id, p.width, p.height, offered.has('print'), offered.has('fine-art'), rates),
               ...digital,
             ]
       // Apply the across-the-board + color-label markup to every list price, then

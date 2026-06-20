@@ -139,6 +139,10 @@ export default async function ShopProductView({
     paper: p.paper,
     paperLabel: p.paperLabel,
     paperBlurb: p.paperBlurb,
+    family: p.family,
+    familyLabel: p.familyLabel,
+    frameColor: p.frameColor,
+    frameColors: p.frameColors,
   }))
 
   const schemaTypeName: Record<ProductType, string> = {

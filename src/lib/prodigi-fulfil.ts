@@ -10,7 +10,7 @@
 
 import { getCatalog, type ShopProduct } from './shop'
 import { createOrder, prodigiConfigured, type ProdigiOrderResult, type QuoteItem } from './prodigi'
-import { posterAssetUrl, type OrderLine, type OrderShipping } from './downloads'
+import { posterAssetUrl, fineArtAssetUrl, type OrderLine, type OrderShipping } from './downloads'
 
 const A_SIZES = new Set(['A4', 'A3', 'A2', 'A1', 'A0'])
 
@@ -43,6 +43,8 @@ export async function quoteItemsForSkus(skus: string[]): Promise<QuoteItem[]> {
 }
 
 interface PhysicalItem {
+  /** 'poster' → typeset poster master; 'fineart' → full-res master, fill-cropped. */
+  kind: 'poster' | 'fineart'
   providerSku: string
   photoId: string
   size: string
@@ -66,15 +68,20 @@ async function resolvePhysicalItems(lineItems: OrderLine[]): Promise<PhysicalIte
   for (const li of lineItems) {
     const hit = bySku.get(li.sku)
     if (!hit) continue
-    const providerSku = hit.product.providerSku!
+    const product = hit.product
+    const providerSku = product.providerSku!
     const size = providerSku.split('-').pop() ?? ''
-    if (!A_SIZES.has(size)) continue
+    const kind = product.type === 'fine-art' ? 'fineart' : 'poster'
+    // Posters are A-series only (the typeset sheet); fine art uses inch + A sizes,
+    // and its providerSku came straight from the curated range, so it's not gated.
+    if (kind === 'poster' && !A_SIZES.has(size)) continue
     out.push({
+      kind,
       providerSku,
       photoId: hit.photoId,
       size,
       copies: li.qty || 1,
-      attributes: hit.product.attributes ?? {},
+      attributes: product.attributes ?? {},
       ourSku: li.sku,
     })
   }
@@ -110,13 +117,25 @@ export async function submitProdigiOrder(input: {
     throw new Error(`order ${input.orderCode} has physical items but no shipping address`)
   }
 
-  const items = physical.map((p) => ({
-    sku: p.providerSku,
-    copies: p.copies,
-    attributes: p.attributes,
-    merchantReference: p.ourSku,
-    assets: [{ printArea: 'default', url: posterAssetUrl(p.photoId, p.size, input.orderCode) }],
-  }))
+  const items = physical.map((p) =>
+    p.kind === 'fineart'
+      ? {
+          sku: p.providerSku,
+          copies: p.copies,
+          attributes: p.attributes,
+          merchantReference: p.ourSku,
+          // Full-res master cover-cropped by Prodigi to this product's print area.
+          sizing: 'fillPrintArea',
+          assets: [{ printArea: 'default', url: fineArtAssetUrl(p.photoId, input.orderCode) }],
+        }
+      : {
+          sku: p.providerSku,
+          copies: p.copies,
+          attributes: p.attributes,
+          merchantReference: p.ourSku,
+          assets: [{ printArea: 'default', url: posterAssetUrl(p.photoId, p.size, input.orderCode) }],
+        },
+  )
 
   // Prodigi rejects empty/whitespace strings on optional address fields (e.g.
   // stateOrCounty for countries that have no state, like DK → 400

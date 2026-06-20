@@ -84,6 +84,10 @@ const FULFIL_CACHE_DIR = resolve(process.env.FULFIL_CACHE_DIR ?? join(DATA_DIR, 
  *  masters), NEVER on the fast SSD that holds /data — the default is derived from
  *  MASTERS_DIR's parent, not DATA_DIR, so it can't accidentally fill the SSD. */
 const POSTER_ASSETS_DIR = resolve(process.env.POSTER_ASSETS_DIR ?? join(dirname(MASTERS_DIR), 'poster-assets'))
+/** Fine-art print assets: full-res, no-logo, copyright-embedded JPEGs Prodigi
+ *  fill-crops to each print area. One per photo (every fine-art size of a photo
+ *  fills from the same full master). HD, like the poster assets. */
+const FINEART_ASSETS_DIR = resolve(process.env.FINEART_ASSETS_DIR ?? join(dirname(MASTERS_DIR), 'fineart-assets'))
 /** Download grant records, one JSON file per order id. */
 const ORDERS_DIR = resolve(process.env.ORDERS_DIR ?? join(DATA_DIR, 'orders'))
 /** Public site origin, for the download link in the email. */
@@ -145,6 +149,19 @@ function verifyAssetToken(id, size, orderCode, token) {
   if (!id || !size || !orderCode || !token) return false
   const expected = createHmac('sha256', SHARED_SECRET || 'dev')
     .update(`${id}:${size}:${orderCode}`)
+    .digest('hex')
+    .slice(0, 32)
+  const a = Buffer.from(String(token))
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
+/** Fine-art print-asset token — HMAC over (photoId, orderCode). One asset per
+ *  photo (Prodigi fill-crops it to each size), so there's no size in the token. */
+function verifyFineArtToken(id, orderCode, token) {
+  if (!id || !orderCode || !token) return false
+  const expected = createHmac('sha256', SHARED_SECRET || 'dev')
+    .update(`${id}:${orderCode}`)
     .digest('hex')
     .slice(0, 32)
   const a = Buffer.from(String(token))
@@ -281,6 +298,7 @@ function digitalProducts(id, w, h, tiers, masterBrackets, tiffMasterBrackets, ra
 await mkdir(CACHE_DIR, { recursive: true })
 await mkdir(FULFIL_CACHE_DIR, { recursive: true })
 await mkdir(POSTER_ASSETS_DIR, { recursive: true })
+await mkdir(FINEART_ASSETS_DIR, { recursive: true })
 await mkdir(ORDERS_DIR, { recursive: true })
 
 // Monotonic preview-cache version. The Worker appends it to every preview URL as
@@ -330,6 +348,12 @@ app.use((req, res, next) => {
   // it's secured by the per-order token (bound to photo+size+order) instead.
   const a = req.path.match(/^\/fulfil\/poster\/([^/]+)\/([^/]+)$/)
   if (a && verifyAssetToken(decodeURIComponent(a[1]), decodeURIComponent(a[2]), req.query.o, req.query.t)) {
+    return next()
+  }
+  // Token-gated fine-art print asset — Prodigi pulls the full-res master headerless
+  // (it fill-crops to the print area), secured by the per-order token (photo+order).
+  const fa = req.path.match(/^\/fulfil\/fineart\/([^/]+)$/)
+  if (fa && verifyFineArtToken(decodeURIComponent(fa[1]), req.query.o, req.query.t)) {
     return next()
   }
   if (SHARED_SECRET && req.get('x-shop-secret') !== SHARED_SECRET) {
@@ -899,6 +923,93 @@ app.get('/fulfil/poster/:id/:size', async (req, res) => {
   } catch (err) {
     const notFound = err.code === 'NO_PHOTO' || err.code === 'NO_MASTER'
     if (!notFound) console.error('[fulfil-poster]', id, size, err)
+    res.status(notFound ? 404 : 500).json({ error: err.message })
+  }
+})
+
+/**
+ * Generate-or-reuse the FINE-ART print master for a photo — the Prodigi print
+ * asset: the full-resolution edited master, NO watermark/logo, with copyright
+ * metadata embedded. ONE per photo: every fine-art size fills from this same
+ * file (Prodigi cover-crops it to each print area via `sizing: fillPrintArea`),
+ * so it's cached by ref. JPEG masters ship their exact exported bytes; TIFF-only
+ * photos are encoded to a visually-lossless JPEG.
+ */
+async function buildFineArtMaster(id, force = false) {
+  const out = join(FINEART_ASSETS_DIR, `${photoRef(id)}.jpg`)
+  if (!force && (await fileIfExists(out))) return out
+
+  const { photos } = await loadCatalog()
+  const photo = photos.find((p) => p.id === id)
+  if (!photo) {
+    const e = new Error(`no photo ${id} in catalog`)
+    e.code = 'NO_PHOTO'
+    throw e
+  }
+
+  const srcPath = await resolveSource(id, 'jpeg') // full-res edited master (jpg preferred)
+  const isJpeg = /\.jpe?g$/i.test(srcPath)
+  const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
+  try {
+    if (isJpeg) {
+      await copyFile(srcPath, tmp) // ship the exact bytes exported from Lightroom
+    } else {
+      await sharp(srcPath, { limitInputPixels: false })
+        .rotate() // bake EXIF orientation before re-encoding
+        .keepIccProfile() // preserve the colour profile
+        .jpeg({ quality: 100, chromaSubsampling: '4:4:4', mozjpeg: true })
+        .toFile(tmp)
+    }
+    // Embed rights metadata (image data untouched for copied JPEGs).
+    await exiftool.write(tmp, {
+      Artist: 'Gus McEwan',
+      'XMP-dc:Creator': 'Gus McEwan',
+      'IPTC:By-line': 'Gus McEwan',
+      Copyright: COPYRIGHT,
+      'IPTC:CopyrightNotice': COPYRIGHT,
+      'XMP-dc:Rights': COPYRIGHT,
+      'XMP-xmpRights:WebStatement': 'https://gusmcewan.com',
+      'XMP-xmpRights:Marked': 'True',
+      CreatorWorkURL: 'https://gusmcewan.com',
+    }, { writeArgs: ['-overwrite_original'] })
+    await rename(tmp, out)
+  } catch (err) {
+    await unlink(tmp).catch(() => {})
+    throw err
+  }
+  return out
+}
+
+/** Fine-art print master — secret-gated (the Worker proxies; used for admin
+ *  preview + the mockup generator's source). Generated on first request. */
+app.get('/fineart-master/:id', async (req, res) => {
+  const { id } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'bad request' })
+  try {
+    const path = await buildFineArtMaster(id)
+    res.set('Cache-Control', 'public, max-age=31536000, immutable')
+    res.type('jpeg')
+    createReadStream(path).pipe(res)
+  } catch (err) {
+    const notFound = err.code === 'NO_PHOTO' || err.code === 'NO_MASTER'
+    if (!notFound) console.error('[fineart-master]', id, err)
+    res.status(notFound ? 404 : 500).json({ error: err.message })
+  }
+})
+
+/** Public, token-gated fine-art print master for Prodigi (headerless fetch at
+ *  order time, secured by the per-order token). */
+app.get('/fulfil/fineart/:id', async (req, res) => {
+  const { id } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'bad request' })
+  try {
+    const path = await buildFineArtMaster(id)
+    res.set('Cache-Control', 'public, max-age=31536000, immutable')
+    res.type('jpeg')
+    createReadStream(path).pipe(res)
+  } catch (err) {
+    const notFound = err.code === 'NO_PHOTO' || err.code === 'NO_MASTER'
+    if (!notFound) console.error('[fulfil-fineart]', id, err)
     res.status(notFound ? 404 : 500).json({ error: err.message })
   }
 })

@@ -322,6 +322,24 @@ export function posterAssetUrl(photoId: string, size: string, orderCode: string)
   return u.toString()
 }
 
+/** Token for the fine-art print-asset URL — HMAC over (photoId, orderCode). One
+ *  asset per photo (Prodigi fill-crops it to each size), so no size is bound. */
+export function fineArtAssetToken(photoId: string, orderCode: string): string {
+  return createHmac('sha256', ORIGIN_SECRET || 'dev')
+    .update(`${photoId}:${orderCode}`)
+    .digest('hex')
+    .slice(0, 32)
+}
+
+/** Public, token-gated URL Prodigi fetches the FULL-RES fine-art master from (it
+ *  fill-crops to the print area). Served by the origin's `/fulfil/fineart/:id`. */
+export function fineArtAssetUrl(photoId: string, orderCode: string): string {
+  const u = new URL(`${ORIGIN}/fulfil/fineart/${encodeURIComponent(photoId)}`)
+  u.searchParams.set('o', orderCode)
+  u.searchParams.set('t', fineArtAssetToken(photoId, orderCode))
+  return u.toString()
+}
+
 /** One shipment's tracking, surfaced from a Prodigi status callback. */
 export interface FulfilmentTracking {
   carrier?: string | null
