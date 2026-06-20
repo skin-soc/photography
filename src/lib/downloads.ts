@@ -116,8 +116,14 @@ export function extractOrderLines(session: Stripe.Checkout.Session): {
     })
     .filter((l) => l.sku !== 'vat')
 
+  // Address source, in order: Stripe's collected shipping details (legacy flow),
+  // then the recipient we set on the PaymentIntent ourselves (current flow — the
+  // address is captured in our pre-payment shipping step), then the legacy field.
+  const pi = session.payment_intent
+  const piShip = pi && typeof pi === 'object' ? (pi as Stripe.PaymentIntent).shipping ?? null : null
   const ship =
     session.collected_information?.shipping_details ??
+    piShip ??
     (session as unknown as { shipping_details?: { name?: string | null; address?: Stripe.Address | null } })
       .shipping_details ??
     null
@@ -367,6 +373,10 @@ export async function recordFulfilment(
     mode: string
     error?: string | null
     tracking?: FulfilmentTracking[] | null
+    /** ISO country where Prodigi produced the order (e.g. 'NL'). */
+    productionCountry?: string | null
+    /** Dispatch date from the shipment (ISO string), when shipped. */
+    shippedAt?: string | null
   },
 ): Promise<void> {
   if (!ORIGIN) return
@@ -559,6 +569,8 @@ export interface AdminOrder {
     mode: string | null
     error?: string | null
     tracking?: FulfilmentTracking[] | null
+    productionCountry?: string | null
+    shippedAt?: string | null
     updatedAt?: number
   } | null
 }

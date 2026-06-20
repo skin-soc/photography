@@ -179,7 +179,21 @@
     "vatGb": "Storbritannien (GB) lämnade EU:s momssystem efter brexit, så ett brittiskt momsnummer kan inte valideras här — och behövs inte: ingen EU-moms tas ut på beställningar utanför EU. (Nordirländska “XI”-nummer fungerar fortfarande.)",
     "vatMalformed": "Ange ett giltigt EU-momsnummer, t.ex. DE123456789.",
     "vatSelf": "Det är butikens eget momsnummer — ange ditt företags momsnummer.",
-    "reverseChargeCheckout": "Moms omvänd skattskyldighet (0 %){business} — du redovisar momsen i ditt land."
+    "reverseChargeCheckout": "Moms omvänd skattskyldighet (0 %){business} — du redovisar momsen i ditt land.",
+    "deliveryHeading": "Leverans",
+    "deliveryIntro": "Ange din leveransadress för att se fraktalternativ.",
+    "recipientName": "Fullständigt namn",
+    "addressLine1": "Adress",
+    "addressLine2": "Lägenhet, våning osv. (valfritt)",
+    "city": "Ort",
+    "postalCode": "Postnummer",
+    "stateRegion": "Region (valfritt)",
+    "country": "Land",
+    "chooseDelivery": "Välj ett fraktalternativ",
+    "quoting": "Hämtar fraktalternativ…",
+    "shippingUnavailable": "Vi kan inte leverera till den här adressen just nu. Kontakta oss.",
+    "continueToPayment": "Fortsätt till betalning",
+    "shippingLine": "Frakt"
   },
   "downloads": {
     "eyebrow": "Dina nedladdningar",

@@ -179,7 +179,21 @@
     "vatGb": "Wielka Brytania (GB) opuściła unijny system VAT po brexicie, więc brytyjskiego numeru VAT nie można tu zweryfikować — i nie jest potrzebny: zamówienia spoza UE nie są objęte unijnym VAT. (Numery „XI” z Irlandii Północnej nadal działają.)",
     "vatMalformed": "Wpisz prawidłowy unijny numer VAT, np. DE123456789.",
     "vatSelf": "To jest numer VAT samego sklepu — wpisz numer VAT swojej firmy.",
-    "reverseChargeCheckout": "VAT z odwrotnym obciążeniem (0%){business} — rozliczasz VAT w swoim kraju."
+    "reverseChargeCheckout": "VAT z odwrotnym obciążeniem (0%){business} — rozliczasz VAT w swoim kraju.",
+    "deliveryHeading": "Dostawa",
+    "deliveryIntro": "Podaj adres dostawy, aby zobaczyć opcje wysyłki.",
+    "recipientName": "Imię i nazwisko",
+    "addressLine1": "Adres",
+    "addressLine2": "Mieszkanie, piętro itp. (opcjonalnie)",
+    "city": "Miasto",
+    "postalCode": "Kod pocztowy",
+    "stateRegion": "Region (opcjonalnie)",
+    "country": "Kraj",
+    "chooseDelivery": "Wybierz opcję dostawy",
+    "quoting": "Pobieranie opcji wysyłki…",
+    "shippingUnavailable": "Obecnie nie możemy wysłać na ten adres. Skontaktuj się z nami.",
+    "continueToPayment": "Przejdź do płatności",
+    "shippingLine": "Wysyłka"
   },
   "downloads": {
     "eyebrow": "Twoje pobrania",

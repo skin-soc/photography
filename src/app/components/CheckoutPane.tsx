@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import {
   CheckoutElementsProvider,
   PaymentElement,
-  ShippingAddressElement,
   useCheckout,
 } from '@stripe/react-stripe-js/checkout'
 import type { StripeElementsOptions } from '@stripe/stripe-js'
@@ -26,10 +25,15 @@ export interface CheckoutSummary {
   vatRate: number
   subtotalMinor: number
   discountMinor: number
+  /** Shipping charged (net, minor units) — Prodigi quote + handling, 0 if none. */
+  shippingMinor: number
+  /** Chosen shipment method (Budget/Standard/…), or null for digital orders. */
+  shippingMethod?: string | null
   vatMinor: number
   totalMinor: number
   subtotal: string
   discount: string
+  shipping: string
   vat: string
   total: string
 }
@@ -44,6 +48,9 @@ interface CheckoutPaneProps {
    *  else DK). Stops the element defaulting to GB, whose address autocomplete
    *  collapses the form to a single line. */
   shippingDefaultCountry?: string | null
+  /** True when the email was already captured in the shipping step (physical
+   *  orders) and set as the session's customer email — so we don't re-ask here. */
+  emailCollected?: boolean
   totalText: string
   summary: CheckoutSummary | null
   /** B2B: VAT reverse-charged (0%) for a validated EU business — show a note. */
@@ -114,6 +121,7 @@ function PaymentForm({
   hasPhysical,
   downloadItems,
   billingCountry,
+  emailCollected,
   totalText,
   summary,
   reverseCharge,
@@ -191,31 +199,27 @@ function PaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      {/* Email — optional; used to send the download link + passcode. */}
-      <div>
-        <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">
-          {t('emailLabel')}
-        </p>
-        <input
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="w-full rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-4 py-3 text-[14px] text-foreground placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
-        />
-      </div>
-
-      {/* Shipping address — only for physical items */}
-      {hasPhysical && (
+      {/* Email — optional; used to send the download link + passcode. Hidden when
+          already captured in the shipping step (set as the session customer email). */}
+      {!emailCollected && (
         <div>
           <p className="mb-3 text-[10px] font-light tracking-[0.22em] uppercase text-foreground/35">
-            {t('shippingAddress')}
+            {t('emailLabel')}
           </p>
-          <ShippingAddressElement />
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full rounded-[8px] border border-foreground/15 bg-foreground/[0.04] px-4 py-3 text-[14px] text-foreground placeholder:text-foreground/25 focus:border-[#931020] focus:outline-none transition-colors"
+          />
         </div>
       )}
+
+      {/* Shipping address is collected in the prior step (needed to quote
+          shipping) and set on the PaymentIntent server-side — no element here. */}
 
       {/* Payment method */}
       <div>
@@ -288,7 +292,7 @@ function PaymentForm({
 
       {/* Order summary — our own figures (subtotal / discount / VAT / total). */}
       <div className="border-t border-foreground/[0.07] pt-4 space-y-1.5">
-        {summary && (summary.vatMinor > 0 || summary.discountMinor > 0) && (
+        {summary && (summary.vatMinor > 0 || summary.discountMinor > 0 || summary.shippingMinor > 0) && (
           <div className="flex items-baseline justify-between">
             <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/25">{t('subtotal')}</p>
             <p className="text-[12px] font-light text-foreground/45">{summary.subtotal}</p>
@@ -298,6 +302,14 @@ function PaymentForm({
           <div className="flex items-baseline justify-between">
             <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/25">{t('discount')}</p>
             <p className="text-[12px] font-light text-[#931020]">−{summary.discount}</p>
+          </div>
+        )}
+        {summary && summary.shippingMinor > 0 && (
+          <div className="flex items-baseline justify-between">
+            <p className="text-[10px] font-light tracking-[0.22em] uppercase text-foreground/25">
+              {t('shippingLine')}{summary.shippingMethod ? ` · ${summary.shippingMethod}` : ''}
+            </p>
+            <p className="text-[12px] font-light text-foreground/45">{summary.shipping}</p>
           </div>
         )}
         {summary && summary.vatMinor > 0 && (
@@ -351,35 +363,16 @@ export default function CheckoutPane(props: CheckoutPaneProps) {
       options={{
         clientSecret: props.clientSecret,
         elementsOptions: { appearance: buildAppearance(theme) },
-        // Seed the shipping country with the buyer's own (from IP). Otherwise the
-        // Shipping Address Element defaults to GB (browser locale), whose Stripe
-        // address autocomplete collapses the form to a single "Address" search line
-        // — so the buyer only sees address line 1. The element exposes no default-
-        // country option in Custom Checkout, so we prefill via the checkout SDK's
-        // defaultValues; line1 must be a string, so the rest is seeded empty.
-        ...(props.shippingDefaultCountry
-          ? {
-              defaultValues: {
-                shippingAddress: {
-                  name: '',
-                  address: {
-                    line1: '',
-                    line2: '',
-                    city: '',
-                    state: '',
-                    postal_code: '',
-                    country: props.shippingDefaultCountry,
-                  },
-                },
-              },
-            }
-          : {}),
+        // Shipping address is no longer collected here (it's captured in the cart's
+        // shipping step and set on the PaymentIntent server-side), so no shipping
+        // defaultValues are needed.
       }}
     >
       <PaymentForm
         hasPhysical={props.hasPhysical}
         downloadItems={props.downloadItems}
         billingCountry={props.billingCountry}
+        emailCollected={props.emailCollected}
         totalText={props.totalText}
         summary={props.summary}
         reverseCharge={props.reverseCharge}

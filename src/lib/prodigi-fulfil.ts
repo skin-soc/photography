@@ -9,10 +9,38 @@
  */
 
 import { getCatalog, type ShopProduct } from './shop'
-import { createOrder, prodigiConfigured, type ProdigiOrderResult } from './prodigi'
+import { createOrder, prodigiConfigured, type ProdigiOrderResult, type QuoteItem } from './prodigi'
 import { posterAssetUrl, type OrderLine, type OrderShipping } from './downloads'
 
 const A_SIZES = new Set(['A4', 'A3', 'A2', 'A1', 'A0'])
+
+/** Map our shop SKUs to Prodigi quote items (provider 'prodigi' A-size posters),
+ *  grouping duplicates into copies. Shared by the shipping-quote endpoint and any
+ *  pre-charge quoting; quoting needs only sku + copies + attributes (no asset). */
+export async function quoteItemsForSkus(skus: string[]): Promise<QuoteItem[]> {
+  if (skus.length === 0) return []
+  const catalog = await getCatalog()
+  const bySku = new Map<string, ShopProduct>()
+  for (const photo of catalog) {
+    for (const p of photo.products) {
+      if (p.provider === 'prodigi' && p.providerSku) bySku.set(p.sku, p)
+    }
+  }
+  // Group by providerSku (+ attribute signature) so repeats become copies.
+  const grouped = new Map<string, QuoteItem>()
+  for (const sku of skus) {
+    const p = bySku.get(sku)
+    if (!p?.providerSku) continue
+    const size = p.providerSku.split('-').pop() ?? ''
+    if (!A_SIZES.has(size)) continue
+    const attributes = p.attributes ?? {}
+    const key = `${p.providerSku}|${JSON.stringify(attributes)}`
+    const existing = grouped.get(key)
+    if (existing) existing.copies += 1
+    else grouped.set(key, { sku: p.providerSku, copies: 1, attributes })
+  }
+  return Array.from(grouped.values())
+}
 
 interface PhysicalItem {
   providerSku: string
@@ -70,6 +98,8 @@ export async function submitProdigiOrder(input: {
   shipping: OrderShipping | null
   email: string | null
   callbackUrl?: string
+  /** Shipment method the customer paid for (Budget/Standard/Express). */
+  shippingMethod?: string
 }): Promise<ProdigiOrderResult | null> {
   if (!prodigiConfigured()) return null
   const physical = await resolvePhysicalItems(input.lineItems)
@@ -109,5 +139,11 @@ export async function submitProdigiOrder(input: {
     },
   }
 
-  return createOrder({ merchantReference: input.orderCode, recipient, items, callbackUrl: input.callbackUrl })
+  return createOrder({
+    merchantReference: input.orderCode,
+    recipient,
+    items,
+    callbackUrl: input.callbackUrl,
+    ...(input.shippingMethod ? { shippingMethod: input.shippingMethod } : {}),
+  })
 }

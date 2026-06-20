@@ -179,7 +179,21 @@
     "vatGb": "El Reino Unido (GB) abandonó el sistema de IVA de la UE tras el Brexit, por lo que un número de IVA británico no puede validarse aquí — y no es necesario: no se cobra IVA de la UE en pedidos fuera de la UE. (Los números “XI” de Irlanda del Norte siguen funcionando.)",
     "vatMalformed": "Introduce un número de IVA de la UE válido, p. ej. DE123456789.",
     "vatSelf": "Ese es el número de IVA de la propia tienda — introduce el número de IVA de tu empresa.",
-    "reverseChargeCheckout": "IVA con inversión del sujeto pasivo (0 %){business} — declaras el IVA en tu país."
+    "reverseChargeCheckout": "IVA con inversión del sujeto pasivo (0 %){business} — declaras el IVA en tu país.",
+    "deliveryHeading": "Envío",
+    "deliveryIntro": "Introduce tu dirección de entrega para ver las opciones de envío.",
+    "recipientName": "Nombre completo",
+    "addressLine1": "Dirección",
+    "addressLine2": "Piso, puerta, etc. (opcional)",
+    "city": "Ciudad",
+    "postalCode": "Código postal",
+    "stateRegion": "Provincia / región (opcional)",
+    "country": "País",
+    "chooseDelivery": "Elige una opción de envío",
+    "quoting": "Obteniendo opciones de envío…",
+    "shippingUnavailable": "No podemos enviar a esta dirección ahora mismo. Contáctanos, por favor.",
+    "continueToPayment": "Continuar al pago",
+    "shippingLine": "Envío"
   },
   "downloads": {
     "eyebrow": "Tus descargas",

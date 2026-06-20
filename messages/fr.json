@@ -179,7 +179,21 @@
     "vatGb": "Le Royaume-Uni (GB) a quitté le système de TVA de l’UE après le Brexit ; un numéro de TVA britannique ne peut donc pas être validé ici — et il n’est pas nécessaire : aucune TVA de l’UE n’est appliquée aux commandes hors UE. (Les numéros « XI » d’Irlande du Nord fonctionnent toujours.)",
     "vatMalformed": "Saisissez un numéro de TVA UE valide, p. ex. DE123456789.",
     "vatSelf": "C’est le propre numéro de TVA de cette boutique — veuillez saisir le numéro de TVA de votre entreprise.",
-    "reverseChargeCheckout": "TVA autoliquidée (0 %){business} — vous déclarez la TVA dans votre pays."
+    "reverseChargeCheckout": "TVA autoliquidée (0 %){business} — vous déclarez la TVA dans votre pays.",
+    "deliveryHeading": "Livraison",
+    "deliveryIntro": "Saisissez votre adresse de livraison pour voir les options d’expédition.",
+    "recipientName": "Nom complet",
+    "addressLine1": "Adresse",
+    "addressLine2": "Appartement, étage, etc. (facultatif)",
+    "city": "Ville",
+    "postalCode": "Code postal",
+    "stateRegion": "Région (facultatif)",
+    "country": "Pays",
+    "chooseDelivery": "Choisissez un mode de livraison",
+    "quoting": "Récupération des options de livraison…",
+    "shippingUnavailable": "Nous ne pouvons pas livrer à cette adresse pour le moment. Veuillez nous contacter.",
+    "continueToPayment": "Continuer vers le paiement",
+    "shippingLine": "Livraison"
   },
   "downloads": {
     "eyebrow": "Vos téléchargements",

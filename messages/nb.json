@@ -179,7 +179,21 @@
     "vatGb": "Storbritannia (GB) forlot EUs mva-system etter brexit, så et britisk mva-nummer kan ikke valideres her — og det trengs ikke: ingen EU-mva belastes på bestillinger utenfor EU. (Nordirske “XI”-numre fungerer fortsatt.)",
     "vatMalformed": "Skriv inn et gyldig EU-mva-nummer, f.eks. DE123456789.",
     "vatSelf": "Det er butikkens eget mva-nummer — skriv inn virksomhetens mva-nummer.",
-    "reverseChargeCheckout": "Mva omvendt avgiftsplikt (0 %){business} — du beregner mva i ditt land."
+    "reverseChargeCheckout": "Mva omvendt avgiftsplikt (0 %){business} — du beregner mva i ditt land.",
+    "deliveryHeading": "Levering",
+    "deliveryIntro": "Skriv inn leveringsadressen for å se fraktalternativer.",
+    "recipientName": "Fullt navn",
+    "addressLine1": "Adresse",
+    "addressLine2": "Leilighet, etasje osv. (valgfritt)",
+    "city": "Sted",
+    "postalCode": "Postnummer",
+    "stateRegion": "Region (valgfritt)",
+    "country": "Land",
+    "chooseDelivery": "Velg et fraktalternativ",
+    "quoting": "Henter fraktalternativer…",
+    "shippingUnavailable": "Vi kan ikke sende til denne adressen akkurat nå. Ta kontakt med oss.",
+    "continueToPayment": "Fortsett til betaling",
+    "shippingLine": "Frakt"
   },
   "downloads": {
     "eyebrow": "Nedlastingene dine",

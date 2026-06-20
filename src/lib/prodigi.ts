@@ -16,17 +16,23 @@
 import { isEU } from './vat'
 
 const KEY = process.env.PRODIGI_API_KEY ?? ''
-const BASE = KEY.startsWith('test_')
-  ? 'https://api.sandbox.prodigi.com/v4.0'
-  : 'https://api.prodigi.com/v4.0'
+// Environment is EXPLICIT via PRODIGI_MODE — never inferred from the key. Prodigi's
+// (rotated) sandbox keys don't carry a 'test_' prefix, so prefix-sniffing wrongly
+// routed sandbox keys to the live API → 401. Defaults to sandbox per the standing
+// rule (live parked); set PRODIGI_MODE=live (with a live key) to switch.
+const MODE: 'sandbox' | 'live' =
+  (process.env.PRODIGI_MODE ?? 'sandbox').toLowerCase() === 'live' ? 'live' : 'sandbox'
+const BASE = MODE === 'live'
+  ? 'https://api.prodigi.com/v4.0'
+  : 'https://api.sandbox.prodigi.com/v4.0'
 
 export function prodigiConfigured(): boolean {
   return KEY.length > 0
 }
 
-/** Which environment the active key targets. */
+/** Which environment the active key targets (explicit, not key-derived). */
 export function prodigiMode(): 'sandbox' | 'live' {
-  return KEY.startsWith('test_') ? 'sandbox' : 'live'
+  return MODE
 }
 
 async function prodigiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -212,6 +218,65 @@ export async function getQuote({
     totalMinor: toMinor(cs.totalCost?.amount),
     fulfilments,
   }
+}
+
+/** One shipment method's quote (a row of the customer's delivery-option picker). */
+export interface ProdigiMethodQuote extends ProdigiQuote {
+  /** Prodigi shipment method, e.g. 'Budget' | 'Standard' | 'Express'. */
+  method: string
+}
+
+/** Normalise one raw quote row into a ProdigiQuote. */
+function parseQuoteRow(q: QuoteResponse['quotes'][number], currencyCode: string): ProdigiQuote {
+  const cs = q.costSummary
+  const fulfilments: ProdigiFulfilment[] = (q.shipments ?? [])
+    .filter((s) => s.fulfillmentLocation)
+    .map((s) => ({
+      countryCode: s.fulfillmentLocation!.countryCode,
+      labCode: s.fulfillmentLocation!.labCode,
+      carrier: s.carrier?.name,
+    }))
+  return {
+    currency: cs.totalCost?.currency ?? currencyCode,
+    itemsMinor: toMinor(cs.items?.amount),
+    shippingMinor: toMinor(cs.shipping?.amount),
+    taxMinor: toMinor(cs.totalTax?.amount),
+    totalMinor: toMinor(cs.totalCost?.amount),
+    fulfilments,
+  }
+}
+
+/**
+ * Quote EVERY available shipment method for an order + destination (Prodigi
+ * returns one quote per method). Used to present the customer their delivery
+ * options with prices. Shipping cost depends on the WHOLE basket (sizes/qty), so
+ * pass all physical items together. Caller applies the EU production guard
+ * (`checkEuFulfilment`) per method and converts the ex-tax `shippingMinor`.
+ */
+export async function getQuotes({
+  items,
+  destinationCountryCode,
+  currencyCode = 'EUR',
+}: {
+  items: QuoteItem[]
+  destinationCountryCode: string
+  currencyCode?: string
+}): Promise<ProdigiMethodQuote[]> {
+  const body = {
+    destinationCountryCode,
+    currencyCode,
+    items: items.map((i) => ({
+      sku: i.sku,
+      copies: i.copies,
+      attributes: i.attributes ?? {},
+      assets: [{ printArea: i.printArea ?? 'default' }],
+    })),
+  }
+  const d = await prodigiFetch<QuoteResponse>('/quotes', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  return (d.quotes ?? []).map((q) => ({ method: q.shipmentMethod, ...parseQuoteRow(q, currencyCode) }))
 }
 
 // ── EU/NL routing guard (§7) ──────────────────────────────────────────────────

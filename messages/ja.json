@@ -179,7 +179,21 @@
     "vatGb": "英国（GB）はブレグジット後にEUのVAT制度を離脱したため、英国のVAT番号はここでは検証できません — また必要もありません：EU域外の注文にEUのVATは課されません。（北アイルランドの「XI」番号は引き続き有効です。）",
     "vatMalformed": "有効なEUのVAT番号を入力してください。例：DE123456789。",
     "vatSelf": "それはこのショップ自身のVAT番号です — お客様の会社のVAT番号を入力してください。",
-    "reverseChargeCheckout": "VATリバースチャージ（0%）{business} — お客様の国でVATを申告・納付します。"
+    "reverseChargeCheckout": "VATリバースチャージ（0%）{business} — お客様の国でVATを申告・納付します。",
+    "deliveryHeading": "配送",
+    "deliveryIntro": "配送先住所を入力すると配送オプションが表示されます。",
+    "recipientName": "氏名",
+    "addressLine1": "住所",
+    "addressLine2": "建物名・部屋番号など（任意）",
+    "city": "市区町村",
+    "postalCode": "郵便番号",
+    "stateRegion": "都道府県・地域（任意）",
+    "country": "国",
+    "chooseDelivery": "配送方法を選択",
+    "quoting": "配送オプションを取得しています…",
+    "shippingUnavailable": "現在この住所へは配送できません。お問い合わせください。",
+    "continueToPayment": "支払いに進む",
+    "shippingLine": "配送料"
   },
   "downloads": {
     "eyebrow": "あなたのダウンロード",

@@ -179,7 +179,21 @@
     "vatGb": "Il Regno Unito (GB) ha lasciato il sistema IVA dell’UE dopo la Brexit, quindi una partita IVA britannica non può essere convalidata qui — e non è necessaria: nessuna IVA UE è applicata agli ordini fuori dall’UE. (I numeri “XI” dell’Irlanda del Nord funzionano ancora.)",
     "vatMalformed": "Inserisci una partita IVA UE valida, es. DE123456789.",
     "vatSelf": "Questa è la partita IVA del negozio stesso — inserisci la partita IVA della tua azienda.",
-    "reverseChargeCheckout": "IVA in inversione contabile (0%){business} — assolvi l’IVA nel tuo Paese."
+    "reverseChargeCheckout": "IVA in inversione contabile (0%){business} — assolvi l’IVA nel tuo Paese.",
+    "deliveryHeading": "Spedizione",
+    "deliveryIntro": "Inserisci l’indirizzo di consegna per vedere le opzioni di spedizione.",
+    "recipientName": "Nome completo",
+    "addressLine1": "Indirizzo",
+    "addressLine2": "Interno, piano, ecc. (facoltativo)",
+    "city": "Città",
+    "postalCode": "CAP",
+    "stateRegion": "Provincia / regione (facoltativo)",
+    "country": "Paese",
+    "chooseDelivery": "Scegli un’opzione di spedizione",
+    "quoting": "Recupero delle opzioni di spedizione…",
+    "shippingUnavailable": "Al momento non possiamo spedire a questo indirizzo. Contattaci.",
+    "continueToPayment": "Continua al pagamento",
+    "shippingLine": "Spedizione"
   },
   "downloads": {
     "eyebrow": "I tuoi download",

@@ -2402,19 +2402,29 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
             ].filter(Boolean).join(', ')}
           />
         )}
-        {order.fulfilment && (
-          <Row
-            label="Prodigi"
-            value={[
-              order.fulfilment.stage || order.fulfilment.outcome || '—',
-              order.fulfilment.mode,
-              order.fulfilment.prodigiId,
-              order.fulfilment.error,
-            ].filter(Boolean).join(' · ')}
-            mono
-            accent
-          />
-        )}
+        {order.fulfilment && (() => {
+          const f = order.fulfilment
+          // Humanise the Prodigi stage: "InProgress" → "In Progress"; an error
+          // outcome reads "Failed". Mode shown as a plain word.
+          const rawStage = f.stage || f.outcome || '—'
+          const friendly = f.outcome === 'error'
+            ? 'Failed'
+            : rawStage.replace(/([a-z])([A-Z])/g, '$1 $2')
+          const made = (() => {
+            if (!f.productionCountry) return null
+            try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(f.productionCountry) ?? f.productionCountry }
+            catch { return f.productionCountry }
+          })()
+          return (
+            <>
+              <Row label="Fulfilment" value={`${friendly}${f.mode ? ` · ${f.mode}` : ''}`} accent />
+              {f.prodigiId && <Row label="Prodigi ref" value={f.prodigiId} mono />}
+              {made && <Row label="Made in" value={made} />}
+              {f.shippedAt && <Row label="Shipped" value={new Date(f.shippedAt).toLocaleDateString('en-GB')} />}
+              {f.error && <Row label="Prodigi error" value={f.error} />}
+            </>
+          )
+        })()}
         {order.fulfilment?.tracking && order.fulfilment.tracking.length > 0 && (
           <div className="grid grid-cols-[140px_1fr] gap-4 py-3.5">
             <dt className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 pt-0.5">Tracking</dt>
@@ -2709,6 +2719,8 @@ function PricesTab() {
     setCfg((c) => (c ? { ...c, markup: { ...c.markup, general: pct } } : c))
   const setMarkupLabel = (color: ColorLabel, pct: number) =>
     setCfg((c) => (c ? { ...c, markup: { ...c.markup, labels: { ...c.markup.labels, [color]: pct } } } : c))
+  const setShippingHandling = (ore: number) =>
+    setCfg((c) => (c ? { ...c, shippingHandlingMinor: Math.max(0, Math.round(ore)) } : c))
 
   // Client-side floor check mirrors the server, so Save is disabled before a
   // doomed round-trip. (Posters are cost-plus, always ≥ cost — not checked.)
@@ -2854,6 +2866,27 @@ function PricesTab() {
               )
             })()}
             {markupError && <p className="mt-4 text-[12px] text-[#931020]">{markupError}</p>}
+          </section>
+
+          {/* Shipping handling — flat fee added to Prodigi's quoted shipping. */}
+          <section className="mt-6 rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <h2 className={sectionTitle}>Shipping</h2>
+            <p className="mt-1.5 text-[12px] text-white/40">
+              Customers are charged Prodigi’s live shipping quote (converted to DKK) plus this flat
+              handling fee, for the whole order. VAT applies to the total incl. shipping. Set to 0 for
+              no handling fee.
+            </p>
+            <div className="mt-6 flex flex-col gap-1.5">
+              <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/40">Handling fee · kr</span>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={Math.round(cfg.shippingHandlingMinor / 100)}
+                onChange={(e) => setShippingHandling((Number(e.target.value) || 0) * 100)}
+                className="w-32 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[14px] font-mono-ibm tabular-nums text-white/90 focus:border-white/40 focus:outline-none"
+              />
+            </div>
           </section>
 
           {/* Posters — cost-plus (read-only). Price = Prodigi cost × (1 + general

@@ -179,7 +179,21 @@
     "vatGb": "영국(GB)은 브렉시트 이후 EU VAT 체계를 떠났으므로 영국 VAT 번호는 여기서 검증할 수 없습니다 — 그리고 필요하지도 않습니다: EU 외 주문에는 EU VAT가 부과되지 않습니다. (북아일랜드 “XI” 번호는 계속 작동합니다.)",
     "vatMalformed": "유효한 EU VAT 번호를 입력하세요. 예: DE123456789.",
     "vatSelf": "그것은 이 상점 자체의 VAT 번호입니다 — 귀하 사업자의 VAT 번호를 입력하세요.",
-    "reverseChargeCheckout": "VAT 대리납부 (0%){business} — 귀하의 국가에서 VAT를 신고·납부합니다."
+    "reverseChargeCheckout": "VAT 대리납부 (0%){business} — 귀하의 국가에서 VAT를 신고·납부합니다.",
+    "deliveryHeading": "배송",
+    "deliveryIntro": "배송 주소를 입력하면 배송 옵션이 표시됩니다.",
+    "recipientName": "이름",
+    "addressLine1": "주소",
+    "addressLine2": "상세 주소(동/호 등, 선택)",
+    "city": "도시",
+    "postalCode": "우편번호",
+    "stateRegion": "지역(선택)",
+    "country": "국가",
+    "chooseDelivery": "배송 옵션 선택",
+    "quoting": "배송 옵션을 가져오는 중…",
+    "shippingUnavailable": "현재 이 주소로는 배송할 수 없습니다. 문의해 주세요.",
+    "continueToPayment": "결제로 계속",
+    "shippingLine": "배송"
   },
   "downloads": {
     "eyebrow": "내 다운로드",

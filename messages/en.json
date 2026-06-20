@@ -179,7 +179,21 @@
     "vatGb": "The UK (GB) left the EU VAT system after Brexit, so a UK VAT number can’t be validated here — and none is needed: no EU VAT is charged on orders outside the EU. (Northern Ireland “XI” numbers still work.)",
     "vatMalformed": "Enter a valid EU VAT number, e.g. DE123456789.",
     "vatSelf": "That’s this shop’s own VAT number — please enter your business’s VAT number.",
-    "reverseChargeCheckout": "VAT reverse-charged (0%){business} — you account for VAT in your country."
+    "reverseChargeCheckout": "VAT reverse-charged (0%){business} — you account for VAT in your country.",
+    "deliveryHeading": "Delivery",
+    "deliveryIntro": "Enter your delivery address to see shipping options.",
+    "recipientName": "Full name",
+    "addressLine1": "Address",
+    "addressLine2": "Apartment, suite, etc. (optional)",
+    "city": "City",
+    "postalCode": "Postal code",
+    "stateRegion": "State / region (optional)",
+    "country": "Country",
+    "chooseDelivery": "Choose a delivery option",
+    "quoting": "Getting shipping options…",
+    "shippingUnavailable": "We can’t ship to this address right now. Please contact us.",
+    "continueToPayment": "Continue to payment",
+    "shippingLine": "Shipping"
   },
   "downloads": {
     "eyebrow": "Your downloads",

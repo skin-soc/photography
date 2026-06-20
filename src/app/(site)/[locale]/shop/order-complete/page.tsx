@@ -83,12 +83,12 @@ export default async function OrderComplete({
             )}
 
             {hasPhysical && (
-              <div className="rounded-[16px] border border-foreground/10 bg-foreground/[0.04] px-6 py-5 mb-8">
-                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30 mb-2">
-                  Shipping
+              <div className="rounded-[16px] border border-[#931020]/40 bg-[#931020]/[0.06] px-6 py-5 mb-8">
+                <p className="text-[9px] font-light tracking-[0.22em] uppercase text-[#931020] mb-2">
+                  Print order
                 </p>
-                <p className="text-[13px] font-light text-foreground/50 leading-relaxed">
-                  Your print order is being prepared. You will receive a shipping confirmation once dispatched.
+                <p className="text-[14px] font-normal text-foreground/85 leading-relaxed">
+                  Your print order is being prepared. You’ll receive a shipping confirmation once it’s dispatched.
                 </p>
               </div>
             )}

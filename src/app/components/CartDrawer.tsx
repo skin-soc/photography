@@ -8,8 +8,13 @@ import dynamic from 'next/dynamic'
 import type { DownloadItem, CheckoutSummary } from './CheckoutPane'
 
 const CheckoutPane = dynamic(() => import('./CheckoutPane'), { ssr: false })
+const ShippingStep = dynamic(() => import('./ShippingStep'), { ssr: false })
+import type { ShippingAddress } from './ShippingStep'
 
-type Step = 'cart' | 'payment' | 'success'
+type Step = 'cart' | 'shipping' | 'payment' | 'success'
+
+/** Chosen delivery: method + recipient address, carried into the Stripe session. */
+interface ShippingSelection { method: string; address: ShippingAddress }
 
 interface PaymentData {
   clientSecret: string
@@ -50,6 +55,12 @@ export default function CartDrawer() {
   const [step, setStep] = useState<Step>('cart')
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [successData, setSuccessData] = useState<{ downloads: DownloadItem[]; hasPhysical: boolean; orderId: string } | null>(null)
+  // Chosen delivery (physical orders) — captured in the shipping step, carried
+  // into the session and re-applied if the session is re-created (coupon change).
+  const [shippingSel, setShippingSel] = useState<ShippingSelection | null>(null)
+  // Contact email captured in the shipping step (physical orders) → set as the
+  // session's customer email server-side, so the payment step doesn't re-ask.
+  const [contactEmail, setContactEmail] = useState('')
   const [intentLoading, setIntentLoading] = useState(false)
   const [intentError, setIntentError] = useState(false)
   // Coupon — our own (not Stripe). The applied code is part of the session, so
@@ -89,11 +100,15 @@ export default function CartDrawer() {
 
   // Items being checked out — cart items or the buy-now single item
   const checkoutItems = buyNowItem ? [buyNowItem] : items
+  // Physical orders need a delivery address + shipping quote before payment.
+  const hasPhysicalCheckout = checkoutItems.some((i) => i.type !== 'digital')
 
-  // Auto-jump to payment when Buy Now opens the cart
+  // Auto-jump when Buy Now opens the cart: physical items need the shipping step
+  // first; digital go straight to payment.
   useEffect(() => {
     if (isOpen && buyNowItem) {
-      void startPayment([buyNowItem])
+      if (buyNowItem.type !== 'digital') setStep('shipping')
+      else void startPayment([buyNowItem])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, buyNowItem])
@@ -104,6 +119,8 @@ export default function CartDrawer() {
       setStep('cart')
       setPaymentData(null)
       setSuccessData(null)
+      setShippingSel(null)
+      setContactEmail('')
       setIntentError(false)
       setIssueState('idle')
       setIssuedPasscode(null)
@@ -173,7 +190,12 @@ export default function CartDrawer() {
     }
   }
 
-  async function startPayment(itemsToCharge = checkoutItems, coupon: string | null = couponCode) {
+  async function startPayment(
+    itemsToCharge = checkoutItems,
+    coupon: string | null = couponCode,
+    shipping: ShippingSelection | null = shippingSel,
+    email: string = contactEmail,
+  ) {
     if (itemsToCharge.length === 0) return
     setIntentLoading(true)
     setIntentError(false)
@@ -185,6 +207,8 @@ export default function CartDrawer() {
           items: itemsToCharge.map((i) => ({ sku: i.sku })),
           locale,
           ...(coupon ? { couponCode: coupon } : {}),
+          ...(shipping ? { shipping } : {}),
+          ...(email ? { email } : {}),
           ...(confirmedVat ? { business: {
             vatId: confirmedVat,
             token: vatCheck?.token ?? undefined,
@@ -294,7 +318,7 @@ export default function CartDrawer() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/[0.07] shrink-0">
         <p className="text-[10px] font-light tracking-[0.28em] uppercase text-foreground/50">
-          {step === 'payment' ? t('payment') : step === 'success' ? t('orderConfirmed') : t('title')}
+          {step === 'shipping' ? t('deliveryHeading') : step === 'payment' ? t('payment') : step === 'success' ? t('orderConfirmed') : t('title')}
           {step === 'cart' && items.length > 0 && (
             <span className="ml-2 text-foreground/25">({items.length})</span>
           )}
@@ -377,6 +401,21 @@ export default function CartDrawer() {
           </>
         )}
 
+        {/* ── Shipping step (physical orders) ───────────────────────────── */}
+        {step === 'shipping' && (
+          <ShippingStep
+            skus={checkoutItems.map((i) => i.sku)}
+            defaultCountry="DK"
+            onBack={() => setStep('cart')}
+            onContinue={(sel) => {
+              const ship = { method: sel.method, address: sel.address }
+              setShippingSel(ship)
+              setContactEmail(sel.email)
+              void startPayment(checkoutItems, couponCode, ship, sel.email)
+            }}
+          />
+        )}
+
         {/* ── Payment step ──────────────────────────────────────────────── */}
         {step === 'payment' && paymentData && (
           <CheckoutPane
@@ -386,6 +425,7 @@ export default function CartDrawer() {
             downloadItems={paymentData.downloadItems}
             billingCountry={paymentData.billingCountry}
             shippingDefaultCountry={paymentData.shippingDefaultCountry}
+            emailCollected={!!contactEmail}
             totalText={totalText}
             summary={paymentData.summary}
             reverseCharge={paymentData.reverseCharge}
@@ -476,8 +516,8 @@ export default function CartDrawer() {
             )}
 
             {successData.hasPhysical && (
-              <div className="rounded-[12px] border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3.5">
-                <p className="text-[11px] font-light text-foreground/45 leading-relaxed">{t('physicalConfirm')}</p>
+              <div className="rounded-[12px] border border-[#931020]/50 bg-[#931020]/[0.08] px-4 py-4">
+                <p className="text-[13px] font-normal text-foreground/90 leading-relaxed">{t('physicalConfirm')}</p>
               </div>
             )}
 
@@ -622,7 +662,7 @@ export default function CartDrawer() {
           )}
           <button
             type="button"
-            onClick={() => startPayment()}
+            onClick={() => { if (hasPhysicalCheckout) setStep('shipping'); else void startPayment() }}
             disabled={intentLoading}
             className={`w-full rounded-[14px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
               intentLoading

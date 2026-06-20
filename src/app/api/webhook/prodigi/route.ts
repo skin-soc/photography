@@ -20,6 +20,8 @@ import { prodigiMode } from '@/lib/prodigi'
 interface ProdigiShipment {
   carrier?: { name?: string; service?: string } | null
   tracking?: { number?: string; url?: string } | null
+  dispatchDate?: string | null
+  fulfillmentLocation?: { countryCode?: string; labCode?: string } | null
 }
 interface ProdigiCallbackOrder {
   id?: string
@@ -62,13 +64,20 @@ export async function POST(req: NextRequest) {
 
   // Shipment tracking — surfaced on the admin card so we (and the buyer) can
   // follow the parcel. Only included when at least one shipment has details.
-  const tracking: FulfilmentTracking[] = (order?.shipments ?? [])
+  const shipments = order?.shipments ?? []
+  const tracking: FulfilmentTracking[] = shipments
     .map((s) => ({
+      // Prodigi's carrier name already encodes the service, e.g. "DPD NL Classic".
       carrier: s.carrier?.name ?? null,
       number: s.tracking?.number ?? null,
       url: s.tracking?.url ?? null,
     }))
     .filter((t) => t.carrier || t.number || t.url)
+
+  // Where Prodigi produced the order (e.g. NL) + when it dispatched — surfaced on
+  // the admin card. First non-empty across shipments.
+  const productionCountry = shipments.map((s) => s.fulfillmentLocation?.countryCode).find(Boolean) ?? null
+  const shippedAt = shipments.map((s) => s.dispatchDate).find(Boolean) ?? null
 
   await recordFulfilment(orderCode, {
     provider: 'prodigi',
@@ -77,6 +86,8 @@ export async function POST(req: NextRequest) {
     outcome,
     mode: prodigiMode(),
     tracking: tracking.length ? tracking : null,
+    productionCountry,
+    shippedAt,
   })
 
   return NextResponse.json({ received: true })

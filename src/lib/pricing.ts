@@ -78,6 +78,9 @@ export interface PricingConfig {
   }
   /** Across-the-board + per-label markup applied on top of the list prices. */
   markup: MarkupConfig
+  /** Flat handling fee (DKK øre) ADDED to the Prodigi-quoted shipping cost shown
+   *  to the customer (covers packaging/admin). May be 0. */
+  shippingHandlingMinor: number
 }
 
 /**
@@ -130,6 +133,8 @@ export const DEFAULT_PRICING: PricingConfig = {
   // No markup by default — the list prices above ARE the sell prices until the
   // admin dials in a general / per-label markup.
   markup: { general: 0, labels: { red: 0, yellow: 0, green: 0, blue: 0, purple: 0 } },
+  // Default handling fee added on top of Prodigi's shipping cost (20.00 DKK).
+  shippingHandlingMinor: 2000,
 }
 
 async function settingsKV(): Promise<KVLike | undefined> {
@@ -159,6 +164,11 @@ function coerce(raw: unknown): PricingConfig {
     const n = Number(v)
     return Number.isFinite(n) && n >= 0 ? n : fallback
   }
+  // Fees (øre) may legitimately be 0; non-negative integer.
+  const fee = (v: unknown, fallback: number): number => {
+    const n = Number(v)
+    return Number.isFinite(n) && n >= 0 ? Math.round(n) : fallback
+  }
   const rm = (r.markup ?? {}) as Partial<MarkupConfig>
   const rl = (rm.labels ?? {}) as Partial<Record<ColorLabel, number>>
   const general = pct(rm.general, d.markup.general)
@@ -183,6 +193,7 @@ function coerce(raw: unknown): PricingConfig {
         purple: pct(rl.purple, d.markup.labels.purple),
       },
     },
+    shippingHandlingMinor: fee(r.shippingHandlingMinor, d.shippingHandlingMinor),
   }
 }
 
@@ -215,6 +226,7 @@ export function pricingStamp(p: PricingConfig): string {
     p.digital.original,
     p.markup.general,
     p.markup.labels,
+    p.shippingHandlingMinor,
   ])
   let h = 5381
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0

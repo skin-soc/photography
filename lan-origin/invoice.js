@@ -408,7 +408,7 @@ export function buildInvoicePdf(grant, priceBySku, langOverride) {
         doc.text(value, amountX, y, { width: right - amountX, align: 'right' })
         y += bold ? 20 : 16
       }
-      if (discount > 0) totalRow(t.discount, `−${money(discount, currency, loc)}`)
+      if (discount > 0) totalRow(t.discount, `-${money(discount, currency, loc)}`)
       totalRow(t.subtotal, money(net, currency, loc))
       totalRow(grant.reverseCharge ? `${t.vat} (${t.reverseChargeShort})` : `${t.vat} (${ratePct}%)`, money(vat, currency, loc))
       totalRow(t.total, money(gross, currency, loc), true)
@@ -610,14 +610,14 @@ export function buildRefundPdf(grant, priceBySku, langOverride) {
         for (const i of creditLines) {
           const qty = Number(i.qty) || 1
           const label = (qty > 1 ? `${qty} × ` : '') + (i.label || i.sku)
-          drawLine(label, `−${money(Number(i.net) || 0, currency, loc)}`, i.detail || null, i.filename || null)
+          drawLine(label, `-${money(Number(i.net) || 0, currency, loc)}`, i.detail || null, i.filename || null)
         }
       } else if (legacyLines && havePrices) {
         for (const i of legacyLines) {
-          drawLine(i.label || i.sku, `−${money(lineNet(i), currency, loc)}`, null, null)
+          drawLine(i.label || i.sku, `-${money(lineNet(i), currency, loc)}`, null, null)
         }
       } else {
-        drawLine(rt.refundLine, `−${money(refundNet, currency, loc)}`, null, null)
+        drawLine(rt.refundLine, `-${money(refundNet, currency, loc)}`, null, null)
       }
 
       // ── Totals (all negative) — kept together; pushed to a new page if needed ──
@@ -635,9 +635,9 @@ export function buildRefundPdf(grant, priceBySku, langOverride) {
         doc.text(value, amountX, y, { width: right - amountX, align: 'right' })
         y += bold ? 20 : 16
       }
-      totalRow(t.subtotal, `−${money(refundNet, currency, loc)}`)
-      totalRow(grant.reverseCharge ? `${t.vat} (${t.reverseChargeShort})` : t.vat, `−${money(refundVat, currency, loc)}`)
-      totalRow(rt.totalRefunded, `−${money(refundGross, currency, loc)}`, true)
+      totalRow(t.subtotal, `-${money(refundNet, currency, loc)}`)
+      totalRow(grant.reverseCharge ? `${t.vat} (${t.reverseChargeShort})` : t.vat, `-${money(refundVat, currency, loc)}`)
+      totalRow(rt.totalRefunded, `-${money(refundGross, currency, loc)}`, true)
 
       // ── Refund stamp ──
       y += 12

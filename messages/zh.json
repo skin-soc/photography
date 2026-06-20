@@ -179,7 +179,21 @@
     "vatGb": "英国（GB）在脱欧后已退出欧盟增值税体系，因此英国增值税号无法在此验证 — 也无需验证：欧盟以外的订单不收取欧盟增值税。（北爱尔兰“XI”号码仍然有效。）",
     "vatMalformed": "请输入有效的欧盟增值税号，例如 DE123456789。",
     "vatSelf": "那是本店自己的增值税号 — 请输入贵公司的增值税号。",
-    "reverseChargeCheckout": "增值税反向征收（0%）{business} — 由您在所在国申报增值税。"
+    "reverseChargeCheckout": "增值税反向征收（0%）{business} — 由您在所在国申报增值税。",
+    "deliveryHeading": "配送",
+    "deliveryIntro": "输入您的配送地址以查看配送选项。",
+    "recipientName": "全名",
+    "addressLine1": "地址",
+    "addressLine2": "公寓、楼层等（选填）",
+    "city": "城市",
+    "postalCode": "邮政编码",
+    "stateRegion": "省/地区（选填）",
+    "country": "国家/地区",
+    "chooseDelivery": "选择配送方式",
+    "quoting": "正在获取配送选项…",
+    "shippingUnavailable": "我们目前无法配送到此地址。请与我们联系。",
+    "continueToPayment": "继续付款",
+    "shippingLine": "运费"
   },
   "downloads": {
     "eyebrow": "您的下载",

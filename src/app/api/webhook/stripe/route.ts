@@ -89,6 +89,8 @@ async function fulfilSession(sessionId: string, workerBase: string): Promise<voi
       lineItems,
       shipping,
       email: session.customer_details?.email ?? null,
+      // The delivery method the customer chose + paid for (Budget/Standard/…).
+      shippingMethod: session.metadata?.shippingMethod ?? undefined,
       // Prodigi POSTs CloudEvents status updates here; secured by a per-order
       // token (their callbacks carry no signature). Worker origin, not the LAN one.
       callbackUrl: prodigiCallbackUrl(workerBase, orderCode),

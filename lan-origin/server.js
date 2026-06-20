@@ -1318,18 +1318,28 @@ function formatExpiry(expiresAt, locale) {
   }
 }
 
-async function sendDownloadEmail({ email, orderId, passcode, items, locale, expiresAt, invoice, license }) {
+async function sendDownloadEmail({ email, orderId, passcode, items, lineItems, locale, expiresAt, invoice, license }) {
   if (!email) throw new Error('no recipient email')
   if (!emailConfigured()) throw new Error('SMTP not configured')
 
   const loc = locale || 'en'
   const logo = await getEmailLogo()
+  // Physical (print / fine-art) lines vs digital: digital lines carry a deliverable
+  // `filename` (set by the Worker's describeOrderLines), physical ones don't. Using
+  // that flag — rather than "not in the download items" — keeps physical detection
+  // correct even on a resend whose `items` has had a refunded digital line removed.
+  // Lets the email acknowledge the artwork being prepared and avoids mis-titling a
+  // posters-only order "Your downloads".
+  const physical = (Array.isArray(lineItems) ? lineItems : [])
+    .filter((l) => l && !l.filename && l.sku !== 'shipping')
+    .map((l) => ({ label: l.label || l.sku, detail: l.detail || null }))
   const { subject, text, html } = renderDownloadEmail({
     locale: loc,
     brandName: BRAND_NAME,
     url: `${SITE_URL}/${loc}/shop/downloads/${orderId}`,
     passcode,
     items: items.map((i) => ({ label: i.label, filename: customerFilename(i), format: i.format })),
+    physical,
     expiryText: formatExpiry(expiresAt, loc),
     copyright: COPYRIGHT,
     logoCid: LOGO_CID,
@@ -1515,6 +1525,7 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
         orderId,
         passcode: grant.passcode,
         items: grant.items,
+        lineItems: grant.lineItems,
         locale: locale || 'en',
         expiresAt: grant.expiresAt,
         invoice: await invoiceForGrant(grant).catch((e) => { console.error('[invoice] build failed:', e.message); return null }),
@@ -1569,7 +1580,7 @@ app.post('/orders/:orderId/fulfilment', express.json({ limit: '8kb' }), async (r
  await withOrderLock(req.params.orderId, async () => {
   const grant = await readGrant(req.params.orderId)
   if (!grant) return res.status(404).json({ error: 'not found' })
-  const { provider, prodigiId, stage, outcome, mode, error, tracking } = req.body ?? {}
+  const { provider, prodigiId, stage, outcome, mode, error, tracking, productionCountry, shippedAt } = req.body ?? {}
   // Merge over any prior fulfilment so a later status callback (which may omit
   // fields) updates stage/tracking without wiping the id/mode set at creation.
   const prev = grant.fulfilment && typeof grant.fulfilment === 'object' ? grant.fulfilment : {}
@@ -1588,6 +1599,8 @@ app.post('/orders/:orderId/fulfilment', express.json({ limit: '8kb' }), async (r
     mode: mode ? String(mode) : (prev.mode ?? null),
     error: error ? String(error).slice(0, 500) : (prev.error ?? null),
     tracking: cleanTracking ?? prev.tracking ?? null,
+    productionCountry: productionCountry ? String(productionCountry).slice(0, 8) : (prev.productionCountry ?? null),
+    shippedAt: shippedAt ? String(shippedAt).slice(0, 40) : (prev.shippedAt ?? null),
     updatedAt: Date.now(),
   }
   await writeFile(orderPath(req.params.orderId), JSON.stringify(grant, null, 2)).catch(() => {})
@@ -1902,7 +1915,7 @@ app.post('/admin/orders/:orderId/resend', express.json({ limit: '4kb' }), async 
   try {
     await sendDownloadEmail({
       email: to, orderId: grant.orderId, passcode: grant.passcode,
-      items: liveItems, locale: grant.locale || 'en', expiresAt: grant.expiresAt,
+      items: liveItems, lineItems: grant.lineItems, locale: grant.locale || 'en', expiresAt: grant.expiresAt,
       invoice: await invoiceForGrant(grant).catch(() => null),
       license: await licenseForGrant(grant).catch(() => null),
     })
@@ -2075,20 +2088,23 @@ app.post('/admin/cache/rerender-previews', express.json({ limit: '4kb' }), async
     })
     const idSet = new Set(matched.map((p) => p.id))
 
-    // Delete every cached size for the matched ids. Cache files are `${id}.jpg`
-    // (the full PREVIEW_MAX) and `${id}-${size}.jpg` (smaller variants), so map
-    // each filename back to its photo id robustly before matching.
+    // Delete EVERY cached variant for the matched ids. Cache filenames are built
+    // by previewCacheKey as `${id}(-${size})?(-4x5)?(-nologo)?.jpg` — i.e. the id
+    // plus optional size, poster-crop and no-logo suffixes (in that order). Strip
+    // them back off (reverse order) to recover the id; the size strip is guarded by
+    // idSet so an id ending in "-<digits>" isn't mis-parsed. The OLD logic only
+    // stripped `-<size>`, so poster/-nologo variants were never deleted — leaving
+    // buildPreview to serve the stale crop even after a re-render.
     let deleted = 0
     let files = []
     try { files = await readdir(CACHE_DIR) } catch { /* empty */ }
     for (const name of files) {
       if (!name.toLowerCase().endsWith('.jpg')) continue
-      const base = name.slice(0, -4)
-      let id = base
-      if (!idSet.has(id)) {
-        const m = /^(.+)-\d+$/.exec(base) // strip a `-<size>` suffix and retry
-        if (m && idSet.has(m[1])) id = m[1]
-      }
+      let cand = name.slice(0, -4)
+      if (cand.endsWith('-nologo')) cand = cand.slice(0, -'-nologo'.length)
+      if (cand.endsWith('-4x5')) cand = cand.slice(0, -'-4x5'.length)
+      const m = /^(.+)-\d+$/.exec(cand) // strip a `-<size>` suffix (guarded)
+      const id = (m && idSet.has(m[1])) ? m[1] : cand
       if (!idSet.has(id)) continue
       await unlink(join(CACHE_DIR, name)).catch(() => {})
       deleted += 1

@@ -179,7 +179,21 @@
     "vatGb": "Yhdistynyt kuningaskunta (GB) erosi EU:n alv-järjestelmästä brexitin jälkeen, joten brittiläistä alv-numeroa ei voi vahvistaa täällä — eikä sitä tarvita: EU:n ulkopuolisista tilauksista ei peritä EU:n alv:tä. (Pohjois-Irlannin “XI”-numerot toimivat edelleen.)",
     "vatMalformed": "Syötä kelvollinen EU:n alv-numero, esim. DE123456789.",
     "vatSelf": "Tämä on kaupan oma alv-numero — syötä yrityksesi alv-numero.",
-    "reverseChargeCheckout": "Käännetty alv-velvollisuus (0 %){business} — tilität alv:n omassa maassasi."
+    "reverseChargeCheckout": "Käännetty alv-velvollisuus (0 %){business} — tilität alv:n omassa maassasi.",
+    "deliveryHeading": "Toimitus",
+    "deliveryIntro": "Anna toimitusosoitteesi nähdäksesi toimitusvaihtoehdot.",
+    "recipientName": "Koko nimi",
+    "addressLine1": "Osoite",
+    "addressLine2": "Asunto, kerros tms. (valinnainen)",
+    "city": "Kaupunki",
+    "postalCode": "Postinumero",
+    "stateRegion": "Alue (valinnainen)",
+    "country": "Maa",
+    "chooseDelivery": "Valitse toimitustapa",
+    "quoting": "Haetaan toimitusvaihtoehtoja…",
+    "shippingUnavailable": "Emme voi toimittaa tähän osoitteeseen juuri nyt. Ota meihin yhteyttä.",
+    "continueToPayment": "Jatka maksamiseen",
+    "shippingLine": "Toimitus"
   },
   "downloads": {
     "eyebrow": "Latauksesi",

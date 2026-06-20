@@ -179,7 +179,21 @@
     "vatGb": "Das Vereinigte Königreich (GB) hat das EU-Mehrwertsteuersystem nach dem Brexit verlassen, daher kann eine britische USt-IdNr. hier nicht geprüft werden — und sie wird nicht benötigt: Auf Bestellungen außerhalb der EU wird keine EU-USt. erhoben. (Nordirische „XI“-Nummern funktionieren weiterhin.)",
     "vatMalformed": "Geben Sie eine gültige EU-USt-IdNr. ein, z. B. DE123456789.",
     "vatSelf": "Das ist die eigene USt-IdNr. dieses Shops — bitte die USt-IdNr. Ihres Unternehmens eingeben.",
-    "reverseChargeCheckout": "USt. Reverse-Charge (0 %){business} — Sie schulden die USt. in Ihrem Land."
+    "reverseChargeCheckout": "USt. Reverse-Charge (0 %){business} — Sie schulden die USt. in Ihrem Land.",
+    "deliveryHeading": "Lieferung",
+    "deliveryIntro": "Geben Sie Ihre Lieferadresse ein, um die Versandoptionen zu sehen.",
+    "recipientName": "Vollständiger Name",
+    "addressLine1": "Adresse",
+    "addressLine2": "Wohnung, Etage usw. (optional)",
+    "city": "Stadt",
+    "postalCode": "Postleitzahl",
+    "stateRegion": "Bundesland / Region (optional)",
+    "country": "Land",
+    "chooseDelivery": "Versandart wählen",
+    "quoting": "Versandoptionen werden geladen…",
+    "shippingUnavailable": "Wir können derzeit nicht an diese Adresse liefern. Bitte kontaktieren Sie uns.",
+    "continueToPayment": "Weiter zur Zahlung",
+    "shippingLine": "Versand"
   },
   "downloads": {
     "eyebrow": "Ihre Downloads",

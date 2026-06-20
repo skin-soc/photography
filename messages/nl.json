@@ -179,7 +179,21 @@
     "vatGb": "Het Verenigd Koninkrijk (GB) heeft na de Brexit het EU-btw-systeem verlaten, dus een Brits btw-nummer kan hier niet worden gevalideerd — en is niet nodig: er wordt geen EU-btw geheven op bestellingen buiten de EU. (Noord-Ierse “XI”-nummers werken nog wel.)",
     "vatMalformed": "Voer een geldig EU-btw-nummer in, bijv. DE123456789.",
     "vatSelf": "Dat is het eigen btw-nummer van deze winkel — voer het btw-nummer van je bedrijf in.",
-    "reverseChargeCheckout": "Btw verlegd (0%){business} — je draagt de btw af in je eigen land."
+    "reverseChargeCheckout": "Btw verlegd (0%){business} — je draagt de btw af in je eigen land.",
+    "deliveryHeading": "Bezorging",
+    "deliveryIntro": "Voer je bezorgadres in om de verzendopties te zien.",
+    "recipientName": "Volledige naam",
+    "addressLine1": "Adres",
+    "addressLine2": "Appartement, verdieping, enz. (optioneel)",
+    "city": "Plaats",
+    "postalCode": "Postcode",
+    "stateRegion": "Provincie / regio (optioneel)",
+    "country": "Land",
+    "chooseDelivery": "Kies een verzendoptie",
+    "quoting": "Verzendopties ophalen…",
+    "shippingUnavailable": "We kunnen momenteel niet naar dit adres verzenden. Neem contact met ons op.",
+    "continueToPayment": "Doorgaan naar betaling",
+    "shippingLine": "Verzending"
   },
   "downloads": {
     "eyebrow": "Je downloads",

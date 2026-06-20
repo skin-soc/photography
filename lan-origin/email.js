@@ -38,14 +38,42 @@ const M = {
   ko: { subject: '다운로드 안내', preheader: '파일을 다운로드할 수 있습니다.', heading: '구매해 주셔서 감사합니다.', body: '파일이 준비되었습니다. 아래 페이지를 열고 접근 코드를 입력하여 다운로드하세요.', cta: '다운로드 열기', passcode: '접근 코드', files: '내 파일', validUntil: '이 링크는 {date}까지 유효합니다.', help: '문제가 있나요? 이 이메일에 답장해 주시면 도와드리겠습니다.' },
 }
 
+// Physical (print / fine-art) strings, kept separate from M so the download keys
+// stay untouched. `orderSubject` is the subject for any order that contains a
+// physical item (so a posters-only order never says "Your downloads");
+// `printsLabel` heads the list of what's being made; `printNote` is the
+// being-prepared / shipping-to-follow line shown in a stand-out callout.
+const P = {
+  en: { orderSubject: 'Your order', printsLabel: 'Your prints', printNote: 'Your print order is being prepared. You’ll receive a shipping confirmation once it’s dispatched.' },
+  da: { orderSubject: 'Din ordre', printsLabel: 'Dine prints', printNote: 'Din print-ordre er under forberedelse. Du modtager en forsendelsesbekræftelse, når den er afsendt.' },
+  de: { orderSubject: 'Ihre Bestellung', printsLabel: 'Ihre Drucke', printNote: 'Ihre Druckbestellung wird vorbereitet. Sie erhalten eine Versandbestätigung, sobald sie versandt wurde.' },
+  es: { orderSubject: 'Tu pedido', printsLabel: 'Tus copias', printNote: 'Tu pedido de impresión se está preparando. Recibirás una confirmación de envío cuando se despache.' },
+  fr: { orderSubject: 'Votre commande', printsLabel: 'Vos tirages', printNote: 'Votre commande d’impression est en préparation. Vous recevrez une confirmation d’expédition dès son envoi.' },
+  it: { orderSubject: 'Il tuo ordine', printsLabel: 'Le tue stampe', printNote: 'Il tuo ordine di stampa è in preparazione. Riceverai una conferma di spedizione una volta inviato.' },
+  nl: { orderSubject: 'Je bestelling', printsLabel: 'Je prints', printNote: 'Je printbestelling wordt voorbereid. Je ontvangt een verzendbevestiging zodra deze is verzonden.' },
+  nb: { orderSubject: 'Din bestilling', printsLabel: 'Dine trykk', printNote: 'Din trykkbestilling klargjøres. Du får en forsendelsesbekreftelse når den er sendt.' },
+  pl: { orderSubject: 'Twoje zamówienie', printsLabel: 'Twoje odbitki', printNote: 'Twoje zamówienie na wydruki jest przygotowywane. Otrzymasz potwierdzenie wysyłki po nadaniu.' },
+  pt: { orderSubject: 'A sua encomenda', printsLabel: 'As suas impressões', printNote: 'A sua encomenda de impressão está a ser preparada. Receberá uma confirmação de envio assim que for expedida.' },
+  fi: { orderSubject: 'Tilauksesi', printsLabel: 'Vedoksesi', printNote: 'Printtitilaustasi valmistellaan. Saat toimitusvahvistuksen, kun se on lähetetty.' },
+  sv: { orderSubject: 'Din beställning', printsLabel: 'Dina utskrifter', printNote: 'Din utskriftsbeställning förbereds. Du får en leveransbekräftelse när den har skickats.' },
+  ar: { orderSubject: 'طلبك', printsLabel: 'مطبوعاتك', printNote: 'يتم تحضير طلب الطباعة الخاص بك. ستتلقى تأكيد الشحن بمجرد إرساله.' },
+  ru: { orderSubject: 'Ваш заказ', printsLabel: 'Ваши отпечатки', printNote: 'Ваш заказ на печать готовится. Вы получите подтверждение отправки, как только он будет отправлен.' },
+  zh: { orderSubject: '您的订单', printsLabel: '您的打印件', printNote: '您的打印订单正在准备中。发货后您将收到发货确认。' },
+  ja: { orderSubject: 'ご注文', printsLabel: 'プリント', printNote: 'プリントのご注文を準備中です。発送が完了しましたら、発送確認をお送りします。' },
+  ko: { orderSubject: '주문', printsLabel: '프린트', printNote: '프린트 주문을 준비 중입니다. 발송되면 배송 확인을 보내드립니다.' },
+}
+
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 /**
  * Render the download email.
  * @returns {{subject:string, text:string, html:string}}
  */
-function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryText, copyright, logoCid, logoW = 80, logoH = 44 }) {
+function renderDownloadEmail({ locale, brandName, url, passcode, items, physical = [], expiryText, copyright, logoCid, logoW = 80, logoH = 44 }) {
   const t = M[locale] || M.en
+  const p = P[locale] || P.en
+  const hasDigital = items.length > 0
+  const hasPhysical = physical.length > 0
   const dir = locale === 'ar' ? 'rtl' : 'ltr'
   const align = dir === 'rtl' ? 'right' : 'left'
   const startAlign = dir === 'rtl' ? 'right' : 'left'
@@ -53,17 +81,27 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
   const arrow = dir === 'rtl' ? '&larr;' : '&rarr;'
   const validUntil = t.validUntil.replace('{date}', expiryText)
 
-  // ── Plain-text alternative ──
-  const text =
-    `${t.heading}\n\n` +
-    `${t.body}\n\n` +
-    `${t.cta}: ${url}\n` +
-    `${t.passcode}: ${passcode}\n\n` +
-    `${t.files}:\n` +
-    items.map((i) => `  • ${i.label} — ${i.filename}`).join('\n') + `\n\n` +
-    `${validUntil}\n\n` +
-    `${t.help}\n\n` +
-    `${copyright}\n`
+  // ── Plain-text alternative — digital and/or physical sections ──
+  const textParts = [t.heading, '']
+  if (hasDigital) {
+    textParts.push(
+      t.body, '',
+      `${t.cta}: ${url}`,
+      `${t.passcode}: ${passcode}`, '',
+      `${t.files}:`,
+      ...items.map((i) => `  • ${i.label} — ${i.filename}`),
+      '', validUntil, '',
+    )
+  }
+  if (hasPhysical) {
+    textParts.push(
+      `${p.printsLabel}:`,
+      ...physical.map((i) => `  • ${i.label}${i.detail ? ` — ${i.detail}` : ''}`),
+      '', p.printNote, '',
+    )
+  }
+  textParts.push(t.help, '', copyright, '')
+  const text = textParts.join('\n')
 
   // ── HTML ──
   const fileRows = items.map((i) =>
@@ -72,6 +110,44 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
       `<span class="muted" style="color:#666;font-size:12px;"> &nbsp;·&nbsp; ${esc(i.label)}${i.format === 'tiff' ? ' · 16-bit TIFF' : ' · JPEG'}</span>` +
     `</td></tr><tr><td style="height:8px;line-height:8px;font-size:8px;">&nbsp;</td></tr>`
   ).join('')
+
+  // Digital section (CTA + passcode + file list) — only when there are downloads.
+  const digitalHtml = hasDigital ? `
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;">
+          <tr><td style="border-radius:14px;background:${BRAND};">
+            <a class="cta" href="${esc(url)}" style="display:inline-block;padding:13px 26px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:14px;">${esc(t.cta)} ${arrow}</a>
+          </td></tr>
+        </table>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
+          <tr><td class="passbox" style="background:#f6f6f6;border:1px solid #e6e6e6;border-radius:12px;padding:14px 16px;text-align:${align};">
+            <div class="subtle" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a9a9a;margin:0 0 4px;">${esc(t.passcode)}</div>
+            <div class="passcode" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;letter-spacing:0.22em;color:${BRAND};">${esc(passcode)}</div>
+          </td></tr>
+        </table>
+        <div class="subtle" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a9a9a;margin:0 0 12px;">${esc(t.files)}</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${fileRows}</table>
+        <p class="subtle" style="margin:18px 0 0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#9a9a9a;">${esc(validUntil)}</p>` : ''
+
+  // Physical section — a stand-out, brand-accented callout listing what's being
+  // made plus the being-prepared / shipping-to-follow note (so a posters-only or
+  // mixed order is clearly acknowledged, not just the downloads).
+  // Each item: title on its own line, the spec (size · paper · weight) on a muted
+  // line beneath — with clear spacing between items so the list isn't cramped.
+  const printRows = physical.map((i) =>
+    `<tr><td style="padding:0 0 14px;">` +
+      `<div class="text" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45;color:#1a1a1a;">${esc(i.label)}</div>` +
+      (i.detail ? `<div class="muted" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.45;color:#666;margin-top:3px;">${esc(i.detail)}</div>` : '') +
+    `</td></tr>`
+  ).join('')
+  const physicalHtml = hasPhysical ? `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${hasDigital ? '30px' : '4px'} 0 24px;">
+          <tr><td class="prints" style="background:#fbeaec;border:1px solid ${BRAND};border-radius:12px;padding:18px 20px;text-align:${align};">
+            <div class="printlabel" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND};font-weight:600;margin:0 0 14px;">${esc(p.printsLabel)}</div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${printRows}</table>
+            <div class="rule" style="height:1px;line-height:1px;font-size:1px;background:#e6c9ce;margin:4px 0 14px;">&nbsp;</div>
+            <p class="text" style="margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;">${esc(p.printNote)}</p>
+          </td></tr>
+        </table>` : ''
 
   const html = `<!doctype html>
 <html lang="${locale}" dir="${dir}">
@@ -101,6 +177,8 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
     .passbox { background:#1d1d1d !important; border-color:#2b2b2b !important; }
     .passcode { color:${BRAND_LIGHT} !important; }
     .filerow { background:#1b1b1b !important; border-color:#2b2b2b !important; color:#f1f1f1 !important; }
+    .prints { background:#241015 !important; border-color:${BRAND_LIGHT} !important; }
+    .printlabel { color:${BRAND_LIGHT} !important; }
   }
   [data-ogsc] .card { background:#141414 !important; }
   [data-ogsc] .text { color:#f1f1f1 !important; }
@@ -110,6 +188,8 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
   [data-ogsc] .passbox { background:#1d1d1d !important; border-color:#2b2b2b !important; }
   [data-ogsc] .passcode { color:${BRAND_LIGHT} !important; }
   [data-ogsc] .filerow { background:#1b1b1b !important; border-color:#2b2b2b !important; color:#f1f1f1 !important; }
+  [data-ogsc] .prints { background:#241015 !important; border-color:${BRAND_LIGHT} !important; }
+  [data-ogsc] .printlabel { color:${BRAND_LIGHT} !important; }
 </style>
 </head>
 <body class="wrap" style="margin:0;padding:0;background:#f1f1f1;">
@@ -137,27 +217,9 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
       <!-- Body -->
       <tr><td class="card text" dir="${dir}" style="background:#ffffff;padding:28px 32px 34px;text-align:${align};color:#1a1a1a;">
         <h1 class="text" style="margin:0 0 14px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:21px;font-weight:600;color:#1a1a1a;">${esc(t.heading)}</h1>
-        <p class="muted" style="margin:0 0 24px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#666;">${esc(t.body)}</p>
-
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;">
-          <tr><td style="border-radius:14px;background:${BRAND};">
-            <a class="cta" href="${esc(url)}" style="display:inline-block;padding:13px 26px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:14px;">${esc(t.cta)} ${arrow}</a>
-          </td></tr>
-        </table>
-
-        <!-- Passcode -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
-          <tr><td class="passbox" style="background:#f6f6f6;border:1px solid #e6e6e6;border-radius:12px;padding:14px 16px;text-align:${align};">
-            <div class="subtle" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a9a9a;margin:0 0 4px;">${esc(t.passcode)}</div>
-            <div class="passcode" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;letter-spacing:0.22em;color:${BRAND};">${esc(passcode)}</div>
-          </td></tr>
-        </table>
-
-        <!-- Files -->
-        <div class="subtle" style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a9a9a;margin:0 0 12px;">${esc(t.files)}</div>
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${fileRows}</table>
-
-        <p class="subtle" style="margin:18px 0 0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#9a9a9a;">${esc(validUntil)}</p>
+        ${hasDigital ? `<p class="muted" style="margin:0 0 24px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#666;">${esc(t.body)}</p>` : ''}
+        ${digitalHtml}
+        ${physicalHtml}
         <p class="muted" style="margin:22px 0 0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#666;">${esc(t.help)}</p>
       </td></tr>
     </table>
@@ -172,7 +234,10 @@ function renderDownloadEmail({ locale, brandName, url, passcode, items, expiryTe
 </body>
 </html>`
 
-  return { subject: `${t.subject} — ${brandName}`, text, html }
+  // A posters / fine-art order (with or without downloads) is "Your order"; a
+  // downloads-only order keeps the specific "Your downloads".
+  const subjectText = hasPhysical ? p.orderSubject : t.subject
+  return { subject: `${subjectText} — ${brandName}`, text, html }
 }
 
 // ── Refund email ──────────────────────────────────────────────────────────────

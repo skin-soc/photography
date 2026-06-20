@@ -19,9 +19,26 @@ import { vatOutcome, type BusinessVat } from '@/lib/vat'
 import { verifyVatNumber, verifyVatToken } from '@/lib/vies'
 import { getVatRate } from '@/lib/shop-settings'
 import { validateCoupon, discountFor } from '@/lib/coupons'
-import { formatDKK } from '@/lib/currency'
+import { formatDKK, getRates, eurToDkkOre } from '@/lib/currency'
+import { getQuote, checkEuFulfilment } from '@/lib/prodigi'
+import { quoteItemsForSkus } from '@/lib/prodigi-fulfil'
+import { getPricing } from '@/lib/pricing'
 
 interface RequestItem { sku: string }
+
+/** Shipping selection sent from the cart's shipping step (physical orders). */
+interface ShippingSelection {
+  method: string
+  address: {
+    name?: string
+    line1?: string
+    line2?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    country?: string
+  }
+}
 
 /** Countries we ship physical orders to — the Shipping Address Element's allowed
  *  list, and the set the buyer's IP country must be in to seed the form's
@@ -36,6 +53,9 @@ export async function POST(req: Request) {
       locale?: string
       couponCode?: string
       business?: { vatId?: string; token?: string; declaredName?: string; declaredAddress?: string }
+      shipping?: ShippingSelection
+      /** Buyer email captured in the shipping step (physical orders). */
+      email?: string
     }
     const locale = body.locale ?? 'en'
     // Buyer country from Cloudflare's IP geolocation (as the old flow did), so we
@@ -159,9 +179,46 @@ export async function POST(req: Request) {
     if (discountedNet <= 0) {
       return Response.json({ error: 'coupon too large for this order' }, { status: 400 })
     }
-    // VAT computed by us on the discounted net (single rounding); 0% when not taxable.
-    const taxMinor = outcome.taxable ? Math.round(discountedNet * rate / 100) : 0
-    const gross = discountedNet + taxMinor
+
+    // ── Shipping ──
+    // Any physical order carries a delivery address (collected in the cart's
+    // shipping step). Only Prodigi-fulfilled POSTERS (type 'print') get a live
+    // shipping charge — re-quoted SERVER-SIDE for the chosen method (never trust a
+    // client amount). Fine art (provider pending) collects the address but isn't
+    // charged shipping here. Digital orders have neither.
+    let shippingNet = 0
+    let shippingMethod: string | null = null
+    const shippingSel = body.shipping
+    const needsShipping = items.some((i) => i.product.type === 'print')
+    if (hasPhysical && (!shippingSel?.address?.line1 || !shippingSel.address?.country)) {
+      return Response.json({ error: 'shipping address required' }, { status: 400 })
+    }
+    if (needsShipping) {
+      if (!shippingSel?.method || !shippingSel.address?.country) {
+        return Response.json({ error: 'shipping selection required' }, { status: 400 })
+      }
+      try {
+        const quote = await getQuote({
+          items: await quoteItemsForSkus(skus),
+          destinationCountryCode: shippingSel.address.country.toUpperCase(),
+          shippingMethod: shippingSel.method,
+        })
+        if (!checkEuFulfilment(quote).ok) {
+          return Response.json({ error: 'shipping unavailable to this destination' }, { status: 422 })
+        }
+        const [rates, pricing] = await Promise.all([getRates(), getPricing()])
+        shippingNet = eurToDkkOre(quote.shippingMinor, rates) + pricing.shippingHandlingMinor
+        shippingMethod = shippingSel.method
+      } catch (err) {
+        console.error('[checkout-session] shipping quote failed:', err instanceof Error ? err.message : String(err))
+        return Response.json({ error: 'shipping quote unavailable' }, { status: 502 })
+      }
+    }
+
+    // VAT computed by us on the discounted net + shipping (delivery is part of the
+    // taxable supply, taxed at the same rate); single rounding; 0% when not taxable.
+    const taxMinor = outcome.taxable ? Math.round((discountedNet + shippingNet) * rate / 100) : 0
+    const gross = discountedNet + shippingNet + taxMinor
 
     // Record business + VAT treatment on the order for receipts and reporting
     // (reverse-charge EU sales go on the EC Sales List).
@@ -176,8 +233,13 @@ export async function POST(req: Request) {
     // VAT + discount facts read back by fulfilment (webhook / issue route) — these
     // are the source of truth for the receipt, NOT any Stripe-computed tax.
     metadata.taxAmount = String(taxMinor)
-    metadata.netAmount = String(discountedNet)
+    // Net of the whole order incl. shipping (the line items sum to this).
+    metadata.netAmount = String(discountedNet + shippingNet)
     metadata.vatRate = String(rate)
+    if (shippingMethod) {
+      metadata.shippingMethod = shippingMethod
+      metadata.shippingNet = String(shippingNet)
+    }
     if (appliedCoupon) {
       metadata.couponCode = appliedCoupon
       metadata.discountAmount = String(discountMinor)
@@ -207,6 +269,18 @@ export async function POST(req: Request) {
         },
       })
     })
+    // Shipping as its own (full-price, undiscounted) line; tagged sku 'shipping'
+    // so it flows through the invoice itemisation and reconciles into the net.
+    if (shippingNet > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency,
+          unit_amount: shippingNet,
+          product_data: { name: `Shipping — ${shippingMethod}`, metadata: { sku: 'shipping' } },
+        },
+      })
+    }
     if (taxMinor > 0) {
       lineItems.push({
         quantity: 1,
@@ -222,17 +296,38 @@ export async function POST(req: Request) {
       ui_mode: 'elements',
       mode: 'payment',
       line_items: lineItems,
-      // No billing_address_collection: 'required' — for a digital download we set
-      // the country (from IP) client-side via updateBillingAddress instead of
-      // showing an address form. Physical orders still collect a shipping address.
-      ...(hasPhysical
-        ? { shipping_address_collection: { allowed_countries: SHIPPING_COUNTRIES } }
+      // Email captured in our shipping step (physical orders) → the session's
+      // customer email, used for the receipt + the download link. Digital orders
+      // collect it on the payment step instead (checkout.updateEmail).
+      ...(typeof body.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())
+        ? { customer_email: body.email.trim() }
         : {}),
+      // We DON'T use Stripe's shipping_address_collection any more: the address is
+      // captured in our own pre-payment step (needed for the shipping quote) and
+      // set on the PaymentIntent below, so the quoted address always matches the
+      // fulfilled one. Digital orders set the country (from IP) client-side.
       return_url: `${new URL(req.url).origin}/${locale}/shop/order-complete?session_id={CHECKOUT_SESSION_ID}`,
       metadata,
       payment_intent_data: {
         description: `Order ${orderCode}`,
         metadata,
+        // Physical: record the collected recipient address on the PI; the webhook
+        // reads it for the invoice "Bill To" + the Prodigi recipient.
+        ...(hasPhysical && shippingSel?.address?.line1 && shippingSel.address.country
+          ? {
+              shipping: {
+                name: shippingSel.address.name || 'Customer',
+                address: {
+                  line1: shippingSel.address.line1,
+                  ...(shippingSel.address.line2 ? { line2: shippingSel.address.line2 } : {}),
+                  ...(shippingSel.address.city ? { city: shippingSel.address.city } : {}),
+                  ...(shippingSel.address.state ? { state: shippingSel.address.state } : {}),
+                  ...(shippingSel.address.postalCode ? { postal_code: shippingSel.address.postalCode } : {}),
+                  country: shippingSel.address.country.toUpperCase(),
+                },
+              },
+            }
+          : {}),
       },
     })
 
@@ -262,10 +357,13 @@ export async function POST(req: Request) {
         vatRate: rate,
         subtotalMinor: netTotal,
         discountMinor,
+        shippingMinor: shippingNet,
+        shippingMethod,
         vatMinor: taxMinor,
         totalMinor: gross,
         subtotal: money(netTotal),
         discount: money(discountMinor),
+        shipping: money(shippingNet),
         vat: money(taxMinor),
         total: money(gross),
       },
