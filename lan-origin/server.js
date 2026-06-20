@@ -169,6 +169,19 @@ function verifyFineArtToken(id, orderCode, token) {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
+/** Mockup-source token — HMAC over (`mockup:`, photoId). Gates the medium no-logo
+ *  JPEG that Prodigi's mockup generator fetches as the artwork (no order bound). */
+function verifyMockupToken(id, token) {
+  if (!id || !token) return false
+  const expected = createHmac('sha256', SHARED_SECRET || 'dev')
+    .update(`mockup:${id}`)
+    .digest('hex')
+    .slice(0, 32)
+  const a = Buffer.from(String(token))
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
 /** Customer-facing PHOTO reference — GMP-XXXXXXX from the photo id. The Lightroom
  *  plugin names master files by this, so the deliverable store carries the shop
  *  reference rather than raw camera filenames. */
@@ -354,6 +367,12 @@ app.use((req, res, next) => {
   // (it fill-crops to the print area), secured by the per-order token (photo+order).
   const fa = req.path.match(/^\/fulfil\/fineart\/([^/]+)$/)
   if (fa && verifyFineArtToken(decodeURIComponent(fa[1]), req.query.o, req.query.t)) {
+    return next()
+  }
+  // Token-gated mockup source — Prodigi's mockup generator fetches the medium
+  // no-logo JPEG headerless, secured by a per-photo token.
+  const ms = req.path.match(/^\/mockup-src\/([^/]+)$/)
+  if (ms && verifyMockupToken(decodeURIComponent(ms[1]), req.query.t)) {
     return next()
   }
   if (SHARED_SECRET && req.get('x-shop-secret') !== SHARED_SECRET) {
@@ -1010,6 +1029,61 @@ app.get('/fulfil/fineart/:id', async (req, res) => {
   } catch (err) {
     const notFound = err.code === 'NO_PHOTO' || err.code === 'NO_MASTER'
     if (!notFound) console.error('[fulfil-fineart]', id, err)
+    res.status(notFound ? 404 : 500).json({ error: err.message })
+  }
+})
+
+/**
+ * Generate-or-reuse the MOCKUP SOURCE for a photo — a medium (1600px long edge),
+ * NO-logo, copyright-embedded JPEG that Prodigi's mockup generator fetches as the
+ * `&image=` artwork. Medium-res (not print-res) keeps it small/fast and limits
+ * exposure; the token gate keeps it from being casually scraped. Cached by ref.
+ */
+async function buildMockupSource(id) {
+  const out = join(CACHE_DIR, `${photoRef(id)}-mocksrc.jpg`)
+  if (await fileIfExists(out)) return out
+
+  const { photos } = await loadCatalog()
+  if (!photos.find((p) => p.id === id)) {
+    const e = new Error(`no photo ${id} in catalog`)
+    e.code = 'NO_PHOTO'
+    throw e
+  }
+  const srcPath = await resolveSource(id, 'jpeg')
+  const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
+  try {
+    await sharp(srcPath, { limitInputPixels: false })
+      .rotate()
+      .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+      .keepIccProfile()
+      .jpeg({ quality: 88, mozjpeg: true })
+      .toFile(tmp)
+    await exiftool.write(tmp, {
+      Artist: 'Gus McEwan',
+      Copyright: COPYRIGHT,
+      'IPTC:CopyrightNotice': COPYRIGHT,
+      'XMP-dc:Rights': COPYRIGHT,
+    }, { writeArgs: ['-overwrite_original'] })
+    await rename(tmp, out)
+  } catch (err) {
+    await unlink(tmp).catch(() => {})
+    throw err
+  }
+  return out
+}
+
+/** Public, token-gated mockup source for Prodigi's image generator. */
+app.get('/mockup-src/:id', async (req, res) => {
+  const { id } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'bad request' })
+  try {
+    const path = await buildMockupSource(id)
+    res.set('Cache-Control', 'public, max-age=31536000, immutable')
+    res.type('jpeg')
+    createReadStream(path).pipe(res)
+  } catch (err) {
+    const notFound = err.code === 'NO_PHOTO' || err.code === 'NO_MASTER'
+    if (!notFound) console.error('[mockup-src]', id, err)
     res.status(notFound ? 404 : 500).json({ error: err.message })
   }
 })

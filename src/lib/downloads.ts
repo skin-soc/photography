@@ -340,6 +340,22 @@ export function fineArtAssetUrl(photoId: string, orderCode: string): string {
   return u.toString()
 }
 
+/** Token for the mockup-source URL — HMAC over (`mockup:`, photoId). No order. */
+export function mockupSrcToken(photoId: string): string {
+  return createHmac('sha256', ORIGIN_SECRET || 'dev')
+    .update(`mockup:${photoId}`)
+    .digest('hex')
+    .slice(0, 32)
+}
+
+/** Public, token-gated URL the Prodigi mockup generator fetches the medium
+ *  no-logo artwork from. Served by the origin's `/mockup-src/:id`. */
+export function mockupSrcUrl(photoId: string): string {
+  const u = new URL(`${ORIGIN}/mockup-src/${encodeURIComponent(photoId)}`)
+  u.searchParams.set('t', mockupSrcToken(photoId))
+  return u.toString()
+}
+
 /** One shipment's tracking, surfaced from a Prodigi status callback. */
 export interface FulfilmentTracking {
   carrier?: string | null

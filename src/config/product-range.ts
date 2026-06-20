@@ -211,7 +211,10 @@ const FINE_ART_FAMILIES: FineArtFamilyDef[] = [
     label: 'Framed & mounted print',
     blurb: 'EMA 200gsm giclée · snow-white mount · acrylic',
     prodigiPrefix: 'GLOBAL-CFPM',
-    frameColors: ['black', 'white', 'natural', 'dark grey'],
+    // black/white/natural only — Prodigi's mockup generator has no 'dark grey'
+    // cover, so keeping these three lets every frame colour show a real mockup
+    // (and matches the canvas colour set).
+    frameColors: ['black', 'white', 'natural'],
     minDpi: 200,
     fixedAttributes: { mount: '2.4mm', mountColor: 'Snow white', glaze: 'Acrylic / Perspex' },
     sizes: [
