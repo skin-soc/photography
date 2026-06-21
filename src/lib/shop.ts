@@ -16,6 +16,7 @@
 
 import { createHmac } from 'node:crypto'
 import { posterOptions, fineArtOptions } from '@/config/product-range'
+import { mockupSizeSupported } from '@/lib/mockups'
 import {
   getPricing,
   pricingStamp,
@@ -259,6 +260,11 @@ function physicalProducts(
     // buffer); the catalog markup is applied in buildCatalog. Frame colour is a
     // customer choice (defaults to the first), so one product per family × size.
     for (const o of fineArtOptions(w, h)) {
+      // STANDING RULE: we only sell a fine-art (family, size) we can show a true
+      // room mockup for. The mockup generator renders room07 for only a subset of
+      // sizes (canvas 16X24/24X36/30X40; framed all) — drop the rest even when the
+      // photo's aspect + resolution would otherwise qualify them.
+      if (!mockupSizeSupported(o.family, o.size)) continue
       // One SKU per frame colour (colour is part of the variant, like poster paper),
       // so the chosen colour reaches Prodigi via the SKU's baked `attributes.color`.
       for (const color of o.frameColors) {
