@@ -37,6 +37,18 @@ export function canMockup(family: string | undefined, color: string | undefined)
   return !!family && family in MOCKUP_PRODUCT && !!color && MOCKUP_COLORS.includes(color)
 }
 
+/** The frame colour whose mockup actually composites the artwork — canvas only has
+ *  a black cover, framed has all three. Used to key the cached asset + the request. */
+export function mockupColor(family: string, color: string): string {
+  return family === 'canvas' ? 'black' : color
+}
+
+/** Distinct cached-mockup colours to render for a family (canvas → just black,
+ *  since its other colours reuse the black cover). */
+export function mockupColorsForFamily(family: string): string[] {
+  return family === 'canvas' ? ['black'] : MOCKUP_COLORS
+}
+
 /** Build the Prodigi PIG render URL for a fine-art room mockup, or null when the
  *  (family, colour) isn't renderable. Server-side only (embeds a gated src URL). */
 export function mockupRenderUrl(opts: {

@@ -88,6 +88,9 @@ const POSTER_ASSETS_DIR = resolve(process.env.POSTER_ASSETS_DIR ?? join(dirname(
  *  fill-crops to each print area. One per photo (every fine-art size of a photo
  *  fills from the same full master). HD, like the poster assets. */
 const FINEART_ASSETS_DIR = resolve(process.env.FINEART_ASSETS_DIR ?? join(dirname(MASTERS_DIR), 'fineart-assets'))
+/** Pre-rendered fine-art room mockups (Prodigi PIG composites), keyed by
+ *  ref+family+colour. Public-by-design (a marketing in-room scene), like previews. */
+const MOCKUP_ASSETS_DIR = resolve(process.env.MOCKUP_ASSETS_DIR ?? join(dirname(MASTERS_DIR), 'mockup-assets'))
 /** Download grant records, one JSON file per order id. */
 const ORDERS_DIR = resolve(process.env.ORDERS_DIR ?? join(DATA_DIR, 'orders'))
 /** Public site origin, for the download link in the email. */
@@ -312,6 +315,7 @@ await mkdir(CACHE_DIR, { recursive: true })
 await mkdir(FULFIL_CACHE_DIR, { recursive: true })
 await mkdir(POSTER_ASSETS_DIR, { recursive: true })
 await mkdir(FINEART_ASSETS_DIR, { recursive: true })
+await mkdir(MOCKUP_ASSETS_DIR, { recursive: true })
 await mkdir(ORDERS_DIR, { recursive: true })
 
 // Monotonic preview-cache version. The Worker appends it to every preview URL as
@@ -347,6 +351,9 @@ app.use((req, res, next) => {
   // hostname with NO Worker in the path, so they cannot carry the shared secret.
   // Only this exact shape is exempt; catalog/masters/orders/admin stay gated.
   if (/^\/preview\/[A-Za-z0-9_-]+$/.test(req.path)) return next()
+  // Pre-rendered fine-art mockups are public-by-design (an in-room marketing
+  // scene, no clean artwork) — served from the cache-ruled loki host, no secret.
+  if (/^\/mockup\/[A-Za-z0-9_-]+\/[a-z]+\/[a-z]+$/.test(req.path)) return next()
   // Signed, time-limited direct-download URLs bypass the header gate so the
   // browser streams the file straight from here (never through the Worker,
   // which would exhaust its CPU budget on large files).
@@ -1086,6 +1093,79 @@ app.get('/mockup-src/:id', async (req, res) => {
     if (!notFound) console.error('[mockup-src]', id, err)
     res.status(notFound ? 404 : 500).json({ error: err.message })
   }
+})
+
+const MOCKUP_PART = /^[a-z]+$/
+
+/**
+ * Serve a PRE-RENDERED fine-art room mockup (Prodigi PIG composite), keyed by
+ * ref+family+colour. Public (an in-room marketing scene). 404 if not yet
+ * pre-rendered — the worker hides the hero mockup and falls back to the preview.
+ * (The render itself happens in /admin/mockup-prerender, since Prodigi — not the
+ * origin — composites; the worker provides the render URLs.)
+ */
+app.get('/mockup/:id/:family/:color', async (req, res) => {
+  const { id, family, color } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id) || !MOCKUP_PART.test(family) || !MOCKUP_PART.test(color)) {
+    return res.status(400).json({ error: 'bad request' })
+  }
+  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${color}.png`)
+  const found = await fileIfExists(path)
+  if (!found) return res.status(404).json({ error: 'not rendered' })
+  res.set('Cache-Control', 'public, max-age=31536000, immutable')
+  res.type('png')
+  createReadStream(found).pipe(res)
+})
+
+/**
+ * PRE-RENDER fine-art mockups. Prodigi's image generator (not the origin) does
+ * the compositing, so the Worker — which owns the SKU range + builds the render
+ * URLs — hands us a flat list of { id, family, color, url }. We fetch each URL
+ * (Kite composites our token-gated mockup source into the room scene) and cache
+ * the PNG on the NAS. Mirrors /admin/poster-prerender: respond immediately, render
+ * in the background. Secret-gated by the global middleware.
+ */
+app.post('/admin/mockup-prerender', express.json({ limit: '256kb' }), async (req, res) => {
+  const items = Array.isArray(req.body?.items)
+    ? req.body.items.filter(
+        (x) =>
+          x && typeof x.id === 'string' && /^[A-Za-z0-9_-]+$/.test(x.id) &&
+          MOCKUP_PART.test(x.family ?? '') && MOCKUP_PART.test(x.color ?? '') &&
+          typeof x.url === 'string' && x.url.startsWith('https://'),
+      )
+    : []
+  res.json({ ok: true, queued: items.length })
+  ;(async () => {
+    let done = 0
+    let failed = 0
+    let cursor = 0
+    const worker = async () => {
+      for (;;) {
+        const idx = cursor++
+        if (idx >= items.length) return
+        const { id, family, color, url } = items[idx]
+        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${color}.png`)
+        const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.png`
+        try {
+          const r = await fetch(url)
+          if (!r.ok) throw new Error(`render responded ${r.status}`)
+          const buf = Buffer.from(await r.arrayBuffer())
+          // Guard against an empty/placeholder render (Kite returns a small blank
+          // PNG when the source is unreachable) — don't cache a dud.
+          if (buf.length < 20000) throw new Error(`render too small (${buf.length}B)`)
+          await writeFile(tmp, buf)
+          await rename(tmp, out)
+          done += 1
+        } catch (err) {
+          failed += 1
+          await unlink(tmp).catch(() => {})
+          console.error('[mockup-prerender]', id, family, color, err.message)
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(WARM_CONCURRENCY, items.length || 1) }, worker))
+    console.log(`[mockup-prerender] done ${done}/${items.length}` + (failed ? ` (${failed} failed)` : ''))
+  })().catch((err) => console.error('[mockup-prerender] batch error:', err.message))
 })
 
 /**

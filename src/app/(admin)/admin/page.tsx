@@ -482,7 +482,7 @@ function CacheControls() {
       })
       const d = (await res.json().catch(() => ({}))) as { deleted?: number; queued?: number; posters?: number; error?: string }
       const detail = typeof d.queued === 'number'
-        ? ` (${d.posters} posters → ${d.queued} sizes rendering in the background)`
+        ? ` (${d.posters} photos → ${d.queued} rendering in the background)`
         : typeof d.deleted === 'number' ? ` (${d.deleted} cleared)` : ''
       setNote(res.ok ? `${label} done${detail}.` : (d.error || 'Failed.'))
     } catch { setNote('Failed.') } finally { setBusy(null) }
@@ -501,6 +501,9 @@ function CacheControls() {
     { action: 'prerender-posters', label: 'Pre-render posters', busyLabel: 'Queuing…',
       desc: 'Renders every poster print master (all qualifying A-sizes) to bulk storage, ready for Prodigi. Run after publishing or editing posters; force-refreshes existing ones.',
       confirm: 'Pre-render all poster print masters? Force-regenerates every qualifying A-size on the NAS (a few minutes in the background).' },
+    { action: 'prerender-mockups', label: 'Generate fine-art mockups', busyLabel: 'Queuing…',
+      desc: 'Renders every fine-art room mockup (each family × frame colour) via Prodigi and caches them on the NAS, so the product hero is instant and never blanks. Run after publishing or editing fine-art photos.',
+      confirm: 'Generate all fine-art room mockups? Renders each family × colour via Prodigi onto the NAS (a couple of minutes in the background).' },
   ]
 
   return (

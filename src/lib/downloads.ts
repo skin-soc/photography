@@ -772,6 +772,35 @@ export async function adminPrerenderPosters(
   return (await res.json()) as { queued: number }
 }
 
+/**
+ * Kick off a background pre-render of fine-art room mockups on the origin. The
+ * caller (worker) enumerates fine-art photo × family × colour and builds the
+ * Prodigi render URLs (it owns the SKU range); the origin fetches each + caches
+ * the PNG on the NAS. Returns how many were queued.
+ */
+export async function adminPrerenderMockups(
+  items: { id: string; family: string; color: string; url: string }[],
+): Promise<{ queued: number } | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/mockup-prerender`, {
+    method: 'POST',
+    headers: originHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify({ items }),
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  return (await res.json()) as { queued: number }
+}
+
+/** Fetch a pre-rendered fine-art mockup PNG from the origin (secret-gated). 404
+ *  when it hasn't been pre-rendered yet. */
+export async function fetchOriginMockup(photoId: string, family: string, color: string): Promise<Response> {
+  return fetch(`${ORIGIN}/mockup/${encodeURIComponent(photoId)}/${family}/${color}`, {
+    headers: originHeaders(),
+    cache: 'no-store',
+  })
+}
+
 /** Clear generated deliverables (they regenerate on next download). */
 export async function adminClearFulfilCache(): Promise<{ deleted: number } | null> {
   if (!ORIGIN) return null
