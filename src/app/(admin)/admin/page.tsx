@@ -564,7 +564,9 @@ function RenderProgress() {
 
   const bar = (label: string, b: RenderBatch) => {
     const ran = b.total > 0 || b.running || b.finishedAt > 0
-    const pct = b.total ? Math.round((b.done / b.total) * 100) : 0
+    // A finished batch reads as a full bar even when nothing was queued (total 0,
+    // e.g. everything already cached) — otherwise the fill is 0%-wide and invisible.
+    const pct = b.total ? Math.round((b.done / b.total) * 100) : b.finishedAt ? 100 : 0
     const state = b.running ? 'Rendering…' : b.finishedAt ? 'Done' : 'Idle'
     return (
       <div key={label}>
@@ -577,7 +579,7 @@ function RenderProgress() {
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
           <div
-            className={`h-full rounded-full transition-[width] duration-500 ${b.running ? 'bg-accent' : b.failed ? 'bg-amber-500/70' : 'bg-emerald-500/70'}`}
+            className={`h-full rounded-full transition-[width] duration-500 ${b.running ? 'bg-accent-bright' : b.failed ? 'bg-amber-500/70' : 'bg-accent'}`}
             style={{ width: `${pct}%` }}
           />
         </div>
