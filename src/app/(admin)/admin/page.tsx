@@ -538,17 +538,28 @@ function RenderProgress() {
   const [status, setStatus] = useState<'loading' | 'ok' | 'unavailable'>('loading')
   useEffect(() => {
     let stop = false
+    let iv: ReturnType<typeof setTimeout> | null = null
     const tick = async () => {
       try {
         const r = await fetch('/api/admin/render-progress', { cache: 'no-store' })
         if (stop) return
-        if (r.ok) { setP(await r.json()); setStatus('ok') }
-        else setStatus('unavailable')
-      } catch { if (!stop) setStatus('unavailable') }
+        if (r.ok) {
+          const data = (await r.json()) as { poster: RenderBatch; mockup: RenderBatch }
+          setP(data); setStatus('ok')
+          // Poll fast only while a batch is actually running; otherwise idle slowly
+          // so the admin page isn't hammering the Worker forever.
+          const active = data.poster.running || data.mockup.running
+          if (!stop) iv = setTimeout(tick, active ? 2500 : 30000)
+        } else {
+          setStatus('unavailable')
+          if (!stop) iv = setTimeout(tick, 30000)
+        }
+      } catch {
+        if (!stop) { setStatus('unavailable'); iv = setTimeout(tick, 30000) }
+      }
     }
     tick()
-    const iv = setInterval(tick, 2500)
-    return () => { stop = true; clearInterval(iv) }
+    return () => { stop = true; if (iv) clearTimeout(iv) }
   }, [])
 
   const bar = (label: string, b: RenderBatch) => {
