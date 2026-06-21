@@ -32,6 +32,7 @@ export interface PickerProduct {
   // ── Fine-art variant (fine art only) — family, then frame colour, then size. ──
   family?: string
   familyLabel?: string
+  faSize?: string
   frameColor?: string
   frameColors?: string[]
 }
@@ -277,12 +278,16 @@ export default function ShopProductPicker({
     repointFineArt(selectedFamily, color)
   }
 
-  // Publish the fine-art selection so the hero (FineArtHero) can show the matching
-  // room mockup. Runs on mount (defaults) and whenever family/colour changes.
+  // Publish the fine-art selection so the hero (FineArtHero) shows the matching
+  // per-size room mockup. Driven by the selected product (captures family + size +
+  // colour) so it updates on a size click too.
   const publishFineArt = useFineArtPreview((s) => s.setSelection)
   useEffect(() => {
-    if (selectedFamily) publishFineArt(selectedFamily, selectedColor)
-  }, [selectedFamily, selectedColor, publishFineArt])
+    const sel = products.find((p) => p.sku === selectedSku)
+    if (sel?.type === 'fine-art' && sel.family) {
+      publishFineArt(sel.family, sel.faSize ?? null, sel.frameColor ?? null)
+    }
+  }, [selectedSku, products, publishFineArt])
 
   const [rawModalOpen, setRawModalOpen] = useState(false)
   const [expandedSku, setExpandedSku] = useState<string | null>(null)

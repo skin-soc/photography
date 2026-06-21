@@ -128,6 +128,8 @@ export interface ShopProduct {
   family?: string
   /** Customer-facing family name, e.g. 'Float-framed canvas'. */
   familyLabel?: string
+  /** Prodigi size token, e.g. '16X24' | 'A2' — used to render the per-size mockup. */
+  faSize?: string
   /** This product's frame colour (also in `attributes.color`). */
   frameColor?: string
   /** All frame colours offered for this family (for the swatch chooser). */
@@ -270,6 +272,7 @@ function physicalProducts(
           material: `${o.widthCm} × ${o.heightCm} cm · ${o.blurb}`,
           family: o.family,
           familyLabel: o.familyLabel,
+          faSize: o.size,
           frameColor: color,
           frameColors: o.frameColors,
           provider: 'prodigi',

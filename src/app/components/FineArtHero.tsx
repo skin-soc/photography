@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useFineArtPreview } from '@/store/fineart-preview'
 
 /** Frame colours that have a real mockup cover (canvas always previews in black). */
@@ -23,6 +23,7 @@ export default function FineArtHero({
   previewW,
   previewH,
   defaultFamily,
+  defaultSize,
   defaultColor,
 }: {
   photoSlug: string
@@ -33,18 +34,22 @@ export default function FineArtHero({
   previewW: number
   previewH: number
   defaultFamily: string
+  defaultSize: string
   defaultColor: string
 }) {
   const sel = useFineArtPreview()
   const family = sel.family ?? defaultFamily
+  const size = sel.size ?? defaultSize
   const color = sel.color ?? defaultColor
   const [failed, setFailed] = useState(false)
 
   const shadow = 'shadow-[0_28px_64px_-26px_rgba(0,0,0,0.6)]'
   const mockupSrc =
-    family && color
-      ? `/api/fineart-mockup?photo=${encodeURIComponent(photoSlug)}&family=${encodeURIComponent(family)}&color=${encodeURIComponent(mockupColor(family, color))}`
+    family && size && color
+      ? `/api/fineart-mockup?photo=${encodeURIComponent(photoSlug)}&family=${encodeURIComponent(family)}&size=${encodeURIComponent(size)}&color=${encodeURIComponent(mockupColor(family, color))}`
       : null
+  // Re-arm the fallback whenever the target mockup changes (size/family/colour).
+  useEffect(() => { setFailed(false) }, [mockupSrc])
 
   // The room mockup (square) replaces the preview. Keyed by src so a colour/family
   // change re-arms the error fallback. While it can't be shown, fall back to the

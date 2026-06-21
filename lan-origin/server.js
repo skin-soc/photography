@@ -353,7 +353,8 @@ app.use((req, res, next) => {
   if (/^\/preview\/[A-Za-z0-9_-]+$/.test(req.path)) return next()
   // Pre-rendered fine-art mockups are public-by-design (an in-room marketing
   // scene, no clean artwork) — served from the cache-ruled loki host, no secret.
-  if (/^\/mockup\/[A-Za-z0-9_-]+\/[a-z]+\/[a-z]+$/.test(req.path)) return next()
+  // Path: /mockup/<id>/<family>/<size>/<colour>.
+  if (/^\/mockup\/[A-Za-z0-9_-]+\/[a-z]+\/[A-Za-z0-9]+\/[a-z]+$/.test(req.path)) return next()
   // Signed, time-limited direct-download URLs bypass the header gate so the
   // browser streams the file straight from here (never through the Worker,
   // which would exhaust its CPU budget on large files).
@@ -1096,20 +1097,21 @@ app.get('/mockup-src/:id', async (req, res) => {
 })
 
 const MOCKUP_PART = /^[a-z]+$/
+const MOCKUP_SIZE = /^[A-Za-z0-9]+$/
 
 /**
  * Serve a PRE-RENDERED fine-art room mockup (Prodigi PIG composite), keyed by
- * ref+family+colour. Public (an in-room marketing scene). 404 if not yet
- * pre-rendered — the worker hides the hero mockup and falls back to the preview.
- * (The render itself happens in /admin/mockup-prerender, since Prodigi — not the
- * origin — composites; the worker provides the render URLs.)
+ * ref+family+SIZE+colour (per-size so the room scene shows the real scale).
+ * Public. 404 if not yet pre-rendered / unsupported by the generator — the hero
+ * falls back to the framed preview. (The render itself happens in
+ * /admin/mockup-prerender, since Prodigi — not the origin — composites.)
  */
-app.get('/mockup/:id/:family/:color', async (req, res) => {
-  const { id, family, color } = req.params
-  if (!/^[A-Za-z0-9_-]+$/.test(id) || !MOCKUP_PART.test(family) || !MOCKUP_PART.test(color)) {
+app.get('/mockup/:id/:family/:size/:color', async (req, res) => {
+  const { id, family, size, color } = req.params
+  if (!/^[A-Za-z0-9_-]+$/.test(id) || !MOCKUP_PART.test(family) || !MOCKUP_SIZE.test(size) || !MOCKUP_PART.test(color)) {
     return res.status(400).json({ error: 'bad request' })
   }
-  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${color}.png`)
+  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}.png`)
   const found = await fileIfExists(path)
   if (!found) return res.status(404).json({ error: 'not rendered' })
   res.set('Cache-Control', 'public, max-age=31536000, immutable')
@@ -1125,12 +1127,12 @@ app.get('/mockup/:id/:family/:color', async (req, res) => {
  * the PNG on the NAS. Mirrors /admin/poster-prerender: respond immediately, render
  * in the background. Secret-gated by the global middleware.
  */
-app.post('/admin/mockup-prerender', express.json({ limit: '256kb' }), async (req, res) => {
+app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req, res) => {
   const items = Array.isArray(req.body?.items)
     ? req.body.items.filter(
         (x) =>
           x && typeof x.id === 'string' && /^[A-Za-z0-9_-]+$/.test(x.id) &&
-          MOCKUP_PART.test(x.family ?? '') && MOCKUP_PART.test(x.color ?? '') &&
+          MOCKUP_PART.test(x.family ?? '') && MOCKUP_SIZE.test(x.size ?? '') && MOCKUP_PART.test(x.color ?? '') &&
           typeof x.url === 'string' && x.url.startsWith('https://'),
       )
     : []
@@ -1143,8 +1145,8 @@ app.post('/admin/mockup-prerender', express.json({ limit: '256kb' }), async (req
       for (;;) {
         const idx = cursor++
         if (idx >= items.length) return
-        const { id, family, color, url } = items[idx]
-        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${color}.png`)
+        const { id, family, size, color, url } = items[idx]
+        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}.png`)
         const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.png`
         try {
           const r = await fetch(url)
@@ -1159,7 +1161,7 @@ app.post('/admin/mockup-prerender', express.json({ limit: '256kb' }), async (req
         } catch (err) {
           prog.failed += 1
           await unlink(tmp).catch(() => {})
-          console.error('[mockup-prerender]', id, family, color, err.message)
+          console.error('[mockup-prerender]', id, family, size, color, err.message)
         }
       }
     }

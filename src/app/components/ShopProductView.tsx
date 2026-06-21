@@ -142,6 +142,7 @@ export default async function ShopProductView({
     paperBlurb: p.paperBlurb,
     family: p.family,
     familyLabel: p.familyLabel,
+    faSize: p.faSize,
     frameColor: p.frameColor,
     frameColors: p.frameColors,
   }))
@@ -216,8 +217,9 @@ export default async function ShopProductView({
   // to the first fine-art product's family/colour so it's correct on first paint.
   const firstFineArt = pickerProducts.find((p) => p.type === 'fine-art')
   const defaultFineArtFamily = firstFineArt?.family ?? ''
-  const defaultFineArtColor =
-    pickerProducts.find((p) => p.type === 'fine-art' && p.family === defaultFineArtFamily)?.frameColor ?? ''
+  const firstOfDefaultFamily = pickerProducts.find((p) => p.type === 'fine-art' && p.family === defaultFineArtFamily)
+  const defaultFineArtSize = firstOfDefaultFamily?.faSize ?? ''
+  const defaultFineArtColor = firstOfDefaultFamily?.frameColor ?? ''
 
   // Physical (poster / fine-art) contexts preview the artwork WITHOUT the logo
   // badge — the customer is judging the print, not buying a file. The repeating
@@ -271,6 +273,7 @@ export default async function ShopProductView({
               previewW={previewW}
               previewH={previewH}
               defaultFamily={defaultFineArtFamily}
+              defaultSize={defaultFineArtSize}
               defaultColor={defaultFineArtColor}
             />
           </div>

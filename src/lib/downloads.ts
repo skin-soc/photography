@@ -779,7 +779,7 @@ export async function adminPrerenderPosters(
  * the PNG on the NAS. Returns how many were queued.
  */
 export async function adminPrerenderMockups(
-  items: { id: string; family: string; color: string; url: string }[],
+  items: { id: string; family: string; size: string; color: string; url: string }[],
 ): Promise<{ queued: number } | null> {
   if (!ORIGIN) return null
   const res = await fetch(`${ORIGIN}/admin/mockup-prerender`, {
@@ -793,13 +793,16 @@ export async function adminPrerenderMockups(
 }
 
 /** Fetch a pre-rendered fine-art mockup PNG from the origin (secret-gated). 404
- *  when it hasn't been pre-rendered yet. */
-export async function fetchOriginMockup(photoId: string, family: string, color: string): Promise<Response> {
-  return fetch(`${ORIGIN}/mockup/${encodeURIComponent(photoId)}/${family}/${color}`, {
+ *  when it hasn't been pre-rendered / the size is unsupported by the generator. */
+export async function fetchOriginMockup(photoId: string, family: string, size: string, color: string): Promise<Response> {
+  return fetch(`${ORIGIN}/mockup/${encodeURIComponent(photoId)}/${family}/${size}/${color}`, {
     headers: originHeaders(),
     cache: 'no-store',
   })
 }
+
+/** Item for the mockup pre-render batch (worker builds the Prodigi render URL). */
+export interface MockupPrerenderItem { id: string; family: string; size: string; color: string; url: string }
 
 /** One batch's live render progress. */
 export interface RenderProgressItem {
