@@ -472,14 +472,30 @@ async function fetchRawCatalog(): Promise<RawCatalog> {
     const hit = await edge.match(CATALOG_CACHE_KEY).catch(() => undefined)
     if (hit) return hit.json() as Promise<RawCatalog>
   }
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 30000)
-  const res = await fetch(`${ORIGIN}/catalog.json`, {
-    headers: { 'x-shop-secret': ORIGIN_SECRET },
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timer))
-  if (!res.ok) throw new Error(`origin responded ${res.status}`)
-  const buf = await res.arrayBuffer()
+  // Fetch the catalog over the (slow) origin tunnel. Retry once on a timeout /
+  // network error / 5xx so a single slow fetch on a cold edge cache doesn't bubble
+  // up as an empty catalog (which would render the misleading "coming soon" page).
+  const fetchOnce = async (): Promise<ArrayBuffer> => {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 30000)
+    try {
+      const res = await fetch(`${ORIGIN}/catalog.json`, {
+        headers: { 'x-shop-secret': ORIGIN_SECRET },
+        signal: controller.signal,
+      })
+      if (!res.ok) throw new Error(`origin responded ${res.status}`)
+      return await res.arrayBuffer()
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+  let buf: ArrayBuffer
+  try {
+    buf = await fetchOnce()
+  } catch (err) {
+    console.error('[catalog] fetch failed, retrying once:', (err as Error).message)
+    buf = await fetchOnce()
+  }
   if (edge) {
     // Cache the catalog body (not the secret-bearing request) for 60s.
     edge
