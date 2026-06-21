@@ -162,6 +162,11 @@ interface FineArtSize {
   /** Print/canvas size in cm, PORTRAIT (short × long). */
   shortCm: number
   longCm: number
+  /** Prodigi's RECOMMENDED source resolution (px, short × long) — its print-area
+   *  pixel size. We gate at this as the ABSOLUTE MINIMUM: a size is offered only
+   *  when the photo (after the aspect crop) meets it, so a resized master never
+   *  gets a size it can't print at Prodigi's recommended quality. */
+  recPx: [number, number]
   /** Prodigi ex-tax cost, EUR minor — the cost-plus pricing basis. */
   cost: number
 }
@@ -176,9 +181,6 @@ interface FineArtFamilyDef {
   prodigiPrefix: string
   /** Frame colours offered to the customer (Prodigi `color` attribute values). */
   frameColors: string[]
-  /** Minimum print resolution (DPI) — gates which sizes a photo can fill. Canvas is
-   *  viewed at distance so tolerates less; framed prints are inspected closer. */
-  minDpi: number
   /** Fixed Prodigi attributes baked onto every order line for this family. */
   fixedAttributes: Record<string, string>
   sizes: FineArtSize[]
@@ -190,20 +192,22 @@ const FINE_ART_FAMILIES: FineArtFamilyDef[] = [
     label: 'Float-framed canvas',
     blurb: 'Gallery canvas in a floating frame · 400gsm',
     prodigiPrefix: 'GLOBAL-FRA-CAN',
-    frameColors: ['black', 'white', 'natural'],
-    minDpi: 150,
+    // BLACK only — Prodigi's mockup generator has just a black float-frame cover
+    // for canvas (white/natural render blank), so we offer the colour we can
+    // faithfully preview. (Framed prints keep black/white/natural.)
+    frameColors: ['black'],
     fixedAttributes: { wrap: 'ImageWrap' },
     sizes: [
-      { size: '16X24', aspect: '2:3', shortCm: 40.6, longCm: 61.0, cost: 6400 },
-      { size: '24X36', aspect: '2:3', shortCm: 61.0, longCm: 91.4, cost: 10000 },
-      { size: '30X45', aspect: '2:3', shortCm: 76.2, longCm: 114.3, cost: 12200 },
-      { size: '40X60', aspect: '2:3', shortCm: 101.6, longCm: 152.4, cost: 18500 },
-      { size: '30X40', aspect: '3:4', shortCm: 76.2, longCm: 101.6, cost: 11600 },
-      { size: '36X48', aspect: '3:4', shortCm: 91.4, longCm: 121.9, cost: 12800 },
-      { size: '40X40', aspect: '1:1', shortCm: 101.6, longCm: 101.6, cost: 12500 },
-      { size: 'A2', aspect: 'A', shortCm: 42.0, longCm: 59.4, cost: 6400 },
-      { size: 'A1', aspect: 'A', shortCm: 59.4, longCm: 84.1, cost: 9200 },
-      { size: 'A0', aspect: 'A', shortCm: 84.1, longCm: 118.9, cost: 12500 },
+      { size: '16X24', aspect: '2:3', shortCm: 40.6, longCm: 61.0, recPx: [4854, 7254], cost: 6400 },
+      { size: '24X36', aspect: '2:3', shortCm: 61.0, longCm: 91.4, recPx: [7254, 10854], cost: 10000 },
+      { size: '30X45', aspect: '2:3', shortCm: 76.2, longCm: 114.3, recPx: [9045, 13545], cost: 12200 },
+      { size: '40X60', aspect: '2:3', shortCm: 101.6, longCm: 152.4, recPx: [12600, 18600], cost: 18500 },
+      { size: '30X40', aspect: '3:4', shortCm: 76.2, longCm: 101.6, recPx: [9054, 12054], cost: 11600 },
+      { size: '36X48', aspect: '3:4', shortCm: 91.4, longCm: 121.9, recPx: [10845, 14445], cost: 12800 },
+      { size: '40X40', aspect: '1:1', shortCm: 101.6, longCm: 101.6, recPx: [12054, 12054], cost: 12500 },
+      { size: 'A2', aspect: 'A', shortCm: 42.0, longCm: 59.4, recPx: [5004, 7074], cost: 6400 },
+      { size: 'A1', aspect: 'A', shortCm: 59.4, longCm: 84.1, recPx: [7074, 9984], cost: 9200 },
+      { size: 'A0', aspect: 'A', shortCm: 84.1, longCm: 118.9, recPx: [9975, 14082], cost: 12500 },
     ],
   },
   {
@@ -211,18 +215,14 @@ const FINE_ART_FAMILIES: FineArtFamilyDef[] = [
     label: 'Framed & mounted print',
     blurb: 'EMA 200gsm giclée · snow-white mount · acrylic',
     prodigiPrefix: 'GLOBAL-CFPM',
-    // black/white/natural only — Prodigi's mockup generator has no 'dark grey'
-    // cover, so keeping these three lets every frame colour show a real mockup
-    // (and matches the canvas colour set).
     frameColors: ['black', 'white', 'natural'],
-    minDpi: 200,
     fixedAttributes: { mount: '2.4mm', mountColor: 'Snow white', glaze: 'Acrylic / Perspex' },
     sizes: [
-      { size: '18X24', aspect: '3:4', shortCm: 45.7, longCm: 61.0, cost: 5400 },
-      { size: '24X36', aspect: '2:3', shortCm: 61.0, longCm: 91.4, cost: 8000 },
-      { size: 'A2', aspect: 'A', shortCm: 42.0, longCm: 59.4, cost: 5200 },
-      { size: '20X28', aspect: 'A', shortCm: 50.8, longCm: 71.1, cost: 6000 },
-      { size: 'A1', aspect: 'A', shortCm: 59.4, longCm: 84.1, cost: 7500 },
+      { size: '18X24', aspect: '3:4', shortCm: 45.7, longCm: 61.0, recPx: [4200, 6000], cost: 5400 },
+      { size: '24X36', aspect: '2:3', shortCm: 61.0, longCm: 91.4, recPx: [6000, 9600], cost: 8000 },
+      { size: 'A2', aspect: 'A', shortCm: 42.0, longCm: 59.4, recPx: [3780, 5835], cost: 5200 },
+      { size: '20X28', aspect: 'A', shortCm: 50.8, longCm: 71.1, recPx: [4800, 7200], cost: 6000 },
+      { size: 'A1', aspect: 'A', shortCm: 59.4, longCm: 84.1, recPx: [5895, 8805], cost: 7500 },
     ],
   },
 ]
@@ -257,11 +257,11 @@ function cropFraction(rPhoto: number, rTarget: number): number {
   return 1 - Math.min(rPhoto, rTarget) / Math.max(rPhoto, rTarget)
 }
 
-/** Does (wPx × hPx), once centre-cropped to aspect `rTarget` (long÷short), still meet
- *  `minDpi` over the cm size (short × long, unoriented)? No upscaling. */
-function fineArtResolves(wPx: number, hPx: number, shortCm: number, longCm: number, rTarget: number, minDpi: number): boolean {
-  const reqShort = (shortCm / MM_PER_INCH) * 10 * minDpi // cm→in (×10/25.4) × dpi
-  const reqLong = (longCm / MM_PER_INCH) * 10 * minDpi
+/** Does (wPx × hPx), once centre-cropped to aspect `rTarget` (long÷short), meet
+ *  Prodigi's recommended source resolution `recPx` ([short, long])? No upscaling.
+ *  This is the ABSOLUTE MINIMUM — below it the size isn't offered. */
+function fineArtResolves(wPx: number, hPx: number, recPx: [number, number], rTarget: number): boolean {
+  const [reqShort, reqLong] = recPx
   const sShort = Math.min(wPx, hPx)
   const sLong = Math.max(wPx, hPx)
   const rPhoto = sLong / sShort
@@ -285,7 +285,7 @@ export function fineArtOptions(wPx: number, hPx: number): FineArtOption[] {
     for (const s of fam.sizes) {
       const rTarget = ASPECT_RATIO[s.aspect]
       if (cropFraction(rPhoto, rTarget) > FINE_ART_CROP_TOLERANCE) continue
-      if (!fineArtResolves(wPx, hPx, s.shortCm, s.longCm, rTarget, fam.minDpi)) continue
+      if (!fineArtResolves(wPx, hPx, s.recPx, rTarget)) continue
       out.push({
         family: fam.family,
         familyLabel: fam.label,

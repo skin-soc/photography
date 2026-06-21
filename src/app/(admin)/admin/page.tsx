@@ -535,31 +535,33 @@ function CacheControls() {
 interface RenderBatch { total: number; done: number; failed: number; running: boolean; finishedAt: number }
 function RenderProgress() {
   const [p, setP] = useState<{ poster: RenderBatch; mockup: RenderBatch } | null>(null)
+  const [status, setStatus] = useState<'loading' | 'ok' | 'unavailable'>('loading')
   useEffect(() => {
     let stop = false
     const tick = async () => {
       try {
         const r = await fetch('/api/admin/render-progress', { cache: 'no-store' })
-        if (r.ok && !stop) setP(await r.json())
-      } catch { /* keep last */ }
+        if (stop) return
+        if (r.ok) { setP(await r.json()); setStatus('ok') }
+        else setStatus('unavailable')
+      } catch { if (!stop) setStatus('unavailable') }
     }
     tick()
     const iv = setInterval(tick, 2500)
     return () => { stop = true; clearInterval(iv) }
   }, [])
-  if (!p) return null
 
   const bar = (label: string, b: RenderBatch) => {
-    if (!b || (b.total === 0 && !b.running && !b.finishedAt)) return null // never run → hide
+    const ran = b.total > 0 || b.running || b.finishedAt > 0
     const pct = b.total ? Math.round((b.done / b.total) * 100) : 0
-    const state = b.running ? 'Rendering…' : b.finishedAt ? 'Done' : ''
+    const state = b.running ? 'Rendering…' : b.finishedAt ? 'Done' : 'Idle'
     return (
       <div key={label}>
         <div className="flex items-baseline justify-between text-[11px] font-mono-ibm">
           <span className="uppercase tracking-[0.2em] text-white/45">{label}</span>
           <span className="tabular-nums text-white/55">
-            {b.done}/{b.total}{b.failed ? ` · ${b.failed} failed` : ''}
-            {state && <span className="ml-2 text-white/35">{state}</span>}
+            {ran ? `${b.done}/${b.total}` : '—'}{b.failed ? ` · ${b.failed} failed` : ''}
+            <span className="ml-2 text-white/30">{state}</span>
           </span>
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -572,10 +574,18 @@ function RenderProgress() {
     )
   }
 
-  const posters = bar('Posters', p.poster)
-  const mockups = bar('Mockups', p.mockup)
-  if (!posters && !mockups) return null
-  return <div className="mt-5 space-y-3">{posters}{mockups}</div>
+  return (
+    <div className="mt-6 border-t border-white/10 pt-5">
+      <h3 className="text-[10px] font-mono-ibm uppercase tracking-[0.28em] text-white/35">Render progress</h3>
+      {status === 'unavailable' ? (
+        <p className="mt-3 text-[11px] text-amber-400/70">Origin progress endpoint unavailable — rebuild the NAS origin (needs the render-progress build).</p>
+      ) : !p ? (
+        <p className="mt-3 text-[11px] text-white/35">Loading…</p>
+      ) : (
+        <div className="mt-3 space-y-3">{bar('Posters', p.poster)}{bar('Mockups', p.mockup)}</div>
+      )}
+    </div>
+  )
 }
 
 /**
