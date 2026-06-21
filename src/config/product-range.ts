@@ -192,13 +192,12 @@ const FINE_ART_FAMILIES: FineArtFamilyDef[] = [
     label: 'Float-framed canvas',
     blurb: 'Gallery canvas in a floating frame · 400gsm',
     prodigiPrefix: 'GLOBAL-FRA-CAN',
-    // Prodigi manufactures the float frame in 6 colours; we offer the neutral
-    // three to match the framed range. NOTE: the mockup generator only has a
-    // BLACK float-frame cover for canvas (white/natural render blank), so the
-    // room preview shows the black frame as REPRESENTATIVE for white/natural —
-    // the chosen colour still flows to fulfilment via the SKU's `color` attr.
-    // `mockupColor('canvas', …)` maps every canvas colour → black accordingly.
-    frameColors: ['black', 'white', 'natural'],
+    // BLACK only. Prodigi can manufacture the float frame in 6 colours, but its
+    // mockup generator only has a black_cover for canvas (white/natural/etc.
+    // render blank — confirmed across sizes). Policy: we only sell what we can
+    // show a true room mockup for, so canvas is offered in black alone.
+    // (Framed/CFPM has a real cover per colour, so it keeps black/white/natural.)
+    frameColors: ['black'],
     fixedAttributes: { wrap: 'ImageWrap' },
     sizes: [
       { size: '16X24', aspect: '2:3', shortCm: 40.6, longCm: 61.0, recPx: [4854, 7254], cost: 6400 },

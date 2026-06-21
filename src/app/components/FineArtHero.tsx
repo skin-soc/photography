@@ -54,10 +54,6 @@ export default function FineArtHero({
   // The room mockup (square) replaces the preview. Keyed by src so a colour/family
   // change re-arms the error fallback. While it can't be shown, fall back to the
   // framed artwork preview so the hero is never blank.
-  // Canvas only has a black float-frame mockup cover, so white/natural canvas
-  // previews show the black frame — flag it as representative (the real colour
-  // is still made + shipped). Framed prints have a true cover per colour.
-  const representative = family === 'canvas' && color !== 'black'
   if (mockupSrc && !failed) {
     return (
       <div className={`relative shrink-0 mx-auto xl:mx-0 w-full overflow-hidden rounded-[2px] ${shadow}`} style={{ maxWidth: previewW }}>
@@ -69,11 +65,6 @@ export default function FineArtHero({
           className="block aspect-square w-full object-cover"
           onError={() => setFailed(true)}
         />
-        {representative && (
-          <p className="absolute bottom-0 inset-x-0 bg-black/55 px-3 py-1.5 text-center text-[10px] font-light tracking-[0.04em] text-white/85 backdrop-blur-sm">
-            Frame shown in black — {color} frame made to order
-          </p>
-        )}
       </div>
     )
   }

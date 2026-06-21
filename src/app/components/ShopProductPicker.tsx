@@ -46,6 +46,13 @@ const FRAME_SWATCH: Record<string, string> = {
 }
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
+/** Print area (cm²) parsed from a "W × H cm" size label — for ordering size
+ *  options smallest → largest. Returns 0 when the label has no dimensions. */
+function printArea(p: PickerProduct): number {
+  const m = (p.label || '').match(/([\d.]+)\s*[×x]\s*([\d.]+)/)
+  return m ? parseFloat(m[1]) * parseFloat(m[2]) : 0
+}
+
 const TYPE_ORDER: ProductType[] = ['print', 'fine-art', 'digital']
 
 const LICENSE_I18N: Record<LicenseTier, string> = {
@@ -361,11 +368,15 @@ export default function ShopProductPicker({
           // on the chosen paper. Other types: the plain option list.
           const isPoster = g.type === 'print' && posterPapers.length > 0
           const isFineArt = g.type === 'fine-art' && fineArtFamilies.length > 0
-          const items = isPoster && selectedPaper
+          const itemsRaw = isPoster && selectedPaper
             ? g.items.filter((p) => p.paper === selectedPaper)
             : isFineArt
               ? g.items.filter((p) => p.family === selectedFamily && p.frameColor === selectedColor)
               : g.items
+          // Physical products (posters/fine-art) are emitted grouped by aspect
+          // ratio, not size — order them smallest → largest by print area (parsed
+          // from the "W × H cm" label) so the size list reads in ascending order.
+          const items = isPoster || isFineArt ? [...itemsRaw].sort((a, b) => printArea(a) - printArea(b)) : itemsRaw
           const paperBlurb = isPoster
             ? posterPapers.find((x) => x.code === selectedPaper)?.blurb
             : undefined
