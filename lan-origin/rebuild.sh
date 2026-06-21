@@ -22,6 +22,15 @@ if ! grep -q "$MARKER" "$SOURCE/server.js"; then
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
+# Per-SIZE fine-art mockups (v0.9.7+): the route gained a :size segment. The old
+# /orders marker above can't catch a source that's new enough for orders but stale
+# on mockups, so guard the per-size mockup route explicitly — otherwise canvas
+# renders only black and no size variants ever appear on the NAS.
+if ! grep -q "'/mockup/:id/:family/:size/:color'" "$SOURCE/server.js"; then
+  echo "ERROR: $SOURCE/server.js is STALE (no per-SIZE mockup route /mockup/:id/:family/:size/:color)."
+  echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
+  exit 1
+fi
 if ! grep -q '"nodemailer"' "$SOURCE/package.json"; then
   echo "WARNING: $SOURCE/package.json looks stale (no nodemailer) — re-sync it too."
 fi
