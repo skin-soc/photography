@@ -12,6 +12,7 @@ import {
 import { categoryUrl } from '@/lib/shop-url'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
+import FineArtHero from '@/app/components/FineArtHero'
 import PosterMat from '@/app/components/PosterMat'
 import SalePill from '@/app/components/SalePill'
 import LicensingLink from '@/app/components/LicensingLink'
@@ -208,7 +209,15 @@ export default async function ShopProductView({
   // gallery mat with the title + caption typeset below (PosterMat). Everything
   // else (fine art, digital) uses the simple 21px gallery frame.
   const posterView = primaryType === 'print'
+  const fineArtView = primaryType === 'fine-art'
   const posterCardMaxWidth = Math.min(previewW + 40, 600)
+
+  // Fine-art hero shows the room mockup for the selected family + colour; default
+  // to the first fine-art product's family/colour so it's correct on first paint.
+  const firstFineArt = pickerProducts.find((p) => p.type === 'fine-art')
+  const defaultFineArtFamily = firstFineArt?.family ?? ''
+  const defaultFineArtColor =
+    pickerProducts.find((p) => p.type === 'fine-art' && p.family === defaultFineArtFamily)?.frameColor ?? ''
 
   // Physical (poster / fine-art) contexts preview the artwork WITHOUT the logo
   // badge — the customer is judging the print, not buying a file. The repeating
@@ -250,7 +259,22 @@ export default async function ShopProductView({
 
         {/* Photo — gallery poster mat (typeset title/caption) in the Posters
             context, otherwise the simple 21px white frame. */}
-        {posterView ? (
+        {fineArtView ? (
+          <div className="relative shrink-0 mx-auto xl:mx-0 w-full" style={{ maxWidth: previewW }}>
+            {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
+            <FineArtHero
+              photoSlug={slug}
+              previewSrc={`${photo.previewUrl}${heroQuery(800)}`}
+              previewSrcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
+              sizes={`${previewW}px`}
+              alt={`${displayTitle(photo)} — ${photo.location}`}
+              previewW={previewW}
+              previewH={previewH}
+              defaultFamily={defaultFineArtFamily}
+              defaultColor={defaultFineArtColor}
+            />
+          </div>
+        ) : posterView ? (
           <div className="relative shrink-0 mx-auto xl:mx-0 w-full" style={{ maxWidth: posterCardMaxWidth }}>
             {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
             <PosterMat

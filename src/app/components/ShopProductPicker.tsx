@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ProductType, LicenseTier } from '@/lib/shop'
 import { useCartStore } from '@/store/cart'
 import type { CartItemType } from '@/store/cart'
+import { useFineArtPreview } from '@/store/fineart-preview'
 
 export interface PickerProduct {
   sku: string
@@ -43,26 +44,6 @@ const FRAME_SWATCH: Record<string, string> = {
   'dark grey': '#4b4b4b',
 }
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-
-/** Prodigi room mockup for the chosen fine-art family + frame colour (proxied +
- *  edge-cached by /api/fineart-mockup). Hidden if the render is unavailable. */
-function FineArtMockup({ photoSlug, family, color }: { photoSlug: string; family: string; color: string }) {
-  const [failed, setFailed] = useState(false)
-  if (failed) return null
-  const src = `/api/fineart-mockup?photo=${encodeURIComponent(photoSlug)}&family=${encodeURIComponent(family)}&color=${encodeURIComponent(color)}`
-  return (
-    <div className="relative overflow-hidden rounded-[12px] bg-foreground/[0.04]" style={{ aspectRatio: '1 / 1' }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt="The artwork shown framed on a wall"
-        loading="lazy"
-        className="block h-full w-full object-cover"
-        onError={() => setFailed(true)}
-      />
-    </div>
-  )
-}
 
 const TYPE_ORDER: ProductType[] = ['print', 'fine-art', 'digital']
 
@@ -296,6 +277,13 @@ export default function ShopProductPicker({
     repointFineArt(selectedFamily, color)
   }
 
+  // Publish the fine-art selection so the hero (FineArtHero) can show the matching
+  // room mockup. Runs on mount (defaults) and whenever family/colour changes.
+  const publishFineArt = useFineArtPreview((s) => s.setSelection)
+  useEffect(() => {
+    if (selectedFamily) publishFineArt(selectedFamily, selectedColor)
+  }, [selectedFamily, selectedColor, publishFineArt])
+
   const [rawModalOpen, setRawModalOpen] = useState(false)
   const [expandedSku, setExpandedSku] = useState<string | null>(null)
 
@@ -439,17 +427,10 @@ export default function ShopProductPicker({
               </div>
             )}
 
-            {/* Fine-art chooser: a room mockup, then family (canvas / framed), then colour */}
+            {/* Fine-art chooser: family (canvas / framed), then frame colour. The
+                room mockup for the selection is shown in the hero (FineArtHero). */}
             {isFineArt && (
               <div className="px-5 pt-4 pb-3 border-b border-foreground/[0.06] space-y-3">
-                {selectedFamily && selectedColor && (
-                  <FineArtMockup
-                    key={`${selectedFamily}-${selectedColor}`}
-                    photoSlug={photoSlug}
-                    family={selectedFamily}
-                    color={selectedColor}
-                  />
-                )}
                 {fineArtFamilies.length > 1 && (
                   <div className="flex flex-wrap gap-2">
                     {fineArtFamilies.map((fa) => {

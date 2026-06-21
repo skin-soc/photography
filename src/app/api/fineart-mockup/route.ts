@@ -6,7 +6,7 @@
  * header. Stored in the Cloudflare edge cache so repeat views never re-hit Prodigi.
  */
 import { getCatalog } from '@/lib/shop'
-import { mockupRenderUrl } from '@/lib/mockups'
+import { mockupRenderUrl, MOCKUP_VERSION } from '@/lib/mockups'
 
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url)
@@ -15,9 +15,10 @@ export async function GET(req: Request): Promise<Response> {
   const color = url.searchParams.get('color') ?? ''
   if (!slug || !family || !color) return new Response('bad request', { status: 400 })
 
-  // The proxied PNG is identical for everyone, so cache it at the edge.
+  // The proxied PNG is identical for everyone, so cache it at the edge. The
+  // version in the key lets a MOCKUP_VERSION bump bust stale/bad renders.
   const cacheKey = new Request(
-    new URL(`/api/fineart-mockup?photo=${slug}&family=${family}&color=${color}`, url.origin).toString(),
+    new URL(`/api/fineart-mockup?photo=${slug}&family=${family}&color=${color}&v=${MOCKUP_VERSION}`, url.origin).toString(),
   )
   const cache = (caches as unknown as { default?: Cache }).default
   const cached = await cache?.match(cacheKey)
@@ -40,9 +41,12 @@ export async function GET(req: Request): Promise<Response> {
   if (!upstream.ok) return new Response('mockup unavailable', { status: 502 })
 
   const png = await upstream.arrayBuffer()
+  // Cache for a day (not immutable): mockups rarely change, but a bad render
+  // (e.g. the source was briefly unreachable) then self-heals next day rather
+  // than being stuck forever. A MOCKUP_VERSION bump busts it immediately.
   const res = new Response(png, {
     status: 200,
-    headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000, immutable' },
+    headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' },
   })
   await cache?.put(cacheKey, res.clone())
   return res
