@@ -1135,9 +1135,9 @@ app.post('/admin/mockup-prerender', express.json({ limit: '256kb' }), async (req
       )
     : []
   res.json({ ok: true, queued: items.length })
+  startProgress('mockup', items.length)
   ;(async () => {
-    let done = 0
-    let failed = 0
+    const prog = renderProgress.mockup
     let cursor = 0
     const worker = async () => {
       for (;;) {
@@ -1155,17 +1155,19 @@ app.post('/admin/mockup-prerender', express.json({ limit: '256kb' }), async (req
           if (buf.length < 20000) throw new Error(`render too small (${buf.length}B)`)
           await writeFile(tmp, buf)
           await rename(tmp, out)
-          done += 1
+          prog.done += 1
         } catch (err) {
-          failed += 1
+          prog.failed += 1
           await unlink(tmp).catch(() => {})
           console.error('[mockup-prerender]', id, family, color, err.message)
         }
       }
     }
     await Promise.all(Array.from({ length: Math.min(WARM_CONCURRENCY, items.length || 1) }, worker))
-    console.log(`[mockup-prerender] done ${done}/${items.length}` + (failed ? ` (${failed} failed)` : ''))
-  })().catch((err) => console.error('[mockup-prerender] batch error:', err.message))
+    prog.running = false
+    prog.finishedAt = Date.now()
+    console.log(`[mockup-prerender] done ${prog.done}/${items.length}` + (prog.failed ? ` (${prog.failed} failed)` : ''))
+  })().catch((err) => { renderProgress.mockup.running = false; console.error('[mockup-prerender] batch error:', err.message) })
 })
 
 /**
@@ -1176,6 +1178,18 @@ app.post('/admin/mockup-prerender', express.json({ limit: '256kb' }), async (req
  * fill the container's dedicated cores) and return immediately. Idempotent:
  * re-running just re-renders.
  */
+// Live progress of the background pre-render batches, polled by the admin page.
+const renderProgress = {
+  poster: { total: 0, done: 0, failed: 0, running: false, startedAt: 0, finishedAt: 0 },
+  mockup: { total: 0, done: 0, failed: 0, running: false, startedAt: 0, finishedAt: 0 },
+}
+function startProgress(kind, total) {
+  renderProgress[kind] = { total, done: 0, failed: 0, running: true, startedAt: Date.now(), finishedAt: 0 }
+}
+
+/** Live render progress for the admin page (both batches). Secret-gated. */
+app.get('/admin/render-progress', (_req, res) => res.json(renderProgress))
+
 app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req, res) => {
   const items = Array.isArray(req.body?.items)
     ? req.body.items.filter(
@@ -1183,12 +1197,12 @@ app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req
       )
     : []
   res.json({ ok: true, queued: items.length })
+  startProgress('poster', items.length)
   // Background — never blocks the response; the Worker just kicks this off.
   // WARM_CONCURRENCY jobs in parallel (single-threaded each) to use the dedicated
   // cores; each poster master is a large 300-dpi render.
   ;(async () => {
-    let done = 0
-    let failed = 0
+    const prog = renderProgress.poster
     let cursor = 0
     const worker = async () => {
       for (;;) {
@@ -1197,16 +1211,18 @@ app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req
         const { id, size } = items[idx]
         try {
           await buildPosterMaster(id, size, true)
-          done += 1
+          prog.done += 1
         } catch (err) {
-          failed += 1
+          prog.failed += 1
           console.error('[poster-prerender]', id, size, err.message)
         }
       }
     }
     await Promise.all(Array.from({ length: Math.min(WARM_CONCURRENCY, items.length || 1) }, worker))
-    console.log(`[poster-prerender] done ${done}/${items.length}` + (failed ? ` (${failed} failed)` : ''))
-  })().catch((err) => console.error('[poster-prerender] batch error:', err.message))
+    prog.running = false
+    prog.finishedAt = Date.now()
+    console.log(`[poster-prerender] done ${prog.done}/${items.length}` + (prog.failed ? ` (${prog.failed} failed)` : ''))
+  })().catch((err) => { renderProgress.poster.running = false; console.error('[poster-prerender] batch error:', err.message) })
 })
 
 /**

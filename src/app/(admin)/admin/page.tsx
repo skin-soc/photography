@@ -524,9 +524,58 @@ function CacheControls() {
         ))}
       </div>
       {note && <p className="mt-4 text-[12px] text-white/55">{note}</p>}
+      <RenderProgress />
       <RerenderPreviews btn={btn} />
     </section>
   )
+}
+
+/** Live progress bars for the background pre-render batches (posters + mockups),
+ *  polled from the origin. Hidden until a batch has run this session. */
+interface RenderBatch { total: number; done: number; failed: number; running: boolean; finishedAt: number }
+function RenderProgress() {
+  const [p, setP] = useState<{ poster: RenderBatch; mockup: RenderBatch } | null>(null)
+  useEffect(() => {
+    let stop = false
+    const tick = async () => {
+      try {
+        const r = await fetch('/api/admin/render-progress', { cache: 'no-store' })
+        if (r.ok && !stop) setP(await r.json())
+      } catch { /* keep last */ }
+    }
+    tick()
+    const iv = setInterval(tick, 2500)
+    return () => { stop = true; clearInterval(iv) }
+  }, [])
+  if (!p) return null
+
+  const bar = (label: string, b: RenderBatch) => {
+    if (!b || (b.total === 0 && !b.running && !b.finishedAt)) return null // never run → hide
+    const pct = b.total ? Math.round((b.done / b.total) * 100) : 0
+    const state = b.running ? 'Rendering…' : b.finishedAt ? 'Done' : ''
+    return (
+      <div key={label}>
+        <div className="flex items-baseline justify-between text-[11px] font-mono-ibm">
+          <span className="uppercase tracking-[0.2em] text-white/45">{label}</span>
+          <span className="tabular-nums text-white/55">
+            {b.done}/{b.total}{b.failed ? ` · ${b.failed} failed` : ''}
+            {state && <span className="ml-2 text-white/35">{state}</span>}
+          </span>
+        </div>
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div
+            className={`h-full rounded-full transition-[width] duration-500 ${b.running ? 'bg-accent' : b.failed ? 'bg-amber-500/70' : 'bg-emerald-500/70'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  const posters = bar('Posters', p.poster)
+  const mockups = bar('Mockups', p.mockup)
+  if (!posters && !mockups) return null
+  return <div className="mt-5 space-y-3">{posters}{mockups}</div>
 }
 
 /**

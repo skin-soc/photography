@@ -801,6 +801,28 @@ export async function fetchOriginMockup(photoId: string, family: string, color: 
   })
 }
 
+/** One batch's live render progress. */
+export interface RenderProgressItem {
+  total: number
+  done: number
+  failed: number
+  running: boolean
+  startedAt: number
+  finishedAt: number
+}
+export interface RenderProgress {
+  poster: RenderProgressItem
+  mockup: RenderProgressItem
+}
+
+/** Poll the origin's live pre-render progress (posters + mockups). */
+export async function adminRenderProgress(): Promise<RenderProgress | null> {
+  if (!ORIGIN) return null
+  const res = await fetch(`${ORIGIN}/admin/render-progress`, { headers: originHeaders(), cache: 'no-store' })
+  if (!res.ok) return null
+  return (await res.json()) as RenderProgress
+}
+
 /** Clear generated deliverables (they regenerate on next download). */
 export async function adminClearFulfilCache(): Promise<{ deleted: number } | null> {
   if (!ORIGIN) return null
