@@ -1132,7 +1132,10 @@ async function cropCoverMatte(buf) {
     for (let x = 0; x < W; x++) {
       const i = (y * W + x) * C
       const r = data[i], g = data[i + 1], b = data[i + 2]
-      const matte = r > 150 && b > 150 && g < Math.min(r, b) - 50
+      // Magenta-tint test: red AND blue notably exceed green. Catches the matte AND
+      // its anti-aliased edge (the old r>150 threshold missed the darker rim pixels,
+      // leaving a 1-2px pink border). Safe for B&W/sepia photos — sepia has b<g.
+      const matte = r - g > 25 && b - g > 25
       if (!matte) {
         if (x < minX) minX = x
         if (x > maxX) maxX = x
@@ -1142,7 +1145,12 @@ async function cropCoverMatte(buf) {
     }
   }
   if (maxX < minX || maxY < minY) return buf // entirely matte — leave as-is
-  return sharp(buf).extract({ left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 }).toBuffer()
+  // Inset a few px as a belt-and-braces against sub-pixel residue / JPEG edge bleed.
+  const inset = 3
+  let left = minX + inset, top = minY + inset
+  let width = maxX - minX + 1 - inset * 2, height = maxY - minY + 1 - inset * 2
+  if (width < 1 || height < 1) { left = minX; top = minY; width = maxX - minX + 1; height = maxY - minY + 1 }
+  return sharp(buf).extract({ left, top, width, height }).toBuffer()
 }
 
 /**
