@@ -63,6 +63,7 @@ const PUBLIC_URL = (process.env.PUBLIC_URL ?? '').replace(/\/$/, '')
 // during warming. Unset → edge priming is skipped (origin disk warming still runs).
 const PREVIEW_PUBLIC_BASE = (process.env.PREVIEW_PUBLIC_BASE ?? '').replace(/\/+$/, '')
 const PREVIEW_VERSION_PATH = resolve(process.env.PREVIEW_VERSION_PATH ?? join(DATA_DIR, 'preview-version'))
+const MOCKUP_VERSION_PATH = resolve(process.env.MOCKUP_VERSION_PATH ?? join(DATA_DIR, 'mockup-version'))
 const PREVIEW_MAX = Number(process.env.PREVIEW_MAX ?? 800)
 const SHARED_SECRET = process.env.SHARED_SECRET ?? ''
 
@@ -335,6 +336,24 @@ async function bumpPreviewVersion() {
   return _previewVersion
 }
 
+// Monotonic mockup-asset version — same idea as previewVersion but for fine-art
+// mockups (room07 + cover). The Worker folds it into every mockup URL + cache key
+// + the catalog version, so bumping it busts ALL mockup caches (edge + browser) at
+// once. Bumped automatically when a render batch COMPLETES (so the new version only
+// ever maps to freshly-written assets — no cutover poisoning). Persisted.
+let _mockupVersion = 1
+try {
+  const n = parseInt((await readFile(MOCKUP_VERSION_PATH, 'utf8')).trim(), 10)
+  if (Number.isFinite(n) && n > 0) _mockupVersion = n
+} catch { /* default 1; created on first bump */ }
+const mockupVersion = () => _mockupVersion
+async function bumpMockupVersion() {
+  _mockupVersion += 1
+  await writeFile(MOCKUP_VERSION_PATH, String(_mockupVersion))
+    .catch((err) => console.error('[mockup-version] persist failed:', err.message))
+  return _mockupVersion
+}
+
 const app = express()
 app.disable('x-powered-by')
 // Gzip responses — catalog.json is ~2MB JSON and the tunnel upstream is slow
@@ -478,7 +497,7 @@ app.get('/catalog.json', async (_req, res) => {
     res.set('Cache-Control', 'public, max-age=300')
     // previewVersion drives the `?v=` cache-buster the Worker appends to preview
     // URLs — bumped on re-render so loki's edge cache refreshes.
-    res.json({ ...catalog, previewVersion: previewVersion() })
+    res.json({ ...catalog, previewVersion: previewVersion(), mockupVersion: mockupVersion() })
   } catch (err) {
     console.error('[catalog]', err)
     res.status(500).json({ error: 'catalog unavailable' })
@@ -1205,6 +1224,14 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
     await Promise.all(Array.from({ length: Math.min(WARM_CONCURRENCY, items.length || 1) }, worker))
     prog.running = false
     prog.finishedAt = Date.now()
+    // Bump the mockup version now the new assets are all written — the Worker folds
+    // it into mockup URLs + the catalog version, so every mockup cache (edge +
+    // browser) busts automatically on the next catalog read. Only bump if something
+    // actually rendered, so a no-op run doesn't needlessly invalidate caches.
+    if (prog.done > 0) {
+      prog.version = await bumpMockupVersion()
+      console.log(`[mockup-prerender] bumped mockup version → ${prog.version}`)
+    }
     console.log(`[mockup-prerender] done ${prog.done}/${items.length}` + (prog.failed ? ` (${prog.failed} failed)` : ''))
   })().catch((err) => { renderProgress.mockup.running = false; console.error('[mockup-prerender] batch error:', err.message) })
 })
@@ -1226,8 +1253,10 @@ function startProgress(kind, total) {
   renderProgress[kind] = { total, done: 0, failed: 0, running: true, startedAt: Date.now(), finishedAt: 0 }
 }
 
-/** Live render progress for the admin page (both batches). Secret-gated. */
-app.get('/admin/render-progress', (_req, res) => res.json(renderProgress))
+/** Live render progress for the admin page (both batches) + the current asset
+ *  versions, so the admin can show what cache-bust version is live. Secret-gated. */
+app.get('/admin/render-progress', (_req, res) =>
+  res.json({ ...renderProgress, previewVersion: previewVersion(), mockupVersion: mockupVersion() }))
 
 app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req, res) => {
   const items = Array.isArray(req.body?.items)

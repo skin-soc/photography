@@ -8,7 +8,7 @@
  */
 import { getCatalog } from '@/lib/shop'
 import { fetchOriginMockup } from '@/lib/downloads'
-import { canMockup, mockupColor, MOCKUP_VERSION } from '@/lib/mockups'
+import { canMockup, mockupColor } from '@/lib/mockups'
 
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url)
@@ -17,13 +17,16 @@ export async function GET(req: Request): Promise<Response> {
   const size = (url.searchParams.get('size') ?? '').replace(/[^A-Za-z0-9]/g, '')
   const color = url.searchParams.get('color') ?? ''
   const view = url.searchParams.get('view') === 'cover' ? 'cover' : 'room07'
+  // The mockup-asset version (set by the origin, passed by the client) is part of
+  // the cache key, so a re-render's version bump naturally misses the old cache.
+  const v = (url.searchParams.get('v') ?? '1').replace(/[^0-9]/g, '') || '1'
   if (!slug || !family || !size || !color || !canMockup(family, color)) {
     return new Response('bad request', { status: 400 })
   }
   const assetColor = mockupColor(family, color)
 
   const cacheKey = new Request(
-    new URL(`/api/fineart-mockup?photo=${slug}&family=${family}&size=${size}&color=${assetColor}&view=${view}&v=${MOCKUP_VERSION}`, url.origin).toString(),
+    new URL(`/api/fineart-mockup?photo=${slug}&family=${family}&size=${size}&color=${assetColor}&view=${view}&v=${v}`, url.origin).toString(),
   )
   const cache = (caches as unknown as { default?: Cache }).default
   const cached = await cache?.match(cacheKey)

@@ -53,6 +53,14 @@ if ! grep -q "cropCoverMatte" "$SOURCE/server.js"; then
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
+# Auto mockup versioning (v0.9.11+): the prerender bumps a persisted mockupVersion
+# so the Worker busts mockup caches automatically. Without it, cache management
+# reverts to manual constant bumps.
+if ! grep -q "bumpMockupVersion" "$SOURCE/server.js"; then
+  echo "ERROR: $SOURCE/server.js is STALE (no auto mockupVersion bump)."
+  echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
+  exit 1
+fi
 if ! grep -q '"nodemailer"' "$SOURCE/package.json"; then
   echo "WARNING: $SOURCE/package.json looks stale (no nodemailer) — re-sync it too."
 fi

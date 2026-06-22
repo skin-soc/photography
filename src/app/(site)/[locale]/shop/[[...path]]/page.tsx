@@ -3,11 +3,11 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound, redirect } from 'next/navigation'
 import ShopGrid from '@/app/components/ShopGrid'
 import ShopProductView from '@/app/components/ShopProductView'
-import { MOCKUP_VERSION } from '@/lib/mockups'
 import {
   getCatalog,
   getPhoto,
   catalogVersion,
+  mockupAssetVersion,
   photoTypes,
   availableTypes,
   buildCategoryTree,
@@ -257,7 +257,7 @@ export default async function Shop({ params }: { params: Params }) {
           heading={t('h1')}
           intro={tShop('intro')}
           siteLabel={siteLabel}
-          mockupVersion={MOCKUP_VERSION}
+          mockupVersion={mockupAssetVersion()}
         />
       ) : (
         <header className="max-w-2xl">

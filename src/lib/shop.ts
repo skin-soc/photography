@@ -451,6 +451,10 @@ interface RawCatalog {
   /** Monotonic preview-cache version from the origin. Appended to preview URLs as
    *  `?v=` so a re-render busts loki's immutable edge cache. */
   previewVersion?: number
+  /** Monotonic mockup-asset version from the origin — bumped when a fine-art mockup
+   *  render batch completes. Folded into the catalog version + every mockup URL so
+   *  re-rendering busts all mockup caches automatically. */
+  mockupVersion?: number
   photos: ShopPhoto[]
 }
 
@@ -472,6 +476,14 @@ let _inflight: Promise<ShopPhoto[]> | null = null
  *  busts the edge-cached grid catalog. Bump when the payload gains/changes fields.
  *  v2 = added per-photo `faCovers` (fine-art grid cover variants). */
 const CATALOG_SCHEMA = 2
+
+/** The origin's current mockup-asset version, captured on the last catalog build.
+ *  Drives every mockup URL + cache key, so the origin bumping it (on a render-batch
+ *  completion) automatically busts all mockup caches. 1 until the first build. */
+let _mockupAssetVersion = 1
+export function mockupAssetVersion(): number {
+  return _mockupAssetVersion
+}
 
 /** Stable cache key for the raw catalog at the Cloudflare edge. */
 const CATALOG_CACHE_KEY = 'https://shop-origin.internal/catalog.json'
@@ -573,10 +585,12 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
     // origin, so folding it into the key re-processes the catalog (new ?v=) the
     // moment the origin reports a new version.
     const previewVer = data.previewVersion ?? 1
+    const mockupVer = data.mockupVersion ?? 1
+    _mockupAssetVersion = mockupVer // captured for mockupAssetVersion()
     const key =
       (data.generated ||
         `${data.photos.length}:${data.photos[0]?.id ?? ''}:${data.photos[data.photos.length - 1]?.id ?? ''}`) +
-      `|p:${pricingStamp(pricing)}|r:${rates.EUR.toFixed(5)}|v:${previewVer}|s:${CATALOG_SCHEMA}`
+      `|p:${pricingStamp(pricing)}|r:${rates.EUR.toFixed(5)}|v:${previewVer}|m:${mockupVer}|s:${CATALOG_SCHEMA}`
     if (_processed && _processed.key === key) return _processed.photos
     const photos = data.photos.map((p) => ({
       ...p,

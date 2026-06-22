@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { ReferenceLookup, AssetInfo } from '@/lib/shop'
 import type { AdminOrder, AssetAudit as AssetAuditData } from '@/lib/downloads'
 import { vatJurisdiction, jurisdictionLabel, type VatJurisdiction } from '@/lib/vat'
@@ -533,9 +533,12 @@ function CacheControls() {
 /** Live progress bars for the background pre-render batches (posters + mockups),
  *  polled from the origin. Hidden until a batch has run this session. */
 interface RenderBatch { total: number; done: number; failed: number; running: boolean; finishedAt: number }
+interface ProgressData { poster: RenderBatch; mockup: RenderBatch; previewVersion?: number; mockupVersion?: number }
 function RenderProgress() {
-  const [p, setP] = useState<{ poster: RenderBatch; mockup: RenderBatch } | null>(null)
+  const [p, setP] = useState<ProgressData | null>(null)
   const [status, setStatus] = useState<'loading' | 'ok' | 'unavailable'>('loading')
+  const [syncing, setSyncing] = useState(false)
+  const lastMockupVer = useRef<number | null>(null)
   useEffect(() => {
     let stop = false
     let iv: ReturnType<typeof setTimeout> | null = null
@@ -544,8 +547,20 @@ function RenderProgress() {
         const r = await fetch('/api/admin/render-progress', { cache: 'no-store' })
         if (stop) return
         if (r.ok) {
-          const data = (await r.json()) as { poster: RenderBatch; mockup: RenderBatch }
+          const data = (await r.json()) as ProgressData
           setP(data); setStatus('ok')
+          // AUTO cache management: when the origin's mockup version advances (a render
+          // batch finished + bumped it), purge the catalog so the new version — and
+          // therefore fresh mockup URLs everywhere — propagates immediately instead of
+          // waiting out the 60s TTL. No manual flush, no stale covers.
+          const mv = data.mockupVersion ?? null
+          if (mv != null && lastMockupVer.current != null && mv > lastMockupVer.current) {
+            setSyncing(true)
+            fetch('/api/admin/cache', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'refresh-catalog' }) })
+              .catch(() => {})
+              .finally(() => { if (!stop) setSyncing(false) })
+          }
+          if (mv != null) lastMockupVer.current = mv
           // Poll fast only while a batch is actually running; otherwise idle slowly
           // so the admin page isn't hammering the Worker forever.
           const active = data.poster.running || data.mockup.running
@@ -595,7 +610,18 @@ function RenderProgress() {
       ) : !p ? (
         <p className="mt-3 text-[11px] text-white/35">Loading…</p>
       ) : (
-        <div className="mt-3 space-y-3">{bar('Posters', p.poster)}{bar('Mockups', p.mockup)}</div>
+        <>
+          <div className="mt-3 space-y-3">{bar('Posters', p.poster)}{bar('Mockups', p.mockup)}</div>
+          {/* Cache versions — bumped automatically on re-render; the catalog is
+              re-synced on the spot so the new version reaches the shop instantly. */}
+          <div className="mt-3 flex items-center justify-between text-[10px] font-mono-ibm text-white/30">
+            <span className="uppercase tracking-[0.2em]">Cache</span>
+            <span className="tabular-nums">
+              preview v{p.previewVersion ?? '—'} · mockup v{p.mockupVersion ?? '—'}
+              {syncing && <span className="ml-2 text-accent">re-syncing…</span>}
+            </span>
+          </div>
+        </>
       )}
     </div>
   )
