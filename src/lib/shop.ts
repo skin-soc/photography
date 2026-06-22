@@ -467,6 +467,12 @@ interface RawCatalog {
 let _processed: { key: string; photos: ShopPhoto[] } | null = null
 let _inflight: Promise<ShopPhoto[]> | null = null
 
+/** Schema version of the /api/shop/catalog payload shape. Folded into
+ *  catalogVersion() so a CODE change to that shape (not just data/price/rates)
+ *  busts the edge-cached grid catalog. Bump when the payload gains/changes fields.
+ *  v2 = added per-photo `faCovers` (fine-art grid cover variants). */
+const CATALOG_SCHEMA = 2
+
 /** Stable cache key for the raw catalog at the Cloudflare edge. */
 const CATALOG_CACHE_KEY = 'https://shop-origin.internal/catalog.json'
 
@@ -570,7 +576,7 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
     const key =
       (data.generated ||
         `${data.photos.length}:${data.photos[0]?.id ?? ''}:${data.photos[data.photos.length - 1]?.id ?? ''}`) +
-      `|p:${pricingStamp(pricing)}|r:${rates.EUR.toFixed(5)}|v:${previewVer}`
+      `|p:${pricingStamp(pricing)}|r:${rates.EUR.toFixed(5)}|v:${previewVer}|s:${CATALOG_SCHEMA}`
     if (_processed && _processed.key === key) return _processed.photos
     const photos = data.photos.map((p) => ({
       ...p,
