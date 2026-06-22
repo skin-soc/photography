@@ -51,6 +51,9 @@ interface PhysicalItem {
   copies: number
   attributes: Record<string, string>
   ourSku: string
+  /** Oriented print aspect "W:H" (cm) — the origin pre-crops the fine-art master to
+   *  it (keep bottom, centre sides) instead of Prodigi centre-cropping. */
+  aspect?: string
 }
 
 /** Map paid line items to Prodigi-fulfillable physical items (catalog products
@@ -83,6 +86,7 @@ async function resolvePhysicalItems(lineItems: OrderLine[]): Promise<PhysicalIte
       copies: li.qty || 1,
       attributes: product.attributes ?? {},
       ourSku: li.sku,
+      aspect: product.printSize ? `${product.printSize.w}:${product.printSize.h}` : undefined,
     })
   }
   return out
@@ -124,9 +128,10 @@ export async function submitProdigiOrder(input: {
           copies: p.copies,
           attributes: p.attributes,
           merchantReference: p.ourSku,
-          // Full-res master cover-cropped by Prodigi to this product's print area.
+          // Master pre-cropped by the origin to this size's aspect (keep bottom,
+          // centre sides); fillPrintArea then scales-to-fill with no further crop.
           sizing: 'fillPrintArea',
-          assets: [{ printArea: 'default', url: fineArtAssetUrl(p.photoId, input.orderCode) }],
+          assets: [{ printArea: 'default', url: fineArtAssetUrl(p.photoId, input.orderCode, p.aspect) }],
         }
       : {
           sku: p.providerSku,

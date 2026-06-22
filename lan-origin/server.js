@@ -593,17 +593,17 @@ async function buildPreview(id, max, logo = true, poster = false) {
     .resize(max, max, { fit: 'inside', withoutEnlargement: true })
     .toBuffer({ resolveWithObject: true })
 
-  // Poster variant: centre-crop the resized preview to the 4:5 PORTRAIT poster
-  // format — the same crop the print master uses, so preview = print. No upscale:
-  // we extract the largest centred 4:5 region that fits the resized image.
+  // Poster variant: crop the resized preview to the 4:5 PORTRAIT poster format —
+  // the same crop the print master uses, so preview = print. Crop priority: keep
+  // the BOTTOM (trim from the top) and centre the sides. No upscale.
   if (poster) {
     const RATIO = 4 / 5 // portrait width / height
     const { width: w, height: h } = resizeInfo
     let cw, ch
     if (w / h > RATIO) { ch = h; cw = Math.round(h * RATIO) } // too wide → trim sides
-    else { cw = w; ch = Math.round(w / RATIO) }               // too tall → trim top/bottom
+    else { cw = w; ch = Math.round(w / RATIO) }               // too tall → trim from the top
     const out = await sharp(resizedBuf)
-      .extract({ left: Math.round((w - cw) / 2), top: Math.round((h - ch) / 2), width: cw, height: ch })
+      .extract({ left: Math.round((w - cw) / 2), top: h - ch, width: cw, height: ch })
       .toBuffer({ resolveWithObject: true })
     resizedBuf = out.data
     resizeInfo = out.info
@@ -973,16 +973,67 @@ app.get('/fulfil/poster/:id/:size', async (req, res) => {
   }
 })
 
+/** Prodigi's maximum order-asset upload (bytes). Master JPEGs are kept under this
+ *  so the order asset Prodigi fetches never exceeds the limit. */
+const PRODIGI_MAX_UPLOAD = Number(process.env.PRODIGI_MAX_UPLOAD ?? 48 * 1024 * 1024)
+
+/** Parse an `ar` query like "3:2" into oriented {tw, th}, or null. */
+function parseAspect(ar) {
+  const m = /^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/.exec(ar ?? '')
+  if (!m) return null
+  const tw = parseFloat(m[1]), th = parseFloat(m[2])
+  return tw > 0 && th > 0 ? { tw, th } : null
+}
+
+/** Crop rectangle fitting (w×h) to aspect (tw:th), keeping the BOTTOM (excess taken
+ *  from the TOP) and horizontally CENTRED — our fine-art/poster crop priority.
+ *  Returns null when already at the target aspect. */
+function southCropRect(w, h, tw, th) {
+  const target = tw / th, ar = w / h
+  if (Math.abs(ar - target) < 0.003) return null
+  if (ar > target) {
+    const cw = Math.round(h * target)
+    return { left: Math.round((w - cw) / 2), top: 0, width: cw, height: h } // crop sides evenly
+  }
+  const ch = Math.round(w / target)
+  return { left: 0, top: h - ch, width: w, height: ch } // keep the bottom, crop the top
+}
+
+/** Re-encode `path` in place at descending quality, then progressively downscale,
+ *  until it's ≤ PRODIGI_MAX_UPLOAD. Keeps full resolution as long as possible
+ *  (print quality), shrinking only as a last resort. No-op if already small enough. */
+async function capUploadSize(path) {
+  if ((await stat(path)).size <= PRODIGI_MAX_UPLOAD) return
+  for (const quality of [92, 88, 84, 80, 76, 72]) {
+    const tmp = `${path}.cap-${randomBytes(4).toString('hex')}.jpg`
+    await sharp(path, { limitInputPixels: false }).rotate().keepIccProfile()
+      .jpeg({ quality, mozjpeg: true, chromaSubsampling: '4:2:0' }).toFile(tmp)
+    if ((await stat(tmp)).size <= PRODIGI_MAX_UPLOAD) { await rename(tmp, path); return }
+    await unlink(tmp).catch(() => {})
+  }
+  const meta = await sharp(path, { limitInputPixels: false }).metadata()
+  for (let scale = 0.9; scale >= 0.4; scale -= 0.1) {
+    const tmp = `${path}.cap-${randomBytes(4).toString('hex')}.jpg`
+    await sharp(path, { limitInputPixels: false }).rotate().keepIccProfile()
+      .resize({ width: Math.max(1, Math.round((meta.width || 0) * scale)) })
+      .jpeg({ quality: 80, mozjpeg: true, chromaSubsampling: '4:2:0' }).toFile(tmp)
+    if ((await stat(tmp)).size <= PRODIGI_MAX_UPLOAD) { await rename(tmp, path); return }
+    await unlink(tmp).catch(() => {})
+  }
+}
+
 /**
  * Generate-or-reuse the FINE-ART print master for a photo — the Prodigi print
  * asset: the full-resolution edited master, NO watermark/logo, with copyright
- * metadata embedded. ONE per photo: every fine-art size fills from this same
- * file (Prodigi cover-crops it to each print area via `sizing: fillPrintArea`),
- * so it's cached by ref. JPEG masters ship their exact exported bytes; TIFF-only
- * photos are encoded to a visually-lossless JPEG.
+ * metadata embedded. When `aspect` ({tw,th}) is given, the master is pre-cropped
+ * to that exact print aspect keeping the BOTTOM + horizontally centred (so Prodigi
+ * doesn't centre-crop it) and cached per-aspect; otherwise the full frame is kept,
+ * cached by ref. Output is always held ≤ Prodigi's 50MB upload limit. JPEG masters
+ * ship their exact bytes when uncropped; otherwise a visually-lossless JPEG.
  */
-async function buildFineArtMaster(id, force = false) {
-  const out = join(FINEART_ASSETS_DIR, `${photoRef(id)}.jpg`)
+async function buildFineArtMaster(id, aspect = null, force = false) {
+  const tag = aspect ? `-${aspect.tw}x${aspect.th}` : ''
+  const out = join(FINEART_ASSETS_DIR, `${photoRef(id)}${tag}.jpg`)
   if (!force && (await fileIfExists(out))) return out
 
   const { photos } = await loadCatalog()
@@ -997,7 +1048,15 @@ async function buildFineArtMaster(id, force = false) {
   const isJpeg = /\.jpe?g$/i.test(srcPath)
   const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
   try {
-    if (isJpeg) {
+    if (aspect) {
+      // Pre-crop to the print aspect (gravity south: keep bottom, centre sides) at
+      // full resolution, then re-encode visually-lossless.
+      const pipe = sharp(srcPath, { limitInputPixels: false }).rotate()
+      const meta = await pipe.metadata()
+      const rect = southCropRect(meta.width || 0, meta.height || 0, aspect.tw, aspect.th)
+      const cropped = rect ? sharp(srcPath, { limitInputPixels: false }).rotate().extract(rect) : sharp(srcPath, { limitInputPixels: false }).rotate()
+      await cropped.keepIccProfile().jpeg({ quality: 95, chromaSubsampling: '4:4:4', mozjpeg: true }).toFile(tmp)
+    } else if (isJpeg) {
       await copyFile(srcPath, tmp) // ship the exact bytes exported from Lightroom
     } else {
       await sharp(srcPath, { limitInputPixels: false })
@@ -1006,6 +1065,8 @@ async function buildFineArtMaster(id, force = false) {
         .jpeg({ quality: 100, chromaSubsampling: '4:4:4', mozjpeg: true })
         .toFile(tmp)
     }
+    // Keep the asset under Prodigi's upload limit (re-encodes/shrinks only if needed).
+    await capUploadSize(tmp)
     // Embed rights metadata (image data untouched for copied JPEGs).
     await exiftool.write(tmp, {
       Artist: 'Gus McEwan',
@@ -1049,7 +1110,9 @@ app.get('/fulfil/fineart/:id', async (req, res) => {
   const { id } = req.params
   if (!/^[A-Za-z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'bad request' })
   try {
-    const path = await buildFineArtMaster(id)
+    // ?ar=W:H → pre-crop to the ordered size's aspect (keep bottom, centre sides);
+    // the Worker passes the oriented print aspect so Prodigi doesn't centre-crop.
+    const path = await buildFineArtMaster(id, parseAspect(req.query.ar))
     res.set('Cache-Control', 'public, max-age=31536000, immutable')
     res.type('jpeg')
     createReadStream(path).pipe(res)
@@ -1066,8 +1129,9 @@ app.get('/fulfil/fineart/:id', async (req, res) => {
  * `&image=` artwork. Medium-res (not print-res) keeps it small/fast and limits
  * exposure; the token gate keeps it from being casually scraped. Cached by ref.
  */
-async function buildMockupSource(id) {
-  const out = join(CACHE_DIR, `${photoRef(id)}-mocksrc.jpg`)
+async function buildMockupSource(id, aspect = null) {
+  const tag = aspect ? `-${aspect.tw}x${aspect.th}` : ''
+  const out = join(CACHE_DIR, `${photoRef(id)}-mocksrc${tag}.jpg`)
   if (await fileIfExists(out)) return out
 
   const { photos } = await loadCatalog()
@@ -1079,8 +1143,15 @@ async function buildMockupSource(id) {
   const srcPath = await resolveSource(id, 'jpeg')
   const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
   try {
-    await sharp(srcPath, { limitInputPixels: false })
-      .rotate()
+    let pipe = sharp(srcPath, { limitInputPixels: false }).rotate()
+    if (aspect) {
+      // Pre-crop to the product aspect (keep bottom, centre sides) so PIG — which
+      // ignores crop gravity — composites the same crop the print uses.
+      const meta = await sharp(srcPath, { limitInputPixels: false }).rotate().metadata()
+      const rect = southCropRect(meta.width || 0, meta.height || 0, aspect.tw, aspect.th)
+      if (rect) pipe = pipe.extract(rect)
+    }
+    await pipe
       .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
       .keepIccProfile()
       .jpeg({ quality: 88, mozjpeg: true })
@@ -1104,7 +1175,9 @@ app.get('/mockup-src/:id', async (req, res) => {
   const { id } = req.params
   if (!/^[A-Za-z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'bad request' })
   try {
-    const path = await buildMockupSource(id)
+    // ?ar=W:H → pre-crop to the product aspect (keep bottom, centre sides) so the
+    // PIG mockup matches the print crop.
+    const path = await buildMockupSource(id, parseAspect(req.query.ar))
     res.set('Cache-Control', 'public, max-age=31536000, immutable')
     res.type('jpeg')
     createReadStream(path).pipe(res)

@@ -96,10 +96,11 @@ export async function renderPosterMaster({ photo, size, title, caption, siteLabe
   const bandTop = photoY + photoH
   const bandH = H - bandTop
 
-  // Photo — centre-cropped to the 4:5 image area at full print resolution.
+  // Photo — cropped to the 4:5 image area at full print resolution. Crop priority:
+  // keep the BOTTOM (trim from the top) and centre the sides → position 'bottom'.
   const photoBuf = await sharp(photo, { limitInputPixels: false })
     .rotate() // honour EXIF orientation
-    .resize(photoW, photoH, { fit: 'cover', position: 'centre' })
+    .resize(photoW, photoH, { fit: 'cover', position: 'bottom' })
     .toBuffer()
 
   // Type band — caption + title centred in the space above the website, which is

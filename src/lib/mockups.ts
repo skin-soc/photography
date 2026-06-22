@@ -89,6 +89,9 @@ export function mockupRenderUrl(opts: {
    *  for the masonry grid). Defaults to a square `px` box. */
   outW?: number
   outH?: number
+  /** Oriented print aspect "W:H" — the origin pre-crops the source to it (keep
+   *  bottom, centre sides) so the mockup crop matches the print. */
+  aspect?: string
 }): string | null {
   const prefix = MOCKUP_PREFIX[opts.family]
   if (!prefix || !canMockup(opts.family, opts.color) || !mockupSizeSupported(opts.family, opts.size)) return null
@@ -108,6 +111,6 @@ export function mockupRenderUrl(opts: {
     u.searchParams.set('scene', 'room07')
   }
   u.searchParams.set('variant', `${coverColor}_cover`)
-  u.searchParams.set('image', `${mockupSrcUrl(opts.photoId)}&v=${MOCKUP_VERSION}`)
+  u.searchParams.set('image', `${mockupSrcUrl(opts.photoId, opts.aspect)}&v=${MOCKUP_VERSION}`)
   return u.toString()
 }

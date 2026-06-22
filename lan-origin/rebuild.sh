@@ -61,6 +61,12 @@ if ! grep -q "bumpMockupVersion" "$SOURCE/server.js"; then
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
+# 50MB upload cap + gravity-south aspect crop (v0.9.13+).
+if ! grep -q "capUploadSize" "$SOURCE/server.js" || ! grep -q "southCropRect" "$SOURCE/server.js"; then
+  echo "ERROR: $SOURCE/server.js is STALE (no 50MB cap / south-crop)."
+  echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
+  exit 1
+fi
 if ! grep -q '"nodemailer"' "$SOURCE/package.json"; then
   echo "WARNING: $SOURCE/package.json looks stale (no nodemailer) — re-sync it too."
 fi

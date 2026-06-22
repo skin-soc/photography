@@ -331,12 +331,14 @@ export function fineArtAssetToken(photoId: string, orderCode: string): string {
     .slice(0, 32)
 }
 
-/** Public, token-gated URL Prodigi fetches the FULL-RES fine-art master from (it
- *  fill-crops to the print area). Served by the origin's `/fulfil/fineart/:id`. */
-export function fineArtAssetUrl(photoId: string, orderCode: string): string {
+/** Public, token-gated URL Prodigi fetches the FULL-RES fine-art master from. The
+ *  origin pre-crops it to `aspect` ("W:H", keep bottom + centre sides) so Prodigi
+ *  doesn't centre-crop. Served by the origin's `/fulfil/fineart/:id`. */
+export function fineArtAssetUrl(photoId: string, orderCode: string, aspect?: string): string {
   const u = new URL(`${ORIGIN}/fulfil/fineart/${encodeURIComponent(photoId)}`)
   u.searchParams.set('o', orderCode)
   u.searchParams.set('t', fineArtAssetToken(photoId, orderCode))
+  if (aspect) u.searchParams.set('ar', aspect)
   return u.toString()
 }
 
@@ -349,10 +351,12 @@ export function mockupSrcToken(photoId: string): string {
 }
 
 /** Public, token-gated URL the Prodigi mockup generator fetches the medium
- *  no-logo artwork from. Served by the origin's `/mockup-src/:id`. */
-export function mockupSrcUrl(photoId: string): string {
+ *  no-logo artwork from. The origin pre-crops it to `aspect` ("W:H") so the mockup
+ *  crop matches the print. Served by the origin's `/mockup-src/:id`. */
+export function mockupSrcUrl(photoId: string, aspect?: string): string {
   const u = new URL(`${ORIGIN}/mockup-src/${encodeURIComponent(photoId)}`)
   u.searchParams.set('t', mockupSrcToken(photoId))
+  if (aspect) u.searchParams.set('ar', aspect)
   return u.toString()
 }
 
