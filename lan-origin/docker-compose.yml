@@ -9,6 +9,16 @@ services:
     # image rebuild.sh just built (not a stale auto-named one).
     image: ix-photography-shop-origin:latest
     restart: unless-stopped
+    # Cap the container at 5 cores of CPU time (sharp image processing is the heavy
+    # bit — preview/poster generation + warming). Paired with sharp.concurrency(1)
+    # + WARM_CONCURRENCY=5 in server.js so the warmer runs 5 single-threaded jobs
+    # that cleanly fill these 5 cores (no thread thrash). docker compose v2 (TrueNAS
+    # SCALE) applies this as --cpus even without swarm. To instead PIN to specific
+    # physical cores, replace this block with:  cpuset: "0-4"
+    deploy:
+      resources:
+        limits:
+          cpus: "5"
     environment:
       PORT: 8787
       DATA_DIR: /data
@@ -17,6 +27,7 @@ services:
       CACHE_DIR: /data/cache
       PRODUCTS_PATH: /data/products.json
       PUBLIC_URL: https://valhalla.gusmcewan.com
+      PREVIEW_PUBLIC_BASE: https://loki.gusmcewan.com  # public cacheable host the warmer primes (loki edge)
       PREVIEW_MAX: 800   # never serve a preview larger than the plugin's 800px preview
       SHARED_SECRET: 72CI7xmvrcXqgapT1tISjvc8Kopd95PsGcQM4az9w27faLHhAeVObnZuqzSdN3Su4qIjWJSvM2iUszyUxQOujLHvMDLLVZxEN2bx
       # ── Fulfilment (Phase 2) ──────────────────────────────────────────────
@@ -25,6 +36,7 @@ services:
       # are the single deliverable source — RAW originals are never read here.
       MASTERS_DIR: /fulfil/masters          # Lightroom-exported edited masters
       FULFIL_CACHE_DIR: /fulfil/cache       # generated, copyright-embedded files (Standard…Master)
+      POSTER_ASSETS_DIR: /fulfil/poster-assets # pre-rendered poster print masters (Prodigi)
       ORDERS_DIR: /fulfil/orders            # download grant records
       SITE_URL: https://gusmcewan.com       # public site, for the email link
       LINK_TTL_DAYS: 30
@@ -39,10 +51,12 @@ services:
       # alias). Not secret, so it's set here. Leave SMTP_USER/SMTP_PASS empty to
       # disable email (downloads still work; the buyer is auto-unlocked after
       # payment). On boot the log prints "[email] SMTP ready …" or "… FAILED …".
+      # SMTP_USER/SMTP_PASS are interpolated from a gitignored lan-origin/.env
+      # (synced next to this file on the NAS) — never commit the credential.
       SMTP_HOST: smtp.mail.me.com
       SMTP_PORT: 587
-      SMTP_USER: ""
-      SMTP_PASS: ""
+      SMTP_USER: "${SMTP_USER}"
+      SMTP_PASS: "${SMTP_PASS}"
       MAIL_FROM: "Gus McEwan Photography <email@gusmcewan.com>"
     ports:
       - "8787:8787"
