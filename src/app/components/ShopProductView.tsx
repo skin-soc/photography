@@ -12,6 +12,7 @@ import {
 import { categoryUrl } from '@/lib/shop-url'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
+import { defaultFineArtProduct } from '@/lib/fine-art-default'
 import FineArtHero from '@/app/components/FineArtHero'
 import PosterMat from '@/app/components/PosterMat'
 import SalePill from '@/app/components/SalePill'
@@ -214,12 +215,17 @@ export default async function ShopProductView({
   const posterCardMaxWidth = Math.min(previewW + 40, 600)
 
   // Fine-art hero shows the room mockup for the selected family + colour; default
-  // to the first fine-art product's family/colour so it's correct on first paint.
-  const firstFineArt = pickerProducts.find((p) => p.type === 'fine-art')
-  const defaultFineArtFamily = firstFineArt?.family ?? ''
-  const firstOfDefaultFamily = pickerProducts.find((p) => p.type === 'fine-art' && p.family === defaultFineArtFamily)
-  const defaultFineArtSize = firstOfDefaultFamily?.faSize ?? ''
-  const defaultFineArtColor = firstOfDefaultFamily?.frameColor ?? ''
+  // to the LARGEST BLACK CANVAS — the same product the picker pre-selects — so the
+  // first-paint preview matches the highlighted family/colour/size chips.
+  const defaultFineArt = defaultFineArtProduct(pickerProducts)
+  const defaultFineArtFamily = defaultFineArt?.family ?? ''
+  const defaultFineArtSize = defaultFineArt?.faSize ?? ''
+  const defaultFineArtColor = defaultFineArt?.frameColor ?? ''
+  // Every fine-art variant this photo offers — the hero pre-warms each mockup so
+  // switching size/colour is instant.
+  const fineArtVariants = pickerProducts
+    .filter((p) => p.type === 'fine-art' && p.family && p.faSize)
+    .map((p) => ({ family: p.family as string, size: p.faSize as string, color: p.frameColor ?? 'black' }))
 
   // Physical (poster / fine-art) contexts preview the artwork WITHOUT the logo
   // badge — the customer is judging the print, not buying a file. The repeating
@@ -275,6 +281,7 @@ export default async function ShopProductView({
               defaultFamily={defaultFineArtFamily}
               defaultSize={defaultFineArtSize}
               defaultColor={defaultFineArtColor}
+              variants={fineArtVariants}
             />
           </div>
         ) : posterView ? (

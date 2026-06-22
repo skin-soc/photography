@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ProductType, LicenseTier } from '@/lib/shop'
+import { printArea, defaultFineArtProduct } from '@/lib/fine-art-default'
 import { useCartStore } from '@/store/cart'
 import type { CartItemType } from '@/store/cart'
 import { useFineArtPreview } from '@/store/fineart-preview'
@@ -45,13 +46,6 @@ const FRAME_SWATCH: Record<string, string> = {
   'dark grey': '#4b4b4b',
 }
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-
-/** Print area (cm²) parsed from a "W × H cm" size label — for ordering size
- *  options smallest → largest. Returns 0 when the label has no dimensions. */
-function printArea(p: PickerProduct): number {
-  const m = (p.label || '').match(/([\d.]+)\s*[×x]\s*([\d.]+)/)
-  return m ? parseFloat(m[1]) * parseFloat(m[2]) : 0
-}
 
 const TYPE_ORDER: ProductType[] = ['print', 'fine-art', 'digital']
 
@@ -224,8 +218,12 @@ export default function ShopProductPicker({
   }
 
   const cheapest = products.reduce((lo, p) => (p.price < lo.price ? p : lo))
-  const [selectedSku, setSelectedSku] = useState(cheapest.sku)
-  const selected = products.find((p) => p.sku === selectedSku) ?? cheapest
+  // On a fine-art page pre-select the largest black canvas (the gallery hero), so
+  // the family/colour/size chips AND the room mockup all agree on first paint.
+  // Other pages keep the cheapest variant as the default.
+  const initialProduct = defaultFineArtProduct(products) ?? cheapest
+  const [selectedSku, setSelectedSku] = useState(initialProduct.sku)
+  const selected = products.find((p) => p.sku === selectedSku) ?? initialProduct
 
   // Poster papers (distinct, in product order) — posters offer a paper choice,
   // then the sizes that pass for this photo on that paper.
@@ -256,12 +254,14 @@ export default function ShopProductPicker({
       fineArtFamilies.push({ code: p.family, label: p.familyLabel ?? p.family })
     }
   }
-  const firstFa = products.find((p) => p.type === 'fine-art' && p.family)
   const familyColors = (fam: string | null) =>
     products.find((p) => p.type === 'fine-art' && p.family === fam)?.frameColors ?? []
-  const [selectedFamily, setSelectedFamily] = useState<string | null>(firstFa?.family ?? null)
+  // Seed family + colour from the same default product as selectedSku (largest
+  // black canvas) so all three chips and the mockup agree from the first render.
+  const initialFa = initialProduct.type === 'fine-art' ? initialProduct : undefined
+  const [selectedFamily, setSelectedFamily] = useState<string | null>(initialFa?.family ?? null)
   const [selectedColor, setSelectedColor] = useState<string | null>(
-    () => familyColors(firstFa?.family ?? null)[0] ?? null,
+    () => initialFa?.frameColor ?? familyColors(initialFa?.family ?? null)[0] ?? null,
   )
   // Re-point selectedSku to the (family, colour) variant, keeping size if it exists.
   function repointFineArt(fam: string | null, color: string | null) {
