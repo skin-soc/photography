@@ -13,6 +13,7 @@ import { categoryUrl } from '@/lib/shop-url'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
 import { defaultFineArtProduct } from '@/lib/fine-art-default'
+import { MOCKUP_VERSION } from '@/lib/mockups'
 import FineArtHero from '@/app/components/FineArtHero'
 import PosterMat from '@/app/components/PosterMat'
 import SalePill from '@/app/components/SalePill'
@@ -281,6 +282,7 @@ export default async function ShopProductView({
               defaultFamily={defaultFineArtFamily}
               defaultSize={defaultFineArtSize}
               defaultColor={defaultFineArtColor}
+              mockupVersion={MOCKUP_VERSION}
               variants={fineArtVariants}
             />
           </div>

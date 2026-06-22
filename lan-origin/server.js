@@ -1111,11 +1111,11 @@ app.get('/mockup/:id/:family/:size/:color', async (req, res) => {
   if (!/^[A-Za-z0-9_-]+$/.test(id) || !MOCKUP_PART.test(family) || !MOCKUP_SIZE.test(size) || !MOCKUP_PART.test(color)) {
     return res.status(400).json({ error: 'bad request' })
   }
-  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}.png`)
+  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}.jpg`)
   const found = await fileIfExists(path)
   if (!found) return res.status(404).json({ error: 'not rendered' })
   res.set('Cache-Control', 'public, max-age=31536000, immutable')
-  res.type('png')
+  res.type('jpeg')
   createReadStream(found).pipe(res)
 })
 
@@ -1123,9 +1123,10 @@ app.get('/mockup/:id/:family/:size/:color', async (req, res) => {
  * PRE-RENDER fine-art mockups. Prodigi's image generator (not the origin) does
  * the compositing, so the Worker — which owns the SKU range + builds the render
  * URLs — hands us a flat list of { id, family, color, url }. We fetch each URL
- * (Kite composites our token-gated mockup source into the room scene) and cache
- * the PNG on the NAS. Mirrors /admin/poster-prerender: respond immediately, render
- * in the background. Secret-gated by the global middleware.
+ * (Kite composites our token-gated mockup source into the room scene), transcode
+ * the lossless PNG to a compact 70%-quality JPEG, and cache that on the NAS.
+ * Mirrors /admin/poster-prerender: respond immediately, render in the background.
+ * Secret-gated by the global middleware.
  */
 app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req, res) => {
   const items = Array.isArray(req.body?.items)
@@ -1146,8 +1147,8 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
         const idx = cursor++
         if (idx >= items.length) return
         const { id, family, size, color, url } = items[idx]
-        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}.png`)
-        const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.png`
+        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}.jpg`)
+        const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
         try {
           const r = await fetch(url)
           if (!r.ok) throw new Error(`render responded ${r.status}`)
@@ -1155,7 +1156,11 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
           // Guard against an empty/placeholder render (Kite returns a small blank
           // PNG when the source is unreachable) — don't cache a dud.
           if (buf.length < 20000) throw new Error(`render too small (${buf.length}B)`)
-          await writeFile(tmp, buf)
+          // Prodigi returns a big lossless PNG; the room scene is fully opaque, so
+          // transcode to a 70%-quality JPEG (mozjpeg) — a fraction of the size with
+          // no visible loss. We control quality here, not the generator.
+          const jpeg = await sharp(buf).jpeg({ quality: 70, mozjpeg: true }).toBuffer()
+          await writeFile(tmp, jpeg)
           await rename(tmp, out)
           prog.done += 1
         } catch (err) {

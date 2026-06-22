@@ -1,6 +1,6 @@
 /**
  * Fine-art room-mockup proxy. The hero requests a mockup by (photo slug, family,
- * SIZE, frame colour); we resolve the slug → photo and stream the PRE-RENDERED PNG
+ * SIZE, frame colour); we resolve the slug → photo and stream the PRE-RENDERED JPEG
  * from the origin's NAS cache (populated by the admin "Generate fine-art mockups"
  * batch → Prodigi PIG), edge-caching it. Per-size so the room scene shows the real
  * scale. 404 when not pre-rendered / unsupported by the generator → the hero falls
@@ -40,10 +40,18 @@ export async function GET(req: Request): Promise<Response> {
   }
   if (!upstream.ok) return new Response('mockup unavailable', { status: upstream.status === 404 ? 404 : 502 })
 
-  const png = await upstream.arrayBuffer()
-  const res = new Response(png, {
+  const img = await upstream.arrayBuffer()
+  // Only ever serve/cache a real JPEG. During the PNG→JPEG cutover the (not-yet-
+  // rebuilt) origin may still return PNG bytes; treat anything that isn't a JPEG
+  // (magic FF D8 FF) as not-ready → 404 (hero falls back to the framed preview)
+  // and DON'T cache it, so the 1-year immutable cache never gets poisoned.
+  const head = new Uint8Array(img.slice(0, 3))
+  if (head[0] !== 0xff || head[1] !== 0xd8 || head[2] !== 0xff) {
+    return new Response('mockup not ready', { status: 404 })
+  }
+  const res = new Response(img, {
     status: 200,
-    headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000, immutable' },
+    headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' },
   })
   await cache?.put(cacheKey, res.clone())
   return res

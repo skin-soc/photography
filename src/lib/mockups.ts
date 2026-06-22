@@ -38,9 +38,10 @@ export function mockupSizeSupported(family: string, size: string): boolean {
   return (MOCKUP_SIZES[family] ?? []).includes(size)
 }
 
-/** Bump to force a fresh render + bust the edge cache. Part of the source URL (so
- *  Kite re-renders) and the worker cache key. */
-export const MOCKUP_VERSION = 3
+/** Bump to force a fresh render + bust every cache (edge + browser). Part of the
+ *  source URL (so Kite re-renders), the worker cache key, AND the hero's public
+ *  mockup URL (so the 1-year immutable browser cache is bypassed). v4/5 = JPEG. */
+export const MOCKUP_VERSION = 5
 
 /** Generator size token: inch sizes are lower-cased (16X24 → 16x24), A-series kept. */
 function sizeToken(size: string): string {

@@ -31,6 +31,14 @@ if ! grep -q "'/mockup/:id/:family/:size/:color'" "$SOURCE/server.js"; then
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
+# Mockups are JPEG now (v0.9.8+): the prerender transcodes the Prodigi PNG to a
+# 70%-quality JPEG and serves .jpg. A source still writing .png would leave the
+# serve route 404-ing (it looks for .jpg) — guard the transcode explicitly.
+if ! grep -q "jpeg({ quality: 70" "$SOURCE/server.js"; then
+  echo "ERROR: $SOURCE/server.js is STALE (mockups not transcoded to JPEG 70%)."
+  echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
+  exit 1
+fi
 if ! grep -q '"nodemailer"' "$SOURCE/package.json"; then
   echo "WARNING: $SOURCE/package.json looks stale (no nodemailer) — re-sync it too."
 fi
