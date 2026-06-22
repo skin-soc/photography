@@ -522,16 +522,18 @@ export default function ShopGrid({
                 })}
               </div>
             ) : isFineArtLeaf ? (
-              /* Fine art: a masonry wall of large head-on cover mockups — max two
-                 per row for breathing space. Each tile shows a RANDOM variant
-                 (canvas / framed, frame colour) at the largest size on offer, the
-                 piece cropped out of its matte and given a poster-style shadow. */
-              <div className="columns-1 sm:columns-2 gap-10 sm:gap-14 [column-fill:_balance]">
+              /* Fine art: large head-on cover mockups, two per row for breathing
+                 space. Each tile shows a RANDOM variant (canvas / framed, frame
+                 colour) at the largest size on offer, the piece cropped out of its
+                 matte with a poster-style shadow. A 2-col GRID (not CSS columns) —
+                 columns + transforms mis-composite the top-of-column tile. Tiles
+                 align to the top so each keeps its natural height. */
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 sm:gap-x-14 gap-y-12 sm:gap-y-16 items-start">
                 {shown.map((p, i) => (
                   <Link
                     key={p.id}
                     href={`/shop/${p.slug}`}
-                    className="group mb-10 sm:mb-14 block break-inside-avoid select-none transition-transform duration-300 ease-out will-change-transform hover:-translate-y-1"
+                    className="group block select-none transition-transform duration-300 ease-out hover:-translate-y-1"
                     onContextMenu={(e) => e.preventDefault()}
                   >
                     <div className="relative">
