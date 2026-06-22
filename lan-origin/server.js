@@ -1101,6 +1101,31 @@ const MOCKUP_SIZE = /^[A-Za-z0-9]+$/
 const MOCKUP_VIEW = /^(room07|cover)$/
 const mockupView = (v) => (MOCKUP_VIEW.test(v ?? '') ? v : 'room07')
 
+/** PIG renders the head-on `cover` on a magenta (#FF00FF) chroma-key matte with a
+ *  baked drop shadow. Crop to the product's bounding box (dropping the matte + the
+ *  shadow halo) so the grid tile is just the piece — the grid adds its own CSS
+ *  shadow. Detects "product" as any pixel that isn't magenta-dominant. */
+async function cropCoverMatte(buf) {
+  const { data, info } = await sharp(buf).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const { width: W, height: H, channels: C } = info
+  let minX = W, minY = H, maxX = -1, maxY = -1
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * C
+      const r = data[i], g = data[i + 1], b = data[i + 2]
+      const matte = r > 150 && b > 150 && g < Math.min(r, b) - 50
+      if (!matte) {
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+      }
+    }
+  }
+  if (maxX < minX || maxY < minY) return buf // entirely matte — leave as-is
+  return sharp(buf).extract({ left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 }).toBuffer()
+}
+
 /**
  * Serve a PRE-RENDERED fine-art room mockup (Prodigi PIG composite), keyed by
  * ref+family+SIZE+colour (per-size so the room scene shows the real scale).
@@ -1162,10 +1187,11 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
           // Guard against an empty/placeholder render (Kite returns a small blank
           // PNG when the source is unreachable) — don't cache a dud.
           if (buf.length < 20000) throw new Error(`render too small (${buf.length}B)`)
-          // Prodigi returns a big lossless PNG; the room scene is fully opaque, so
-          // transcode to a 70%-quality JPEG (mozjpeg) — a fraction of the size with
-          // no visible loss. We control quality here, not the generator.
-          const jpeg = await sharp(buf).jpeg({ quality: 70, mozjpeg: true }).toBuffer()
+          // Prodigi returns a big lossless PNG; transcode to a 70%-quality JPEG
+          // (mozjpeg) — a fraction of the size with no visible loss. The `cover`
+          // view is first cropped out of its magenta chroma-key matte.
+          const src = view === 'cover' ? await cropCoverMatte(buf) : buf
+          const jpeg = await sharp(src).jpeg({ quality: 70, mozjpeg: true }).toBuffer()
           await writeFile(tmp, jpeg)
           await rename(tmp, out)
           prog.done += 1

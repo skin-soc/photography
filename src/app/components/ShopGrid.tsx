@@ -237,7 +237,7 @@ function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version
       onDragStart={(e) => e.preventDefault()}
       onLoad={() => setLoaded(true)}
       onError={() => { if (pick && !failed) setFailed(true); else setLoaded(true) }}
-      className={`block w-full h-auto transition-opacity duration-500 group-hover:opacity-95 pointer-events-none ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      className={`block w-full h-auto transition-[opacity,transform] duration-500 group-hover:-translate-y-1 pointer-events-none shadow-[0_28px_64px_-26px_rgba(0,0,0,0.6)] ${loaded ? 'opacity-100' : 'opacity-0'}`}
     />
   )
 }
@@ -522,25 +522,25 @@ export default function ShopGrid({
                 })}
               </div>
             ) : isFineArtLeaf ? (
-              /* Fine art: a masonry wall of large head-on cover mockups. Each tile
-                 shows a RANDOM variant (canvas / framed, frame colour) at the
-                 largest size on offer, kept at the piece's natural aspect. */
-              <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 [column-fill:_balance]">
+              /* Fine art: a masonry wall of large head-on cover mockups — max two
+                 per row for breathing space. Each tile shows a RANDOM variant
+                 (canvas / framed, frame colour) at the largest size on offer, the
+                 piece cropped out of its matte and given a poster-style shadow. */
+              <div className="columns-1 sm:columns-2 gap-10 sm:gap-14 [column-fill:_balance]">
                 {shown.map((p, i) => (
                   <Link
                     key={p.id}
                     href={`/shop/${p.slug}`}
-                    className="group mb-5 block break-inside-avoid select-none"
+                    className="group mb-10 sm:mb-14 block break-inside-avoid select-none"
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <div className="relative overflow-hidden bg-foreground/5">
+                    <div className="relative">
                       {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
-                      <FineArtCoverTile photo={p} version={mockupVersion} eager={i < 6} />
+                      <FineArtCoverTile photo={p} version={mockupVersion} eager={i < 4} />
                     </div>
-                    <p className="mt-2 text-[13px] font-light leading-tight text-foreground/75 truncate">{p.title}</p>
-                    <div className="flex items-baseline justify-between gap-2">
-                      <p className="min-w-0 text-[10px] tracking-[0.15em] uppercase text-foreground/35 truncate">{p.location}</p>
-                      <p className="shrink-0 text-[10px] tracking-wide text-foreground/45">{t('from')} {p.fromText}</p>
+                    <div className="mt-4 flex items-baseline justify-between gap-3">
+                      <p className="min-w-0 text-[14px] font-light leading-tight text-foreground/80 truncate">{p.title}</p>
+                      <p className="shrink-0 text-[12px] tracking-wide text-accent">{t('from')} {p.fromText}</p>
                     </div>
                   </Link>
                 ))}

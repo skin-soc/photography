@@ -41,8 +41,9 @@ export function mockupSizeSupported(family: string, size: string): boolean {
 /** Bump to force a fresh render + bust every cache (edge + browser). Part of the
  *  source URL (so Kite re-renders), the worker cache key, AND the hero's public
  *  mockup URL (so the 1-year immutable browser cache is bypassed). v4/5 = JPEG;
- *  v6 = per-view assets (room07 hero + cover grid tiles). */
-export const MOCKUP_VERSION = 6
+ *  v6 = per-view assets (room07 hero + cover grid tiles); v7 = covers cropped out
+ *  of PIG's magenta matte. */
+export const MOCKUP_VERSION = 7
 
 /** Generator size token: inch sizes are lower-cased (16X24 → 16x24), A-series kept. */
 function sizeToken(size: string): string {
