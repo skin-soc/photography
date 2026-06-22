@@ -1098,6 +1098,8 @@ app.get('/mockup-src/:id', async (req, res) => {
 
 const MOCKUP_PART = /^[a-z]+$/
 const MOCKUP_SIZE = /^[A-Za-z0-9]+$/
+const MOCKUP_VIEW = /^(room07|cover)$/
+const mockupView = (v) => (MOCKUP_VIEW.test(v ?? '') ? v : 'room07')
 
 /**
  * Serve a PRE-RENDERED fine-art room mockup (Prodigi PIG composite), keyed by
@@ -1111,7 +1113,10 @@ app.get('/mockup/:id/:family/:size/:color', async (req, res) => {
   if (!/^[A-Za-z0-9_-]+$/.test(id) || !MOCKUP_PART.test(family) || !MOCKUP_SIZE.test(size) || !MOCKUP_PART.test(color)) {
     return res.status(400).json({ error: 'bad request' })
   }
-  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}.jpg`)
+  // View selects the asset: ?view=room07 (in-room hero, default) or ?view=cover
+  // (head-on product shot for the grid).
+  const view = mockupView(req.query.view)
+  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}-${view}.jpg`)
   const found = await fileIfExists(path)
   if (!found) return res.status(404).json({ error: 'not rendered' })
   res.set('Cache-Control', 'public, max-age=31536000, immutable')
@@ -1147,7 +1152,8 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
         const idx = cursor++
         if (idx >= items.length) return
         const { id, family, size, color, url } = items[idx]
-        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}.jpg`)
+        const view = mockupView(items[idx].view)
+        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}-${view}.jpg`)
         const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
         try {
           const r = await fetch(url)

@@ -16,13 +16,14 @@ export async function GET(req: Request): Promise<Response> {
   const family = url.searchParams.get('family') ?? ''
   const size = (url.searchParams.get('size') ?? '').replace(/[^A-Za-z0-9]/g, '')
   const color = url.searchParams.get('color') ?? ''
+  const view = url.searchParams.get('view') === 'cover' ? 'cover' : 'room07'
   if (!slug || !family || !size || !color || !canMockup(family, color)) {
     return new Response('bad request', { status: 400 })
   }
   const assetColor = mockupColor(family, color)
 
   const cacheKey = new Request(
-    new URL(`/api/fineart-mockup?photo=${slug}&family=${family}&size=${size}&color=${assetColor}&v=${MOCKUP_VERSION}`, url.origin).toString(),
+    new URL(`/api/fineart-mockup?photo=${slug}&family=${family}&size=${size}&color=${assetColor}&view=${view}&v=${MOCKUP_VERSION}`, url.origin).toString(),
   )
   const cache = (caches as unknown as { default?: Cache }).default
   const cached = await cache?.match(cacheKey)
@@ -34,7 +35,7 @@ export async function GET(req: Request): Promise<Response> {
 
   let upstream: Response
   try {
-    upstream = await fetchOriginMockup(photo.id, family, size, assetColor)
+    upstream = await fetchOriginMockup(photo.id, family, size, assetColor, view)
   } catch {
     return new Response('mockup unavailable', { status: 502 })
   }

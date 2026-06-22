@@ -12,12 +12,28 @@
  * otherwise the Worker never reprocesses or re-serializes the catalog.
  */
 
-import { getCatalog, fromPrice, photoTypes, displayTitle } from '@/lib/shop'
+import { getCatalog, fromPrice, photoTypes, displayTitle, type ShopPhoto } from '@/lib/shop'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 
 /** The Cloudflare edge cache (per colo), or undefined where it's unavailable —
  *  same access pattern as the preview route + getCatalog. */
 const edgeCache = (globalThis as { caches?: { default?: Cache } }).caches?.default
+
+/** A fine-art photo's grid-cover descriptors: the LARGEST offered size per
+ *  (family, frame colour) — each has a pre-rendered head-on `cover` mockup. The
+ *  grid picks one at random per tile. Undefined for non-fine-art photos. */
+function fineArtCovers(p: ShopPhoto): { family: string; size: string; color: string }[] | undefined {
+  const best = new Map<string, { family: string; size: string; color: string; area: number }>()
+  for (const x of p.products) {
+    if (x.type !== 'fine-art' || !x.family || !x.faSize) continue
+    const area = (x.printSize?.w ?? 0) * (x.printSize?.h ?? 0)
+    const key = `${x.family}|${x.frameColor ?? ''}`
+    const cur = best.get(key)
+    if (!cur || area > cur.area) best.set(key, { family: x.family, size: x.faSize, color: x.frameColor ?? 'black', area })
+  }
+  if (best.size === 0) return undefined
+  return Array.from(best.values()).map(({ family, size, color }) => ({ family, size, color }))
+}
 
 export async function GET(req: Request): Promise<Response> {
   try {
@@ -46,6 +62,9 @@ export async function GET(req: Request): Promise<Response> {
         key: p.key,
         salePct: p.salePct,
         captureDate: p.captureDate,
+        // Fine-art grid covers: the largest size per (family, frame colour) — the
+        // grid tile shows one at random as a head-on cover mockup.
+        faCovers: fineArtCovers(p),
       }
     })
 

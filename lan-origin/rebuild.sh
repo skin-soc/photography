@@ -39,6 +39,13 @@ if ! grep -q "jpeg({ quality: 70" "$SOURCE/server.js"; then
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
+# Per-VIEW mockups (v0.9.9+): assets are now keyed by view (room07 / cover) and the
+# serve route reads ?view=. A source without mockupView() would 404 the grid covers.
+if ! grep -q "mockupView" "$SOURCE/server.js"; then
+  echo "ERROR: $SOURCE/server.js is STALE (no per-VIEW mockups — room07/cover)."
+  echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
+  exit 1
+fi
 if ! grep -q '"nodemailer"' "$SOURCE/package.json"; then
   echo "WARNING: $SOURCE/package.json looks stale (no nodemailer) — re-sync it too."
 fi

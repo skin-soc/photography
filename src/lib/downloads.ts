@@ -792,17 +792,18 @@ export async function adminPrerenderMockups(
   return (await res.json()) as { queued: number }
 }
 
-/** Fetch a pre-rendered fine-art mockup PNG from the origin (secret-gated). 404
- *  when it hasn't been pre-rendered / the size is unsupported by the generator. */
-export async function fetchOriginMockup(photoId: string, family: string, size: string, color: string): Promise<Response> {
-  return fetch(`${ORIGIN}/mockup/${encodeURIComponent(photoId)}/${family}/${size}/${color}`, {
+/** Fetch a pre-rendered fine-art mockup JPEG from the origin (secret-gated) for a
+ *  given view (room07 hero / cover grid tile). 404 when it hasn't been pre-rendered
+ *  / the size is unsupported by the generator. */
+export async function fetchOriginMockup(photoId: string, family: string, size: string, color: string, view: string): Promise<Response> {
+  return fetch(`${ORIGIN}/mockup/${encodeURIComponent(photoId)}/${family}/${size}/${color}?view=${encodeURIComponent(view)}`, {
     headers: originHeaders(),
     cache: 'no-store',
   })
 }
 
 /** Item for the mockup pre-render batch (worker builds the Prodigi render URL). */
-export interface MockupPrerenderItem { id: string; family: string; size: string; color: string; url: string }
+export interface MockupPrerenderItem { id: string; family: string; size: string; color: string; view: string; url: string }
 
 /** One batch's live render progress. */
 export interface RenderProgressItem {

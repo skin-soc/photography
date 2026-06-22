@@ -40,8 +40,9 @@ export function mockupSizeSupported(family: string, size: string): boolean {
 
 /** Bump to force a fresh render + bust every cache (edge + browser). Part of the
  *  source URL (so Kite re-renders), the worker cache key, AND the hero's public
- *  mockup URL (so the 1-year immutable browser cache is bypassed). v4/5 = JPEG. */
-export const MOCKUP_VERSION = 5
+ *  mockup URL (so the 1-year immutable browser cache is bypassed). v4/5 = JPEG;
+ *  v6 = per-view assets (room07 hero + cover grid tiles). */
+export const MOCKUP_VERSION = 6
 
 /** Generator size token: inch sizes are lower-cased (16X24 → 16x24), A-series kept. */
 function sizeToken(size: string): string {
@@ -64,17 +65,29 @@ export function canMockup(family: string | undefined, color: string | undefined)
   return !!family && family in MOCKUP_PREFIX && !!color && MOCKUP_COLORS.includes(color)
 }
 
-/** Build the Prodigi PIG render URL for a fine-art room mockup at a specific SIZE,
- *  or null when the (family, colour) isn't renderable. Server-side only (embeds a
- *  gated src URL). Unsupported sizes still build a URL but Prodigi returns an
- *  error/blank → the origin won't cache it → the hero falls back to the preview. */
+/** The two mockup views we render per (family, size, colour):
+ *  • room07 — the artwork composited into in-room scene 7 (product-page hero).
+ *  • cover  — the framed/canvas piece head-on on a plain ground (grid tiles). */
+export type MockupView = 'room07' | 'cover'
+export const MOCKUP_VIEWS: MockupView[] = ['room07', 'cover']
+
+/** Build the Prodigi PIG render URL for a fine-art mockup at a specific SIZE in a
+ *  given VIEW (room07 scene, or head-on cover), or null when the (family, colour)
+ *  isn't renderable. Server-side only (embeds a gated src URL). Unsupported sizes
+ *  still build a URL but Prodigi returns an error/blank → the origin won't cache
+ *  it → the hero falls back to the preview. */
 export function mockupRenderUrl(opts: {
   photoId: string
   family: string
   size: string
   color: string
   portrait: boolean
+  view?: MockupView
   px?: number
+  /** Cover only — output dimensions (so the head-on tile keeps the piece's aspect
+   *  for the masonry grid). Defaults to a square `px` box. */
+  outW?: number
+  outH?: number
 }): string | null {
   const prefix = MOCKUP_PREFIX[opts.family]
   if (!prefix || !canMockup(opts.family, opts.color) || !mockupSizeSupported(opts.family, opts.size)) return null
@@ -82,13 +95,17 @@ export function mockupRenderUrl(opts: {
   const product_id = `${prefix}-${sizeToken(opts.size)}-${orient}`
   const coverColor = mockupColor(opts.family, opts.color)
   const px = opts.px ?? 1400
+  const sizeParam = opts.outW && opts.outH ? `${opts.outW}x${opts.outH}` : `${px}x${px}`
   const u = new URL(PIG_RENDER)
   u.searchParams.set('product_id', product_id)
   u.searchParams.set('format', 'png')
-  u.searchParams.set('size', `${px}x${px}`)
+  u.searchParams.set('size', sizeParam)
   u.searchParams.set('fill_mode', 'contain')
-  u.searchParams.set('scene_resize_type', 'cover')
-  u.searchParams.set('scene', 'room07')
+  // room07 composites into a scene; cover (no scene) is the head-on product shot.
+  if ((opts.view ?? 'room07') === 'room07') {
+    u.searchParams.set('scene_resize_type', 'cover')
+    u.searchParams.set('scene', 'room07')
+  }
   u.searchParams.set('variant', `${coverColor}_cover`)
   u.searchParams.set('image', `${mockupSrcUrl(opts.photoId)}&v=${MOCKUP_VERSION}`)
   return u.toString()

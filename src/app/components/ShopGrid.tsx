@@ -32,6 +32,9 @@ export interface GridPhoto {
   salePct?: number
   /** Seconds since Lightroom epoch (Jan 1 2001 UTC) — used for chronological sort. */
   captureDate?: number
+  /** Fine-art grid covers — the largest size per (family, frame colour). The tile
+   *  shows one at random as a head-on cover mockup. Absent for non-fine-art. */
+  faCovers?: { family: string; size: string; color: string }[]
 }
 
 function matchesCategory(photo: GridPhoto, path: string[]): boolean {
@@ -205,6 +208,40 @@ function LazyImage({
   )
 }
 
+/** The head-on cover-mockup URL for a fine-art (family, size, colour). The worker
+ *  maps the frame colour to the renderable cover; `v` busts the browser cache. */
+function coverUrl(slug: string, c: { family: string; size: string; color: string }, v: number): string {
+  return `/api/fineart-mockup?photo=${encodeURIComponent(slug)}&family=${encodeURIComponent(c.family)}&size=${encodeURIComponent(c.size)}&color=${encodeURIComponent(c.color)}&view=cover&v=${v}`
+}
+
+/**
+ * A fine-art masonry tile: shows ONE random cover mockup (random family + frame
+ * colour, at the largest size on offer) at the piece's natural aspect. Falls back
+ * to the watermarked artwork preview if the cover isn't rendered yet (404).
+ */
+function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version: number; eager?: boolean }) {
+  const covers = photo.faCovers ?? []
+  // Pick one variant for this tile's lifetime. Grid tiles are client-only (the
+  // catalog is fetched), so Math.random here is safe — no hydration mismatch.
+  const [pick] = useState(() => (covers.length ? covers[Math.floor(Math.random() * covers.length)] : null))
+  const [loaded, setLoaded] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const src = pick && !failed ? coverUrl(photo.slug, pick, version) : previewSrc(photo.previewUrl, 800, true)
+  return (
+    <img
+      src={src}
+      alt={`${photo.title} — ${photo.location}`}
+      loading={eager ? 'eager' : 'lazy'}
+      draggable={false}
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      onLoad={() => setLoaded(true)}
+      onError={() => { if (pick && !failed) setFailed(true); else setLoaded(true) }}
+      className={`block w-full h-auto transition-opacity duration-500 group-hover:opacity-95 pointer-events-none ${loaded ? 'opacity-100' : 'opacity-0'}`}
+    />
+  )
+}
+
 /**
  * Breadcrumb over the full nav path. Segment 0 is the product-type tier
  * (rendered with its friendly label); the rest are Lightroom subject folders.
@@ -278,6 +315,7 @@ export default function ShopGrid({
   heading,
   intro,
   siteLabel,
+  mockupVersion,
 }: {
   /** Opaque catalog version — cache-busts the client fetch of the photo tiles. */
   catalogVersion: string
@@ -299,6 +337,8 @@ export default function ShopGrid({
   intro: string
   /** Foot line for poster cards, e.g. "WWW.GUSMCEWAN.COM". */
   siteLabel: string
+  /** MOCKUP_VERSION — busts the browser cache for fine-art cover tiles. */
+  mockupVersion: number
 }) {
   const t = useTranslations('shop')
   const typeLabel = useCallback(
@@ -371,6 +411,8 @@ export default function ShopGrid({
   const isFolderView = !isLanding && !isLeaf
   // Posters leaf: photo cards are rendered as full poster mats (not square tiles).
   const isPosterLeaf = isLeaf && typeFilter === 'print'
+  // Fine-art leaf: a masonry wall of large head-on cover mockups (random variant).
+  const isFineArtLeaf = isLeaf && typeFilter === 'fine-art'
   // Changes when the view changes — re-arms each image's fade-in (LazyImage /
   // RotatingImage) so a persisting tile re-reveals on a filter/category change.
   const viewKey = navPath.join('|') || '·landing'
@@ -478,6 +520,30 @@ export default function ShopGrid({
                     </Link>
                   )
                 })}
+              </div>
+            ) : isFineArtLeaf ? (
+              /* Fine art: a masonry wall of large head-on cover mockups. Each tile
+                 shows a RANDOM variant (canvas / framed, frame colour) at the
+                 largest size on offer, kept at the piece's natural aspect. */
+              <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 [column-fill:_balance]">
+                {shown.map((p, i) => (
+                  <Link
+                    key={p.id}
+                    href={`/shop/${p.slug}`}
+                    className="group mb-5 block break-inside-avoid select-none"
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
+                    <div className="relative overflow-hidden bg-foreground/5">
+                      {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
+                      <FineArtCoverTile photo={p} version={mockupVersion} eager={i < 6} />
+                    </div>
+                    <p className="mt-2 text-[13px] font-light leading-tight text-foreground/75 truncate">{p.title}</p>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="min-w-0 text-[10px] tracking-[0.15em] uppercase text-foreground/35 truncate">{p.location}</p>
+                      <p className="shrink-0 text-[10px] tracking-wide text-foreground/45">{t('from')} {p.fromText}</p>
+                    </div>
+                  </Link>
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
