@@ -271,11 +271,13 @@ function physicalProducts(
         out.push({
           sku: `${id}-${o.family}-${o.size}-${color.replace(/\s+/g, '')}`,
           type: 'fine-art',
-          label: `${o.widthCm} × ${o.heightCm} cm`,
+          // Title in inches; description carries cm + whether the size includes the
+          // frame (canvas = artwork; framed = finished outer size) + the spec blurb.
+          label: `${o.widthIn} × ${o.heightIn}″`,
           price: eurToDkkOre(o.cost, rates),
           currency: 'DKK',
           printSize: { w: o.widthCm, h: o.heightCm },
-          material: `${o.widthCm} × ${o.heightCm} cm · ${o.blurb}`,
+          material: `${o.widthCm} × ${o.heightCm} cm · ${o.dimensionBasis} · ${o.blurb}`,
           family: o.family,
           familyLabel: o.familyLabel,
           faSize: o.size,

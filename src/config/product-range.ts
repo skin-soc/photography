@@ -177,6 +177,9 @@ interface FineArtFamilyDef {
   label: string
   /** Short spec descriptor shown under the size. */
   blurb: string
+  /** Whether the quoted size is the artwork or the finished framed size — shown in
+   *  the description so the customer knows if dimensions include the frame. */
+  dimensionBasis: string
   /** Prodigi SKU family prefix, e.g. 'GLOBAL-FRA-CAN'. */
   prodigiPrefix: string
   /** Frame colours offered to the customer (Prodigi `color` attribute values). */
@@ -191,6 +194,9 @@ const FINE_ART_FAMILIES: FineArtFamilyDef[] = [
     family: 'canvas',
     label: 'Float-framed canvas',
     blurb: 'Gallery canvas in a floating frame · 400gsm',
+    // The size is the canvas (the image wraps it edge-to-edge); the float frame
+    // adds a slim surround, so the finished piece is marginally larger.
+    dimensionBasis: 'canvas size — the float frame adds a slim surround',
     prodigiPrefix: 'GLOBAL-FRA-CAN',
     // BLACK only. Prodigi can manufacture the float frame in 6 colours, but its
     // mockup generator only has a black_cover for canvas (white/natural/etc.
@@ -216,6 +222,9 @@ const FINE_ART_FAMILIES: FineArtFamilyDef[] = [
     family: 'framed',
     label: 'Framed & mounted print',
     blurb: 'EMA 200gsm giclée · snow-white mount · acrylic',
+    // CFPM's size is the FINISHED FRAMED (outer) size; the print sits inside a
+    // snow-white mount, so the visible image is smaller than the quoted dimension.
+    dimensionBasis: 'finished framed size — the print sits within a snow-white mount',
     prodigiPrefix: 'GLOBAL-CFPM',
     frameColors: ['black', 'white', 'natural'],
     fixedAttributes: { mount: '2.4mm', mountColor: 'Snow white', glaze: 'Acrylic / Perspex' },
@@ -246,6 +255,11 @@ export interface FineArtOption {
   /** Print/canvas size in cm, oriented to the photo. */
   widthCm: number
   heightCm: number
+  /** Same size in whole inches, oriented to the photo — used for the title. */
+  widthIn: number
+  heightIn: number
+  /** Whether the size is the artwork or the finished framed size (description). */
+  dimensionBasis: string
   /** Provider ex-tax cost, EUR minor — the cost-plus pricing basis. */
   cost: number
   /** Frame colours the customer can pick (first is the default). */
@@ -257,6 +271,18 @@ export interface FineArtOption {
 /** Linear crop fraction to fit a photo of ratio `rPhoto` (long÷short) into `rTarget`. */
 function cropFraction(rPhoto: number, rTarget: number): number {
   return 1 - Math.min(rPhoto, rTarget) / Math.max(rPhoto, rTarget)
+}
+
+/** A size's (short, long) edges in whole inches. Inch tokens like '24X36' parse
+ *  directly (short×long); A-series and any non-inch token derive from cm (÷2.54). */
+function sizeInches(s: FineArtSize): [number, number] {
+  const m = /^(\d+)X(\d+)$/.exec(s.size)
+  if (m) {
+    const a = parseInt(m[1], 10)
+    const b = parseInt(m[2], 10)
+    return [Math.min(a, b), Math.max(a, b)]
+  }
+  return [Math.round(s.shortCm / 2.54), Math.round(s.longCm / 2.54)]
 }
 
 /** Does (wPx × hPx), once centre-cropped to aspect `rTarget` (long÷short), meet
@@ -288,6 +314,7 @@ export function fineArtOptions(wPx: number, hPx: number): FineArtOption[] {
       const rTarget = ASPECT_RATIO[s.aspect]
       if (cropFraction(rPhoto, rTarget) > FINE_ART_CROP_TOLERANCE) continue
       if (!fineArtResolves(wPx, hPx, s.recPx, rTarget)) continue
+      const [shortIn, longIn] = sizeInches(s)
       out.push({
         family: fam.family,
         familyLabel: fam.label,
@@ -297,6 +324,9 @@ export function fineArtOptions(wPx: number, hPx: number): FineArtOption[] {
         providerSku: `${fam.prodigiPrefix}-${s.size}`,
         widthCm: portrait ? s.shortCm : s.longCm,
         heightCm: portrait ? s.longCm : s.shortCm,
+        widthIn: portrait ? shortIn : longIn,
+        heightIn: portrait ? longIn : shortIn,
+        dimensionBasis: fam.dimensionBasis,
         cost: s.cost,
         frameColors: fam.frameColors,
         fixedAttributes: fam.fixedAttributes,
