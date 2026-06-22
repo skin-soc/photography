@@ -1193,37 +1193,41 @@ const MOCKUP_SIZE = /^[A-Za-z0-9]+$/
 const MOCKUP_VIEW = /^(room07|cover)$/
 const mockupView = (v) => (MOCKUP_VIEW.test(v ?? '') ? v : 'room07')
 
-/** PIG renders the head-on `cover` on a magenta (#FF00FF) chroma-key matte with a
- *  baked drop shadow. Crop to the product's bounding box (dropping the matte + the
- *  shadow halo) so the grid tile is just the piece — the grid adds its own CSS
- *  shadow. Detects "product" as any pixel that isn't magenta-dominant. */
-async function cropCoverMatte(buf) {
+/** PIG renders the head-on `cover` on a magenta (#FF00FF) chroma-key matte (opaque,
+ *  not alpha). Key it OUT mathematically: for every pixel, `m = min(R,B) - G` is its
+ *  "magenta-ness" (0 for neutral B&W/sepia, up to 255 for pure magenta). We
+ *   • set alpha from m (fully transparent above a small threshold, a soft ramp below),
+ *   • DESPILL by pulling R and B down to G by m (so no edge pixel can stay pink),
+ *  then trim the transparent border. Output is a transparent PNG cutout — there is
+ *  no magenta left ANYWHERE, by construction, on any edge. Safe for sepia (m≤0). */
+async function keyCoverMatte(buf) {
+  const RAMP = 90 // m≥RAMP → fully transparent; below → partial (soft edge)
   const { data, info } = await sharp(buf).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width: W, height: H, channels: C } = info
   let minX = W, minY = H, maxX = -1, maxY = -1
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const i = (y * W + x) * C
-      const r = data[i], g = data[i + 1], b = data[i + 2]
-      // Magenta-tint test: red AND blue notably exceed green. Catches the matte AND
-      // its anti-aliased edge (the old r>150 threshold missed the darker rim pixels,
-      // leaving a 1-2px pink border). Safe for B&W/sepia photos — sepia has b<g.
-      const matte = r - g > 25 && b - g > 25
-      if (!matte) {
-        if (x < minX) minX = x
-        if (x > maxX) maxX = x
-        if (y < minY) minY = y
-        if (y > maxY) maxY = y
-      }
+  for (let p = 0; p < W * H; p++) {
+    const i = p * C
+    const r = data[i], g = data[i + 1], b = data[i + 2]
+    const m = Math.min(r, b) - g
+    if (m > 0) {
+      // Despill: remove the magenta cast so the kept/edge pixels are neutral (no pink).
+      data[i] = Math.max(g, r - m)
+      data[i + 2] = Math.max(g, b - m)
+      data[i + 3] = m >= RAMP ? 0 : Math.round(255 * (1 - m / RAMP))
+    } else {
+      data[i + 3] = 255 // neutral pixel (the photo / frame / mount) — fully opaque
+    }
+    if (data[i + 3] > 24) { // bbox of the visible product (ignore near-transparent fringe)
+      const x = p % W, y = (p - x) / W
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
     }
   }
-  if (maxX < minX || maxY < minY) return buf // entirely matte — leave as-is
-  // Inset a few px as a belt-and-braces against sub-pixel residue / JPEG edge bleed.
-  const inset = 3
-  let left = minX + inset, top = minY + inset
-  let width = maxX - minX + 1 - inset * 2, height = maxY - minY + 1 - inset * 2
-  if (width < 1 || height < 1) { left = minX; top = minY; width = maxX - minX + 1; height = maxY - minY + 1 }
-  return sharp(buf).extract({ left, top, width, height }).toBuffer()
+  const keyed = sharp(data, { raw: { width: W, height: H, channels: C } })
+  if (maxX < minX || maxY < minY) return keyed.png().toBuffer()
+  return keyed.extract({ left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 }).png().toBuffer()
 }
 
 /**
@@ -1238,14 +1242,15 @@ app.get('/mockup/:id/:family/:size/:color', async (req, res) => {
   if (!/^[A-Za-z0-9_-]+$/.test(id) || !MOCKUP_PART.test(family) || !MOCKUP_SIZE.test(size) || !MOCKUP_PART.test(color)) {
     return res.status(400).json({ error: 'bad request' })
   }
-  // View selects the asset: ?view=room07 (in-room hero, default) or ?view=cover
-  // (head-on product shot for the grid).
+  // View selects the asset: ?view=room07 (in-room hero JPEG, default) or
+  // ?view=cover (head-on transparent-PNG cutout for the grid).
   const view = mockupView(req.query.view)
-  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}-${view}.jpg`)
+  const ext = view === 'cover' ? 'png' : 'jpg'
+  const path = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}-${view}.${ext}`)
   const found = await fileIfExists(path)
   if (!found) return res.status(404).json({ error: 'not rendered' })
   res.set('Cache-Control', 'public, max-age=31536000, immutable')
-  res.type('jpeg')
+  res.type(ext === 'png' ? 'png' : 'jpeg')
   createReadStream(found).pipe(res)
 })
 
@@ -1278,8 +1283,10 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
         if (idx >= items.length) return
         const { id, family, size, color, url } = items[idx]
         const view = mockupView(items[idx].view)
-        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}-${view}.jpg`)
-        const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
+        // cover → transparent PNG (chroma-keyed cutout); room07 → opaque JPEG.
+        const ext = view === 'cover' ? 'png' : 'jpg'
+        const out = join(MOCKUP_ASSETS_DIR, `${photoRef(id)}-${family}-${size}-${color}-${view}.${ext}`)
+        const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.${ext}`
         try {
           const r = await fetch(url)
           if (!r.ok) throw new Error(`render responded ${r.status}`)
@@ -1287,12 +1294,12 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
           // Guard against an empty/placeholder render (Kite returns a small blank
           // PNG when the source is unreachable) — don't cache a dud.
           if (buf.length < 20000) throw new Error(`render too small (${buf.length}B)`)
-          // Prodigi returns a big lossless PNG; transcode to a 70%-quality JPEG
-          // (mozjpeg) — a fraction of the size with no visible loss. The `cover`
-          // view is first cropped out of its magenta chroma-key matte.
-          const src = view === 'cover' ? await cropCoverMatte(buf) : buf
-          const jpeg = await sharp(src).jpeg({ quality: 70, mozjpeg: true }).toBuffer()
-          await writeFile(tmp, jpeg)
+          // cover → chroma-key the magenta matte OUT to transparency (no pink, ever);
+          // room07 (opaque room scene) → 70%-quality mozjpeg, a fraction of the size.
+          const outBuf = view === 'cover'
+            ? await keyCoverMatte(buf)
+            : await sharp(buf).jpeg({ quality: 70, mozjpeg: true }).toBuffer()
+          await writeFile(tmp, outBuf)
           await rename(tmp, out)
           prog.done += 1
         } catch (err) {

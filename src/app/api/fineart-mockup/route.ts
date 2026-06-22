@@ -45,17 +45,20 @@ export async function GET(req: Request): Promise<Response> {
   if (!upstream.ok) return new Response('mockup unavailable', { status: upstream.status === 404 ? 404 : 502 })
 
   const img = await upstream.arrayBuffer()
-  // Only ever serve/cache a real JPEG. During the PNG→JPEG cutover the (not-yet-
-  // rebuilt) origin may still return PNG bytes; treat anything that isn't a JPEG
-  // (magic FF D8 FF) as not-ready → 404 (hero falls back to the framed preview)
-  // and DON'T cache it, so the 1-year immutable cache never gets poisoned.
-  const head = new Uint8Array(img.slice(0, 3))
-  if (head[0] !== 0xff || head[1] !== 0xd8 || head[2] !== 0xff) {
+  // Only ever serve/cache a real image of the EXPECTED type — cover is a transparent
+  // PNG, room07 an opaque JPEG. Anything else (e.g. a not-yet-rebuilt origin serving
+  // the wrong format) is treated as not-ready → 404 (graceful fallback) and NOT
+  // cached, so the 1-year immutable cache is never poisoned with the wrong bytes.
+  const head = new Uint8Array(img.slice(0, 4))
+  const isJpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff
+  const isPng = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47
+  const wantPng = view === 'cover'
+  if (wantPng ? !isPng : !isJpeg) {
     return new Response('mockup not ready', { status: 404 })
   }
   const res = new Response(img, {
     status: 200,
-    headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' },
+    headers: { 'content-type': wantPng ? 'image/png' : 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' },
   })
   await cache?.put(cacheKey, res.clone())
   return res
