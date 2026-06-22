@@ -522,27 +522,31 @@ export default function ShopGrid({
                 })}
               </div>
             ) : isFineArtLeaf ? (
-              /* Fine art: large head-on cover mockups, two per row for breathing
-                 space. Each tile shows a RANDOM variant (canvas / framed, frame
-                 colour) at the largest size on offer, the piece cropped out of its
-                 matte with a poster-style shadow. A 2-col GRID (not CSS columns) —
-                 columns + transforms mis-composite the top-of-column tile. Tiles
-                 align to the top so each keeps its natural height. */
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 sm:gap-x-14 gap-y-12 sm:gap-y-16 items-start">
+              /* Fine art: a true masonry wall (CSS columns) of large head-on cover
+                 mockups, two per row for breathing space. Each tile shows a RANDOM
+                 variant (canvas / framed, frame colour) at the largest size on
+                 offer, the piece cropped out of its matte with a poster-style
+                 shadow. CRITICAL: the column item (Link) must NOT be transformed —
+                 transforming a multicol fragment box mis-composites the top-of-
+                 column tile in Chromium. The hover-raise lives on an INNER wrapper,
+                 which is normal in-flow content and composites cleanly. */
+              <div className="columns-1 sm:columns-2 gap-10 sm:gap-14 [column-fill:_balance]">
                 {shown.map((p, i) => (
                   <Link
                     key={p.id}
                     href={`/shop/${p.slug}`}
-                    className="group block select-none transition-transform duration-300 ease-out hover:-translate-y-1"
+                    className="group mb-10 sm:mb-14 block break-inside-avoid select-none"
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <div className="relative">
-                      {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
-                      <FineArtCoverTile photo={p} version={mockupVersion} eager={i < 4} />
-                    </div>
-                    <div className="mt-4 flex items-baseline justify-between gap-3">
-                      <p className="min-w-0 text-[14px] font-light leading-tight text-foreground/80 truncate">{p.title}</p>
-                      <p className="shrink-0 text-[12px] tracking-wide text-accent">{t('from')} {p.fromText}</p>
+                    <div className="transition-transform duration-300 ease-out group-hover:-translate-y-1">
+                      <div className="relative">
+                        {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
+                        <FineArtCoverTile photo={p} version={mockupVersion} eager={i < 4} />
+                      </div>
+                      <div className="mt-4 flex items-baseline justify-between gap-3">
+                        <p className="min-w-0 text-[14px] font-light leading-tight text-foreground/80 truncate">{p.title}</p>
+                        <p className="shrink-0 text-[12px] tracking-wide text-accent">{t('from')} {p.fromText}</p>
+                      </div>
                     </div>
                   </Link>
                 ))}
