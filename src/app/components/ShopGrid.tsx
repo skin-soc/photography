@@ -522,34 +522,38 @@ export default function ShopGrid({
                 })}
               </div>
             ) : isFineArtLeaf ? (
-              /* Fine art: a true masonry wall (CSS columns) of large head-on cover
-                 mockups, two per row for breathing space. Each tile shows a RANDOM
-                 variant (canvas / framed, frame colour) at the largest size on
-                 offer, the piece cropped out of its matte with a poster-style
-                 shadow. CRITICAL: the column item (Link) must NOT be transformed —
-                 transforming a multicol fragment box mis-composites the top-of-
-                 column tile in Chromium. The hover-raise lives on an INNER wrapper,
-                 which is normal in-flow content and composites cleanly. */
-              <div className="columns-1 sm:columns-2 gap-10 sm:gap-14 [column-fill:_balance]">
-                {shown.map((p, i) => (
-                  <Link
-                    key={p.id}
-                    href={`/shop/${p.slug}`}
-                    className="group mb-10 sm:mb-14 block break-inside-avoid select-none"
-                    onContextMenu={(e) => e.preventDefault()}
-                  >
-                    <div className="transition-transform duration-300 ease-out group-hover:-translate-y-1">
-                      <div className="relative">
-                        {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
-                        <FineArtCoverTile photo={p} version={mockupVersion} eager={i < 4} />
-                      </div>
-                      <div className="mt-4 flex items-baseline justify-between gap-3">
-                        <p className="min-w-0 text-[14px] font-light leading-tight text-foreground/80 truncate">{p.title}</p>
-                        <p className="shrink-0 text-[12px] tracking-wide text-accent">{t('from')} {p.fromText}</p>
-                      </div>
+              /* Fine art: true masonry of large head-on cover mockups, two per row.
+                 We distribute the tiles into REAL flex columns ourselves (NOT CSS
+                 `columns`) — multicol mis-balances (2nd column pushed down) and
+                 mis-composites transformed tiles in Chromium. Here every tile is a
+                 plain block in a flex column, so the hover-raise just works and the
+                 columns start flush at the top. Sequential split keeps reading order
+                 on mobile (the two columns stack in order). */
+              <div className="flex flex-col sm:flex-row gap-10 sm:gap-14 items-start">
+                {(() => {
+                  const half = Math.ceil(shown.length / 2)
+                  return [shown.slice(0, half), shown.slice(half)].map((col, ci) => (
+                    <div key={ci} className="flex-1 min-w-0 flex flex-col gap-10 sm:gap-14">
+                      {col.map((p) => (
+                        <Link
+                          key={p.id}
+                          href={`/shop/${p.slug}`}
+                          className="group block select-none transition-transform duration-300 ease-out hover:-translate-y-1"
+                          onContextMenu={(e) => e.preventDefault()}
+                        >
+                          <div className="relative">
+                            {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
+                            <FineArtCoverTile photo={p} version={mockupVersion} eager />
+                          </div>
+                          <div className="mt-4 flex items-baseline justify-between gap-3">
+                            <p className="min-w-0 text-[14px] font-light leading-tight text-foreground/80 truncate">{p.title}</p>
+                            <p className="shrink-0 text-[12px] tracking-wide text-accent">{t('from')} {p.fromText}</p>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                  </Link>
-                ))}
+                  ))
+                })()}
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
