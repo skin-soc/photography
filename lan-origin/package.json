@@ -1,6 +1,6 @@
 {
   "name": "shop-lan-origin",
-  "version": "0.9.14",
+  "version": "0.9.15",
   "private": true,
   "description": "LAN origin service — serves the photo shop catalog and watermarked previews from the TrueNAS server, reached through a Cloudflare Tunnel.",
   "type": "module",

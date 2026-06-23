@@ -46,10 +46,10 @@ if ! grep -q "mockupView" "$SOURCE/server.js"; then
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
-# Cover chroma-key (v0.9.14+): covers are keyed OUT of PIG's magenta matte to a
-# transparent PNG (no pink, ever). A source without it would leave pink grid tiles.
-if ! grep -q "keyCoverMatte" "$SOURCE/server.js"; then
-  echo "ERROR: $SOURCE/server.js is STALE (no cover chroma-key — covers would show pink)."
+# Cover frame-crop (v0.9.15+): covers are cropped to the non-magenta product bbox,
+# dropping PIG's magenta matte AND its baked shadow (no pink, no baked shadow).
+if ! grep -q "cropFrameFromMatte" "$SOURCE/server.js"; then
+  echo "ERROR: $SOURCE/server.js is STALE (no cover frame-crop — covers would show pink/baked shadow)."
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
