@@ -215,15 +215,17 @@ function coverUrl(slug: string, c: { family: string; size: string; color: string
 }
 
 /**
- * A fine-art masonry tile: shows ONE random cover mockup (random family + frame
- * colour, at the largest size on offer) at the piece's natural aspect. Falls back
- * to the watermarked artwork preview if the cover isn't rendered yet (404).
+ * A fine-art grid tile: always the BLACK framed-&-mounted-print cover mockup (at
+ * the largest size on offer), at its natural aspect. The cover is a transparent
+ * PNG cutout, so a `drop-shadow` filter (which follows the alpha, unlike box-shadow)
+ * gives the framed piece the same floating shadow as the posters. Falls back to the
+ * artwork preview if the cover isn't rendered yet (404).
  */
 function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version: number; eager?: boolean }) {
   const covers = photo.faCovers ?? []
-  // Pick one variant for this tile's lifetime. Grid tiles are client-only (the
-  // catalog is fetched), so Math.random here is safe — no hydration mismatch.
-  const [pick] = useState(() => (covers.length ? covers[Math.floor(Math.random() * covers.length)] : null))
+  // Always the black framed print (no longer random); fall back to whatever's first
+  // if a photo somehow doesn't offer it.
+  const pick = covers.find((c) => c.family === 'framed' && c.color === 'black') ?? covers[0] ?? null
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   const src = pick && !failed ? coverUrl(photo.slug, pick, version) : previewSrc(photo.previewUrl, 800, true)
@@ -237,7 +239,7 @@ function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version
       onDragStart={(e) => e.preventDefault()}
       onLoad={() => setLoaded(true)}
       onError={() => { if (pick && !failed) setFailed(true); else setLoaded(true) }}
-      className={`block w-full h-auto transition-opacity duration-500 pointer-events-none shadow-[0_28px_64px_-26px_rgba(0,0,0,0.6)] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      className={`block w-full h-auto transition-opacity duration-500 pointer-events-none drop-shadow-[0_26px_30px_rgba(0,0,0,0.55)] ${loaded ? 'opacity-100' : 'opacity-0'}`}
     />
   )
 }
