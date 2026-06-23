@@ -23,11 +23,10 @@
   --bg: 0 0 0;
   --fg: 255 255 255;
   color-scheme: dark;
-  /* Fine-art grid cover "lift" — theme-aware drop-shadow. A dark shadow is invisible
-     on the black dark-mode bg, so dark uses a faint light glow; light uses a real
-     shadow. Kept small enough to fit within the grid gap (no clipping by the next
-     tile). Hover lifts to a BRAND-red glow on every theme (the raised tile is
-     z-promoted so the glow isn't clipped). */
+  /* Fine-art grid cover "lift" — theme-aware drop-shadow. DARK mode: a dark shadow
+     is invisible on the black bg, so use a faint light glow at rest and a BRAND-red
+     glow on hover. LIGHT mode: a real soft shadow at rest, a slightly deeper one on
+     hover — NO colour. Kept small so it fits within the grid gap. */
   --fa-lift: 0 10px 22px rgba(255, 255, 255, 0.07);
   --fa-lift-hover: 0 16px 30px rgba(201, 41, 63, 0.42);
 }
@@ -38,14 +37,16 @@
   --fg: 255 255 255;
   color-scheme: dark;
   --fa-lift: 0 10px 22px rgba(255, 255, 255, 0.07);
+  --fa-lift-hover: 0 16px 30px rgba(201, 41, 63, 0.42);
 }
 
-/* Light (admin → Light). */
+/* Light (admin → Light) — neutral shadows, no brand colour. */
 .light {
   --bg: 255 255 255;
   --fg: 17 17 17;
   color-scheme: light;
-  --fa-lift: 0 14px 18px rgba(0, 0, 0, 0.32);
+  --fa-lift: 0 12px 16px rgba(0, 0, 0, 0.28);
+  --fa-lift-hover: 0 16px 22px rgba(0, 0, 0, 0.36);
 }
 
 /* Auto (admin → Auto) — follow the visitor's OS, pure CSS, no flash. */
@@ -53,13 +54,15 @@
   --bg: 255 255 255;
   --fg: 17 17 17;
   color-scheme: light dark;
-  --fa-lift: 0 14px 18px rgba(0, 0, 0, 0.32);
+  --fa-lift: 0 12px 16px rgba(0, 0, 0, 0.28);
+  --fa-lift-hover: 0 16px 22px rgba(0, 0, 0, 0.36);
 }
 @media (prefers-color-scheme: dark) {
   .theme-auto {
     --bg: 0 0 0;
     --fg: 255 255 255;
     --fa-lift: 0 10px 22px rgba(255, 255, 255, 0.07);
+    --fa-lift-hover: 0 16px 30px rgba(201, 41, 63, 0.42);
   }
 }
 

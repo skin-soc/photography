@@ -536,11 +536,16 @@ export default function ShopGrid({
                   const half = Math.ceil(shown.length / 2)
                   return [shown.slice(0, half), shown.slice(half)].map((col, ci) => (
                     <div key={ci} className="flex-1 min-w-0 flex flex-col gap-10 sm:gap-14">
-                      {col.map((p) => (
+                      {col.map((p, j) => (
                         <Link
                           key={p.id}
                           href={`/shop/${p.slug}`}
-                          className="group relative z-0 hover:z-10 block select-none transition-transform duration-300 ease-out hover:-translate-y-1"
+                          // Descending z down the column so each tile's lift-shadow
+                          // always paints OVER the tile below it (never clipped → no
+                          // hard line). The shadow offset is downward, so a hovered
+                          // tile's glow falls on the lower-z tile below → not clipped.
+                          style={{ zIndex: col.length - j }}
+                          className="group relative block select-none transition-transform duration-300 ease-out hover:-translate-y-1"
                           onContextMenu={(e) => e.preventDefault()}
                         >
                           <div className="relative">
