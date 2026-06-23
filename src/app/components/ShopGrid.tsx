@@ -239,7 +239,7 @@ function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version
       onDragStart={(e) => e.preventDefault()}
       onLoad={() => setLoaded(true)}
       onError={() => { if (pick && !failed) setFailed(true); else setLoaded(true) }}
-      className={`block w-full h-auto transition-opacity duration-500 pointer-events-none drop-shadow-[0_26px_30px_rgba(0,0,0,0.55)] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      className={`block w-full h-auto transition-[opacity,filter] duration-300 pointer-events-none [filter:drop-shadow(var(--fa-lift))] group-hover:[filter:drop-shadow(var(--fa-lift-hover))] ${loaded ? 'opacity-100' : 'opacity-0'}`}
     />
   )
 }
@@ -540,7 +540,7 @@ export default function ShopGrid({
                         <Link
                           key={p.id}
                           href={`/shop/${p.slug}`}
-                          className="group block select-none transition-transform duration-300 ease-out hover:-translate-y-1"
+                          className="group relative z-0 hover:z-10 block select-none transition-transform duration-300 ease-out hover:-translate-y-1"
                           onContextMenu={(e) => e.preventDefault()}
                         >
                           <div className="relative">
