@@ -2379,9 +2379,12 @@ app.post('/admin/orders/:orderId/resend', express.json({ limit: '4kb' }), async 
   const to = (req.body && req.body.email) || grant.email
   if (!to) return res.status(400).json({ error: 'no email on file — pass one' })
   // Only the items the buyer still has — refunded (revoked) items are excluded
-  // so the re-sent email matches what they can actually download.
+  // so the re-sent email matches what they can actually download. `grant.items`
+  // is legitimately empty for a physical-only order (no digital download), so
+  // that alone must never trigger the "nothing to send" guard — only check
+  // liveItems against the order's own digital item count.
   const liveItems = grant.items.filter((i) => !(grant.revokedSkus || []).includes(i.sku))
-  if (grant.revoked || liveItems.length === 0) {
+  if (grant.revoked || (grant.items.length > 0 && liveItems.length === 0)) {
     return res.status(409).json({ error: 'order fully refunded — nothing to send' })
   }
   try {
