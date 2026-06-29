@@ -124,11 +124,11 @@ export function saleDiscountPct(m: MarkupConfig): number {
 export const DEFAULT_PRICING: PricingConfig = {
   fineArt: FINE_ART_DEFAULT_PRICE,
   digital: {
-    standard: 9900,
-    medium: 29500,
-    pro: 59500,
-    master: [150000, 250000, 400000],
-    original: [300000, 500000, 800000],
+    standard: 2500,
+    medium: 4500,
+    pro: 15900,
+    master: [39900, 79900, 129900],
+    original: [59900, 99900, 159900],
   },
   // No markup by default — the list prices above ARE the sell prices until the
   // admin dials in a general / per-label markup.
