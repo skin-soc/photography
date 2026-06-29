@@ -67,6 +67,15 @@ if ! grep -q "capUploadSize" "$SOURCE/server.js" || ! grep -q "southCropRect" "$
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
+# Master-mtime cache self-heal (v0.9.16+): derived caches (mockup source, fine-art
+# print, poster) rebuild when the master is re-edited. Without it, editing a photo +
+# re-rendering leaves ALREADY-rendered sizes showing the previous artwork.
+if ! grep -q "cacheFreshFor" "$SOURCE/server.js"; then
+  echo "ERROR: $SOURCE/server.js is STALE (no master-mtime cache self-heal — edited"
+  echo "       photos won't update on already-rendered sizes)."
+  echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
+  exit 1
+fi
 if ! grep -q '"nodemailer"' "$SOURCE/package.json"; then
   echo "WARNING: $SOURCE/package.json looks stale (no nodemailer) — re-sync it too."
 fi

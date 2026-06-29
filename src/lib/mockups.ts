@@ -38,12 +38,46 @@ export function mockupSizeSupported(family: string, size: string): boolean {
   return (MOCKUP_SIZES[family] ?? []).includes(size)
 }
 
+/**
+ * PIG composites the artwork into a fixed `bleed_area` window of the product
+ * template — and for FRAMED prints (CFPM) that window is the MOUNT aperture, which
+ * is a DIFFERENT aspect from the paper and varies by size (e.g. 18x24→1.42,
+ * 24x36→1.59, 20x28→1.50). If we hand PIG a source at the paper aspect, PIG
+ * re-fits it to the window and centre-crops the mismatch off the TOP+BOTTOM —
+ * eating a subject placed low in frame. So we crop the source to the window aspect
+ * instead (keep-bottom, in the origin), and PIG then fits it with nothing to crop.
+ * Returns "W:H" (landscape-oriented pixel ratio) or null if PIG has no config.
+ * Cached per product_id — the window is a property of the template, not the photo. */
+const _winAspect = new Map<string, string | null>()
+export async function mountWindowAspect(family: string, size: string, portrait: boolean): Promise<string | null> {
+  const prefix = MOCKUP_PREFIX[family]
+  if (!prefix) return null
+  const product_id = `${prefix}-${sizeToken(size)}-${portrait ? 'PORTRAIT' : 'LANDSCAPE'}`
+  if (_winAspect.has(product_id)) return _winAspect.get(product_id) ?? null
+  let aspect: string | null = null
+  try {
+    const res = await fetch(`https://productimagegenerator.services.prodigi.com/product/${product_id}/`)
+    if (res.ok) {
+      const cfg = (await res.json()) as { images?: { masks?: { bleed_area?: { points?: { x: number; y: number }[][] } }[] }[] }
+      const pts = cfg.images?.[0]?.masks?.[0]?.bleed_area?.points?.[0]
+      if (pts && pts.length >= 3) {
+        const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y)
+        const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys)
+        if (w > 0 && h > 0) aspect = `${w}:${h}`
+      }
+    }
+  } catch { /* network/parse failure → null, caller falls back to the paper aspect */ }
+  _winAspect.set(product_id, aspect)
+  return aspect
+}
+
 /** Bump to force a fresh render + bust every cache (edge + browser). Part of the
  *  source URL (so Kite re-renders), the worker cache key, AND the hero's public
  *  mockup URL (so the 1-year immutable browser cache is bypassed). v4/5 = JPEG;
  *  v6 = per-view assets (room07 hero + cover grid tiles); v7 = covers cropped out
- *  of PIG's magenta matte. */
-export const MOCKUP_VERSION = 7
+ *  of PIG's magenta matte; v8 = source cropped to PIG's mount-window aspect so a low
+ *  subject's footroom survives (no top+bottom centre-crop by PIG). */
+export const MOCKUP_VERSION = 8
 
 /** Generator size token: inch sizes are lower-cased (16X24 → 16x24), A-series kept. */
 function sizeToken(size: string): string {
@@ -92,6 +126,10 @@ export function mockupRenderUrl(opts: {
   /** Oriented print aspect "W:H" — the origin pre-crops the source to it (keep
    *  bottom, centre sides) so the mockup crop matches the print. */
   aspect?: string
+  /** The artwork (preview) version, appended to the `image=` source URL so a re-edited
+   *  master gives Prodigi a NEW URL → it refetches instead of reusing its immutable
+   *  cache of the old source. Defaults to the static MOCKUP_VERSION (format bumps). */
+  srcVersion?: number
 }): string | null {
   const prefix = MOCKUP_PREFIX[opts.family]
   if (!prefix || !canMockup(opts.family, opts.color) || !mockupSizeSupported(opts.family, opts.size)) return null
@@ -111,6 +149,8 @@ export function mockupRenderUrl(opts: {
     u.searchParams.set('scene', 'room07')
   }
   u.searchParams.set('variant', `${coverColor}_cover`)
-  u.searchParams.set('image', `${mockupSrcUrl(opts.photoId, opts.aspect)}&v=${MOCKUP_VERSION}`)
+  // `v` busts BOTH Prodigi's immutable fetch-cache AND the origin's mtime cache: a
+  // re-edited master bumps srcVersion (= preview version) → new URL → fresh artwork.
+  u.searchParams.set('image', `${mockupSrcUrl(opts.photoId, opts.aspect)}&v=${opts.srcVersion ?? MOCKUP_VERSION}`)
   return u.toString()
 }

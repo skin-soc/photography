@@ -114,7 +114,10 @@
     "added": "Добавлено",
     "sectionTitle": "Магазин {name}",
     "shopRoot": "Магазин",
-    "alsoAvailableAs": "Также доступно как {name}"
+    "alsoAvailableAs": "Также доступно как {name}",
+    "colourMode": "Цветовой режим",
+    "monochrome": "Монохромный",
+    "colour": "Цвет"
   },
   "cart": {
     "emailLabel": "Эл. почта (для ссылки на загрузку)",

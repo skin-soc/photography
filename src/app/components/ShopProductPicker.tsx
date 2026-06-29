@@ -7,6 +7,7 @@ import { printArea, defaultFineArtProduct } from '@/lib/fine-art-default'
 import { useCartStore } from '@/store/cart'
 import type { CartItemType } from '@/store/cart'
 import { useFineArtPreview } from '@/store/fineart-preview'
+import { usePosterPreview } from '@/store/poster-preview'
 
 export interface PickerProduct {
   sku: string
@@ -210,6 +211,7 @@ export default function ShopProductPicker({
   const addItem = useCartStore((s) => s.addItem)
   const buyNow = useCartStore((s) => s.buyNow)
   const cartItems = useCartStore((s) => s.items)
+  const posterBw = usePosterPreview((s) => s.bw)
 
   const typeLabel: Record<ProductType, string> = {
     print: t('prints'),
@@ -320,6 +322,7 @@ export default function ShopProductPicker({
       thumbnailUrl: previewUrl,
       downloadToken: selected.downloadToken,
       format: selected.format,
+      bw: selected.type === 'print' ? posterBw : undefined,
     }
   }
 

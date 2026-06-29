@@ -85,6 +85,7 @@
     "availableAs": "Disponible en",
     "addToCart": "Ajouter au panier",
     "checkoutSoon": "Le paiement en ligne arrive bientôt — revenez nous voir.",
+    "shopOffline": "La boutique est temporairement hors ligne pour maintenance. Merci de réessayer dans un petit moment — merci de votre patience.",
     "backToShop": "Retour à la boutique",
     "prints": "Affiches",
     "fineArt": "Tirages d'art",
@@ -114,7 +115,10 @@
     "added": "Ajouté",
     "sectionTitle": "Boutique {name}",
     "shopRoot": "Boutique",
-    "alsoAvailableAs": "Également disponible en {name}"
+    "alsoAvailableAs": "Également disponible en {name}",
+    "colourMode": "Mode couleur",
+    "monochrome": "Monochrome",
+    "colour": "Couleur"
   },
   "cart": {
     "emailLabel": "E-mail (pour votre lien de téléchargement)",

@@ -337,6 +337,24 @@ export function fineArtOptions(wPx: number, hPx: number): FineArtOption[] {
 }
 
 /**
+ * Prodigi's recommended IMAGE-AREA pixels (short × long) for a fine-art providerSku.
+ * For FRAMED (mounted) sizes this is the MAT-WINDOW area — WIDER than the paper (e.g.
+ * 24X36 = 6000×9600 → 1.60, vs paper 1.50) — so cropping the print to it (keep-bottom)
+ * matches what the mount actually reveals AND what the mockup shows; a low subject is
+ * no longer hidden under the mat. Canvas is full-bleed so its recPx == the paper aspect
+ * (unchanged). Returns null for an unknown SKU (caller falls back to the paper aspect).
+ */
+export function fineArtRecPx(providerSku: string): { short: number; long: number } | null {
+  for (const fam of FINE_ART_FAMILIES) {
+    const pre = `${fam.prodigiPrefix}-`
+    if (!providerSku.startsWith(pre)) continue
+    const s = fam.sizes.find((x) => x.size === providerSku.slice(pre.length))
+    if (s) return { short: s.recPx[0], long: s.recPx[1] }
+  }
+  return null
+}
+
+/**
  * Deprecated fine-art placeholder — superseded by {@link fineArtOptions} (real
  * Prodigi range, 2026-06-20). Kept only so the admin Prices-tab "Fine art" base
  * field + its cost floor keep compiling until that field is retired; the live

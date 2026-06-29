@@ -47,7 +47,7 @@ export interface OrderLine {
  * the Stripe label when a sku can't be resolved. Used by both fulfilment routes
  * before the invoice is built.
  */
-export async function describeOrderLines(lines: OrderLine[]): Promise<OrderLine[]> {
+export async function describeOrderLines(lines: OrderLine[], bwSkus?: Set<string>): Promise<OrderLine[]> {
   if (lines.length === 0) return lines
   const { getCatalog, displayTitle } = await import('@/lib/shop')
   const catalog = await getCatalog()
@@ -74,10 +74,11 @@ export async function describeOrderLines(lines: OrderLine[]): Promise<OrderLine[
     const size = p.label || (p.providerSku ? p.providerSku.split('-').pop() : null)
     const paper = p.paperLabel || p.material || 'Print'
     const cm = p.printSize ? `${p.printSize.w} × ${p.printSize.h} cm` : null
+    const colourMode = (p.type === 'print' && bwSkus?.has(l.sku)) ? 'Monochrome' : null
     return {
       ...l,
       label: `${hit.title} — ${paper}${size ? ` (${size})` : ''}`,
-      detail: [cm, p.paperBlurb].filter(Boolean).join(' · ') || null,
+      detail: [cm, p.paperBlurb, colourMode].filter(Boolean).join(' · ') || null,
       filename: null,
     }
   })
@@ -314,11 +315,14 @@ export function posterAssetToken(photoId: string, size: string, orderCode: strin
 
 /** Public, token-gated URL Prodigi fetches the print-ready poster MASTER from.
  *  Headerless (Prodigi can't send our secret), so it's secured by the per-order
- *  token above. Served by the origin's `/fulfil/poster/:id/:size` endpoint. */
-export function posterAssetUrl(photoId: string, size: string, orderCode: string): string {
+ *  token above. Served by the origin's `/fulfil/poster/:id/:size` endpoint.
+ *  `locale` selects the localised pre-rendered asset (defaults to 'en'). */
+export function posterAssetUrl(photoId: string, size: string, orderCode: string, locale = 'en', bw?: boolean): string {
   const u = new URL(`${ORIGIN}/fulfil/poster/${encodeURIComponent(photoId)}/${encodeURIComponent(size)}`)
   u.searchParams.set('o', orderCode)
   u.searchParams.set('t', posterAssetToken(photoId, size, orderCode))
+  if (locale && locale !== 'en') u.searchParams.set('locale', locale)
+  if (bw) u.searchParams.set('bw', '1')
   return u.toString()
 }
 
@@ -763,7 +767,7 @@ export async function adminRerenderPreviews(
  * were queued (the render itself runs in the background on the NAS).
  */
 export async function adminPrerenderPosters(
-  items: { id: string; size: string }[],
+  items: { id: string; size: string; locale?: string; title?: string; caption?: string }[],
 ): Promise<{ queued: number } | null> {
   if (!ORIGIN) return null
   const res = await fetch(`${ORIGIN}/admin/poster-prerender`, {

@@ -15,6 +15,8 @@ export interface CartItem {
   thumbnailUrl?: string
   downloadToken?: string
   format?: 'jpeg' | 'tiff'
+  /** Poster-only: customer chose the black-and-white print master. */
+  bw?: boolean
 }
 
 interface CartState {

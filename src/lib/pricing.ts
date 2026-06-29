@@ -146,6 +146,14 @@ async function settingsKV(): Promise<KVLike | undefined> {
   }
 }
 
+/** The SHOP_SETTINGS KV binding (or undefined). Shared so other modules (e.g. the
+ *  processed-catalog cache) can use the same binding without re-deriving it. Unlike
+ *  the Cache API, KV works on workers.dev preview too. */
+export async function shopSettingsKV(): Promise<KVLike | undefined> {
+  return settingsKV()
+}
+export type { KVLike }
+
 /** Deep-merge a stored (possibly partial / older-schema) config over the
  *  defaults so every field is always present and numeric. */
 function coerce(raw: unknown): PricingConfig {

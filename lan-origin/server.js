@@ -834,6 +834,21 @@ async function fileIfExists(p) {
   try { await stat(p); return p } catch { return null }
 }
 
+/** True when a cached/derived file `out` exists AND is at least as new as its source
+ *  master `src`. A republished / re-edited master (newer mtime) therefore invalidates
+ *  every derived cache (mockup source, fine-art print, poster), so the next build
+ *  regenerates from the new artwork instead of serving the previous edit. This is the
+ *  fix for "I edited the photo + re-rendered, but the OLD sizes didn't update": the
+ *  per-size derived caches were keyed by ref only and never checked the master mtime. */
+async function cacheFreshFor(out, src) {
+  try {
+    const [o, s] = await Promise.all([stat(out), stat(src)])
+    return o.mtimeMs >= s.mtimeMs
+  } catch {
+    return false
+  }
+}
+
 /** Find a digital product (and its photo) by SKU across the live catalog. */
 async function findProductBySku(sku) {
   const { photos } = await loadCatalog()
@@ -893,9 +908,22 @@ const POSTER_SITE_LABEL = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').to
  * buyer of that photo+size (paper doesn't change the artwork), so cached by
  * ref+size. Mirrors the on-screen PosterMat exactly (see poster.js).
  */
-async function buildPosterMaster(id, size, force = false) {
-  const out = join(POSTER_ASSETS_DIR, `${photoRef(id)}-${size}.jpg`)
-  if (!force && (await fileIfExists(out))) return out
+/**
+ * Generate-or-reuse the poster MASTER for a (photo, A-size[, locale]).
+ *
+ * @param {string}  id     photo id
+ * @param {string}  size   one of POSTER_SIZES
+ * @param {boolean} force  skip the freshness check (pre-render always forces)
+ * @param {object}  [opts]
+ * @param {string}  [opts.locale='en']   BCP-47 locale — 'en' uses the catalog values
+ * @param {string}  [opts.title]         override title (translated); falls back to catalog
+ * @param {string}  [opts.caption]       override caption (translated); falls back to catalog
+ */
+async function buildPosterMaster(id, size, force = false, { locale = 'en', title: titleOverride, caption: captionOverride } = {}) {
+  // English ('en') uses the canonical filename; every other locale appends the code
+  // so the English pre-render is reused for English orders without touching existing assets.
+  const suffix = locale === 'en' ? '' : `-${locale}`
+  const out = join(POSTER_ASSETS_DIR, `${photoRef(id)}-${size}${suffix}.jpg`)
 
   const { photos } = await loadCatalog()
   const photo = photos.find((p) => p.id === id)
@@ -906,14 +934,18 @@ async function buildPosterMaster(id, size, force = false) {
   }
 
   const masterPath = await resolveSource(id, 'jpeg') // full-res edited master
+  // Reuse the cache only if it's as new as the master (a re-edited photo rebuilds it).
+  if (!force && (await cacheFreshFor(out, masterPath))) return out
   // Untitled photos show the GMP reference as the title (mirrors the shop).
   const titled = photo.title && photo.title.toLowerCase() !== id.toLowerCase()
+  const baseTitle = titled ? photo.title : photoRef(id)
   const buf = await renderPosterMaster({
     photo: masterPath,
     size,
-    title: titled ? photo.title : photoRef(id),
-    caption: photo.caption || '',
+    title: titleOverride || baseTitle,
+    caption: captionOverride ?? photo.caption ?? '',
     siteLabel: POSTER_SITE_LABEL,
+    locale,
   })
 
   const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
@@ -958,14 +990,23 @@ app.get('/poster-master/:id/:size', async (req, res) => {
  */
 app.get('/fulfil/poster/:id/:size', async (req, res) => {
   const { id, size } = req.params
+  const locale = typeof req.query.locale === 'string' && /^[a-z]{2}$/.test(req.query.locale)
+    ? req.query.locale : 'en'
+  const bw = req.query.bw === '1'
   if (!/^[A-Za-z0-9_-]+$/.test(id) || !POSTER_SIZES.includes(size)) {
     return res.status(400).json({ error: 'bad request' })
   }
   try {
-    const path = await buildPosterMaster(id, size)
+    const path = await buildPosterMaster(id, size, false, { locale })
     res.set('Cache-Control', 'public, max-age=31536000, immutable')
     res.type('jpeg')
-    createReadStream(path).pipe(res)
+    if (bw) {
+      // Convert to greyscale on the fly — Prodigi fetches once per order so
+      // this is not a hot path; no need for a separate cached B&W asset.
+      sharp(path, { limitInputPixels: false }).grayscale().jpeg({ quality: 95 }).pipe(res)
+    } else {
+      createReadStream(path).pipe(res)
+    }
   } catch (err) {
     const notFound = err.code === 'NO_PHOTO' || err.code === 'NO_MASTER'
     if (!notFound) console.error('[fulfil-poster]', id, size, err)
@@ -1034,7 +1075,6 @@ async function capUploadSize(path) {
 async function buildFineArtMaster(id, aspect = null, force = false) {
   const tag = aspect ? `-${aspect.tw}x${aspect.th}` : ''
   const out = join(FINEART_ASSETS_DIR, `${photoRef(id)}${tag}.jpg`)
-  if (!force && (await fileIfExists(out))) return out
 
   const { photos } = await loadCatalog()
   const photo = photos.find((p) => p.id === id)
@@ -1045,6 +1085,9 @@ async function buildFineArtMaster(id, aspect = null, force = false) {
   }
 
   const srcPath = await resolveSource(id, 'jpeg') // full-res edited master (jpg preferred)
+  // Reuse the cache only if it's as new as the master, so a re-edited photo ships its
+  // NEW artwork on the print (not the previous edit). `force` always rebuilds.
+  if (!force && (await cacheFreshFor(out, srcPath))) return out
   const isJpeg = /\.jpe?g$/i.test(srcPath)
   const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
   try {
@@ -1132,7 +1175,6 @@ app.get('/fulfil/fineart/:id', async (req, res) => {
 async function buildMockupSource(id, aspect = null) {
   const tag = aspect ? `-${aspect.tw}x${aspect.th}` : ''
   const out = join(CACHE_DIR, `${photoRef(id)}-mocksrc${tag}.jpg`)
-  if (await fileIfExists(out)) return out
 
   const { photos } = await loadCatalog()
   if (!photos.find((p) => p.id === id)) {
@@ -1141,6 +1183,9 @@ async function buildMockupSource(id, aspect = null) {
     throw e
   }
   const srcPath = await resolveSource(id, 'jpeg')
+  // Reuse the cache ONLY if it's as new as the master — a re-edited master rebuilds it
+  // (otherwise PIG composites the previous artwork on already-rendered sizes).
+  if (await cacheFreshFor(out, srcPath)) return out
   const tmp = `${out}.tmp-${randomBytes(6).toString('hex')}.jpg`
   try {
     let pipe = sharp(srcPath, { limitInputPixels: false }).rotate()
@@ -1331,7 +1376,7 @@ function startProgress(kind, total) {
 app.get('/admin/render-progress', (_req, res) =>
   res.json({ ...renderProgress, previewVersion: previewVersion(), mockupVersion: mockupVersion() }))
 
-app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req, res) => {
+app.post('/admin/poster-prerender', express.json({ limit: '512kb' }), async (req, res) => {
   const items = Array.isArray(req.body?.items)
     ? req.body.items.filter(
         (x) => x && typeof x.id === 'string' && /^[A-Za-z0-9_-]+$/.test(x.id) && POSTER_SIZES.includes(x.size),
@@ -1349,13 +1394,13 @@ app.post('/admin/poster-prerender', express.json({ limit: '256kb' }), async (req
       for (;;) {
         const idx = cursor++
         if (idx >= items.length) return
-        const { id, size } = items[idx]
+        const { id, size, locale, title, caption } = items[idx]
         try {
-          await buildPosterMaster(id, size, true)
+          await buildPosterMaster(id, size, true, { locale, title, caption })
           prog.done += 1
         } catch (err) {
           prog.failed += 1
-          console.error('[poster-prerender]', id, size, err.message)
+          console.error('[poster-prerender]', id, size, locale ?? 'en', err.message)
         }
       }
     }
@@ -1951,7 +1996,12 @@ app.post('/orders', express.json({ limit: '64kb' }), async (req, res) => {
         locale: locale || 'en',
         expiresAt: grant.expiresAt,
         invoice: await invoiceForGrant(grant).catch((e) => { console.error('[invoice] build failed:', e.message); return null }),
-        license: await licenseForGrant(grant).catch((e) => { console.error('[license] build failed:', e.message); return null }),
+        // The licence only covers the digital download grant — posters/fine-art
+        // are sold under Prodigi's print terms, not our digital licence. Only
+        // attach it when the order actually contains digital items.
+        license: grant.items.length > 0
+          ? await licenseForGrant(grant).catch((e) => { console.error('[license] build failed:', e.message); return null })
+          : null,
       })
       grant.emailed = true
       if (email && !grant.email) grant.email = String(email) // keep admin display accurate
@@ -2339,7 +2389,7 @@ app.post('/admin/orders/:orderId/resend', express.json({ limit: '4kb' }), async 
       email: to, orderId: grant.orderId, passcode: grant.passcode,
       items: liveItems, lineItems: grant.lineItems, locale: grant.locale || 'en', expiresAt: grant.expiresAt,
       invoice: await invoiceForGrant(grant).catch(() => null),
-      license: await licenseForGrant(grant).catch(() => null),
+      license: liveItems.length > 0 ? await licenseForGrant(grant).catch(() => null) : null,
     })
     grant.emailed = true
     if (req.body && req.body.email) grant.email = to

@@ -48,10 +48,57 @@ const WEBSITE_COLOR = '#6a6a6a'
 // system fonts disabled — so the printed type is deterministic on any host and
 // never silently falls back to whatever the box happens to have installed.
 const FONT_DIR = fileURLToPath(new URL('./fonts/', import.meta.url))
-const FONT_FILES = [
+
+// Base fonts — always loaded.
+const BASE_FONT_FILES = [
   join(FONT_DIR, 'CormorantGaramond-VF.ttf'),
   join(FONT_DIR, 'IBMPlexMono-Light.ttf'),
 ]
+
+// Noto fonts for non-Latin scripts — discovered at startup, present only when
+// the container has them (installed via apt fonts-noto-core / fonts-noto-cjk
+// and copied into /app/fonts/ by the Dockerfile).
+import { existsSync } from 'node:fs'
+
+const NOTO_CANDIDATES = [
+  // Cyrillic (Russian) — from fonts-noto-core
+  join(FONT_DIR, 'NotoSerif-Regular.ttf'),
+  // CJK Serif — from fonts-noto-cjk (covers SC / TC / JP / KR in one TTC)
+  join(FONT_DIR, 'NotoSerifCJK-Regular.ttc'),
+  // CJK Sans fallback — in case Serif CJK isn't available
+  join(FONT_DIR, 'NotoSansCJK-Regular.ttc'),
+  // Arabic
+  join(FONT_DIR, 'NotoNaskhArabic-Regular.ttf'),
+  join(FONT_DIR, 'NotoSansArabic-Regular.ttf'),
+]
+const NOTO_AVAILABLE = NOTO_CANDIDATES.filter(existsSync)
+
+const FONT_FILES = [...BASE_FONT_FILES, ...NOTO_AVAILABLE]
+
+/** Font-family stack for the title/caption SVG text per locale.
+ *  Cormorant Garamond covers all Latin scripts. Non-Latin scripts need Noto.
+ *  Arabic additionally requires direction="rtl" on the text elements. */
+function fontFamilyForLocale(locale) {
+  // CJK: prefer Noto Serif CJK (matching Cormorant's serif style), fall back to Sans
+  const hasCjkSerif = NOTO_AVAILABLE.some((f) => f.includes('NotoSerifCJK'))
+  const hasCjkSans  = NOTO_AVAILABLE.some((f) => f.includes('NotoSansCJK'))
+  const cjkStack = hasCjkSerif
+    ? 'Noto Serif CJK SC, Noto Serif CJK JP, Noto Serif CJK KR, Noto Sans CJK SC, Noto Sans CJK JP, Noto Sans CJK KR'
+    : hasCjkSans
+      ? 'Noto Sans CJK SC, Noto Sans CJK JP, Noto Sans CJK KR'
+      : ''
+  const hasNotoSerif  = NOTO_AVAILABLE.some((f) => f.includes('NotoSerif-'))
+  const hasArabic = NOTO_AVAILABLE.some((f) => f.toLowerCase().includes('arabic'))
+
+  switch (locale) {
+    case 'zh': return cjkStack ? `Cormorant Garamond, ${cjkStack}` : 'Cormorant Garamond'
+    case 'ja': return cjkStack ? `Cormorant Garamond, ${cjkStack}` : 'Cormorant Garamond'
+    case 'ko': return cjkStack ? `Cormorant Garamond, ${cjkStack}` : 'Cormorant Garamond'
+    case 'ru': return hasNotoSerif ? 'Cormorant Garamond, Noto Serif' : 'Cormorant Garamond'
+    case 'ar': return hasArabic ? 'Noto Naskh Arabic, Noto Sans Arabic' : 'Cormorant Garamond'
+    default:   return 'Cormorant Garamond'
+  }
+}
 
 /** Escape text for embedding in SVG. */
 function esc(s) {
@@ -74,9 +121,10 @@ export const POSTER_SIZES = ['A3', 'A2', 'A1', 'A0']
  * @param {string}  o.title        heading (Lightroom title) — UPPERCASED here
  * @param {string} [o.caption]     sub-heading (Lightroom caption)
  * @param {string}  o.siteLabel    foot line, e.g. "WWW.GUSMCEWAN.COM"
+ * @param {string} [o.locale='en'] BCP-47 locale code — selects the font stack
  * @param {number} [o.dpi=300]
  */
-export async function renderPosterMaster({ photo, size, title, caption, siteLabel, dpi = 300 }) {
+export async function renderPosterMaster({ photo, size, title, caption, siteLabel, locale = 'en', dpi = 300 }) {
   const a = A_SERIES[size]
   if (!a) throw new Error(`unknown poster size: ${size}`)
 
@@ -119,22 +167,29 @@ export async function renderPosterMaster({ photo, size, title, caption, siteLabe
   const titleBaseline = blockTop + (caption ? captionF * 1.4 + capGap : 0) + titleF * 0.82
   const cx = W / 2
 
+  const serifFamily = fontFamilyForLocale(locale)
+  // Arabic is RTL — add direction + bidi attributes on the text element
+  const isRtl = locale === 'ar'
+  const rtlAttrs = isRtl ? ' direction="rtl" unicode-bidi="embed"' : ''
+
   const line = (text, y, font, family, weight, color, trackEm) =>
     `<text x="${cx}" y="${Math.round(y)}" text-anchor="middle" ` +
     `font-family="${family}" font-weight="${weight}" font-size="${Math.round(font)}" ` +
     `letter-spacing="${(trackEm * font).toFixed(2)}" fill="${color}" ` +
-    `xml:space="preserve">${esc(text)}</text>`
+    `xml:space="preserve"${rtlAttrs}>${esc(text)}</text>`
 
   // Cormorant at 300 (Light): resvg-js 2.6.x ignores font-weight on a variable
   // font and renders its DEFAULT instance — which for CormorantGaramond-VF is
   // wght 300. So the print is Light; we state 300 explicitly so it stays Light
   // even if a future resvg starts honouring the axis, and the preview matches.
+  // For non-Latin locales, the font stack falls back through Noto fonts loaded
+  // alongside Cormorant — resvg picks the first family that covers the glyphs.
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${bandH}" viewBox="0 0 ${W} ${bandH}">` +
     (caption
-      ? line(String(caption).toUpperCase(), captionBaseline, captionF, 'Cormorant Garamond', 300, CAPTION_COLOR, CAPTION_TRACK)
+      ? line(String(caption).toUpperCase(), captionBaseline, captionF, serifFamily, 300, CAPTION_COLOR, CAPTION_TRACK)
       : '') +
-    line(String(title).toUpperCase(), titleBaseline, titleF, 'Cormorant Garamond', 300, TITLE_COLOR, TITLE_TRACK) +
+    line(String(title).toUpperCase(), titleBaseline, titleF, serifFamily, 300, TITLE_COLOR, TITLE_TRACK) +
     line(siteLabel, websiteBaseline, websiteF, 'IBM Plex Mono', 300, WEBSITE_COLOR, WEBSITE_TRACK) +
     `</svg>`
 

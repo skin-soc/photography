@@ -23,12 +23,6 @@
   --bg: 0 0 0;
   --fg: 255 255 255;
   color-scheme: dark;
-  /* Fine-art grid cover "lift" — theme-aware drop-shadow. DARK mode: a dark shadow
-     is invisible on the black bg, so use a faint light glow at rest and a BRAND-red
-     glow on hover. LIGHT mode: a real soft shadow at rest, a slightly deeper one on
-     hover — NO colour. Kept small so it fits within the grid gap. */
-  --fa-lift: 0 10px 22px rgba(255, 255, 255, 0.07);
-  --fa-lift-hover: 0 16px 30px rgba(201, 41, 63, 0.42);
 }
 
 /* Explicit dark (admin → Dark) — same as the :root baseline. */
@@ -36,17 +30,13 @@
   --bg: 0 0 0;
   --fg: 255 255 255;
   color-scheme: dark;
-  --fa-lift: 0 10px 22px rgba(255, 255, 255, 0.07);
-  --fa-lift-hover: 0 16px 30px rgba(201, 41, 63, 0.42);
 }
 
-/* Light (admin → Light) — neutral shadows, no brand colour. */
+/* Light (admin → Light). */
 .light {
   --bg: 255 255 255;
   --fg: 17 17 17;
   color-scheme: light;
-  --fa-lift: 0 12px 16px rgba(0, 0, 0, 0.28);
-  --fa-lift-hover: 0 16px 22px rgba(0, 0, 0, 0.36);
 }
 
 /* Auto (admin → Auto) — follow the visitor's OS, pure CSS, no flash. */
@@ -54,16 +44,34 @@
   --bg: 255 255 255;
   --fg: 17 17 17;
   color-scheme: light dark;
-  --fa-lift: 0 12px 16px rgba(0, 0, 0, 0.28);
-  --fa-lift-hover: 0 16px 22px rgba(0, 0, 0, 0.36);
 }
 @media (prefers-color-scheme: dark) {
   .theme-auto {
     --bg: 0 0 0;
     --fg: 255 255 255;
-    --fa-lift: 0 10px 22px rgba(255, 255, 255, 0.07);
-    --fa-lift-hover: 0 16px 30px rgba(201, 41, 63, 0.42);
   }
+}
+
+/* Poster & fine-art grid page background. In DARK themes it's dark gray (#333333)
+   instead of black; LIGHT themes keep their normal (white) page background. The
+   base rule covers the two dark contexts (:root default + .dark); .light and
+   .theme-auto fall back to the bg token, and .theme-auto goes gray again when the
+   visitor's OS is dark. (Applied via the <main> class in the shop page.) */
+.shop-brand-bg { background-color: #333333; }
+.light .shop-brand-bg,
+.theme-auto .shop-brand-bg { background-color: rgb(var(--bg)); }
+@media (prefers-color-scheme: dark) {
+  .theme-auto .shop-brand-bg { background-color: #333333; }
+}
+
+/* Fine-art tile "from <price>" — brand red on the LIGHT (white) page, but a soft
+   white on the DARK gray page (where brand-red text reads poorly).
+   Mirrors the .shop-brand-bg theme cascade exactly. */
+.fa-price { color: rgba(255, 255, 255, 0.82); }
+.light .fa-price,
+.theme-auto .fa-price { color: #931020; }
+@media (prefers-color-scheme: dark) {
+  .theme-auto .fa-price { color: rgba(255, 255, 255, 0.82); }
 }
 
 /* Brand default font — matches the About page. This is the site-wide

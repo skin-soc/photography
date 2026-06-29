@@ -85,6 +85,7 @@
     "availableAs": "Disponibile come",
     "addToCart": "Aggiungi al carrello",
     "checkoutSoon": "Il pagamento online sarà presto disponibile — torna a trovarci.",
+    "shopOffline": "Il negozio è temporaneamente offline per manutenzione. Riprova tra poco — grazie per la pazienza.",
     "backToShop": "Torna allo shop",
     "prints": "Poster",
     "fineArt": "Stampe d'arte",
@@ -114,7 +115,10 @@
     "added": "Aggiunto",
     "sectionTitle": "Shop {name}",
     "shopRoot": "Shop",
-    "alsoAvailableAs": "Disponibile anche come {name}"
+    "alsoAvailableAs": "Disponibile anche come {name}",
+    "colourMode": "Modalità colore",
+    "monochrome": "Monocromo",
+    "colour": "Colore"
   },
   "cart": {
     "emailLabel": "E-mail (per il tuo link di download)",

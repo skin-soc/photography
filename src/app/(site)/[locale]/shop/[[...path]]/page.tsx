@@ -17,6 +17,8 @@ import {
   type ShopPhoto,
   type ProductType,
 } from '@/lib/shop'
+import { getPosterTranslations } from '@/lib/shop-settings'
+import { resolveText } from '@/lib/poster-translations'
 import { typeFromUrlSlug } from '@/lib/product-types'
 import { isProductSlug, resolveShopPath, categoryUrl } from '@/lib/shop-url'
 import { landingTypeCards, shopFolderCards } from '@/lib/shop-cards'
@@ -231,6 +233,18 @@ export default async function Shop({ params }: { params: Params }) {
   // Poster cards (grid) carry the same foot line as the product-page poster.
   const siteLabel = `WWW.${new URL(SITE_URL).host.replace(/^www\./, '').toUpperCase()}`
 
+  // Build a small locale-text override map for the 8 poster cards in the grid.
+  // Fetched once server-side; the client component uses it without needing KV.
+  const posterTranslations = await getPosterTranslations()
+  const posterTextOverrides: Record<string, { title: string; caption?: string }> = {}
+  for (const p of catalog) {
+    if (!photoTypes(p).includes('print')) continue
+    const text = resolveText(posterTranslations, p.id, locale, { title: p.title || p.id, caption: p.caption })
+    if (text.title !== p.title || text.caption !== p.caption) {
+      posterTextOverrides[p.id] = text
+    }
+  }
+
   // Skip-aware "back" target: the previous stable page, not the immediate parent
   // (which may be a one-option folder that just redirects forward again).
   const backPath = backTarget(categoryTree, catalog, initialCategoryPath)
@@ -243,8 +257,14 @@ export default async function Shop({ params }: { params: Params }) {
   const landingCards = initialCategoryPath.length === 0 ? landingTypeCards(catalog, types) : null
   const folder = shopFolderCards(catalog, categoryTree, initialCategoryPath)
 
+  // Poster & fine-art LEAF grids get the brand-red (#931020) page background in
+  // DARK themes (instead of black); light themes keep their normal bg. `.shop-brand-bg`
+  // (globals.css) carries the theme logic, so we just swap it in for `bg-bg` here.
+  const leafType = folder.isLeaf ? initialCategoryPath[0] : null
+  const brandBg = leafType === 'print' || leafType === 'fine-art'
+
   return (
-    <main className="min-h-screen bg-bg text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32">
+    <main className={`min-h-screen ${brandBg ? 'shop-brand-bg' : 'bg-bg'} text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32`}>
       {catalog.length > 0 ? (
         <ShopGrid
           catalogVersion={version}
@@ -258,11 +278,12 @@ export default async function Shop({ params }: { params: Params }) {
           intro={tShop('intro')}
           siteLabel={siteLabel}
           mockupVersion={mockupAssetVersion()}
+          posterTextOverrides={posterTextOverrides}
         />
       ) : (
         <header className="max-w-2xl">
           <h1 className="text-4xl md:text-5xl font-light">{t('h1')}</h1>
-          <p className="mt-4 text-foreground/60 leading-relaxed">{tShop('checkoutSoon')}</p>
+          <p className="mt-4 text-foreground/60 leading-relaxed">{tShop('shopOffline')}</p>
         </header>
       )}
     </main>

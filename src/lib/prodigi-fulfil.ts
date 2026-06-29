@@ -11,6 +11,7 @@
 import { getCatalog, type ShopProduct } from './shop'
 import { createOrder, prodigiConfigured, type ProdigiOrderResult, type QuoteItem } from './prodigi'
 import { posterAssetUrl, fineArtAssetUrl, type OrderLine, type OrderShipping } from './downloads'
+import { fineArtRecPx } from '@/config/product-range'
 
 const A_SIZES = new Set(['A4', 'A3', 'A2', 'A1', 'A0'])
 
@@ -78,6 +79,14 @@ async function resolvePhysicalItems(lineItems: OrderLine[]): Promise<PhysicalIte
     // Posters are A-series only (the typeset sheet); fine art uses inch + A sizes,
     // and its providerSku came straight from the curated range, so it's not gated.
     if (kind === 'poster' && !A_SIZES.has(size)) continue
+    // Crop aspect for the print: fine art uses Prodigi's IMAGE-AREA (recPx) aspect,
+    // which for FRAMED prints is the MAT-WINDOW (wider than paper) — so a low subject
+    // isn't hidden under the mount, matching the mockup. Falls back to the paper aspect.
+    const ps = product.printSize
+    const rec = kind === 'fineart' ? fineArtRecPx(providerSku) : null
+    const aspect = rec && ps
+      ? (ps.w >= ps.h ? `${rec.long}:${rec.short}` : `${rec.short}:${rec.long}`)
+      : ps ? `${ps.w}:${ps.h}` : undefined
     out.push({
       kind,
       providerSku,
@@ -86,7 +95,7 @@ async function resolvePhysicalItems(lineItems: OrderLine[]): Promise<PhysicalIte
       copies: li.qty || 1,
       attributes: product.attributes ?? {},
       ourSku: li.sku,
-      aspect: product.printSize ? `${product.printSize.w}:${product.printSize.h}` : undefined,
+      aspect,
     })
   }
   return out
@@ -111,6 +120,10 @@ export async function submitProdigiOrder(input: {
   callbackUrl?: string
   /** Shipment method the customer paid for (Budget/Standard/Express). */
   shippingMethod?: string
+  /** Locale the customer was browsing — selects the localised poster master. */
+  locale?: string
+  /** SKUs the customer ordered in black-and-white. */
+  bwSkus?: Set<string>
 }): Promise<ProdigiOrderResult | null> {
   if (!prodigiConfigured()) return null
   const physical = await resolvePhysicalItems(input.lineItems)
@@ -138,7 +151,7 @@ export async function submitProdigiOrder(input: {
           copies: p.copies,
           attributes: p.attributes,
           merchantReference: p.ourSku,
-          assets: [{ printArea: 'default', url: posterAssetUrl(p.photoId, p.size, input.orderCode) }],
+          assets: [{ printArea: 'default', url: posterAssetUrl(p.photoId, p.size, input.orderCode, input.locale, input.bwSkus?.has(p.ourSku)) }],
         },
   )
 

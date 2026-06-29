@@ -22,6 +22,7 @@ import {
   pricingStamp,
   effectiveMarkupPct,
   saleDiscountPct,
+  shopSettingsKV,
   DEFAULT_PRICING,
   type PricingConfig,
   type DigitalBrackets,
@@ -485,8 +486,120 @@ export function mockupAssetVersion(): number {
   return _mockupAssetVersion
 }
 
+/** The origin's current PREVIEW version — bumps when masters/previews are re-rendered.
+ *  The mockup SOURCE artwork that Prodigi composites is the same master, so its render
+ *  URL carries this version: a re-edited photo bumps it → a new `image=` URL → Prodigi
+ *  refetches (its immutable cache of the old source is bypassed) instead of recomposing
+ *  the previous edit on already-rendered sizes. */
+let _previewAssetVersion = 1
+export function previewAssetVersion(): number {
+  return _previewAssetVersion
+}
+
 /** Stable cache key for the raw catalog at the Cloudflare edge. */
 const CATALOG_CACHE_KEY = 'https://shop-origin.internal/catalog.json'
+/** Edge-cache key prefix for the PROCESSED catalog (post-HMAC, post-pricing). Keyed
+ *  by the build `key` (photos+pricing+rates+versions), so any input change is a new
+ *  entry. Lives in `caches.default` — per-colo, but it SURVIVES isolate recycling AND
+ *  deploys, so a cold isolate restores the catalog with one `JSON.parse` instead of
+ *  recomputing ~3.5k HMACs + option sets (which was tipping cold renders over the CPU
+ *  limit → error 1102). */
+const PROCESSED_CACHE_PREFIX = 'https://shop-origin.internal/catalog-processed/'
+/** Single KV key holding the latest processed catalog as `{key, photos}`. KV is the
+ *  DURABLE store — unlike `caches.default` it actually persists on workers.dev preview,
+ *  where the Cache API is a no-op. Only ONE entry is kept (overwritten when the build
+ *  key changes), so writes are rare (≈ per publish / price / version change). */
+const PROCESSED_KV_KEY = 'catalog-processed-v1'
+/** Don't try to stuff a multi-MB catalog past KV's 25 MB value cap. */
+const PROCESSED_KV_MAX = 20 * 1024 * 1024
+const edgeCache = (): Cache | undefined =>
+  (globalThis as { caches?: { default?: Cache } }).caches?.default
+
+async function readProcessedCatalog(key: string): Promise<ShopPhoto[] | null> {
+  // L1 — edge cache: instant, but a no-op on workers.dev (preview).
+  const edge = edgeCache()
+  if (edge) {
+    const hit = await edge.match(PROCESSED_CACHE_PREFIX + encodeURIComponent(key)).catch(() => null)
+    if (hit) {
+      try {
+        return (await hit.json()) as ShopPhoto[]
+      } catch {
+        /* fall through to KV */
+      }
+    }
+  }
+  // L2 — KV: durable everywhere (incl. preview). Keyed value carries its own build key.
+  const kv = await shopSettingsKV()
+  if (kv) {
+    try {
+      const raw = await kv.get(PROCESSED_KV_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as { key: string; photos: ShopPhoto[] }
+        if (parsed.key === key && Array.isArray(parsed.photos)) {
+          // Backfill L1 for the rest of this colo (best-effort).
+          if (edge) {
+            edge
+              .put(
+                PROCESSED_CACHE_PREFIX + encodeURIComponent(key),
+                new Response(JSON.stringify(parsed.photos), {
+                  headers: { 'content-type': 'application/json', 'cache-control': 'max-age=86400' },
+                }),
+              )
+              .catch(() => {})
+          }
+          return parsed.photos
+        }
+      }
+    } catch {
+      /* parse/KV failure → miss, caller rebuilds */
+    }
+  }
+  return null
+}
+
+/** Last processed catalog from KV, IGNORING the build key — a stale-but-correct
+ *  fallback for when the origin fetch fails on a cold isolate (better than a blank
+ *  shop). Returns null if KV is empty/unavailable. */
+async function readLastProcessedCatalog(): Promise<ShopPhoto[] | null> {
+  const kv = await shopSettingsKV()
+  if (!kv) return null
+  try {
+    const raw = await kv.get(PROCESSED_KV_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { photos: ShopPhoto[] }
+    return Array.isArray(parsed.photos) ? parsed.photos : null
+  } catch {
+    return null
+  }
+}
+
+async function writeProcessedCatalog(key: string, photos: ShopPhoto[]): Promise<void> {
+  const body = JSON.stringify(photos)
+  // L1 — edge cache (1-day TTL caps memory; a stale key just ages out, never served).
+  const edge = edgeCache()
+  if (edge) {
+    await edge
+      .put(
+        PROCESSED_CACHE_PREFIX + encodeURIComponent(key),
+        new Response(body, {
+          headers: { 'content-type': 'application/json', 'cache-control': 'max-age=86400' },
+        }),
+      )
+      .catch(() => {})
+  }
+  // L2 — KV. Wrap with the build key WITHOUT re-stringifying `photos`. Awaited so it
+  // lands before the isolate freezes; only happens on a genuine rebuild, so rare.
+  if (body.length <= PROCESSED_KV_MAX) {
+    const kv = await shopSettingsKV()
+    if (kv) {
+      try {
+        await kv.put(PROCESSED_KV_KEY, `{"key":${JSON.stringify(key)},"photos":${body}}`)
+      } catch {
+        /* over quota / unavailable → next cold start just rebuilds */
+      }
+    }
+  }
+}
 
 /**
  * Fetch the raw catalog, served from the Cloudflare edge cache (per-colo,
@@ -587,11 +700,20 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
     const previewVer = data.previewVersion ?? 1
     const mockupVer = data.mockupVersion ?? 1
     _mockupAssetVersion = mockupVer // captured for mockupAssetVersion()
+    _previewAssetVersion = previewVer // captured for previewAssetVersion()
     const key =
       (data.generated ||
         `${data.photos.length}:${data.photos[0]?.id ?? ''}:${data.photos[data.photos.length - 1]?.id ?? ''}`) +
       `|p:${pricingStamp(pricing)}|r:${rates.EUR.toFixed(5)}|v:${previewVer}|m:${mockupVer}|s:${CATALOG_SCHEMA}`
     if (_processed && _processed.key === key) return _processed.photos
+    // Cross-isolate restore: a warm colo (even right after a deploy) serves the
+    // already-processed catalog with one JSON.parse, skipping the ~3.5k HMACs +
+    // option builds below that were blowing the cold-start CPU budget (error 1102).
+    const restored = await readProcessedCatalog(key)
+    if (restored) {
+      _processed = { key, photos: restored }
+      return restored
+    }
     const photos = data.photos.map((p) => ({
       ...p,
       category: p.category ?? [],
@@ -673,12 +795,19 @@ async function buildCatalog(): Promise<ShopPhoto[]> {
       }
     }
     _processed = { key, photos }
+    // Persist the processed catalog so the NEXT cold isolate (or the next deploy)
+    // restores it cheaply instead of re-running this whole build.
+    await writeProcessedCatalog(key, photos)
     return photos
   } catch (err) {
     console.error('[shop] failed to load catalog from origin:', err)
-    // Serve the last good processed catalog if we have one, rather than a blank
-    // shop, when a refetch transiently fails.
+    // Serve the last good processed catalog rather than a blank shop when a refetch
+    // transiently fails. In-isolate memo first; then the KV copy, so a COLD isolate
+    // whose origin fetch timed out (the slow tunnel) still serves the full catalog
+    // instead of an empty one — which was 404-ing product pages / showing "offline".
     if (_processed) return _processed.photos
+    const lastGood = await readLastProcessedCatalog()
+    if (lastGood && lastGood.length) return lastGood
     return []
   }
 }

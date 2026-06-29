@@ -29,7 +29,8 @@ async function fulfilSession(sessionId: string, workerBase: string): Promise<voi
   // Enrich each line with the catalog description (paper/size, format/px/file).
   const raw = extractOrderLines(session)
   const shipping = raw.shipping
-  const lineItems = await describeOrderLines(raw.lineItems)
+  const bwSkus = new Set((session.metadata?.bwSkus ?? '').split(',').filter(Boolean))
+  const lineItems = await describeOrderLines(raw.lineItems, bwSkus)
 
   const pi = session.payment_intent
   const paymentId = typeof pi === 'string' ? pi : pi?.id ?? ''
@@ -91,6 +92,8 @@ async function fulfilSession(sessionId: string, workerBase: string): Promise<voi
       email: session.customer_details?.email ?? null,
       // The delivery method the customer chose + paid for (Budget/Standard/…).
       shippingMethod: session.metadata?.shippingMethod ?? undefined,
+      locale: session.metadata?.locale ?? 'en',
+      bwSkus,
       // Prodigi POSTs CloudEvents status updates here; secured by a per-order
       // token (their callbacks carry no signature). Worker origin, not the LAN one.
       callbackUrl: prodigiCallbackUrl(workerBase, orderCode),

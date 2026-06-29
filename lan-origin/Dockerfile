@@ -21,6 +21,18 @@ COPY server.js email.js invoice.js poster.js logo.svg gmp.png ./
 # Fonts for the poster master compositor (Cormorant Garamond + IBM Plex Mono),
 # loaded directly by @resvg/resvg-js since librsvg ignores embedded @font-face.
 COPY fonts ./fonts
+# Copy Noto fonts from the apt-installed packages into /app/fonts/ so resvg
+# (which uses loadSystemFonts: false and reads explicit font files) can render
+# Cyrillic (Russian), CJK (Chinese / Japanese / Korean), and Arabic glyphs on
+# localised poster masters. We copy only the files that exist — the find is
+# intentionally non-fatal so the build succeeds even on a slimmed base image.
+RUN find /usr/share/fonts \
+      \( -name 'NotoSerif-Regular.ttf' \
+      -o -name 'NotoSerifCJK-Regular.ttc' \
+      -o -name 'NotoSansCJK-Regular.ttc' \
+      -o -name 'NotoNaskhArabic-Regular.ttf' \
+      -o -name 'NotoSansArabic-Regular.ttf' \) \
+    -exec cp {} /app/fonts/ \; 2>/dev/null; true
 
 ENV PORT=8787
 EXPOSE 8787

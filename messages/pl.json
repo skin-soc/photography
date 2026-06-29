@@ -85,6 +85,7 @@
     "availableAs": "Dostępne jako",
     "addToCart": "Dodaj do koszyka",
     "checkoutSoon": "Płatność online już wkrótce — zajrzyj ponownie.",
+    "shopOffline": "Sklep jest tymczasowo niedostępny z powodu prac konserwacyjnych. Spróbuj ponownie za chwilę — dziękujemy za cierpliwość.",
     "backToShop": "Powrót do sklepu",
     "prints": "Plakaty",
     "fineArt": "Wydruki artystyczne",
@@ -114,7 +115,10 @@
     "added": "Dodano",
     "sectionTitle": "Sklep {name}",
     "shopRoot": "Sklep",
-    "alsoAvailableAs": "Dostępne także jako {name}"
+    "alsoAvailableAs": "Dostępne także jako {name}",
+    "colourMode": "Tryb koloru",
+    "monochrome": "Monochromatyczny",
+    "colour": "Kolor"
   },
   "cart": {
     "emailLabel": "E-mail (do linku do pobrania)",

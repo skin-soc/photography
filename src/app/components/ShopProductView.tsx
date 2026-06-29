@@ -1,4 +1,6 @@
 import { getTranslations } from 'next-intl/server'
+import { getPosterTranslations } from '@/lib/shop-settings'
+import { resolveText } from '@/lib/poster-translations'
 import { Link } from '@/i18n/navigation'
 import {
   mockupAssetVersion,
@@ -15,7 +17,7 @@ import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
 import { defaultFineArtProduct } from '@/lib/fine-art-default'
 import FineArtHero from '@/app/components/FineArtHero'
-import PosterMat from '@/app/components/PosterMat'
+import PosterBwHero from '@/app/components/PosterBwHero'
 import SalePill from '@/app/components/SalePill'
 import LicensingLink from '@/app/components/LicensingLink'
 import { SITE_URL, BUSINESS_NAME } from '@/i18n/seo'
@@ -114,6 +116,13 @@ export default async function ShopProductView({
 
   const t = await getTranslations({ locale, namespace: 'shop' })
   const rates = await getRates()
+
+  // Locale-specific poster title/caption — falls back to English catalog values
+  const posterTranslations = await getPosterTranslations()
+  const posterText = resolveText(posterTranslations, photo.id, locale, {
+    title: photo.title || photo.id,
+    caption: photo.caption,
+  })
 
   // Derive the public-event name from the category path, e.g.
   // ["Events","Denmark","Copenhagen","Pride 2013"] → "Copenhagen Pride 2013"
@@ -287,19 +296,17 @@ export default async function ShopProductView({
             />
           </div>
         ) : posterView ? (
-          <div className="relative shrink-0 mx-auto xl:mx-0 w-full" style={{ maxWidth: posterCardMaxWidth }}>
-            {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
-            <PosterMat
-              src={`${photo.previewUrl}${heroQuery(800)}`}
-              srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
-              sizes={`${posterCardMaxWidth}px`}
-              alt={`${displayTitle(photo)} — ${photo.location}`}
-              title={displayTitle(photo)}
-              caption={photo.caption}
-              siteLabel={siteLabel}
-              maxWidth={posterCardMaxWidth}
-            />
-          </div>
+          <PosterBwHero
+            src={`${photo.previewUrl}${heroQuery(800)}`}
+            srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
+            sizes={`${posterCardMaxWidth}px`}
+            alt={`${displayTitle(photo)} — ${photo.location}`}
+            title={posterText.title}
+            caption={posterText.caption}
+            siteLabel={siteLabel}
+            maxWidth={posterCardMaxWidth}
+            salePill={photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : undefined}
+          />
         ) : (
           <div className="relative select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px] shadow-[0_28px_64px_-26px_rgba(0,0,0,0.6)]" style={{ maxWidth: previewW, width: '100%' }}>
             {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
@@ -323,9 +330,9 @@ export default async function ShopProductView({
             photoSlug={slug}
             primaryType={primaryType}
             rawAvailable={photo.rawAvailable ?? false}
-            photoTitle={displayTitle(photo)}
+            photoTitle={primaryType === 'print' ? posterText.title : displayTitle(photo)}
             location={photo.location}
-            caption={photo.caption}
+            caption={primaryType === 'print' ? posterText.caption : photo.caption}
             previewUrl={photo.previewUrl}
             licenseNote={eventName ? (
               <p className="mt-4 text-[11px] font-light leading-relaxed text-foreground/30">

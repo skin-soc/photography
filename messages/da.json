@@ -114,7 +114,10 @@
     "added": "Tilføjet",
     "sectionTitle": "{name}-butik",
     "shopRoot": "Butik",
-    "alsoAvailableAs": "Fås også som {name}"
+    "alsoAvailableAs": "Fås også som {name}",
+    "colourMode": "Farvetilstand",
+    "monochrome": "Sort/hvid",
+    "colour": "Farve"
   },
   "cart": {
     "emailLabel": "E-mail (til dit downloadlink)",

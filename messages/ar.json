@@ -114,7 +114,10 @@
     "added": "تمت الإضافة",
     "sectionTitle": "متجر {name}",
     "shopRoot": "متجر",
-    "alsoAvailableAs": "متوفر أيضًا بصيغة {name}"
+    "alsoAvailableAs": "متوفر أيضًا بصيغة {name}",
+    "colourMode": "وضع الألوان",
+    "monochrome": "أحادي اللون",
+    "colour": "ألوان"
   },
   "cart": {
     "emailLabel": "البريد الإلكتروني (لرابط التنزيل الخاص بك)",

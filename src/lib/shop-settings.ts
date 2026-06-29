@@ -21,6 +21,7 @@ const REFUND_UNDOWNLOADED_DEFAULT_KEY = 'refund:undownloadedDefault'
 const VAT_RATE_KEY = 'vat:rate'
 const DEFAULT_VAT_RATE = 25
 const THEME_KEY = 'site:theme'
+const POSTER_TRANSLATIONS_KEY = 'poster:translations'
 
 async function settingsKV(): Promise<KVLike | undefined> {
   try {
@@ -161,5 +162,34 @@ export async function setThemePref(theme: ThemePref): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return false
   await kv.put(THEME_KEY, theme)
+  return true
+}
+
+// ── Poster text translations ───────────────────────────────────────────────────
+// Locale-specific title + caption for each poster photo. Stored as a JSON blob
+// keyed by photoId → locale → { title, caption? }. English is always the live
+// Lightroom value and is never persisted here; the KV blob only holds the
+// non-English translations so it stays small.
+
+import type { PosterTranslations } from './poster-translations'
+
+/** Saved non-English translations for all poster photos. Returns {} when KV is
+ *  unavailable or the key has never been written. */
+export async function getPosterTranslations(): Promise<PosterTranslations> {
+  const kv = await settingsKV()
+  if (!kv) return {}
+  try {
+    const raw = await kv.get(POSTER_TRANSLATIONS_KEY)
+    return raw ? (JSON.parse(raw) as PosterTranslations) : {}
+  } catch {
+    return {}
+  }
+}
+
+/** Persist non-English translations. Returns false if KV isn't available. */
+export async function setPosterTranslations(data: PosterTranslations): Promise<boolean> {
+  const kv = await settingsKV()
+  if (!kv) return false
+  await kv.put(POSTER_TRANSLATIONS_KEY, JSON.stringify(data))
   return true
 }

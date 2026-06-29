@@ -114,7 +114,10 @@
     "added": "Lagt til",
     "sectionTitle": "{name}-butikk",
     "shopRoot": "Butikk",
-    "alsoAvailableAs": "Også tilgjengelig som {name}"
+    "alsoAvailableAs": "Også tilgjengelig som {name}",
+    "colourMode": "Fargemodus",
+    "monochrome": "Monokrom",
+    "colour": "Farge"
   },
   "cart": {
     "emailLabel": "E-post (for nedlastingslenken din)",

@@ -216,10 +216,10 @@ function coverUrl(slug: string, c: { family: string; size: string; color: string
 
 /**
  * A fine-art grid tile: always the BLACK framed-&-mounted-print cover mockup (at
- * the largest size on offer), at its natural aspect. The cover is a transparent
- * PNG cutout, so a `drop-shadow` filter (which follows the alpha, unlike box-shadow)
- * gives the framed piece the same floating shadow as the posters. Falls back to the
- * artwork preview if the cover isn't rendered yet (404).
+ * the largest size on offer), at its natural aspect. The cover is an opaque cropped
+ * rectangle, so it carries the EXACT same box-shadow as the poster mat — identical
+ * in every theme, no hover change (the hover lift is the Link's -translate-y-1).
+ * Falls back to the artwork preview if the cover isn't rendered yet (404).
  */
 function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version: number; eager?: boolean }) {
   const covers = photo.faCovers ?? []
@@ -239,7 +239,7 @@ function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version
       onDragStart={(e) => e.preventDefault()}
       onLoad={() => setLoaded(true)}
       onError={() => { if (pick && !failed) setFailed(true); else setLoaded(true) }}
-      className={`block w-full h-auto transition-[opacity,filter] duration-300 pointer-events-none [filter:drop-shadow(var(--fa-lift))] group-hover:[filter:drop-shadow(var(--fa-lift-hover))] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      className={`block w-full h-auto transition-opacity duration-300 pointer-events-none shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)] ${loaded ? 'opacity-100' : 'opacity-0'}`}
     />
   )
 }
@@ -318,6 +318,7 @@ export default function ShopGrid({
   intro,
   siteLabel,
   mockupVersion,
+  posterTextOverrides = {},
 }: {
   /** Opaque catalog version — cache-busts the client fetch of the photo tiles. */
   catalogVersion: string
@@ -341,6 +342,9 @@ export default function ShopGrid({
   siteLabel: string
   /** MOCKUP_VERSION — busts the browser cache for fine-art cover tiles. */
   mockupVersion: number
+  /** Locale-specific title + caption overrides for poster photos, keyed by photo
+   *  id. Applied in PosterMat so the grid card matches the product page preview. */
+  posterTextOverrides?: Record<string, { title: string; caption?: string }>
 }) {
   const t = useTranslations('shop')
   const typeLabel = useCallback(
@@ -512,8 +516,8 @@ export default function ShopGrid({
                       <PosterMat
                         src={previewSrc(p.previewUrl, 800, true, true)}
                         alt={`${p.title} — ${p.location}`}
-                        title={p.title}
-                        caption={p.caption}
+                        title={posterTextOverrides[p.id]?.title ?? p.title}
+                        caption={posterTextOverrides[p.id]?.caption ?? p.caption}
                         siteLabel={siteLabel}
                         maxWidth={600}
                         eager={i < 4}
@@ -531,11 +535,11 @@ export default function ShopGrid({
                  plain block in a flex column, so the hover-raise just works and the
                  columns start flush at the top. Sequential split keeps reading order
                  on mobile (the two columns stack in order). */
-              <div className="flex flex-col sm:flex-row gap-10 sm:gap-14 items-start">
+              <div className="flex flex-col sm:flex-row gap-[7.5rem] sm:gap-[10.5rem] items-start">
                 {(() => {
                   const half = Math.ceil(shown.length / 2)
                   return [shown.slice(0, half), shown.slice(half)].map((col, ci) => (
-                    <div key={ci} className="flex-1 min-w-0 flex flex-col gap-10 sm:gap-14">
+                    <div key={ci} className="flex-1 min-w-0 flex flex-col gap-[7.5rem] sm:gap-[10.5rem]">
                       {col.map((p, j) => (
                         <Link
                           key={p.id}
@@ -554,7 +558,7 @@ export default function ShopGrid({
                           </div>
                           <div className="mt-4 flex items-baseline justify-between gap-3">
                             <p className="min-w-0 text-[14px] font-light leading-tight text-foreground/80 truncate">{p.title}</p>
-                            <p className="shrink-0 text-[12px] tracking-wide text-accent">{t('from')} {p.fromText}</p>
+                            <p className="fa-price shrink-0 text-[12px] tracking-wide">{t('from')} {p.fromText}</p>
                           </div>
                         </Link>
                       ))}

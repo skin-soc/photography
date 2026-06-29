@@ -114,7 +114,10 @@
     "added": "Adicionado",
     "sectionTitle": "Loja {name}",
     "shopRoot": "Loja",
-    "alsoAvailableAs": "Também disponível como {name}"
+    "alsoAvailableAs": "Também disponível como {name}",
+    "colourMode": "Modo de cor",
+    "monochrome": "Monocromático",
+    "colour": "Cor"
   },
   "cart": {
     "emailLabel": "E-mail (para o seu link de transferência)",

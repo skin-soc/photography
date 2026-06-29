@@ -204,7 +204,7 @@ export default function CartDrawer() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: itemsToCharge.map((i) => ({ sku: i.sku })),
+          items: itemsToCharge.map((i) => ({ sku: i.sku, bw: i.bw })),
           locale,
           ...(coupon ? { couponCode: coupon } : {}),
           ...(shipping ? { shipping } : {}),
@@ -361,7 +361,7 @@ export default function CartDrawer() {
                           aria-hidden="true"
                           width={60}
                           height={60}
-                          className="w-full h-full object-cover"
+                          className={`w-full h-full object-cover${item.bw ? ' grayscale' : ''}`}
                           draggable={false}
                         />
                       </div>

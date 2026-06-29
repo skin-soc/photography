@@ -85,6 +85,7 @@
     "availableAs": "Erhältlich als",
     "addToCart": "In den Warenkorb",
     "checkoutSoon": "Der Online-Checkout kommt bald — schauen Sie bald wieder vorbei.",
+    "shopOffline": "Der Shop ist wegen Wartungsarbeiten vorübergehend offline. Bitte versuchen Sie es in Kürze erneut — vielen Dank für Ihre Geduld.",
     "backToShop": "Zurück zum Shop",
     "prints": "Poster",
     "fineArt": "Kunstdrucke",
@@ -114,7 +115,10 @@
     "added": "Hinzugefügt",
     "sectionTitle": "{name}-Shop",
     "shopRoot": "Shop",
-    "alsoAvailableAs": "Auch erhältlich als {name}"
+    "alsoAvailableAs": "Auch erhältlich als {name}",
+    "colourMode": "Farbmodus",
+    "monochrome": "Monochrom",
+    "colour": "Farbe"
   },
   "cart": {
     "emailLabel": "E-Mail (für Ihren Download-Link)",

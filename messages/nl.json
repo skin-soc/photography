@@ -85,6 +85,7 @@
     "availableAs": "Verkrijgbaar als",
     "addToCart": "In winkelwagen",
     "checkoutSoon": "Online afrekenen komt binnenkort — kom snel terug.",
+    "shopOffline": "De shop is tijdelijk offline voor onderhoud. Probeer het over een poosje opnieuw — bedankt voor uw geduld.",
     "backToShop": "Terug naar shop",
     "prints": "Posters",
     "fineArt": "Kunstprints",
@@ -114,7 +115,10 @@
     "added": "Toegevoegd",
     "sectionTitle": "{name}-shop",
     "shopRoot": "Shop",
-    "alsoAvailableAs": "Ook verkrijgbaar als {name}"
+    "alsoAvailableAs": "Ook verkrijgbaar als {name}",
+    "colourMode": "Kleurmodus",
+    "monochrome": "Monochroom",
+    "colour": "Kleur"
   },
   "cart": {
     "emailLabel": "E-mail (voor je downloadlink)",

@@ -24,7 +24,7 @@ import { getQuote, checkEuFulfilment } from '@/lib/prodigi'
 import { quoteItemsForSkus } from '@/lib/prodigi-fulfil'
 import { getPricing } from '@/lib/pricing'
 
-interface RequestItem { sku: string }
+interface RequestItem { sku: string; bw?: boolean }
 
 /** Shipping selection sent from the cart's shipping step (physical orders). */
 interface ShippingSelection {
@@ -73,6 +73,9 @@ export async function POST(req: Request) {
       req.headers.get('x-real-ip') ??
       ((req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null)
     const skus = (body.items ?? []).map((i) => i.sku)
+    // SKUs the customer chose to print in B&W — recorded in metadata so the webhook
+    // can pass the bw flag to the print master asset URL.
+    const bwSkus = new Set((body.items ?? []).filter((i) => i.bw).map((i) => i.sku))
     if (skus.length === 0) {
       return Response.json({ error: 'no items' }, { status: 400 })
     }
@@ -153,7 +156,14 @@ export async function POST(req: Request) {
     // Manual VAT decision (B2C by IP, or B2B reverse charge for a validated EU
     // business). DK + EU are taxable at the configured rate; reverse-charge /
     // non-EU are 0%. Catalog prices are net (ex-VAT).
-    const outcome = vatOutcome(country, business)
+    // Physical goods: place of supply is the DELIVERY ADDRESS country (EU VAT
+    // law), not the buyer's IP — a VPN'd IP must never override a real Danish/EU
+    // delivery address. Digital-only orders keep IP geolocation (no address
+    // collected). The shipping selection is parsed below; read it early here.
+    const vatCountry = hasPhysical && body.shipping?.address?.country
+      ? body.shipping.address.country.toUpperCase()
+      : country
+    const outcome = vatOutcome(vatCountry, business)
     const rate = await getVatRate()
     const netTotal = items.reduce((s, i) => s + i.product.price, 0)
 
@@ -244,6 +254,7 @@ export async function POST(req: Request) {
       metadata.couponCode = appliedCoupon
       metadata.discountAmount = String(discountMinor)
     }
+    if (bwSkus.size > 0) metadata.bwSkus = Array.from(bwSkus).join(',')
 
     // Spread the discounted net across the product lines (proportional to price),
     // reconciling rounding on the last line so the sum is exact — Stripe Checkout

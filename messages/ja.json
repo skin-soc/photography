@@ -85,6 +85,7 @@
     "availableAs": "ご購入形式",
     "addToCart": "カートに追加",
     "checkoutSoon": "オンライン決済は近日公開予定です。またご覧ください。",
+    "shopOffline": "ショップは現在メンテナンスのため一時的に停止しています。しばらくしてから再度お試しください。ご不便をおかけして申し訳ございません。",
     "backToShop": "ショップに戻る",
     "prints": "ポスター",
     "fineArt": "ファインアート",
@@ -114,7 +115,10 @@
     "added": "追加しました",
     "sectionTitle": "{name}ショップ",
     "shopRoot": "ショップ",
-    "alsoAvailableAs": "{name}としてもご利用いただけます"
+    "alsoAvailableAs": "{name}としてもご利用いただけます",
+    "colourMode": "カラーモード",
+    "monochrome": "モノクロ",
+    "colour": "カラー"
   },
   "cart": {
     "emailLabel": "メールアドレス（ダウンロードリンク用）",

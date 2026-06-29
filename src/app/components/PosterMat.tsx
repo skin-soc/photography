@@ -70,7 +70,7 @@ export default function PosterMat({
 }) {
   return (
     <figure
-      className="shrink-0 mx-auto xl:mx-0 select-none overflow-hidden bg-white shadow-[0_28px_64px_-26px_rgba(0,0,0,0.6)] flex flex-col"
+      className="shrink-0 mx-auto xl:mx-0 select-none overflow-hidden bg-white shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)] flex flex-col"
       style={{ width: '100%', maxWidth, aspectRatio: `1 / ${SHEET_RATIO}`, containerType: 'inline-size' }}
     >
       {/* Artwork — full-width 4:5 area at the top. Margins in cqw stay locked to

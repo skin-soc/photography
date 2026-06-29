@@ -85,6 +85,7 @@
     "availableAs": "可选规格",
     "addToCart": "加入购物车",
     "checkoutSoon": "在线结账即将上线，敬请期待。",
+    "shopOffline": "商店正在维护中，暂时无法访问。请稍后再试，感谢您的耐心等待。",
     "backToShop": "返回商店",
     "prints": "海报",
     "fineArt": "艺术微喷",
@@ -114,7 +115,10 @@
     "added": "已添加",
     "sectionTitle": "{name}商店",
     "shopRoot": "商店",
-    "alsoAvailableAs": "也可作为{name}提供"
+    "alsoAvailableAs": "也可作为{name}提供",
+    "colourMode": "色彩模式",
+    "monochrome": "单色",
+    "colour": "彩色"
   },
   "cart": {
     "emailLabel": "电子邮箱（用于您的下载链接）",

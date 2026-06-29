@@ -114,7 +114,10 @@
     "added": "Lisätty",
     "sectionTitle": "{name}-kauppa",
     "shopRoot": "Kauppa",
-    "alsoAvailableAs": "Saatavilla myös muodossa {name}"
+    "alsoAvailableAs": "Saatavilla myös muodossa {name}",
+    "colourMode": "Väritila",
+    "monochrome": "Mustavalkoinen",
+    "colour": "Väri"
   },
   "cart": {
     "emailLabel": "Sähköposti (latauslinkkiäsi varten)",

@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import type { PosterTranslations, PosterLocaleText } from '@/lib/poster-translations'
+import type { PosterSource } from '@/app/api/admin/poster-translations/route'
 import type { ReferenceLookup, AssetInfo } from '@/lib/shop'
 import type { AdminOrder, AssetAudit as AssetAuditData } from '@/lib/downloads'
 import { vatJurisdiction, jurisdictionLabel, type VatJurisdiction } from '@/lib/vat'
@@ -9,8 +11,8 @@ import { roundUpToFiveKr } from '@/lib/currency'
 import type { PricingConfig, PricingFloors, PricingValidationError, ColorLabel } from '@/lib/pricing'
 import Logo from '../_components/Logo'
 
-type Tab = 'products' | 'orders' | 'finances' | 'prices' | 'coupons' | 'settings'
-const TABS: Tab[] = ['products', 'orders', 'finances', 'prices', 'coupons', 'settings']
+type Tab = 'products' | 'orders' | 'finances' | 'prices' | 'coupons' | 'translations' | 'settings'
+const TABS: Tab[] = ['products', 'orders', 'finances', 'prices', 'coupons', 'translations', 'settings']
 
 export default function AdminPage() {
   const [tab, setTabState] = useState<Tab>('products')
@@ -62,7 +64,7 @@ export default function AdminPage() {
                   : 'border-transparent text-white/40 hover:text-white/70'
               }`}
             >
-              {t === 'products' ? 'Product lookup' : t === 'orders' ? 'Orders' : t === 'finances' ? 'Finances' : t === 'prices' ? 'Prices' : t === 'coupons' ? 'Coupons' : 'Settings'}
+              {t === 'products' ? 'Product lookup' : t === 'orders' ? 'Orders' : t === 'finances' ? 'Finances' : t === 'prices' ? 'Prices' : t === 'coupons' ? 'Coupons' : t === 'translations' ? 'Translations' : 'Settings'}
             </button>
           ))}
         </div>
@@ -72,6 +74,7 @@ export default function AdminPage() {
           : tab === 'finances' ? <FinancesTab />
           : tab === 'prices' ? <PricesTab />
           : tab === 'coupons' ? <CouponsTab />
+          : tab === 'translations' ? <TranslationsTab />
           : <SettingsTab />}
       </main>
     </div>
@@ -1081,6 +1084,291 @@ function TaxRegistrations() {
         </ul>
       )}
     </section>
+  )
+}
+
+// ── Translations tab ──────────────────────────────────────────────────────────
+
+const LOCALE_LABELS: Record<string, string> = {
+  en: 'English', da: 'Dansk', de: 'Deutsch', es: 'Español', fr: 'Français',
+  it: 'Italiano', nl: 'Nederlands', nb: 'Norsk', pl: 'Polski', pt: 'Português',
+  fi: 'Suomi', sv: 'Svenska', ar: 'العربية', ru: 'Русский', zh: '中文', ja: '日本語', ko: '한국어',
+}
+
+const MYMEMORY_LANG: Record<string, string> = {
+  da: 'da-DK', de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT',
+  nl: 'nl-NL', nb: 'no-NO', pl: 'pl-PL', pt: 'pt-PT', fi: 'fi-FI',
+  sv: 'sv-SE', ar: 'ar-SA', ru: 'ru-RU', zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR',
+}
+
+async function clientTranslate(text: string, targetLang: string): Promise<string> {
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en-GB|${targetLang}`
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return text
+    const data = await res.json() as { responseData?: { translatedText?: string }; responseStatus?: number | string }
+    if (Number(data.responseStatus) !== 200) return text
+    const translated = data.responseData?.translatedText ?? text
+    // Match source capitalisation: if source is title case, apply title case to result
+    const isTitleCase = text.split(' ').filter(w => w.length > 3).every(w => w[0] === w[0].toUpperCase())
+    if (isTitleCase) return translated.split(' ').map(w => w ? w[0].toUpperCase() + w.slice(1) : w).join(' ')
+    // Otherwise just capitalise first letter
+    return translated.charAt(0).toUpperCase() + translated.slice(1)
+  } catch { return text }
+}
+
+function TranslationsTab() {
+  const [posters, setPosters] = useState<PosterSource[] | null>(null)
+  const [allLocales, setAllLocales] = useState<string[]>([])
+  // Draft state: photoId → locale → text
+  const [draft, setDraft] = useState<PosterTranslations>({})
+  const [selectedLocale, setSelectedLocale] = useState('de')
+  const [busy, setBusy] = useState(false)
+  const [generatingId, setGeneratingId] = useState<string | null>(null)
+  const [generatingAll, setGeneratingAll] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  const [dirty, setDirty] = useState(false)
+
+  // Load posters + saved translations
+  useEffect(() => {
+    fetch('/api/admin/poster-translations')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => {
+        const { posters, translations, locales } = d as { posters: PosterSource[]; translations: PosterTranslations; locales: string[] }
+        setPosters(posters)
+        setAllLocales(locales.filter((l) => l !== 'en'))
+        setDraft(translations)
+      })
+      .catch(() => setPosters([]))
+  }, [])
+
+  const updateField = useCallback((photoId: string, locale: string, field: 'title' | 'caption', value: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      [photoId]: {
+        ...(prev[photoId] ?? {}),
+        [locale]: {
+          ...(prev[photoId]?.[locale] ?? { title: '' }),
+          [field]: value,
+        },
+      },
+    }))
+    setDirty(true)
+  }, [])
+
+  async function save() {
+    setBusy(true)
+    setNote(null)
+    try {
+      const res = await fetch('/api/admin/poster-translations', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'save', translations: draft }),
+      })
+      const d = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+      setNote(res.ok && d.ok ? 'Saved.' : (d.error || 'Failed.'))
+      if (res.ok && d.ok) setDirty(false)
+    } catch { setNote('Failed.') } finally { setBusy(false) }
+  }
+
+  async function applyGenerated(posterId: string, generated: Record<string, PosterLocaleText>) {
+    setDraft((prev) => {
+      const updated = { ...prev }
+      const existing = updated[posterId] ?? {}
+      const merged: Record<string, PosterLocaleText> = { ...existing }
+      for (const [locale, text] of Object.entries(generated)) {
+        merged[locale] = {
+          title: existing[locale]?.title?.trim() ? existing[locale].title : text.title,
+          ...(text.caption !== undefined
+            ? { caption: existing[locale]?.caption?.trim() ? existing[locale].caption : text.caption }
+            : existing[locale]?.caption !== undefined ? { caption: existing[locale].caption } : {}),
+        }
+      }
+      updated[posterId] = merged
+      return updated
+    })
+    setDirty(true)
+  }
+
+  async function translatePoster(poster: PosterSource): Promise<Record<string, PosterLocaleText>> {
+    const generated: Record<string, PosterLocaleText> = {}
+    for (const locale of allLocales) {
+      const lang = MYMEMORY_LANG[locale]
+      if (!lang) { generated[locale] = { title: poster.title }; continue }
+      const title = await clientTranslate(poster.title, lang)
+      const entry: PosterLocaleText = { title }
+      if (poster.caption) entry.caption = await clientTranslate(poster.caption, lang)
+      generated[locale] = entry
+    }
+    return generated
+  }
+
+  async function generateForPoster(poster: PosterSource) {
+    setGeneratingId(poster.id)
+    setNote(null)
+    try {
+      const generated = await translatePoster(poster)
+      await applyGenerated(poster.id, generated)
+      setNote(`Translated "${poster.title}". Review and save.`)
+    } catch { setNote('Translation failed.') } finally { setGeneratingId(null) }
+  }
+
+  async function generateAll() {
+    if (!posters || posters.length === 0) return
+    setGeneratingAll(true)
+    setNote(null)
+    let done = 0
+    for (const poster of posters) {
+      setGeneratingId(poster.id)
+      try {
+        const generated = await translatePoster(poster)
+        await applyGenerated(poster.id, generated)
+        done++
+      } catch { setNote(`Failed on "${poster.title}".`) }
+    }
+    setGeneratingId(null)
+    setGeneratingAll(false)
+    if (done > 0) setNote(`Translated ${done} poster${done > 1 ? 's' : ''}. Review and save.`)
+  }
+
+  const field = 'h-9 w-full rounded-md border border-white/15 bg-white/[0.04] px-3 text-[13px] text-white placeholder:text-white/25 focus:border-[#931020] focus:outline-none transition-colors'
+
+  return (
+    <>
+      <h1 className="font-serif font-light text-4xl sm:text-5xl tracking-wide">Poster translations</h1>
+      <p className="mt-2 text-sm text-white/45">
+        Locale-specific title and caption for each poster — printed on the physical sheet and shown
+        in the shop preview. English always comes from Lightroom and cannot be overridden here.
+      </p>
+
+      {/* Locale picker */}
+      <div className="mt-8 flex flex-wrap items-center gap-2">
+        <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 mr-1">Locale</span>
+        {allLocales.map((l) => (
+          <button
+            key={l}
+            onClick={() => setSelectedLocale(l)}
+            className={`rounded-md px-3 py-1.5 text-[11px] font-mono-ibm uppercase tracking-[0.16em] transition-colors border ${
+              selectedLocale === l
+                ? 'border-[#931020] bg-[#931020]/20 text-white'
+                : 'border-white/15 text-white/50 hover:border-white/35 hover:text-white/80'
+            }`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-2 text-[12px] text-white/35">
+        {LOCALE_LABELS[selectedLocale] ?? selectedLocale}
+      </p>
+
+      {/* Poster grid */}
+      <div className="mt-8">
+        {!posters ? (
+          <div className="flex justify-center py-16"><span className="shop-spinner" /></div>
+        ) : posters.length === 0 ? (
+          <Notice tone="muted" title="No posters in catalog" body="Publish posters via Lightroom first." />
+        ) : (
+          <div className="space-y-4">
+            {posters.map((poster) => {
+              const locText = draft[poster.id]?.[selectedLocale]
+              return (
+                <div key={poster.id} className="rounded-lg border border-white/10 bg-white/[0.03] p-5">
+                  <div className="flex gap-5 items-start">
+                    {/* Thumbnail */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`${poster.previewUrl}&max=200`}
+                      alt={poster.title}
+                      className="w-16 shrink-0 rounded border border-white/10 bg-white/[0.03] object-cover"
+                      style={{ aspectRatio: '1 / 1.41' }}
+                    />
+
+                    <div className="flex-1 min-w-0">
+                      {/* English source (read-only) */}
+                      <div className="flex items-baseline gap-3 mb-3">
+                        <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/30 shrink-0">en</span>
+                        <div className="min-w-0">
+                          <p className="text-[14px] font-light text-white/80 leading-snug">{poster.title}</p>
+                          {poster.caption && (
+                            <p className="text-[11px] text-white/35 mt-0.5">{poster.caption}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Editable locale fields */}
+                      <div className="flex items-start gap-3">
+                        <span className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#931020] shrink-0 pt-2.5">{selectedLocale}</span>
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <input
+                            type="text"
+                            value={locText?.title ?? ''}
+                            onChange={(e) => updateField(poster.id, selectedLocale, 'title', e.target.value)}
+                            placeholder={`Title in ${LOCALE_LABELS[selectedLocale] ?? selectedLocale}…`}
+                            className={field}
+                          />
+                          {poster.caption !== undefined && (
+                            <input
+                              type="text"
+                              value={locText?.caption ?? ''}
+                              onChange={(e) => updateField(poster.id, selectedLocale, 'caption', e.target.value)}
+                              placeholder={`Caption in ${LOCALE_LABELS[selectedLocale] ?? selectedLocale}…`}
+                              className={field}
+                            />
+                          )}
+                        </div>
+
+                        {/* Per-poster generate button */}
+                        <button
+                          onClick={() => generateForPoster(poster)}
+                          disabled={generatingId !== null || busy}
+                          title="Auto-translate all locales for this poster"
+                          className="shrink-0 h-9 rounded-md border border-white/15 px-3 text-[10px] font-mono-ibm uppercase tracking-[0.16em] text-white/50 hover:border-white/35 hover:text-white transition-colors disabled:opacity-40 whitespace-nowrap"
+                        >
+                          {generatingId === poster.id ? 'Translating…' : 'Auto-translate'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Save bar */}
+      {posters && posters.length > 0 && (
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <button
+            onClick={generateAll}
+            disabled={generatingAll || generatingId !== null || busy}
+            className="rounded-md border border-white/15 px-4 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/60 hover:border-white/35 hover:text-white transition-colors disabled:opacity-40"
+          >
+            {generatingAll ? `Translating ${posters.findIndex((p) => p.id === generatingId) + 1}/${posters.length}…` : 'Translate all'}
+          </button>
+          <button
+            onClick={save}
+            disabled={busy || !dirty}
+            className="rounded-md bg-[#931020] px-6 py-2.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white hover:bg-[#a8131f] transition-colors disabled:opacity-40"
+          >
+            {busy ? 'Saving…' : 'Save translations'}
+          </button>
+          {note && <span className="text-[12px] text-white/55">{note}</span>}
+          {dirty && !busy && <span className="text-[11px] text-amber-400/70">Unsaved changes</span>}
+        </div>
+      )}
+
+      <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.03] p-5">
+        <p className="text-[12px] font-light text-white/40 leading-relaxed">
+          <strong className="text-white/55">Translate all</strong> auto-fills all 16 non-English locales for every poster via MyMemory.
+          Existing translations are not overwritten — only empty fields are filled.
+          After saving, run <strong className="text-white/55">Pre-render posters</strong> from the Settings → Cache
+          section to rebuild print masters for every locale.
+        </p>
+      </div>
+    </>
   )
 }
 
