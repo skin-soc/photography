@@ -1014,10 +1014,6 @@ app.get('/fulfil/poster/:id/:size', async (req, res) => {
   }
 })
 
-/** Prodigi's maximum order-asset upload (bytes). Master JPEGs are kept under this
- *  so the order asset Prodigi fetches never exceeds the limit. */
-const PRODIGI_MAX_UPLOAD = Number(process.env.PRODIGI_MAX_UPLOAD ?? 48 * 1024 * 1024)
-
 /** Parse an `ar` query like "3:2" into oriented {tw, th}, or null. */
 function parseAspect(ar) {
   const m = /^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/.exec(ar ?? '')
@@ -1040,37 +1036,14 @@ function southCropRect(w, h, tw, th) {
   return { left: 0, top: h - ch, width: w, height: ch } // keep the bottom, crop the top
 }
 
-/** Re-encode `path` in place at descending quality, then progressively downscale,
- *  until it's ≤ PRODIGI_MAX_UPLOAD. Keeps full resolution as long as possible
- *  (print quality), shrinking only as a last resort. No-op if already small enough. */
-async function capUploadSize(path) {
-  if ((await stat(path)).size <= PRODIGI_MAX_UPLOAD) return
-  for (const quality of [92, 88, 84, 80, 76, 72]) {
-    const tmp = `${path}.cap-${randomBytes(4).toString('hex')}.jpg`
-    await sharp(path, { limitInputPixels: false }).rotate().keepIccProfile()
-      .jpeg({ quality, mozjpeg: true, chromaSubsampling: '4:2:0' }).toFile(tmp)
-    if ((await stat(tmp)).size <= PRODIGI_MAX_UPLOAD) { await rename(tmp, path); return }
-    await unlink(tmp).catch(() => {})
-  }
-  const meta = await sharp(path, { limitInputPixels: false }).metadata()
-  for (let scale = 0.9; scale >= 0.4; scale -= 0.1) {
-    const tmp = `${path}.cap-${randomBytes(4).toString('hex')}.jpg`
-    await sharp(path, { limitInputPixels: false }).rotate().keepIccProfile()
-      .resize({ width: Math.max(1, Math.round((meta.width || 0) * scale)) })
-      .jpeg({ quality: 80, mozjpeg: true, chromaSubsampling: '4:2:0' }).toFile(tmp)
-    if ((await stat(tmp)).size <= PRODIGI_MAX_UPLOAD) { await rename(tmp, path); return }
-    await unlink(tmp).catch(() => {})
-  }
-}
-
 /**
  * Generate-or-reuse the FINE-ART print master for a photo — the Prodigi print
  * asset: the full-resolution edited master, NO watermark/logo, with copyright
  * metadata embedded. When `aspect` ({tw,th}) is given, the master is pre-cropped
  * to that exact print aspect keeping the BOTTOM + horizontally centred (so Prodigi
  * doesn't centre-crop it) and cached per-aspect; otherwise the full frame is kept,
- * cached by ref. Output is always held ≤ Prodigi's 50MB upload limit. JPEG masters
- * ship their exact bytes when uncropped; otherwise a visually-lossless JPEG.
+ * cached by ref. JPEG masters ship their exact bytes when uncropped; otherwise a
+ * visually-lossless JPEG at full resolution.
  */
 async function buildFineArtMaster(id, aspect = null, force = false) {
   const tag = aspect ? `-${aspect.tw}x${aspect.th}` : ''
@@ -1108,8 +1081,6 @@ async function buildFineArtMaster(id, aspect = null, force = false) {
         .jpeg({ quality: 100, chromaSubsampling: '4:4:4', mozjpeg: true })
         .toFile(tmp)
     }
-    // Keep the asset under Prodigi's upload limit (re-encodes/shrinks only if needed).
-    await capUploadSize(tmp)
     // Embed rights metadata (image data untouched for copied JPEGs).
     await exiftool.write(tmp, {
       Artist: 'Gus McEwan',

@@ -66,9 +66,9 @@ if ! grep -q "bumpMockupVersion" "$SOURCE/server.js"; then
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
-# 50MB upload cap + gravity-south aspect crop (v0.9.13+).
-if ! grep -q "capUploadSize" "$SOURCE/server.js" || ! grep -q "southCropRect" "$SOURCE/server.js"; then
-  echo -e "${RED}ERROR:${NC} $SOURCE/server.js is STALE (no 50MB cap / south-crop)."
+# Gravity-south aspect crop (v0.9.13+).
+if ! grep -q "southCropRect" "$SOURCE/server.js"; then
+  echo -e "${RED}ERROR:${NC} $SOURCE/server.js is STALE (no gravity-south crop)."
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi
