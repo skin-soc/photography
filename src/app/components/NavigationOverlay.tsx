@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, useCallback, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 
 type NavState = 'idle' | 'loading' | 'error'
 
@@ -22,8 +22,7 @@ const MAX_WAIT_MS = 45_000
 
 export default function NavigationOverlay({ children }: { children: React.ReactNode }) {
   const [navState, setNavState] = useState<NavState>('idle')
-  const pathname = usePathname()
-  const prevPathname = useRef(pathname)
+  const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
@@ -34,22 +33,18 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
     timersRef.current = []
   }, [])
 
-  // Navigation completed — the route actually changed. Tear everything down.
+  // isPending goes false only when the new page's server components have fully
+  // rendered — the correct signal that navigation is complete.
   useEffect(() => {
-    if (pathname !== prevPathname.current) {
-      prevPathname.current = pathname
+    if (!isPending) {
       clearTimers()
       setNavState('idle')
     }
-  }, [pathname, clearTimers])
+  }, [isPending, clearTimers])
 
   // Clean up on unmount.
   useEffect(() => clearTimers, [clearTimers])
 
-  // Probe our own origin to distinguish "slow but alive" from "down". As long
-  // as the server answers, the navigation is simply slow, so we keep the
-  // spinner up and check again shortly. We only show the error when the server
-  // is unreachable (or the overall wait blows past the ceiling).
   const probe = useCallback(async () => {
     if (Date.now() - startedAtRef.current > MAX_WAIT_MS) {
       setNavState('error')
@@ -61,13 +56,11 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
       const res = await fetch('/api/health', { cache: 'no-store', signal: ctrl.signal })
       clearTimeout(t)
       if (res.ok) {
-        // Server is alive — navigation is just slow. Keep waiting, re-check.
         timersRef.current.push(setTimeout(probe, PROBE_INTERVAL_MS))
       } else {
         setNavState('error')
       }
     } catch {
-      // Network failure / timeout → server genuinely unreachable.
       setNavState('error')
     }
   }, [])
@@ -75,9 +68,6 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     const anchor = (e.target as HTMLElement).closest('a')
     if (!anchor) return
-    // Never intercept downloads, new-tab links, or non-page routes — these are
-    // not SPA navigations. Hijacking an `<a download>` would break the download
-    // and spin the overlay forever (the route never renders a page).
     if (anchor.hasAttribute('download')) return
     if (anchor.target && anchor.target !== '_self') return
     let url: URL
@@ -93,11 +83,12 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
     e.preventDefault()
     clearTimers()
     startedAtRef.current = Date.now()
-    router.push(anchor.href)
 
-    // Delay the overlay so quick navigations never flash a spinner.
+    // Wrap in startTransition so isPending stays true until the new page's
+    // server components finish — that's when we dismiss the spinner.
+    startTransition(() => { router.push(anchor.href) })
+
     timersRef.current.push(setTimeout(() => setNavState('loading'), SPINNER_DELAY_MS))
-    // Begin connectivity checks only once the wait is genuinely long.
     timersRef.current.push(setTimeout(probe, PROBE_AFTER_MS))
   }
 
