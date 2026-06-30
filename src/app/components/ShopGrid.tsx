@@ -363,9 +363,12 @@ export default function ShopGrid({
   const [catalogLoading, setCatalogLoading] = useState(false)
   useEffect(() => {
     // No server connection needed for this view (a card view, or a leaf whose
-    // catalog we already hold) — make sure the spinner is cleared.
+    // catalog we already hold) — tiles are already in the DOM, signal ready.
+    // Deferred so NavigationOverlay's listener is set up before this fires
+    // (React runs child effects before parent effects within the same commit).
     if (!isLeaf || fetchedVersion.current === catalogVersion) {
       setCatalogLoading(false)
+      setTimeout(() => window.dispatchEvent(new CustomEvent('page:ready')), 0)
       return
     }
     let cancelled = false
@@ -559,10 +562,10 @@ export default function ShopGrid({
                           // hard line). The shadow offset is downward, so a hovered
                           // tile's glow falls on the lower-z tile below → not clipped.
                           style={{ zIndex: col.length - j }}
-                          className="group relative block select-none transition-transform duration-300 ease-out hover:-translate-y-1"
+                          className="group relative block select-none"
                           onContextMenu={(e) => e.preventDefault()}
                         >
-                          <div className="relative">
+                          <div className="relative transition-transform duration-300 ease-out group-hover:-translate-y-1">
                             {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
                             <FineArtCoverTile photo={p} version={mockupVersion} eager />
                           </div>

@@ -70,8 +70,8 @@ export default function PosterMat({
 }) {
   return (
     <figure
-      className="shrink-0 mx-auto xl:mx-0 select-none overflow-hidden bg-white shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)] flex flex-col"
-      style={{ width: '100%', maxWidth, aspectRatio: `1 / ${SHEET_RATIO}`, containerType: 'inline-size' }}
+      className="shrink-0 mx-auto xl:mx-0 select-none overflow-hidden bg-white flex flex-col"
+      style={{ width: '100%', maxWidth, aspectRatio: `1 / ${SHEET_RATIO}`, containerType: 'inline-size', boxShadow: '0 20px 32px -10px rgba(0,0,0,0.85)' }}
     >
       {/* Artwork — full-width 4:5 area at the top. Margins in cqw stay locked to
           the poster's width, not the browser's. */}

@@ -59,7 +59,7 @@ export default function FineArtHero({
   const color = sel.color ?? defaultColor
   const [failed, setFailed] = useState(false)
 
-  const shadow = 'shadow-[0_28px_64px_-26px_rgba(0,0,0,0.6)]'
+  const shadow = { boxShadow: '0 28px 64px -18px rgba(0,0,0,0.6)' }
   const mockupSrc = family && size && color ? mockupUrl(photoSlug, family, size, color, mockupVersion) : null
   // Re-arm the fallback whenever the target mockup changes (size/family/colour).
   useEffect(() => { setFailed(false) }, [mockupSrc])
@@ -86,7 +86,7 @@ export default function FineArtHero({
   // framed artwork preview so the hero is never blank.
   if (mockupSrc && !failed) {
     return (
-      <div className={`relative shrink-0 mx-auto xl:mx-0 w-full overflow-hidden rounded-[2px] ${shadow}`} style={{ maxWidth: previewW }}>
+      <div className="relative shrink-0 mx-auto xl:mx-0 w-full overflow-hidden rounded-[2px]" style={{ maxWidth: previewW, ...shadow }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           key={mockupSrc}
@@ -101,7 +101,7 @@ export default function FineArtHero({
   }
 
   return (
-    <div className={`relative select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px] ${shadow}`} style={{ maxWidth: previewW, width: '100%' }}>
+    <div className="relative select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px]" style={{ maxWidth: previewW, width: '100%', ...shadow }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={previewSrc}

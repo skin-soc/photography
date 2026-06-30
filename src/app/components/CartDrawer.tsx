@@ -697,10 +697,16 @@ export default function CartDrawer() {
           'fixed inset-y-0 right-0 z-[60]',
           'w-[400px] flex-col',
           'bg-bg border-l border-foreground/[0.08]',
-          'transition-transform duration-300 ease-[cubic-bezier(0.32,0,0.15,1)]',
+          'transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.32,0,0.15,1)]',
           'shadow-[-24px_0_48px_rgba(0,0,0,0.6)]',
         ].join(' ')}
-        style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
+        style={{
+          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          visibility: isOpen ? 'visible' : 'hidden',
+          // Delay the visibility→hidden so the slide-out animation plays first;
+          // snap to visible immediately on open so the slide-in starts visible.
+          transitionDelay: isOpen ? '0ms, 0ms' : '0ms, 300ms',
+        }}
       >
         {panelContent}
       </div>

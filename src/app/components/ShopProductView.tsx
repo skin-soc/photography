@@ -209,10 +209,10 @@ export default async function ShopProductView({
     },
   }
 
-  // Calculate actual preview dimensions (longest edge capped at 800px).
-  // These are used as the CSS display size — the browser reserves the right
-  // layout space before the image loads, and the image renders at native size.
-  const PMAX = 800
+  // Calculate actual preview dimensions (longest edge capped at 1200px).
+  // Raised from 800→1200 to fill the 50/50 desktop column properly; the
+  // fine-art mockup is 2400px from Prodigi so there is headroom to spare.
+  const PMAX = 1200
   const scale  = Math.min(PMAX / photo.width, PMAX / photo.height, 1)
   const previewW = Math.round(photo.width  * scale)
   const previewH = Math.round(photo.height * scale)
@@ -275,55 +275,60 @@ export default async function ShopProductView({
 
       <div className="mt-10 flex flex-col xl:flex-row gap-10 xl:gap-16 items-start">
 
-        {/* Photo — gallery poster mat (typeset title/caption) in the Posters
-            context, otherwise the simple 21px white frame. */}
-        {fineArtView ? (
-          <div className="relative shrink-0 mx-auto xl:mx-0 w-full" style={{ maxWidth: previewW }}>
-            {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
-            <FineArtHero
-              photoSlug={slug}
-              previewSrc={`${photo.previewUrl}${heroQuery(800)}`}
-              previewSrcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
-              sizes={`${previewW}px`}
-              alt={`${displayTitle(photo)} — ${photo.location}`}
-              previewW={previewW}
-              previewH={previewH}
-              defaultFamily={defaultFineArtFamily}
-              defaultSize={defaultFineArtSize}
-              defaultColor={defaultFineArtColor}
-              mockupVersion={mockupAssetVersion()}
-              variants={fineArtVariants}
-            />
-          </div>
-        ) : posterView ? (
-          <PosterBwHero
-            src={`${photo.previewUrl}${heroQuery(800)}`}
-            srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
-            sizes={`${posterCardMaxWidth}px`}
-            alt={`${displayTitle(photo)} — ${photo.location}`}
-            title={posterText.title}
-            caption={posterText.caption}
-            siteLabel={siteLabel}
-            maxWidth={posterCardMaxWidth}
-            salePill={photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : undefined}
-          />
-        ) : (
-          <div className="relative select-none shrink-0 mx-auto xl:mx-0 border-white border-[21px] shadow-[0_28px_64px_-26px_rgba(0,0,0,0.6)]" style={{ maxWidth: previewW, width: '100%' }}>
-            {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
-            <img
+        {/* Photo column — fine-art: equal half (mockup fills the space);
+            poster/digital: fixed to content width so picker extends to fill. */}
+        <div
+          className={`w-full min-w-0 flex justify-center xl:justify-start ${fineArtView ? 'xl:flex-1' : 'xl:shrink-0'}`}
+          style={fineArtView ? undefined : { width: posterView ? posterCardMaxWidth : previewW }}
+        >
+          {fineArtView ? (
+            <div className="relative w-full" style={{ maxWidth: previewW }}>
+              {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
+              <FineArtHero
+                photoSlug={slug}
+                previewSrc={`${photo.previewUrl}${heroQuery(800)}`}
+                previewSrcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
+                sizes={`${previewW}px`}
+                alt={`${displayTitle(photo)} — ${photo.location}`}
+                previewW={previewW}
+                previewH={previewH}
+                defaultFamily={defaultFineArtFamily}
+                defaultSize={defaultFineArtSize}
+                defaultColor={defaultFineArtColor}
+                mockupVersion={mockupAssetVersion()}
+                variants={fineArtVariants}
+              />
+            </div>
+          ) : posterView ? (
+            <PosterBwHero
               src={`${photo.previewUrl}${heroQuery(800)}`}
               srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
-              sizes={`${previewW}px`}
+              sizes={`${posterCardMaxWidth}px`}
               alt={`${displayTitle(photo)} — ${photo.location}`}
-              width={previewW}
-              height={previewH}
-              draggable={false}
-              className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
+              title={posterText.title}
+              caption={posterText.caption}
+              siteLabel={siteLabel}
+              maxWidth={posterCardMaxWidth}
+              salePill={photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : undefined}
             />
-          </div>
-        )}
+          ) : (
+            <div className="relative select-none border-white border-[21px]" style={{ maxWidth: previewW, width: '100%', boxShadow: '0 28px 64px -18px rgba(0,0,0,0.6)' }}>
+              {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
+              <img
+                src={`${photo.previewUrl}${heroQuery(800)}`}
+                srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
+                sizes={`${previewW}px`}
+                alt={`${displayTitle(photo)} — ${photo.location}`}
+                width={previewW}
+                height={previewH}
+                draggable={false}
+                className="block w-full h-auto pointer-events-none ring-1 ring-gray-400/40"
+              />
+            </div>
+          )}
+        </div>
 
-        {/* Info column — title/caption/license now live inside the first picker card */}
+        {/* Info column — equal half on desktop */}
         <div className="min-w-0 flex-1">
           <ShopProductPicker
             products={pickerProducts}

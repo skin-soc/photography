@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 
 type NavState = 'idle' | 'loading' | 'error'
 
-// Don't flash the spinner for near-instant navigations.
-const SPINNER_DELAY_MS = 200
 // How long to wait before the first connectivity check. The server's upstream
 // (NAS) fetch is bounded at ~8s, so a healthy navigation — even with a slow
 // NAS — should resolve within ~10s. We only start probing after that.
@@ -71,23 +69,22 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
         }
       }
 
-      // Branch A: eager images present in DOM (landing, folder, product pages).
-      // If they're all cached (complete), dismiss immediately. If some are still
-      // loading, wait for them. Only fall through to B when there are literally
-      // no eager images in the DOM (leaf grid whose catalog hasn't arrived yet).
-      const eagerImgs = Array.from(
+      // Branch A: eager images still loading in DOM (uncached landing, product
+      // pages, etc.) — wait for every img:not([loading="lazy"]) to finish.
+      const pending = Array.from(
         document.querySelectorAll<HTMLImageElement>('img:not([loading="lazy"])'),
-      )
-      const incomplete = eagerImgs.filter((img) => !img.complete)
+      ).filter((img) => !img.complete)
 
-      if (eagerImgs.length > 0) {
-        if (incomplete.length === 0) { settle(); return }
-        return waitForImages(5000)
-      }
+      if (pending.length > 0) return waitForImages(5000)
 
-      // Branch B: leaf grid — wait for catalog fetch to finish rendering tiles
+      // Branch B: no incomplete eager images — either everything is cached, or
+      // this is a leaf grid whose catalog tiles aren't in the DOM yet.
+      // ShopGrid dispatches "page:ready" in ALL cases (non-leaf immediately,
+      // uncached-leaf after the fetch, cached-leaf immediately). Wait for that
+      // signal, then check whatever images are now in the DOM.
+      // Short ceiling covers non-shop pages that never dispatch page:ready.
       let imgCleanup = () => {}
-      const ceiling = setTimeout(settle, 6000)
+      const ceiling = setTimeout(settle, 2000)
       const onPageReady = () => {
         clearTimeout(ceiling)
         imgCleanup = waitForImages(3000)
@@ -146,9 +143,9 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
 
     // Wrap in startTransition so isPending stays true until the new page's
     // server components finish — that's when we dismiss the spinner.
+    setNavState('loading')
     startTransition(() => { router.push(anchor.href) })
 
-    timersRef.current.push(setTimeout(() => setNavState('loading'), SPINNER_DELAY_MS))
     timersRef.current.push(setTimeout(probe, PROBE_AFTER_MS))
   }
 

@@ -212,6 +212,7 @@ export default function ShopProductPicker({
   const buyNow = useCartStore((s) => s.buyNow)
   const cartItems = useCartStore((s) => s.items)
   const posterBw = usePosterPreview((s) => s.bw)
+  const setPosterBw = usePosterPreview((s) => s.setBw)
 
   const typeLabel: Record<ProductType, string> = {
     print: t('prints'),
@@ -409,10 +410,36 @@ export default function ShopProductPicker({
             )}
 
             {/* Shaded type header */}
-            <div className="bg-foreground/[0.07] px-5 py-2.5">
+            <div className="bg-foreground/[0.07] px-5 py-2.5 flex items-center justify-between gap-4">
               <h2 className="text-[12px] font-light tracking-[0.2em] uppercase text-accent">
                 {groupHeading(g.type)}
               </h2>
+              {g.type === 'print' && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setPosterBw(true)}
+                    className={`rounded-full px-3 py-1 text-[10px] font-mono-ibm uppercase tracking-[0.14em] border transition-colors ${
+                      posterBw
+                        ? 'border-[#931020] bg-[#931020] text-white'
+                        : 'border-foreground/20 text-foreground/45 hover:border-[#931020]/50 hover:text-foreground/80'
+                    }`}
+                  >
+                    {t('monochrome')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPosterBw(false)}
+                    className={`rounded-full px-3 py-1 text-[10px] font-mono-ibm uppercase tracking-[0.14em] border transition-colors ${
+                      !posterBw
+                        ? 'border-[#931020] bg-[#931020] text-white'
+                        : 'border-foreground/20 text-foreground/45 hover:border-[#931020]/50 hover:text-foreground/80'
+                    }`}
+                  >
+                    {t('colour')}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Paper chooser (posters only) */}

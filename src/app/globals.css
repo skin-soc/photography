@@ -52,27 +52,20 @@
   }
 }
 
-/* Poster & fine-art grid page background. In DARK themes it's dark gray (#333333)
-   instead of black; LIGHT themes keep their normal (white) page background. The
-   base rule covers the two dark contexts (:root default + .dark); .light and
-   .theme-auto fall back to the bg token, and .theme-auto goes gray again when the
-   visitor's OS is dark. (Applied via the <main> class in the shop page.) */
-.shop-brand-bg { background-color: #333333; }
+/* Poster & fine-art grid page background. In DARK themes it's a fixed gradient
+   from black at the top to #333 at the bottom; LIGHT themes keep the normal bg.
+   The base rule covers the two dark contexts (:root default + .dark); .light and
+   .theme-auto fall back to the bg token, and .theme-auto goes gradient again when
+   the visitor's OS is dark. (Applied via the <main> class in the shop page.) */
+.shop-brand-bg { background: linear-gradient(to bottom, #000000, #333333) fixed; min-height: 100vh; }
 .light .shop-brand-bg,
-.theme-auto .shop-brand-bg { background-color: rgb(var(--bg)); }
+.theme-auto .shop-brand-bg { background: rgb(var(--bg)); }
 @media (prefers-color-scheme: dark) {
-  .theme-auto .shop-brand-bg { background-color: #333333; }
+  .theme-auto .shop-brand-bg { background: linear-gradient(to bottom, #000000, #333333) fixed; min-height: 100vh; }
 }
 
-/* Fine-art tile "from <price>" — brand red on the LIGHT (white) page, but a soft
-   white on the DARK gray page (where brand-red text reads poorly).
-   Mirrors the .shop-brand-bg theme cascade exactly. */
-.fa-price { color: rgba(255, 255, 255, 0.82); }
-.light .fa-price,
-.theme-auto .fa-price { color: #931020; }
-@media (prefers-color-scheme: dark) {
-  .theme-auto .fa-price { color: rgba(255, 255, 255, 0.82); }
-}
+/* Fine-art tile "from <price>" — brand red in all themes. */
+.fa-price { color: #931020; }
 
 /* Brand default font — matches the About page. This is the site-wide
    default; every page inherits it. Do not override per-page. */
