@@ -279,7 +279,7 @@ export default async function ShopProductView({
             poster/digital: fixed to content width so picker extends to fill. */}
         <div
           className={`w-full min-w-0 flex justify-center xl:justify-start ${fineArtView ? 'xl:flex-1' : 'xl:shrink-0'}`}
-          style={fineArtView ? undefined : { width: posterView ? posterCardMaxWidth : previewW }}
+          style={fineArtView ? undefined : { width: `min(${posterView ? posterCardMaxWidth : previewW}px, 50%)` }}
         >
           {fineArtView ? (
             <div className="relative w-full" style={{ maxWidth: previewW }}>
