@@ -597,7 +597,7 @@ function RenderProgress() {
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
           <div
-            className={`h-full rounded-full transition-[width] duration-500 ${b.running ? 'bg-accent-bright' : b.finishedAt && !b.failed ? 'bg-green-500/80' : b.failed ? 'bg-amber-500/70' : 'bg-accent'}`}
+            className={`h-full rounded-full transition-[width] duration-500 ${b.running ? 'bg-accent-bright' : b.finishedAt && !b.failed ? 'bg-emerald-500' : b.failed ? 'bg-amber-500' : 'bg-accent'}`}
             style={{ width: `${pct}%` }}
           />
         </div>
