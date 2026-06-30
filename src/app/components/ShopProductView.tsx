@@ -278,8 +278,8 @@ export default async function ShopProductView({
         {/* Photo column — fine-art: equal half (mockup fills the space);
             poster/digital: fixed to content width so picker extends to fill. */}
         <div
-          className={`w-full min-w-0 flex justify-center xl:justify-start ${fineArtView ? 'xl:flex-1' : 'xl:shrink-0'}`}
-          style={fineArtView ? undefined : { width: `min(${posterView ? posterCardMaxWidth : previewW}px, 50%)` }}
+          className={`w-full min-w-0 flex justify-center xl:justify-start ${fineArtView ? 'xl:flex-1' : 'xl:shrink-0 xl:[width:min(var(--col-w),50%)]'}`}
+          style={fineArtView ? undefined : { '--col-w': `${posterView ? posterCardMaxWidth : previewW}px` } as React.CSSProperties}
         >
           {fineArtView ? (
             <div className="relative w-full" style={{ maxWidth: previewW }}>
