@@ -117,7 +117,25 @@
     "alsoAvailableAs": "Также доступно как {name}",
     "colourMode": "Цветовой режим",
     "monochrome": "Монохромный",
-    "colour": "Цвет"
+    "colour": "Цвет",
+    "paper": {
+      "PAP": {
+        "label": "Фотографический",
+        "blurb": "Глянцево-матовый · 240г/м²"
+      },
+      "FAP": {
+        "label": "Улучшенный матовый",
+        "blurb": "Гладкий матовый жикле · 200г/м²"
+      },
+      "HPR": {
+        "label": "Hahnemühle Photo Rag",
+        "blurb": "100% хлопок музейное качество"
+      },
+      "HGE": {
+        "label": "Hahnemühle German Etching",
+        "blurb": "Текстурная ручная работа арт-бумага"
+      }
+    }
   },
   "cart": {
     "emailLabel": "Эл. почта (для ссылки на загрузку)",

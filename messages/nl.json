@@ -118,7 +118,25 @@
     "alsoAvailableAs": "Ook verkrijgbaar als {name}",
     "colourMode": "Kleurmodus",
     "monochrome": "Monochroom",
-    "colour": "Kleur"
+    "colour": "Kleur",
+    "paper": {
+      "PAP": {
+        "label": "Fotografisch",
+        "blurb": "Lustre fotografisch · 240gsm"
+      },
+      "FAP": {
+        "label": "Enhanced Matte",
+        "blurb": "Gladde matte giclée · 200gsm"
+      },
+      "HPR": {
+        "label": "Hahnemühle Photo Rag",
+        "blurb": "100% katoen museummat"
+      },
+      "HGE": {
+        "label": "Hahnemühle German Etching",
+        "blurb": "Getextureerd handgemaakt fijne kunst"
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-mail (voor je downloadlink)",

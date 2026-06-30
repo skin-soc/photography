@@ -118,7 +118,25 @@
     "alsoAvailableAs": "Disponibile anche come {name}",
     "colourMode": "Modalità colore",
     "monochrome": "Monocromo",
-    "colour": "Colore"
+    "colour": "Colore",
+    "paper": {
+      "PAP": {
+        "label": "Fotografico",
+        "blurb": "Lustre fotografico · 240gsm"
+      },
+      "FAP": {
+        "label": "Matte migliorato",
+        "blurb": "Giclée matte liscio · 200gsm"
+      },
+      "HPR": {
+        "label": "Hahnemühle Photo Rag",
+        "blurb": "100% cotone qualità museo"
+      },
+      "HGE": {
+        "label": "Hahnemühle German Etching",
+        "blurb": "Arte fine texturizzato artigianale"
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-mail (per il tuo link di download)",

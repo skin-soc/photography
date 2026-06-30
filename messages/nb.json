@@ -117,7 +117,25 @@
     "alsoAvailableAs": "Også tilgjengelig som {name}",
     "colourMode": "Fargemodus",
     "monochrome": "Monokrom",
-    "colour": "Farge"
+    "colour": "Farge",
+    "paper": {
+      "PAP": {
+        "label": "Fotografisk",
+        "blurb": "Lustre fotografisk · 240gsm"
+      },
+      "FAP": {
+        "label": "Enhanced Matte",
+        "blurb": "Glatt matt giclée · 200gsm"
+      },
+      "HPR": {
+        "label": "Hahnemühle Photo Rag",
+        "blurb": "100% bomull museumsmat"
+      },
+      "HGE": {
+        "label": "Hahnemühle German Etching",
+        "blurb": "Teksturert håndlaget finkunst"
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-post (for nedlastingslenken din)",

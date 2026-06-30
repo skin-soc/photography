@@ -380,9 +380,6 @@ export default function ShopProductPicker({
           // ratio, not size — order them smallest → largest by print area (parsed
           // from the "W × H cm" label) so the size list reads in ascending order.
           const items = isPoster || isFineArt ? [...itemsRaw].sort((a, b) => printArea(a) - printArea(b)) : itemsRaw
-          const paperBlurb = isPoster
-            ? posterPapers.find((x) => x.code === selectedPaper)?.blurb
-            : undefined
           const faColors = isFineArt ? familyColors(selectedFamily) : []
           return (
           <div key={g.type} className="overflow-hidden rounded-[20px] border border-foreground/10">
@@ -435,13 +432,13 @@ export default function ShopProductPicker({
                             : 'border border-foreground/15 text-foreground/55 hover:border-foreground/35 hover:text-foreground/80'
                         }`}
                       >
-                        {pp.label}
+                        {t('paper.' + pp.code + '.label')}
                       </button>
                     )
                   })}
                 </div>
-                {paperBlurb && (
-                  <p className="mt-2 text-[11px] font-light text-foreground/35">{paperBlurb}</p>
+                {selectedPaper && (
+                  <p className="mt-2 text-[11px] font-light text-accent">{t('paper.' + selectedPaper + '.blurb')}</p>
                 )}
               </div>
             )}

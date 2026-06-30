@@ -118,7 +118,25 @@
     "alsoAvailableAs": "也可作为{name}提供",
     "colourMode": "色彩模式",
     "monochrome": "单色",
-    "colour": "彩色"
+    "colour": "彩色",
+    "paper": {
+      "PAP": {
+        "label": "摄影相纸",
+        "blurb": "光泽摄影纸 · 240gsm"
+      },
+      "FAP": {
+        "label": "增强哑光",
+        "blurb": "光滑哑光喷墨 · 200gsm"
+      },
+      "HPR": {
+        "label": "哈内姆勒摄影棉纸",
+        "blurb": "100%棉质博物馆哑光"
+      },
+      "HGE": {
+        "label": "哈内姆勒德国蚀刻纸",
+        "blurb": "纹理手工制作艺术纸"
+      }
+    }
   },
   "cart": {
     "emailLabel": "电子邮箱（用于您的下载链接）",

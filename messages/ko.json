@@ -117,7 +117,25 @@
     "alsoAvailableAs": "{name}(으)로도 제공됩니다",
     "colourMode": "색상 모드",
     "monochrome": "흑백",
-    "colour": "컬러"
+    "colour": "컬러",
+    "paper": {
+      "PAP": {
+        "label": "포토그래픽",
+        "blurb": "광택 사진 용지 · 240gsm"
+      },
+      "FAP": {
+        "label": "인핸스드 매트",
+        "blurb": "부드러운 매트 지클레 · 200gsm"
+      },
+      "HPR": {
+        "label": "하네뮬레 포토 래그",
+        "blurb": "100% 면 뮤지엄 매트"
+      },
+      "HGE": {
+        "label": "하네뮬레 저먼 에칭",
+        "blurb": "텍스처드 수제 파인아트"
+      }
+    }
   },
   "cart": {
     "emailLabel": "이메일 (다운로드 링크용)",
