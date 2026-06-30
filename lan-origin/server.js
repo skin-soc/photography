@@ -1003,7 +1003,7 @@ app.get('/fulfil/poster/:id/:size', async (req, res) => {
     if (bw) {
       // Convert to greyscale on the fly — Prodigi fetches once per order so
       // this is not a hot path; no need for a separate cached B&W asset.
-      sharp(path, { limitInputPixels: false }).grayscale().jpeg({ quality: 95 }).pipe(res)
+      sharp(path, { limitInputPixels: false }).grayscale().gamma(1.6).normalise().jpeg({ quality: 95 }).pipe(res)
     } else {
       createReadStream(path).pipe(res)
     }
