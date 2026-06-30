@@ -47,7 +47,29 @@ export interface OrderLine {
  * the Stripe label when a sku can't be resolved. Used by both fulfilment routes
  * before the invoice is built.
  */
-export async function describeOrderLines(lines: OrderLine[], bwSkus?: Set<string>): Promise<OrderLine[]> {
+/** Localized colour-mode labels for the invoice / email detail line.
+ *  Sourced from messages/{locale}.json shop.monochrome / shop.colour. */
+const COLOUR_MODE_LABELS: Record<string, { monochrome: string; colour: string }> = {
+  ar: { monochrome: 'أحادي اللون',       colour: 'ألوان' },
+  da: { monochrome: 'Sort/hvid',          colour: 'Farve' },
+  de: { monochrome: 'Monochrom',          colour: 'Farbe' },
+  en: { monochrome: 'Monochrome',         colour: 'Colour' },
+  es: { monochrome: 'Monocromo',          colour: 'Color' },
+  fi: { monochrome: 'Mustavalkoinen',     colour: 'Väri' },
+  fr: { monochrome: 'Monochrome',         colour: 'Couleur' },
+  it: { monochrome: 'Monocromo',          colour: 'Colore' },
+  ja: { monochrome: 'モノクロ',            colour: 'カラー' },
+  ko: { monochrome: '흑백',               colour: '컬러' },
+  nb: { monochrome: 'Monokrom',           colour: 'Farge' },
+  nl: { monochrome: 'Monochroom',         colour: 'Kleur' },
+  pl: { monochrome: 'Monochromatyczny',   colour: 'Kolor' },
+  pt: { monochrome: 'Monocromático',      colour: 'Cor' },
+  ru: { monochrome: 'Монохромный',        colour: 'Цвет' },
+  sv: { monochrome: 'Monokrom',           colour: 'Färg' },
+  zh: { monochrome: '单色',               colour: '彩色' },
+}
+
+export async function describeOrderLines(lines: OrderLine[], bwSkus?: Set<string>, locale = 'en'): Promise<OrderLine[]> {
   if (lines.length === 0) return lines
   const { getCatalog, displayTitle } = await import('@/lib/shop')
   const catalog = await getCatalog()
@@ -55,6 +77,7 @@ export async function describeOrderLines(lines: OrderLine[], bwSkus?: Set<string
   for (const photo of catalog) {
     for (const p of photo.products) idx.set(p.sku, { product: p, title: displayTitle(photo) })
   }
+  const modeLabels = COLOUR_MODE_LABELS[locale] ?? COLOUR_MODE_LABELS.en
   return lines.map((l) => {
     const hit = idx.get(l.sku)
     if (!hit) return l
@@ -71,10 +94,13 @@ export async function describeOrderLines(lines: OrderLine[], bwSkus?: Set<string
       }
     }
     // Physical (poster / fine art): paper + size up front, cm + blurb beneath.
+    // Posters always state colour mode explicitly — both Monochrome and Colour.
     const size = p.label || (p.providerSku ? p.providerSku.split('-').pop() : null)
     const paper = p.paperLabel || p.material || 'Print'
     const cm = p.printSize ? `${p.printSize.w} × ${p.printSize.h} cm` : null
-    const colourMode = (p.type === 'print' && bwSkus?.has(l.sku)) ? 'Monochrome' : null
+    const colourMode = p.type === 'print'
+      ? (bwSkus?.has(l.sku) ? modeLabels.monochrome : modeLabels.colour)
+      : null
     return {
       ...l,
       label: `${hit.title} — ${paper}${size ? ` (${size})` : ''}`,

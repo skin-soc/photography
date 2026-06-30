@@ -82,9 +82,10 @@ export async function POST(req: NextRequest) {
   const paymentMethod = charge?.payment_method_details?.type ?? null
   // Full itemised + enriched order + shipping, same as the webhook (mixed-order
   // invoice) — this route usually wins the race, so it must record them.
+  const bwSkus = new Set((session.metadata?.bwSkus ?? '').split(',').filter(Boolean))
   const raw = extractOrderLines(session)
   const shipping = raw.shipping
-  const lineItems = await describeOrderLines(raw.lineItems)
+  const lineItems = await describeOrderLines(raw.lineItems, bwSkus, locale)
 
   let passcode: string | null = null
   try {

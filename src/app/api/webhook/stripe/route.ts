@@ -27,10 +27,11 @@ async function fulfilSession(sessionId: string, workerBase: string): Promise<voi
   // Full itemised order (digital + physical, reconciling to the net) + the
   // collected shipping name/address — for the mixed-order invoice + Prodigi.
   // Enrich each line with the catalog description (paper/size, format/px/file).
+  const locale = session.metadata?.locale || 'en'
   const raw = extractOrderLines(session)
   const shipping = raw.shipping
   const bwSkus = new Set((session.metadata?.bwSkus ?? '').split(',').filter(Boolean))
-  const lineItems = await describeOrderLines(raw.lineItems, bwSkus)
+  const lineItems = await describeOrderLines(raw.lineItems, bwSkus, locale)
 
   const pi = session.payment_intent
   const paymentId = typeof pi === 'string' ? pi : pi?.id ?? ''
@@ -42,7 +43,6 @@ async function fulfilSession(sessionId: string, workerBase: string): Promise<voi
   // Payment facts for the receipt: when it was paid and by what method. The
   // session is only fulfilled on payment_status === 'paid', so this is always a
   // settled, paid-in-full charge — there are no payment terms.
-  const locale = session.metadata?.locale || 'en'
   const paidAt = charge?.created ? charge.created * 1000 : (session.created ? session.created * 1000 : null)
   const paymentMethod = charge?.payment_method_details?.type ?? null
 
