@@ -23,15 +23,33 @@ export type PosterTranslations = Record<string, Record<string, PosterLocaleText>
  * Merge saved translations with the English source (from the catalog), so every
  * photo always has an 'en' entry that reflects current Lightroom metadata even
  * when the KV store has never been written.
+ *
+ * If a photo's ID has no saved entry (e.g. the master file was renamed), we
+ * fall back to matching by English title against orphaned saved entries — so
+ * translations survive file renames automatically.
  */
 export function mergeWithSource(
   saved: PosterTranslations,
   source: { id: string; title: string; caption?: string }[],
 ): PosterTranslations {
+  const liveIds = new Set(source.map((p) => p.id))
+  // Orphaned entries: saved keys that no longer match any live photo ID.
+  // Index them by their stored English title for fallback matching.
+  const orphansByTitle = new Map<string, Record<string, PosterLocaleText>>()
+  for (const [id, locales] of Object.entries(saved)) {
+    if (!liveIds.has(id)) {
+      const enTitle = locales['en']?.title
+      if (enTitle) orphansByTitle.set(enTitle, locales)
+    }
+  }
+
   const merged: PosterTranslations = {}
   for (const ph of source) {
-    // 'en' is always the live Lightroom value — spread saved over it, then pin en back
-    const locales = { ...(saved[ph.id] ?? {}) }
+    // Direct match by ID (normal case).
+    let locales = saved[ph.id] ? { ...saved[ph.id] } : undefined
+    // Fallback: recover translations from a renamed file via title match.
+    if (!locales) locales = orphansByTitle.has(ph.title) ? { ...orphansByTitle.get(ph.title)! } : {}
+    // 'en' is always the live Lightroom value.
     locales['en'] = { title: ph.title, caption: ph.caption }
     merged[ph.id] = locales
   }
