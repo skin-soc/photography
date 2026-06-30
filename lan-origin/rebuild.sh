@@ -37,10 +37,10 @@ if ! grep -q "'/mockup/:id/:family/:size/:color'" "$SOURCE/server.js"; then
   exit 1
 fi
 # Mockups are JPEG now (v0.9.8+): the prerender transcodes the Prodigi PNG to a
-# 70%-quality JPEG and serves .jpg. A source still writing .png would leave the
+# 90%-quality JPEG and serves .jpg. A source still writing .png would leave the
 # serve route 404-ing (it looks for .jpg) — guard the transcode explicitly.
-if ! grep -q "jpeg({ quality: 70" "$SOURCE/server.js"; then
-  echo -e "${RED}ERROR:${NC} $SOURCE/server.js is STALE (mockups not transcoded to JPEG 70%)."
+if ! grep -q "jpeg({ quality: 90" "$SOURCE/server.js"; then
+  echo -e "${RED}ERROR:${NC} $SOURCE/server.js is STALE (mockups not transcoded to JPEG 90%)."
   echo "       Re-sync your updated lan-origin/ to $SOURCE, then re-run."
   exit 1
 fi

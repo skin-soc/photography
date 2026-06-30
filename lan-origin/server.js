@@ -1168,7 +1168,7 @@ async function buildMockupSource(id, aspect = null) {
       if (rect) pipe = pipe.extract(rect)
     }
     await pipe
-      .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+      .resize(3200, 3200, { fit: 'inside', withoutEnlargement: true })
       .keepIccProfile()
       .jpeg({ quality: 88, mozjpeg: true })
       .toFile(tmp)
@@ -1299,7 +1299,7 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
           // (clean opaque rectangle); room07 (opaque room scene) → as-is. Both 70%
           // mozjpeg JPEG. The grid adds its own CSS shadow.
           const src = view === 'cover' ? await cropFrameFromMatte(buf) : buf
-          const outBuf = await sharp(src).jpeg({ quality: 70, mozjpeg: true }).toBuffer()
+          const outBuf = await sharp(src).jpeg({ quality: 90, mozjpeg: true }).toBuffer()
           await writeFile(tmp, outBuf)
           await rename(tmp, out)
           prog.done += 1
