@@ -33,11 +33,17 @@ export interface ShippingOption {
 export default function ShippingStep({
   skus,
   defaultCountry,
+  submitting = false,
+  submitError = false,
   onBack,
   onContinue,
 }: {
   skus: string[]
   defaultCountry: string
+  /** True while the checkout-session API call is in flight. */
+  submitting?: boolean
+  /** True if the checkout-session call failed (e.g. re-quote error). */
+  submitError?: boolean
   onBack: () => void
   onContinue: (sel: { method: string; address: ShippingAddress; email: string }) => void
 }) {
@@ -100,7 +106,7 @@ export default function ShippingStep({
   // need a method; with none (fine-art) the address alone is enough.
   const hasOptions = !!options && options.length > 0
   const canContinue =
-    !!addressComplete && emailValid && !quoteError && !quoting && options !== null && (options.length === 0 || !!method)
+    !!addressComplete && emailValid && !quoteError && !quoting && options !== null && (options.length === 0 || method !== null)
 
   const set = (k: keyof ShippingAddress) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setAddr((a) => ({ ...a, [k]: e.target.value }))
@@ -216,15 +222,18 @@ export default function ShippingStep({
         ) : null}
       </div>
 
+      {submitError && (
+        <p className="text-[11px] font-light text-red-400/80 text-center -mb-2">{t('error')}</p>
+      )}
       <button
         type="button"
-        disabled={!canContinue}
+        disabled={!canContinue || submitting}
         onClick={() => onContinue({ method: method ?? '', address: addr, email: email.trim() })}
         className={`w-full rounded-[14px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
-          canContinue ? 'bg-[#931020]/80 hover:bg-[#931020] cursor-pointer' : 'bg-[#931020]/35 cursor-default'
+          canContinue && !submitting ? 'bg-[#931020]/80 hover:bg-[#931020] cursor-pointer' : 'bg-[#931020]/35 cursor-default'
         }`}
       >
-        {t('continueToPayment')} →
+        {submitting ? t('preparing') : `${t('continueToPayment')} →`}
       </button>
       <button
         type="button"

@@ -73,8 +73,18 @@ body {
   background: rgb(var(--bg));
   color: rgb(var(--fg));
   overscroll-behavior: none;
+  overflow-x: hidden;
   font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Prevent iOS Safari auto-zoom on input focus. Safari zooms when the focused
+   element has font-size < 16px — bump all interactive fields to 16px on mobile
+   only, preserving the designed type sizes on desktop. */
+@media (max-width: 767px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
 }
 
 /* Tight crossfade for locale-switch View Transitions. */

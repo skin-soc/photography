@@ -186,7 +186,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
       {/* Mobile menu overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-40 flex flex-col items-start justify-center md:hidden"
+          className="fixed inset-0 z-40 flex flex-col items-start justify-center md:hidden overflow-hidden"
           style={{ backgroundColor: 'rgb(var(--bg) / 0.92)', paddingLeft: '60px' }}
           onClick={() => setOpen(false)}
         >

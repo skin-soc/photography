@@ -10,7 +10,7 @@
  * amount here is never trusted for charging.
  */
 
-import { getQuotes, checkEuFulfilment } from '@/lib/prodigi'
+import { getQuotes, checkEuFulfilment, prodigiMode } from '@/lib/prodigi'
 import { quoteItemsForSkus } from '@/lib/prodigi-fulfil'
 import { getRates, eurToDkkOre } from '@/lib/currency'
 import { getPricing } from '@/lib/pricing'
@@ -39,7 +39,9 @@ export async function POST(req: Request) {
 
     const options = quotes
       // Only methods that produce entirely within the EU (never the UK).
-      .filter((q) => checkEuFulfilment(q).ok)
+      // Sandbox Prodigi responses omit shipments data so fulfilments is always
+      // empty — skip the guard in sandbox to allow quote testing end-to-end.
+      .filter((q) => prodigiMode() === 'sandbox' || checkEuFulfilment(q).ok)
       .map((q) => ({
         method: q.method,
         label: q.method,

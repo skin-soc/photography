@@ -336,7 +336,7 @@ export default function CartDrawer() {
       </div>
 
       {/* Body — scrolls */}
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
 
         {/* ── Cart step ─────────────────────────────────────────────────── */}
         {step === 'cart' && (
@@ -406,11 +406,14 @@ export default function CartDrawer() {
           <ShippingStep
             skus={checkoutItems.map((i) => i.sku)}
             defaultCountry="DK"
+            submitting={intentLoading}
+            submitError={intentError}
             onBack={() => setStep('cart')}
             onContinue={(sel) => {
               const ship = { method: sel.method, address: sel.address }
               setShippingSel(ship)
               setContactEmail(sel.email)
+              setIntentError(false)
               void startPayment(checkoutItems, couponCode, ship, sel.email)
             }}
           />

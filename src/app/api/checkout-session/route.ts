@@ -20,7 +20,7 @@ import { verifyVatNumber, verifyVatToken } from '@/lib/vies'
 import { getVatRate } from '@/lib/shop-settings'
 import { validateCoupon, discountFor } from '@/lib/coupons'
 import { formatDKK, getRates, eurToDkkOre } from '@/lib/currency'
-import { getQuote, checkEuFulfilment } from '@/lib/prodigi'
+import { getQuote, checkEuFulfilment, prodigiMode } from '@/lib/prodigi'
 import { quoteItemsForSkus } from '@/lib/prodigi-fulfil'
 import { getPricing } from '@/lib/pricing'
 
@@ -212,7 +212,7 @@ export async function POST(req: Request) {
           destinationCountryCode: shippingSel.address.country.toUpperCase(),
           shippingMethod: shippingSel.method,
         })
-        if (!checkEuFulfilment(quote).ok) {
+        if (prodigiMode() !== 'sandbox' && !checkEuFulfilment(quote).ok) {
           return Response.json({ error: 'shipping unavailable to this destination' }, { status: 422 })
         }
         const [rates, pricing] = await Promise.all([getRates(), getPricing()])
