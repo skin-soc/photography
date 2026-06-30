@@ -34,12 +34,36 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
     timersRef.current = []
   }, [])
 
-  // isPending goes false only when the new page's server components have fully
-  // rendered — the correct signal that navigation is complete.
+  // isPending goes false when Next.js commits the new page's HTML to the DOM,
+  // but eager images (hero rotators, above-fold tiles) may still be in flight.
+  // We hold the overlay until every eager img has loaded — or 5s has passed —
+  // so the user never sees a half-painted page.
   useEffect(() => {
     if (!isPending) {
       clearTimers()
-      setNavState('idle')
+
+      const settle = () => setNavState('idle')
+
+      const pending = Array.from(
+        document.querySelectorAll<HTMLImageElement>('img:not([loading="lazy"])'),
+      ).filter((img) => !img.complete)
+
+      if (pending.length === 0) { settle(); return }
+
+      const ceiling = setTimeout(settle, 5000)
+      let resolved = 0
+      const onSettled = () => { if (++resolved >= pending.length) { clearTimeout(ceiling); settle() } }
+      pending.forEach((img) => {
+        img.addEventListener('load',  onSettled, { once: true })
+        img.addEventListener('error', onSettled, { once: true })
+      })
+      return () => {
+        clearTimeout(ceiling)
+        pending.forEach((img) => {
+          img.removeEventListener('load',  onSettled)
+          img.removeEventListener('error', onSettled)
+        })
+      }
     }
   }, [isPending, clearTimers])
 
