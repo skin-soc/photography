@@ -71,12 +71,19 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
         }
       }
 
-      // Branch A: images already in DOM
-      const immediate = Array.from(
+      // Branch A: eager images present in DOM (landing, folder, product pages).
+      // If they're all cached (complete), dismiss immediately. If some are still
+      // loading, wait for them. Only fall through to B when there are literally
+      // no eager images in the DOM (leaf grid whose catalog hasn't arrived yet).
+      const eagerImgs = Array.from(
         document.querySelectorAll<HTMLImageElement>('img:not([loading="lazy"])'),
-      ).filter((img) => !img.complete)
+      )
+      const incomplete = eagerImgs.filter((img) => !img.complete)
 
-      if (immediate.length > 0) return waitForImages(5000)
+      if (eagerImgs.length > 0) {
+        if (incomplete.length === 0) { settle(); return }
+        return waitForImages(5000)
+      }
 
       // Branch B: leaf grid — wait for catalog fetch to finish rendering tiles
       let imgCleanup = () => {}
