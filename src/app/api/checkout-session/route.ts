@@ -191,15 +191,14 @@ export async function POST(req: Request) {
     }
 
     // ── Shipping ──
-    // Any physical order carries a delivery address (collected in the cart's
-    // shipping step). Only Prodigi-fulfilled POSTERS (type 'print') get a live
-    // shipping charge — re-quoted SERVER-SIDE for the chosen method (never trust a
-    // client amount). Fine art (provider pending) collects the address but isn't
-    // charged shipping here. Digital orders have neither.
+    // Any physical order (print or fine-art) with a Prodigi providerSku gets a
+    // live shipping charge — re-quoted SERVER-SIDE for the chosen method (never
+    // trust a client amount). Digital-only orders have no shipping. Mixed orders
+    // including any physical item still require an address + method.
     let shippingNet = 0
     let shippingMethod: string | null = null
     const shippingSel = body.shipping
-    const needsShipping = items.some((i) => i.product.type === 'print')
+    const needsShipping = hasPhysical && items.some((i) => i.product.providerSku)
     if (hasPhysical && (!shippingSel?.address?.line1 || !shippingSel.address?.country)) {
       return Response.json({ error: 'shipping address required' }, { status: 400 })
     }
