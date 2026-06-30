@@ -26,7 +26,7 @@ export default function PosterBwHero({ src, srcSet, sizes, alt, title, caption, 
       {/* Poster mat — greyscale filter when monochrome mode is active */}
       <div className="relative">
         {salePill}
-        <div style={{ filter: bw ? 'grayscale(1) brightness(1.15) contrast(1.35)' : 'none', transition: 'filter 0.35s ease' }}>
+        <div style={{ filter: bw ? 'grayscale(1) brightness(1.05) contrast(1.05)' : 'none', transition: 'filter 0.35s ease' }}>
           <PosterMat
             src={src}
             srcSet={srcSet}

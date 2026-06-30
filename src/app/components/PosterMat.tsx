@@ -86,7 +86,7 @@ export default function PosterMat({
             draggable={false}
             loading={eager ? 'eager' : 'lazy'}
             className={`pointer-events-none transition-[filter] duration-700 ease-out ${
-              grayscaleHover ? '[filter:grayscale(1)_brightness(1.15)_contrast(1.35)] group-hover:[filter:none]' : ''
+              grayscaleHover ? '[filter:grayscale(1)_brightness(1.05)_contrast(1.05)] group-hover:[filter:none]' : ''
             }`}
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
           />
