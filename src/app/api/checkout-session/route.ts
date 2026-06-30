@@ -198,7 +198,11 @@ export async function POST(req: Request) {
     let shippingNet = 0
     let shippingMethod: string | null = null
     const shippingSel = body.shipping
-    const needsShipping = hasPhysical && items.some((i) => i.product.providerSku)
+    // Use quoteItemsForSkus (A-size Prodigi posters only) to decide whether a
+    // shipping quote is needed. Fine-art items have a providerSku but are not
+    // A-size, so they return empty here and proceed with address-only (no charge).
+    const quoteItems = await quoteItemsForSkus(skus)
+    const needsShipping = hasPhysical && quoteItems.length > 0
     if (hasPhysical && (!shippingSel?.address?.line1 || !shippingSel.address?.country)) {
       return Response.json({ error: 'shipping address required' }, { status: 400 })
     }
@@ -208,7 +212,7 @@ export async function POST(req: Request) {
       }
       try {
         const quote = await getQuote({
-          items: await quoteItemsForSkus(skus),
+          items: quoteItems,
           destinationCountryCode: shippingSel.address.country.toUpperCase(),
           shippingMethod: shippingSel.method,
         })
