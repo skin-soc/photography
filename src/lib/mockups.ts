@@ -136,7 +136,7 @@ export function mockupRenderUrl(opts: {
   const orient = opts.portrait ? 'PORTRAIT' : 'LANDSCAPE'
   const product_id = `${prefix}-${sizeToken(opts.size)}-${orient}`
   const coverColor = mockupColor(opts.family, opts.color)
-  const px = opts.px ?? 1400
+  const px = opts.px ?? 2400
   const sizeParam = opts.outW && opts.outH ? `${opts.outW}x${opts.outH}` : `${px}x${px}`
   const u = new URL(PIG_RENDER)
   u.searchParams.set('product_id', product_id)
