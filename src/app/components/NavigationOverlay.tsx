@@ -27,6 +27,7 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
 
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const startedAtRef = useRef(0)
+  const pendingHrefRef = useRef<string | null>(null)
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout)
@@ -83,6 +84,7 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
     e.preventDefault()
     clearTimers()
     startedAtRef.current = Date.now()
+    pendingHrefRef.current = anchor.href
 
     // Wrap in startTransition so isPending stays true until the new page's
     // server components finish — that's when we dismiss the spinner.
@@ -97,6 +99,16 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
     setNavState('idle')
   }
 
+  function retry() {
+    const href = pendingHrefRef.current
+    if (!href) { dismiss(); return }
+    clearTimers()
+    startedAtRef.current = Date.now()
+    setNavState('loading')
+    startTransition(() => { router.push(href) })
+    timersRef.current.push(setTimeout(probe, PROBE_AFTER_MS))
+  }
+
   return (
     <div onClickCapture={handleClick}>
       {navState !== 'idle' && (
@@ -104,19 +116,28 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
           {navState === 'loading' ? (
             <div className="shop-spinner" role="status" aria-label="Loading" />
           ) : (
-            <div className="flex flex-col items-center gap-6 px-8 text-center">
-              <p className="font-[family-name:var(--font-mono-ibm)] text-sm tracking-wide text-foreground/70">
-                Couldn&apos;t connect — the server may be temporarily unavailable.
+            <div className="flex flex-col items-center gap-6 px-8 text-center max-w-sm">
+              <div className="shop-spinner opacity-30" role="presentation" />
+              <p className="font-[family-name:var(--font-mono-ibm)] text-sm tracking-wide text-foreground/80">
+                The site is under load right now.
               </p>
-              <p className="font-[family-name:var(--font-mono-ibm)] text-xs tracking-wide text-foreground/40">
-                Please try again later.
+              <p className="font-[family-name:var(--font-mono-ibm)] text-xs tracking-wide text-foreground/45 leading-relaxed">
+                This usually clears in under a minute — please wait a moment and try again.
               </p>
-              <button
-                onClick={dismiss}
-                className="mt-2 border border-foreground/25 px-8 py-2.5 font-[family-name:var(--font-mono-ibm)] text-xs tracking-widest text-foreground/60 transition-colors hover:border-foreground/50 hover:text-foreground/90"
-              >
-                GO BACK
-              </button>
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={retry}
+                  className="border border-accent/60 px-8 py-2.5 font-[family-name:var(--font-mono-ibm)] text-xs tracking-widest text-accent/80 transition-colors hover:border-accent hover:text-accent"
+                >
+                  TRY AGAIN
+                </button>
+                <button
+                  onClick={dismiss}
+                  className="border border-foreground/20 px-8 py-2.5 font-[family-name:var(--font-mono-ibm)] text-xs tracking-widest text-foreground/50 transition-colors hover:border-foreground/40 hover:text-foreground/80"
+                >
+                  GO BACK
+                </button>
+              </div>
             </div>
           )}
         </div>
