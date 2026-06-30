@@ -15,9 +15,10 @@ import { fineArtRecPx } from '@/config/product-range'
 
 const A_SIZES = new Set(['A4', 'A3', 'A2', 'A1', 'A0'])
 
-/** Map our shop SKUs to Prodigi quote items (provider 'prodigi' A-size posters),
- *  grouping duplicates into copies. Shared by the shipping-quote endpoint and any
- *  pre-charge quoting; quoting needs only sku + copies + attributes (no asset). */
+/** Map our shop SKUs to Prodigi quote items, grouping duplicates into copies.
+ *  Includes all Prodigi-fulfilled physical products: A-size posters AND fine-art
+ *  (canvas/framed in inch + A sizes). Digital SKUs are silently ignored.
+ *  Shared by the shipping-quote endpoint and checkout-session pre-charge quoting. */
 export async function quoteItemsForSkus(skus: string[]): Promise<QuoteItem[]> {
   if (skus.length === 0) return []
   const catalog = await getCatalog()
@@ -28,12 +29,17 @@ export async function quoteItemsForSkus(skus: string[]): Promise<QuoteItem[]> {
     }
   }
   // Group by providerSku (+ attribute signature) so repeats become copies.
+  // Mirror resolvePhysicalItems: gate posters to A-sizes only (the typeset
+  // sheet), but let fine-art through unconditionally (inch + A sizes from the
+  // curated Prodigi range are all valid quote targets).
   const grouped = new Map<string, QuoteItem>()
   for (const sku of skus) {
     const p = bySku.get(sku)
     if (!p?.providerSku) continue
-    const size = p.providerSku.split('-').pop() ?? ''
-    if (!A_SIZES.has(size)) continue
+    if (p.type === 'print') {
+      const size = p.providerSku.split('-').pop() ?? ''
+      if (!A_SIZES.has(size)) continue
+    }
     const attributes = p.attributes ?? {}
     const key = `${p.providerSku}|${JSON.stringify(attributes)}`
     const existing = grouped.get(key)
