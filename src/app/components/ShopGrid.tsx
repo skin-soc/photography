@@ -386,6 +386,16 @@ export default function ShopGrid({
     return () => { cancelled = true }
   }, [isLeaf, catalogVersion])
 
+  // Tell the NavigationOverlay that this leaf's tiles are now in the DOM so it
+  // can hold the overlay until the images actually finish loading.
+  const prevCatalogLoading = useRef(catalogLoading)
+  useEffect(() => {
+    if (prevCatalogLoading.current && !catalogLoading) {
+      window.dispatchEvent(new CustomEvent('page:ready'))
+    }
+    prevCatalogLoading.current = catalogLoading
+  }, [catalogLoading])
+
   // The browse position is the URL path (resolved to real folder names by the
   // server); navigation is via real <Link>s, so refresh/share land here exactly.
   const navPath = initialCategoryPath

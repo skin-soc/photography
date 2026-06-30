@@ -34,35 +34,62 @@ export default function NavigationOverlay({ children }: { children: React.ReactN
     timersRef.current = []
   }, [])
 
-  // isPending goes false when Next.js commits the new page's HTML to the DOM,
-  // but eager images (hero rotators, above-fold tiles) may still be in flight.
-  // We hold the overlay until every eager img has loaded — or 5s has passed —
-  // so the user never sees a half-painted page.
+  // isPending goes false when Next.js commits server HTML — but for leaf grids
+  // (posters / fine-art / digital) the tiles are fetched client-side AFTER that
+  // commit, so no images are in the DOM yet. Two-branch strategy:
+  //
+  //  A) Eager images already in DOM (landing, folder, product pages):
+  //     wait for every img:not([loading="lazy"]) to finish loading.
+  //
+  //  B) No eager images yet (leaf grid still fetching catalog):
+  //     wait for ShopGrid's "page:ready" custom event, then wait for whatever
+  //     images it has now rendered. Ceiling: 6s total.
   useEffect(() => {
     if (!isPending) {
       clearTimers()
 
       const settle = () => setNavState('idle')
 
-      const pending = Array.from(
+      const waitForImages = (ceiling: number): (() => void) => {
+        const imgs = Array.from(
+          document.querySelectorAll<HTMLImageElement>('img:not([loading="lazy"])'),
+        ).filter((img) => !img.complete)
+        if (imgs.length === 0) { settle(); return () => {} }
+        const t = setTimeout(settle, ceiling)
+        let n = 0
+        const onSettled = () => { if (++n >= imgs.length) { clearTimeout(t); settle() } }
+        imgs.forEach((img) => {
+          img.addEventListener('load',  onSettled, { once: true })
+          img.addEventListener('error', onSettled, { once: true })
+        })
+        return () => {
+          clearTimeout(t)
+          imgs.forEach((img) => {
+            img.removeEventListener('load',  onSettled)
+            img.removeEventListener('error', onSettled)
+          })
+        }
+      }
+
+      // Branch A: images already in DOM
+      const immediate = Array.from(
         document.querySelectorAll<HTMLImageElement>('img:not([loading="lazy"])'),
       ).filter((img) => !img.complete)
 
-      if (pending.length === 0) { settle(); return }
+      if (immediate.length > 0) return waitForImages(5000)
 
-      const ceiling = setTimeout(settle, 5000)
-      let resolved = 0
-      const onSettled = () => { if (++resolved >= pending.length) { clearTimeout(ceiling); settle() } }
-      pending.forEach((img) => {
-        img.addEventListener('load',  onSettled, { once: true })
-        img.addEventListener('error', onSettled, { once: true })
-      })
+      // Branch B: leaf grid — wait for catalog fetch to finish rendering tiles
+      let imgCleanup = () => {}
+      const ceiling = setTimeout(settle, 6000)
+      const onPageReady = () => {
+        clearTimeout(ceiling)
+        imgCleanup = waitForImages(3000)
+      }
+      window.addEventListener('page:ready', onPageReady, { once: true })
       return () => {
         clearTimeout(ceiling)
-        pending.forEach((img) => {
-          img.removeEventListener('load',  onSettled)
-          img.removeEventListener('error', onSettled)
-        })
+        window.removeEventListener('page:ready', onPageReady)
+        imgCleanup()
       }
     }
   }, [isPending, clearTimers])
