@@ -198,11 +198,20 @@ total lag = settlement (pending → available) + manual payout (~1-4 biz days) +
   order; produced once payment clears, typically X business days + production
   + shipping"). Longer than the original Issuing-based design's ~1-2 business
   days — a real UX tradeoff of avoiding the Issuing approval wait.
-- If Instant Payout eligibility is later confirmed (check
-  `dashboard.stripe.com/balance/overview`) and a debit card is added as an
-  external payout account, the 15-minute cron *and* the payout method
-  (`method: 'instant'`) could both tighten this to near-real-time. Not done
-  yet — not confirmed eligible.
+- **Planned upgrade once Instant Payout eligibility appears** (owner intends
+  to switch — 2026-07-01). Stripe doesn't document eligibility criteria for
+  new accounts at all (confirmed by reading the actual docs page — no stated
+  transaction count/volume/seasoning period; it's opaque, just check
+  `dashboard.stripe.com/balance/overview` or `GET /v1/balance` with
+  `instant_available` expanded periodically). When it appears:
+  - Add a **debit card as a Stripe payout destination** — a THIRD card,
+    distinct from (a) the debit card on file at Prodigi (who they charge) and
+    (b) the bank account standard payouts currently go to. Easy to conflate
+    these three; they're separate.
+  - In `src/lib/prodigi-payout.ts`, change the `stripe.payouts.create()` call
+    to `method: 'instant'` + that card's id as `destination`. The rest of the
+    two-step design (create → wait for `payout.paid` → submit to Prodigi)
+    stays the same — it just closes in ~30 min instead of 1-4 business days.
 
 ### Why this is safe for large orders (100k+ DKK)
 
