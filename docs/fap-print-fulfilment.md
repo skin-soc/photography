@@ -409,13 +409,18 @@ needed because the print price is static while Prodigi cost can drift.
 
 ## 11. Open blockers (all non-code)
 
-1. **Stripe Issuing** approved (sales) + **balance transfers (preview)** enabled +
-   KYB complete + EUR card created with spend controls.
+1. ~~Stripe Issuing approved...~~ **DROPPED** — superseded by the manual-payout
+   design in §4; Issuing needs a formal Sales application with unknown
+   timeline, not pursued further for now.
 2. **Prodigi NL-only routing** arrangement (Appendix A) — now *belt & braces*; the
    pre-charge quote guard (§7) is the primary control. Still worth doing.
 3. ~~Sandbox probe: does the quote expose lab/country?~~ **DONE** — yes, quote
    returns `fulfillmentLocation.countryCode`/`labCode` pre-charge (§7).
-4. **Confirm** Prodigi settlement currency is EUR in account billing settings.
+4. ~~Confirm Prodigi settlement currency is EUR~~ **DONE 2026-07-01** — live
+   account's Billing information explicitly states "You are currently billed
+   per order in EUR." A GBP 0.00 charge seen when adding the debit card was
+   just Prodigi's card-verification test charge, not a billing-currency
+   issue — false alarm, no account migration needed.
 
 ---
 
