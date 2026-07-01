@@ -232,8 +232,10 @@ export async function POST(req: Request) {
   // business days to actually land; only once Stripe confirms it's `paid`
   // (funds genuinely in the bank) do we submit the order to Prodigi, whose
   // debit card draws on that same account. Submitting any earlier would risk
-  // a declined charge and reintroduce float.
-  if (event.type === 'payout.paid' || event.type === 'payout.failed') {
+  // a declined charge and reintroduce float. `failed`/`canceled` both mean
+  // the money never left — record it on the order so it's visible on the
+  // admin card instead of sitting silently as "AwaitingPayout" forever.
+  if (event.type === 'payout.paid' || event.type === 'payout.failed' || event.type === 'payout.canceled') {
     const payout = event.data.object as Stripe.Payout
     const orderId = payout.metadata?.orderId
     if (orderId) {
@@ -247,7 +249,15 @@ export async function POST(req: Request) {
           console.error('[prodigi-payout] submit-after-payout failed for', orderId, err)
         }
       } else {
-        console.error('[prodigi-payout] payout failed for', orderId, payout.id, payout.failure_message)
+        console.error('[prodigi-payout] payout', event.type, 'for', orderId, payout.id, payout.failure_message)
+        await recordFulfilment(orderId, {
+          provider: 'prodigi',
+          prodigiId: null,
+          stage: event.type === 'payout.failed' ? 'PayoutFailed' : 'PayoutCanceled',
+          outcome: 'error',
+          mode: prodigiMode(),
+          error: payout.failure_message ?? `payout ${event.type}`,
+        })
       }
     }
   }

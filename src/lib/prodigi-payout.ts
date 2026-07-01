@@ -181,6 +181,16 @@ export async function checkAndFundPendingOrders(): Promise<PayoutCheckResult[]> 
           await submitAfterPayout(order.orderId, pendingPayoutId)
           results.push({ orderId: order.orderId, action: 'payout-created', detail: pendingPayoutId })
         } else if (payout.status === 'failed' || payout.status === 'canceled') {
+          // Same recording the payout.failed/payout.canceled webhook does —
+          // this is the fallback path in case that event was ever missed.
+          await recordFulfilment(order.orderId, {
+            provider: 'prodigi',
+            prodigiId: null,
+            stage: payout.status === 'failed' ? 'PayoutFailed' : 'PayoutCanceled',
+            outcome: 'error',
+            mode: 'live',
+            error: payout.failure_message ?? `payout ${payout.status}`,
+          })
           results.push({
             orderId: order.orderId,
             action: 'payout-failed',
