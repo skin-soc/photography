@@ -17,12 +17,19 @@ surface.
 
 ## 0. Authorisation gate (blocks everything)
 
-- [ ] **Explicitly lift the standing rules in writing:** `stripe-live-calls-test-only`
-      (live Stripe = read-only/test only) and Prodigi sandbox-only
-      (`fap-print-fulfilment`). Nothing below runs until this is stated.
-- [ ] Prodigi order→fulfilment flow is **built and end-to-end verified on sandbox**
-      (webhook receiver `src/app/api/webhook/prodigi/` wired + verify-by-refetch
-      confirmed). This is the parked "main remaining build" per `docs/next-steps.md`.
+- [x] **Lifted 2026-07-01** — owner explicitly confirmed lifting
+      `stripe-live-calls-test-only` and Prodigi sandbox-only. Merge-to-main and
+      the first live order each still need their own fresh confirmation at that
+      moment (not blanket-covered by this).
+- [x] **Verified fresh 2026-07-01** — real sandbox checkout on
+      `photography-preview.gusmcewan.workers.dev` (fine-art framed 24×36 +
+      Express shipping, Stripe test card, order `GMP-LOKI-E5ZAE`). Confirmed via
+      Prodigi sandbox API (`ord_1161794`, correct SKU/asset/callback URL) AND the
+      origin's admin-orders record (`fulfilment.prodigiId` populated, `mode:
+      "sandbox"`, VAT evidence captured). Order was still `stage: "InProgress"`
+      at check time — the async Prodigi status **callback** hadn't landed yet,
+      so only order-creation is proven fresh; the callback-updates-record path
+      is proven by code read + the 2026-06-17 build note, not by this test.
 
 ## 1. Green production build (do FIRST — before any live config)
 
