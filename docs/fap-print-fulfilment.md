@@ -143,10 +143,89 @@ incl. shipping. Stripe does no tax calc. See §6.
 
 ---
 
-## 4. No-float funding model (firm requirement)
+## 4. No-float funding model (firm requirement) — REVISED 2026-07-01
 
 **No standing float. Every order is funded directly by that customer's own cash.**
 Delivery may be delayed by one or more (business) days as a result — accepted.
+
+**SUPERSEDES the original Issuing-based design below this note.** Stripe
+Issuing requires a formal Sales application for a single own-account virtual
+card (confirmed via Stripe support chat 2026-07-01 — self-serve "Get Started"
+is for Connect platforms issuing to *other* connected accounts, not this use
+case), with an unknown approval timeline. Rather than block launch on that,
+the funding mechanism was redesigned around a **manual Stripe payout to the
+account's own bank account**, with a debit card on that same bank account as
+the payment method on file at Prodigi. No Stripe Issuing involved at all.
+
+### Implemented pipeline (BUILT 2026-07-01, commit `ffdd883`)
+
+`src/lib/prodigi-payout.ts` — `checkAndFundPendingOrders()`, called every 15
+minutes by the `prodigi-cron` Worker (`POST /api/admin/prodigi-payout`):
+
+```
+for each recent LIVE order with physical items, not yet sent to Prodigi:
+  1. Stripe: is this order's charge balance transaction 'available' (settled),
+     not 'pending'?
+  2. if yes → create a manual STANDARD payout (stripe.payouts.create) for the
+     order's full settled net amount (no cost/markup split needed — the whole
+     amount lands in the bank; Prodigi draws only its cost via the debit card
+     charge, markup+VAT just sit in the same account)
+  3. submitProdigiOrder(...) — createOrder is idempotent on orderCode
+```
+
+The Stripe webhook (`src/app/api/webhook/stripe/route.ts`) now **skips**
+immediate Prodigi submission when `prodigiMode() === 'live'` — issuing the
+download grant is enough at checkout time; fulfilment catches up once funded.
+Sandbox is unaffected (immediate submission, unchanged — sandbox needs no
+funding).
+
+**Payout method chosen: manual STANDARD, not Instant.** Checked via a real
+`GET /v1/balance?expand[]=instant_available` call — the field didn't appear
+at all, meaning this account isn't confirmed eligible for Instant Payouts
+(new-account thing, or needs a debit card added as external account first).
+Standard manual payouts have no special fee (only Instant carries a fee — 1%
+in DK) and work with the existing bank account (LUNAR BANK A/S) already on
+file; they just take longer (~1-4 business days per Stripe's docs) than
+Instant's ~30 minutes would.
+
+### Delivery SLA — driven by settlement + payout time, not a card-funding transfer
+
+```
+total lag = settlement (pending → available) + manual payout (~1-4 biz days) + place order
+```
+
+- **Requirement: show a realistic dispatch estimate at checkout** ("made to
+  order; produced once payment clears, typically X business days + production
+  + shipping"). Longer than the original Issuing-based design's ~1-2 business
+  days — a real UX tradeoff of avoiding the Issuing approval wait.
+- If Instant Payout eligibility is later confirmed (check
+  `dashboard.stripe.com/balance/overview`) and a debit card is added as an
+  external payout account, the 15-minute cron *and* the payout method
+  (`method: 'instant'`) could both tighten this to near-real-time. Not done
+  yet — not confirmed eligible.
+
+### Why this is safe for large orders (100k+ DKK)
+
+We never front capital. The customer's payment funds their own order; we just wait
+for it to become available and paid out, then order. If funds never become available
+→ order auto-declines and **the money is still in the payments balance → trivial
+refund**. No-float makes refunds *safer*.
+
+### NOT YET DONE
+
+- Owner hasn't yet run a real live purchase to prove the full chain
+  (settlement detection → payout creation → Prodigi submission) end-to-end.
+  Planned as a fast-follow "soon."
+- A debit card linked to the LUNAR BANK A/S account still needs to be added
+  as the payment method on file at Prodigi's live dashboard.
+- No per-order idempotency guard yet against creating **two** payouts for the
+  same order if the cron runs twice before `submitProdigiOrder` succeeds and
+  updates `fulfilment.prodigiId` — worth hardening before real volume (e.g. a
+  short-lived "payout in flight" marker) if this becomes a concern.
+
+---
+
+## 4a. ORIGINAL Issuing-based design (superseded, kept for reference)
 
 ### The two-balance reality (EEA)
 
@@ -160,7 +239,7 @@ Funding path: **Stripe balance transfer** (payments balance → Issuing balance)
   only). _Preview feature; confirm exact endpoint + enablement when Issuing is on._
 - EU settlement: **within 1 business day** (instant in US).
 
-### Automated pipeline (Cloudflare cron worker)
+### Automated pipeline (Cloudflare cron worker) — NOT what was built
 
 ```
 for each paid order not yet sent to Prodigi:
@@ -173,31 +252,18 @@ for each paid order not yet sent to Prodigi:
 Issuing balance sits at ~€0 between orders. Transfer the **cost only** (markup +
 VAT stay in payments → bank). Sweep dust back occasionally.
 
-### Delivery SLA — driven by SETTLEMENT, not the transfer
-
-```
-total lag = settlement (pending → available) + transfer (≤1 biz day) + place order
-```
-
-- Only **available** funds transfer; fresh card payments are **pending** first
-  (couple of biz days established; **~7 days for a new account** until seasoned).
-- Settlement clock **and** SEPA transfer are **business-day** based → a Friday-
-  night order may reach Prodigi Tue/Wed; bank holidays extend it.
-- **Requirement: show a realistic dispatch estimate at checkout** ("made to order;
-  produced once payment clears, typically X business days + production + shipping").
-
-### Why this is safe for large orders (100k+ DKK)
-
-We never front capital. The customer's payment funds their own order; we just wait
-for it to become available, sweep it, then order. If funds never become available
-→ order auto-declines and **the money is still in payments balance → trivial
-refund**. No-float makes refunds *safer*.
-
 ---
 
-## 5. Stripe Issuing setup
+## 5. Stripe Issuing setup — PARKED, not on the current build path (see §4)
+
+Kept for reference / a possible future revisit if Issuing is later approved
+and Instant Payouts get tightened up. The current implementation uses §4's
+manual-payout design instead, which needs none of this.
 
 - **Availability**: EEA ✓ (Denmark). No setup fee. Virtual card **€0.10**.
+  Note: self-serve activation still failed in practice for this account — see
+  §4's revision note; it needs a formal Sales application, not this self-serve
+  path, regardless of country eligibility.
 - **Currency matching**: issue the card in **EUR** (= Prodigi settlement currency)
   and hold the Issuing balance in EUR → FX happens once at top-up, never per order.
 - **PCI**: issuing for our own use → no extra PCI burden. Can read full PAN+CVC via
