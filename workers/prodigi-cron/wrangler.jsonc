@@ -1,8 +1,14 @@
 /**
- * Tiny scheduled worker that triggers the main app's Prodigi validation daily.
- * The Next app (OpenNext) can't host a scheduled() handler, so this standalone
- * worker does — it just calls POST /api/admin/prodigi-validate with the shared
- * CRON_SECRET. The validation logic + KV + email all live in the main app.
+ * Tiny scheduled worker with two jobs, both calling the main app (which can't
+ * host a scheduled() handler itself under OpenNext) with the shared
+ * CRON_SECRET. All logic + KV + email/Stripe/Prodigi calls live in the main
+ * app; this Worker is just the trigger.
+ *
+ *  - Daily (06:10 UTC): POST /api/admin/prodigi-validate — Prodigi
+ *    SKU/price catalogue check.
+ *  - Every 15 min: POST /api/admin/prodigi-payout — no-float funding check
+ *    (src/lib/prodigi-payout.ts): settle → payout → submit to Prodigi for any
+ *    LIVE physical order awaiting funding. A no-op in sandbox mode.
  *
  * It calls the main worker via a SERVICE BINDING (worker-to-worker over public
  * URLs on the same account is blocked — Cloudflare error 1042).
@@ -19,8 +25,10 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-05-14",
   "triggers": {
-    // 06:10 UTC daily. Adjust as needed.
-    "crons": ["10 6 * * *"]
+    "crons": [
+      "10 6 * * *",
+      "*/15 * * * *"
+    ]
   },
   // Service binding to the main app (preview). At go-live, change "service" to
   // "photography" (the prod worker).
@@ -28,8 +36,9 @@
     { "binding": "MAIN", "service": "photography-preview" }
   ],
   "vars": {
-    // Path on the main app. Host is ignored when called via the MAIN binding.
-    "VALIDATE_URL": "https://main/api/admin/prodigi-validate"
+    // Paths on the main app. Host is ignored when called via the MAIN binding.
+    "VALIDATE_URL": "https://main/api/admin/prodigi-validate",
+    "PAYOUT_URL": "https://main/api/admin/prodigi-payout"
   },
   "observability": { "enabled": true }
 }

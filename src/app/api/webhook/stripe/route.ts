@@ -80,44 +80,54 @@ async function fulfilSession(sessionId: string, workerBase: string): Promise<voi
   })
   console.log('[stripe] download grant issued for', orderCode)
 
-  // Physical items → submit to Prodigi (sandbox). Best-effort: a failure is
-  // logged + recorded on the order, NOT escalated to a 500 (the grant is already
-  // issued; the print order can be retried). createOrder is idempotent on the
-  // order code, so webhook retries never double-order.
-  try {
-    const result = await submitProdigiOrder({
-      orderCode,
-      lineItems,
-      shipping,
-      email: session.customer_details?.email ?? null,
-      // The delivery method the customer chose + paid for (Budget/Standard/…).
-      shippingMethod: session.metadata?.shippingMethod ?? undefined,
-      locale: session.metadata?.locale ?? 'en',
-      bwSkus,
-      // Prodigi POSTs CloudEvents status updates here; secured by a per-order
-      // token (their callbacks carry no signature). Worker origin, not the LAN one.
-      callbackUrl: prodigiCallbackUrl(workerBase, orderCode),
-    })
-    if (result) {
+  // Physical items → submit to Prodigi. In SANDBOX this happens immediately
+  // (best-effort: a failure is logged + recorded, not escalated to a 500 — the
+  // grant is already issued; the print order can be retried). createOrder is
+  // idempotent on the order code, so webhook retries never double-order.
+  //
+  // In LIVE mode this is deliberately SKIPPED — the no-float requirement
+  // (docs/fap-print-fulfilment.md §4) means a physical order must never reach
+  // Prodigi ahead of that customer's own payment actually settling into the
+  // real bank account. src/lib/prodigi-payout.ts (run on a schedule by the
+  // prodigi-cron Worker) checks settlement, pays out to the bank, then
+  // submits the order — this webhook only issuing the grant is enough for the
+  // customer-facing side; fulfilment catches up once funded.
+  if (prodigiMode() !== 'live') {
+    try {
+      const result = await submitProdigiOrder({
+        orderCode,
+        lineItems,
+        shipping,
+        email: session.customer_details?.email ?? null,
+        // The delivery method the customer chose + paid for (Budget/Standard/…).
+        shippingMethod: session.metadata?.shippingMethod ?? undefined,
+        locale: session.metadata?.locale ?? 'en',
+        bwSkus,
+        // Prodigi POSTs CloudEvents status updates here; secured by a per-order
+        // token (their callbacks carry no signature). Worker origin, not the LAN one.
+        callbackUrl: prodigiCallbackUrl(workerBase, orderCode),
+      })
+      if (result) {
+        await recordFulfilment(orderCode, {
+          provider: 'prodigi',
+          prodigiId: result.id,
+          stage: result.stage,
+          outcome: result.outcome,
+          mode: result.mode,
+        })
+        console.log('[prodigi] order created for', orderCode, result.id, `(${result.mode})`)
+      }
+    } catch (err) {
+      console.error('[prodigi] order submission failed for', orderCode, err)
       await recordFulfilment(orderCode, {
         provider: 'prodigi',
-        prodigiId: result.id,
-        stage: result.stage,
-        outcome: result.outcome,
-        mode: result.mode,
+        prodigiId: null,
+        stage: 'Failed',
+        outcome: 'error',
+        mode: prodigiMode(),
+        error: err instanceof Error ? err.message : String(err),
       })
-      console.log('[prodigi] order created for', orderCode, result.id, `(${result.mode})`)
     }
-  } catch (err) {
-    console.error('[prodigi] order submission failed for', orderCode, err)
-    await recordFulfilment(orderCode, {
-      provider: 'prodigi',
-      prodigiId: null,
-      stage: 'Failed',
-      outcome: 'error',
-      mode: prodigiMode(),
-      error: err instanceof Error ? err.message : String(err),
-    })
   }
 
   // Count one coupon redemption on the authoritative (webhook) fulfilment only —
