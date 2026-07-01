@@ -44,12 +44,14 @@ surface.
 
 ## 2. Stripe (live) — external, you do these
 
-- [ ] KYB complete; account activated for live payments.
+- [x] KYB complete; account activated for live payments (confirmed 2026-07-01,
+      also per [[launch-status-and-next-phase]] 2026-06-15).
 - [ ] (If no-float Issuing model) Issuing approved, card created, funding arranged
       (`docs/fap-print-fulfilment.md`).
-- [ ] Create the **live webhook endpoint** → `https://gusmcewan.com/api/webhook/stripe`,
-      subscribe to the same events as the test endpoint (see
-      `src/app/api/webhook/stripe/route.ts`). Copy the live `whsec_…`.
+- [x] Live webhook endpoint exists (`https://gusmcewan.com/api/webhook/stripe`)
+      with the 3 correct events (checkout.session.completed,
+      checkout.session.async_payment_succeeded, charge.refunded — confirmed
+      2026-07-01). Signing secret in hand, ready for §4 dashboard entry.
 - [ ] Recreate **live coupons/promo codes** (test coupons don't carry over).
 - [ ] Have live `sk_live_…`, `pk_live_…`, `whsec_…` ready. (Values already staged
       locally under `LIVE_*` in `.env.local`.)
@@ -77,20 +79,30 @@ top-level `vars` resolve, including `PRODIGI_MODE`.
 Set **once, in the dashboard**, on the production Worker — these persist across
 merges and are NOT in git.
 
-**Build-time environment variables** (Settings → Builds → Variables — needed at
-`next build`, because `NEXT_PUBLIC_*` is inlined into the client bundle):
+**Build-time environment variables** (Settings → Build → production_settings
+environment_variables — needed at `next build`, because `NEXT_PUBLIC_*` is
+inlined into the client bundle):
 
-- [ ] `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = pk_live_…`  ⚠️ build var, not a runtime secret
+- [x] `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = pk_live_…` — set 2026-07-01,
+      `is_secret: false` (correct — it's meant to be public), verified via
+      `GET /accounts/{id}/builds/workers/{script_tag}`.
 
-**Runtime secrets** (Settings → Variables and Secrets → encrypted):
+**Runtime secrets** (Settings → Variables and Secrets → encrypted) — all 7
+confirmed bound 2026-07-01 via `GET
+/accounts/{id}/workers/scripts/photography/settings`:
 
-- [ ] `STRIPE_SECRET_KEY = sk_live_…`
-- [ ] `STRIPE_WEBHOOK_SECRET = whsec_…` (the live endpoint's)
-- [ ] `PRODIGI_API_KEY = <live key>`
-- [ ] `SHOP_ORIGIN_SECRET = <prod value>`
-- [ ] `DOWNLOAD_LINK_SECRET = <prod value, rotated from preview>`
-- [ ] `ADMIN_PASSWORD = <prod value, rotated from preview>`
-- [ ] `CRON_SECRET = <prod value>` (also on the `prodigi-cron` Worker)
+- [x] `STRIPE_SECRET_KEY`
+- [x] `STRIPE_WEBHOOK_SECRET` (the live endpoint's — endpoint + 3 events already
+      existed from earlier work)
+- [x] `PRODIGI_API_KEY` (live)
+- [x] `SHOP_ORIGIN_SECRET` (same value as preview — one physical tunnel/origin
+      serves both)
+- [x] `DOWNLOAD_LINK_SECRET` — freshly generated random value (preview's
+      `.env.local` entry was a `dev-local-…` placeholder, not a real value to
+      reuse, so rotated instead)
+- [x] `ADMIN_PASSWORD` — owner's existing password, entered directly (never
+      touched by Claude — exists only in owner's memory, not in any file)
+- [x] `CRON_SECRET` — already present pre-existing on this Worker
 
 **Runtime vars** — ✅ already committed in `wrangler.jsonc` top-level (`8fe27ea`,
 on branch `final`), no dashboard action needed:
@@ -106,8 +118,12 @@ on branch `final`), no dashboard action needed:
 
 - [ ] `SHOP_SETTINGS` KV bound on the prod Worker — currently **shares** preview's
       namespace id `8a07bbf…` (same in both top-level and `env.preview` config).
-      Decide if pricing/settings should be a dedicated prod namespace instead.
-- [ ] Custom domain / route `gusmcewan.com` attached to the `photography` Worker.
+      Decide if pricing/settings should be a dedicated prod namespace instead
+      (left shared for now — not blocking).
+- [x] Custom domain — **already attached**, discovered 2026-07-01 via
+      `GET /accounts/{id}/workers/domains`: `gusmcewan.com`, `www.gusmcewan.com`,
+      `gusmcewan.uk`, `www.gusmcewan.uk` all routed to `photography`, enabled.
+      No action needed.
 
 ## 5. Go-live PR (the merge that flips it) — committed changes
 
