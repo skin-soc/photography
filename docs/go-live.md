@@ -26,11 +26,12 @@ surface.
 
 ## 1. Green production build (do FIRST — before any live config)
 
-- [ ] Every recent `photography` prod build failed (Workers Builds, on
-      `feature/cart`). Get a **successful production build** from the go-live branch
-      on a throwaway push, so "merge = live" is trustworthy. Diagnose the build
-      failure (build command, missing build-time env, `NEXT_PUBLIC_*` inlining)
-      before trusting the pipeline.
+- [x] **Fixed 2026-07-01** (`c9c80a4`): every recent `photography` prod build was
+      failing on `npm ci` — `package-lock.json` had drifted from `package.json`
+      (missing `@swc/helpers@0.5.23` etc). Regenerated **under the exact CI
+      toolchain** (node 22.16.0 / npm 10.9.2, via `nvm use 22.16.0` —
+      regenerating under local npm 11 produces a much larger, spurious diff).
+      Verified `npm ci` and `next build` both pass clean under that toolchain.
 - [ ] Confirm the CF build command and production branch in the Workers Builds
       settings (dashboard → Worker `photography` → Settings → Builds).
 
@@ -59,6 +60,13 @@ surface.
 
 ## 4. Cloudflare dashboard config for the `photography` Worker (pre-stage)
 
+**IMPORTANT — corrected 2026-07-01:** `npm run deploy` runs
+`opennextjs-cloudflare deploy` with **no `--env` flag**, so CI deploys the
+**top-level (unnamed) config block** in `wrangler.jsonc` — NOT a nested
+`env.production` block (there isn't one, and adding one would be silently
+ignored by CI). Verified via `wrangler deploy --dry-run`: with no `--env`, the
+top-level `vars` resolve, including `PRODIGI_MODE`.
+
 Set **once, in the dashboard**, on the production Worker — these persist across
 merges and are NOT in git.
 
@@ -77,29 +85,37 @@ merges and are NOT in git.
 - [ ] `ADMIN_PASSWORD = <prod value, rotated from preview>`
 - [ ] `CRON_SECRET = <prod value>` (also on the `prodigi-cron` Worker)
 
-**Runtime vars** (non-secret; can be dashboard vars OR committed in wrangler.jsonc
-top-level — see §5):
+**Runtime vars** — ✅ already committed in `wrangler.jsonc` top-level (`8fe27ea`,
+on branch `final`), no dashboard action needed:
 
-- [ ] `SHOP_ORIGIN_URL = https://valhalla.gusmcewan.com` (or prod origin)
-- [ ] `PRODIGI_MODE = live`   ← the flip. Code defaults to `sandbox` when unset
+- [x] `SHOP_ORIGIN_URL = https://valhalla.gusmcewan.com`
+- [x] `SHOP_PREVIEW_BASE_URL = https://loki.gusmcewan.com` (despite the name,
+      this is just a public image-CDN host toggle — see `src/lib/shop.ts:206-217`
+      — not Worker-environment-specific, so prod reuses preview's value)
+- [x] `PRODIGI_MODE = live`   ← the flip. Code defaults to `sandbox` when unset
       (`src/lib/prodigi.ts:23`); mode is explicit, never key-sniffed.
 
 **Bindings / domain:**
 
-- [ ] `SHOP_SETTINGS` KV bound on the prod Worker (decide: share preview's
-      namespace `8a07bbf…` or a dedicated prod namespace for pricing/settings).
+- [ ] `SHOP_SETTINGS` KV bound on the prod Worker — currently **shares** preview's
+      namespace id `8a07bbf…` (same in both top-level and `env.preview` config).
+      Decide if pricing/settings should be a dedicated prod namespace instead.
 - [ ] Custom domain / route `gusmcewan.com` attached to the `photography` Worker.
 
 ## 5. Go-live PR (the merge that flips it) — committed changes
 
-Put the version-controlled bits in the PR that merges to `main`:
+The actual go-live PR is **`final` → `main`** — branch `final` is **277 commits**
+ahead of `origin/main` (the entire shop build: cart, VAT, Prodigi fulfilment,
+fine-art, admin, this go-live prep). `origin/main` hasn't moved since the last
+SEO-only PR.
 
-- [ ] Add a top-level/production `vars` block (or dashboard var) with
-      **`PRODIGI_MODE: "live"`** in `wrangler.jsonc`. Committing it here means the
-      flip lands exactly at merge = cutover, and is auditable in git. (Do NOT set
-      this earlier on a branch that auto-deploys prod.)
-- [ ] Any code from the parked fulfilment build not yet on `main`.
-- [ ] Version bump (standing rule).
+- [x] Top-level `vars` block with **`PRODIGI_MODE: "live"`** committed in
+      `wrangler.jsonc` (`8fe27ea`). Verified with `wrangler deploy --dry-run`
+      that it resolves with no `--env` flag — i.e. exactly what CI will deploy.
+- [x] Version bump: `1.34.52` → `1.35.0` (`8fe27ea`).
+- [ ] Decide: merge `final` → `main` as one 277-commit PR, or land it in smaller
+      reviewed chunks first? Given the size, at minimum diff-review the
+      accumulated changes before opening the PR.
 
 ## 6. Pre-cutover verification
 
