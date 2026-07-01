@@ -52,9 +52,9 @@ surface.
       with the 3 correct events (checkout.session.completed,
       checkout.session.async_payment_succeeded, charge.refunded — confirmed
       2026-07-01). Signing secret in hand, ready for §4 dashboard entry.
-- [ ] Recreate **live coupons/promo codes** (test coupons don't carry over).
-- [ ] Have live `sk_live_…`, `pk_live_…`, `whsec_…` ready. (Values already staged
-      locally under `LIVE_*` in `.env.local`.)
+- [x] Live coupons — **N/A for launch**: no coupons currently exist; test
+      coupons deleted 2026-07-01; coupons will be added post-launch.
+- [x] Live `sk_live_…`, `pk_live_…`, `whsec_…` — all set on the Worker (§4).
 
 ## 3. Prodigi (live) — external
 
