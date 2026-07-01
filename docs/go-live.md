@@ -15,6 +15,35 @@ surface.
 
 ---
 
+## ⚠️ CURRENT STATUS (2026-07-01): BLOCKED on Stripe Issuing
+
+Everything below except the no-float funding pipeline is done and verified
+(§0, §1, §2, §4 all complete — see checkmarks). **Physical-order go-live is
+blocked** on:
+
+1. **Stripe Issuing approval** — the no-float funding pipeline (§4 of
+   `docs/fap-print-fulfilment.md`) needs a EUR virtual card on this account to
+   pay Prodigi. Self-serve "Get Started" in the dashboard silently fails.
+   **Confirmed via Stripe support chat (ground truth):** the instant-Issuing
+   flow is for Connect platforms issuing to *other* connected accounts. A
+   single card on our own account for paying a supplier requires a **formal
+   Stripe Sales application** (`stripe.com/issuing`), not a dashboard click —
+   unknown approval timeline.
+   - Correction: an earlier pass this session wrongly concluded Denmark isn't
+     in Stripe's local-Issuing country list and that this was the blocker —
+     that was a bad inference from a doc skim, not the real cause. Don't
+     repeat that claim.
+2. **The balance-transfer worker itself is unbuilt** — even once Issuing is
+   approved, the actual polling/transfer/order-submission pipeline (design in
+   `docs/fap-print-fulfilment.md` §4) needs to be written and sandbox-tested
+   before it can run for real.
+
+**Do not merge `final` → `main` until both are resolved.** Digital-only launch
+(no physical products) was considered and explicitly declined in favor of
+waiting — see [[stripe-live-calls-test-only]].
+
+---
+
 ## 0. Authorisation gate (blocks everything)
 
 - [x] **Lifted 2026-07-01** — owner explicitly confirmed lifting
