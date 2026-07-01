@@ -2,6 +2,7 @@ import type Stripe from 'stripe'
 import { stripe, cryptoProvider } from '@/lib/stripe-server'
 import { issueGrant, resolveDownloadItems, originConfigured, markRefund, notifyOwnerSale, extractOrderLines, describeOrderLines, recordFulfilment, prodigiCallbackUrl } from '@/lib/downloads'
 import { submitProdigiOrder } from '@/lib/prodigi-fulfil'
+import { submitAfterPayout } from '@/lib/prodigi-payout'
 import { prodigiMode } from '@/lib/prodigi'
 import { getSaleNotify } from '@/lib/shop-settings'
 import { redeemCoupon } from '@/lib/coupons'
@@ -222,6 +223,31 @@ export async function POST(req: Request) {
       } catch (err) {
         console.error('[stripe] failed to record refund:', err)
         return Response.json({ error: 'refund record failed' }, { status: 500 })
+      }
+    }
+  }
+
+  // No-float funding, step 2 (step 1 is the prodigi-cron-triggered payout
+  // creation — see src/lib/prodigi-payout.ts). A manual payout takes 1-4
+  // business days to actually land; only once Stripe confirms it's `paid`
+  // (funds genuinely in the bank) do we submit the order to Prodigi, whose
+  // debit card draws on that same account. Submitting any earlier would risk
+  // a declined charge and reintroduce float.
+  if (event.type === 'payout.paid' || event.type === 'payout.failed') {
+    const payout = event.data.object as Stripe.Payout
+    const orderId = payout.metadata?.orderId
+    if (orderId) {
+      if (event.type === 'payout.paid') {
+        try {
+          await submitAfterPayout(orderId, payout.id)
+          console.log('[prodigi-payout] submitted after payout', payout.id, 'for', orderId)
+        } catch (err) {
+          // Non-fatal: the fallback check in checkAndFundPendingOrders retries
+          // this on the next cron pass (the sentinel is still in place).
+          console.error('[prodigi-payout] submit-after-payout failed for', orderId, err)
+        }
+      } else {
+        console.error('[prodigi-payout] payout failed for', orderId, payout.id, payout.failure_message)
       }
     }
   }

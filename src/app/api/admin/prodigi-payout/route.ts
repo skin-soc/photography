@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
   const results = await checkAndFundPendingOrders()
-  const funded = results.filter((r) => r.action === 'paid-out-and-submitted').length
-  const failed = results.filter((r) => r.action === 'payout-failed' || r.action === 'submit-failed').length
-  console.log(`[prodigi-payout] checked ${results.length} order(s), ${funded} funded, ${failed} failed`)
+  const created = results.filter((r) => r.action === 'payout-created').length
+  const failed = results.filter((r) => r.action === 'payout-failed').length
+  console.log(`[prodigi-payout] checked ${results.length} order(s), ${created} payout(s) created/completed, ${failed} failed`)
   return NextResponse.json({ results })
 }
