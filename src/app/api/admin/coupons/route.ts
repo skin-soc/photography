@@ -109,5 +109,9 @@ export async function POST(req: NextRequest) {
     expiresAt: body.expiresAt,
   })
   if (!res.ok) return NextResponse.json({ ok: false, error: res.error }, { status: 400 })
-  return NextResponse.json({ ok: true, code: res.coupon.code, id: res.coupon.code })
+  // Return the full view, not just the code — KV list() reads aren't
+  // immediately consistent with a write that just happened, so the caller
+  // shouldn't have to re-fetch to show the new coupon; it already has
+  // everything needed to render it right away.
+  return NextResponse.json({ ok: true, coupon: toView(res.coupon) })
 }

@@ -192,8 +192,15 @@ function CouponsTab() {
       const res = await fetch('/api/admin/coupons', {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
       })
-      const d = (await res.json().catch(() => ({}))) as { code?: string; error?: string }
-      if (res.ok) { setNote(`Created ${d.code}.`); setCode(''); setMaxRedemptions(''); setExpiry(''); setCodes(null); load() }
+      const d = (await res.json().catch(() => ({}))) as { coupon?: PromoCode; error?: string }
+      if (res.ok && d.coupon) {
+        // Insert directly rather than re-fetching — KV list() reads aren't
+        // immediately consistent with a write that just happened, so an
+        // immediate reload can come back without the coupon we just created.
+        setNote(`Created ${d.coupon.code}.`)
+        setCode(''); setMaxRedemptions(''); setExpiry('')
+        setCodes((prev) => [d.coupon!, ...(prev ?? [])])
+      }
       else setNote(d.error || 'Failed.')
     } catch { setNote('Failed.') } finally { setBusy(false) }
   }
