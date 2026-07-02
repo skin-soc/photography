@@ -30,10 +30,12 @@
       "*/15 * * * *"
     ]
   },
-  // Service binding to the main app (preview). At go-live, change "service" to
-  // "photography" (the prod worker).
+  // Service binding to the main app — points at the PROD worker "photography"
+  // now that go-live is happening (2026-07-01). Was "photography-preview"
+  // during build/test; switched here so the cron actually reaches the live
+  // app instead of silently hitting sandbox-mode preview forever.
   "services": [
-    { "binding": "MAIN", "service": "photography-preview" }
+    { "binding": "MAIN", "service": "photography" }
   ],
   "vars": {
     // Paths on the main app. Host is ignored when called via the MAIN binding.
