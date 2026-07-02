@@ -2849,7 +2849,10 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
             accent
           />
         )}
-        <Row label="Download page" value={order.downloadUrl} mono />
+        {/* Same URL serves every order type — invoice/license/tracking, not just
+            downloads — so the label shouldn't imply file downloads for a
+            physical-only order. */}
+        <Row label="Order status page" value={order.downloadUrl} mono />
       </dl>
 
       <ul className="mt-4 space-y-1.5">
