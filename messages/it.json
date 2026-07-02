@@ -137,7 +137,17 @@
         "blurb": "Arte fine texturizzato artigianale"
       }
     },
-    "deliveryEstimate": "Realizzato su ordinazione — consegna stimata in {min}–{max} settimane"
+    "deliveryEstimate": "Realizzato su ordinazione — consegna stimata in {min}–{max} settimane",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Canvas con cornice flottante",
+        "blurb": "Canvas da galleria da 400 g in cornice flottante nera. Le misure si riferiscono alla tela — la cornice aggiunge un bordo sottile."
+      },
+      "framed": {
+        "label": "Stampa incorniciata con passe-partout",
+        "blurb": "Stampa giclée opaca sotto vetro acrilico, con passe-partout bianco neve. Le misure si riferiscono alla cornice finita — l’immagine è all’interno del passe-partout."
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-mail (per il tuo link di download)",

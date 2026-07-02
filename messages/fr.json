@@ -137,7 +137,17 @@
         "blurb": "Beaux-arts texturé fait main"
       }
     },
-    "deliveryEstimate": "Fabriqué à la commande — livraison estimée sous {min}–{max} semaines"
+    "deliveryEstimate": "Fabriqué à la commande — livraison estimée sous {min}–{max} semaines",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Toile en caisse américaine",
+        "blurb": "Toile galerie 400 g dans une caisse américaine noire. Les dimensions sont celles de la toile — le cadre ajoute un fin liseré."
+      },
+      "framed": {
+        "label": "Tirage encadré avec passe-partout",
+        "blurb": "Tirage giclée mat sous verre acrylique, dans un passe-partout blanc neige. Les dimensions sont celles du cadre fini — l’image est en retrait dans le passe-partout."
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-mail (pour votre lien de téléchargement)",

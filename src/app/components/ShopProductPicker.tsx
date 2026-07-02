@@ -5,6 +5,13 @@ import { useTranslations } from 'next-intl'
 import type { ProductType, LicenseTier } from '@/lib/shop'
 import { printArea, defaultFineArtProduct } from '@/lib/fine-art-default'
 import { deliveryEstimateWeeks } from '@/lib/delivery-estimate'
+
+/** Fine-art family codes with localised label/blurb messages (shop.fineArtFamily.*).
+ *  Unknown future codes fall back to the English label baked into the catalog. */
+const FAMILY_CODES = ['canvas', 'framed'] as const
+function isFamilyCode(code: string | null | undefined): code is (typeof FAMILY_CODES)[number] {
+  return code != null && (FAMILY_CODES as readonly string[]).includes(code)
+}
 import { useCartStore } from '@/store/cart'
 import type { CartItemType } from '@/store/cart'
 import { useFineArtPreview } from '@/store/fineart-preview'
@@ -490,7 +497,7 @@ export default function ShopProductPicker({
                               : 'border border-foreground/15 text-foreground/55 hover:border-foreground/35 hover:text-foreground/80'
                           }`}
                         >
-                          {fa.label}
+                          {isFamilyCode(fa.code) ? t(`fineArtFamily.${fa.code}.label`) : fa.label}
                         </button>
                       )
                     })}
@@ -521,6 +528,14 @@ export default function ShopProductPicker({
                       )
                     })}
                   </div>
+                )}
+                {/* Family description — shown ONCE here (localised), instead of
+                    repeating frame/mount details under every size row. Also says
+                    whether the sizes are the canvas or the finished frame. */}
+                {isFamilyCode(selectedFamily) && (
+                  <p className="text-[11px] font-light text-accent leading-relaxed">
+                    {t(`fineArtFamily.${selectedFamily}.blurb`)}
+                  </p>
                 )}
               </div>
             )}

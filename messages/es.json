@@ -136,7 +136,17 @@
         "blurb": "Arte fino texturizado artesanal"
       }
     },
-    "deliveryEstimate": "Hecho por encargo — entrega estimada en {min}–{max} semanas"
+    "deliveryEstimate": "Hecho por encargo — entrega estimada en {min}–{max} semanas",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Lienzo con marco flotante",
+        "blurb": "Lienzo de galería de 400 g en marco flotante negro. Las medidas corresponden al lienzo — el marco añade un borde fino."
+      },
+      "framed": {
+        "label": "Impresión enmarcada con paspartú",
+        "blurb": "Impresión giclée mate tras vidrio acrílico, con paspartú blanco nieve. Las medidas corresponden al marco terminado — la imagen queda dentro del paspartú."
+      }
+    }
   },
   "cart": {
     "emailLabel": "Correo electrónico (para tu enlace de descarga)",

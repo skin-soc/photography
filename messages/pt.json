@@ -136,7 +136,17 @@
         "blurb": "Arte fina texturizada artesanal"
       }
     },
-    "deliveryEstimate": "Feito por encomenda — entrega estimada em {min}–{max} semanas"
+    "deliveryEstimate": "Feito por encomenda — entrega estimada em {min}–{max} semanas",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Tela com moldura flutuante",
+        "blurb": "Tela de galeria de 400 g em moldura flutuante preta. As medidas são da própria tela — a moldura acrescenta um rebordo fino."
+      },
+      "framed": {
+        "label": "Impressão emoldurada com paspatur",
+        "blurb": "Impressão giclée mate sob vidro acrílico, com paspatur branco-neve. As medidas são da moldura acabada — a imagem fica dentro do paspatur."
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-mail (para o seu link de transferência)",

@@ -272,13 +272,15 @@ function physicalProducts(
         out.push({
           sku: `${id}-${o.family}-${o.size}-${color.replace(/\s+/g, '')}`,
           type: 'fine-art',
-          // Title in inches; description carries cm + whether the size includes the
-          // frame (canvas = artwork; framed = finished outer size) + the spec blurb.
+          // Title in inches; the per-size spec is just the cm — the family
+          // description (frame/mount, whether sizes include the frame) is shown
+          // once, localised, under the family chooser (shop.fineArtFamily.*),
+          // not repeated on every size row.
           label: `${o.widthIn} × ${o.heightIn}″`,
           price: eurToDkkOre(o.cost, rates),
           currency: 'DKK',
           printSize: { w: o.widthCm, h: o.heightCm },
-          material: `${o.widthCm} × ${o.heightCm} cm · ${o.dimensionBasis} · ${o.blurb}`,
+          material: `${o.widthCm} × ${o.heightCm} cm`,
           family: o.family,
           familyLabel: o.familyLabel,
           faSize: o.size,

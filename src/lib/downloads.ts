@@ -99,7 +99,7 @@ export async function describeOrderLines(lines: OrderLine[], bwSkus?: Set<string
     // Physical (poster / fine art): paper + size up front, cm + blurb beneath.
     // Posters always state colour mode explicitly — both Monochrome and Colour.
     const size = p.label || (p.providerSku ? p.providerSku.split('-').pop() : null)
-    const paper = p.paperLabel || p.material || 'Print'
+    const paper = p.paperLabel || p.familyLabel || p.material || 'Print'
     const cm = p.printSize ? `${p.printSize.w} × ${p.printSize.h} cm` : null
     const colourMode = p.type === 'print'
       ? (bwSkus?.has(l.sku) ? modeLabels.monochrome : modeLabels.colour)

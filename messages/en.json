@@ -137,7 +137,17 @@
         "blurb": "Textured mould-made fine-art"
       }
     },
-    "deliveryEstimate": "Made to order — estimated delivery {min}–{max} weeks"
+    "deliveryEstimate": "Made to order — estimated delivery {min}–{max} weeks",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Float-framed canvas",
+        "blurb": "400gsm gallery canvas in a black float frame. Sizes are the canvas itself — the frame adds a slim surround."
+      },
+      "framed": {
+        "label": "Framed & mounted print",
+        "blurb": "Matte giclée print behind acrylic glazing, set in a snow-white mount. Sizes are the finished frame — the image sits within the mount."
+      }
+    }
   },
   "cart": {
     "emailLabel": "Email (for your download link)",

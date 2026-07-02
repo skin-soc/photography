@@ -137,7 +137,17 @@
         "blurb": "纹理手工制作艺术纸"
       }
     },
-    "deliveryEstimate": "按订单制作 — 预计 {min}–{max} 周送达"
+    "deliveryEstimate": "按订单制作 — 预计 {min}–{max} 周送达",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "悬浮框油画布",
+        "blurb": "400gsm 画廊级油画布，配黑色悬浮框。尺寸为画布本身——外框会略微加大整体尺寸。"
+      },
+      "framed": {
+        "label": "卡纸装裱框画",
+        "blurb": "哑光艺术微喷，亚克力面板，雪白卡纸装裱。尺寸为成品画框——画面位于卡纸内侧。"
+      }
+    }
   },
   "cart": {
     "emailLabel": "电子邮箱（用于您的下载链接）",

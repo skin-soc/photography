@@ -137,7 +137,17 @@
         "blurb": "Fakturowana ręcznie robiona sztuka"
       }
     },
-    "deliveryEstimate": "Wykonywane na zamówienie — szacowana dostawa {min}–{max} tygodni"
+    "deliveryEstimate": "Wykonywane na zamówienie — szacowana dostawa {min}–{max} tygodni",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Canvas w ramie dystansowej",
+        "blurb": "Galeryjny canvas 400 g w czarnej ramie dystansowej. Wymiary dotyczą samego płótna — rama dodaje wąską obwódkę."
+      },
+      "framed": {
+        "label": "Oprawiona odbitka z passe-partout",
+        "blurb": "Matowa odbitka giclée za szkłem akrylowym, w śnieżnobiałym passe-partout. Wymiary dotyczą gotowej ramy — obraz znajduje się wewnątrz passe-partout."
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-mail (do linku do pobrania)",

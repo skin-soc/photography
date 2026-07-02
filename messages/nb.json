@@ -136,7 +136,17 @@
         "blurb": "Teksturert håndlaget finkunst"
       }
     },
-    "deliveryEstimate": "Lages på bestilling — forventet levering {min}–{max} uker"
+    "deliveryEstimate": "Lages på bestilling — forventet levering {min}–{max} uker",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Canvas i svevende ramme",
+        "blurb": "400 g galleri-canvas i svart svevende ramme. Målene er selve lerretet — rammen legger til en smal kant."
+      },
+      "framed": {
+        "label": "Innrammet trykk med passepartout",
+        "blurb": "Matt giclée-trykk bak akrylglass i snøhvit passepartout. Målene er den ferdige rammen — bildet sitter innenfor passepartouten."
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-post (for nedlastingslenken din)",

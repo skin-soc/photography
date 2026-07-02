@@ -137,7 +137,17 @@
         "blurb": "Texturiertes Büttenpapier Fine-Art"
       }
     },
-    "deliveryEstimate": "Auf Bestellung gefertigt — voraussichtliche Lieferung {min}–{max} Wochen"
+    "deliveryEstimate": "Auf Bestellung gefertigt — voraussichtliche Lieferung {min}–{max} Wochen",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Leinwand im Schattenfugenrahmen",
+        "blurb": "400-g-Galerie-Leinwand im schwarzen Schattenfugenrahmen. Die Maße beziehen sich auf die Leinwand — der Rahmen fügt einen schmalen Rand hinzu."
+      },
+      "framed": {
+        "label": "Gerahmter Druck mit Passepartout",
+        "blurb": "Matter Giclée-Druck hinter Acrylglas mit schneeweißem Passepartout. Die Maße beziehen sich auf den fertigen Rahmen — das Bild sitzt im Passepartout."
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-Mail (für Ihren Download-Link)",

@@ -137,7 +137,17 @@
         "blurb": "Getextureerd handgemaakt fijne kunst"
       }
     },
-    "deliveryEstimate": "Op bestelling gemaakt — verwachte levering {min}–{max} weken"
+    "deliveryEstimate": "Op bestelling gemaakt — verwachte levering {min}–{max} weken",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Canvas in zwevende lijst",
+        "blurb": "400 g galeriecanvas in een zwarte zwevende lijst. De maten zijn het doek zelf — de lijst voegt een smalle rand toe."
+      },
+      "framed": {
+        "label": "Ingelijste print met passe-partout",
+        "blurb": "Matte giclée-print achter acrylglas, in een sneeuwwit passe-partout. De maten zijn de afgewerkte lijst — de afbeelding zit binnen het passe-partout."
+      }
+    }
   },
   "cart": {
     "emailLabel": "E-mail (voor je downloadlink)",

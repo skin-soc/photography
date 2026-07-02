@@ -136,7 +136,17 @@
         "blurb": "Teksturoitu käsinvalmistettu taidepaino"
       }
     },
-    "deliveryEstimate": "Valmistetaan tilauksesta — arvioitu toimitus {min}–{max} viikkoa"
+    "deliveryEstimate": "Valmistetaan tilauksesta — arvioitu toimitus {min}–{max} viikkoa",
+    "fineArtFamily": {
+      "canvas": {
+        "label": "Canvas kellutuskehyksessä",
+        "blurb": "400 g:n galleriacanvas mustassa kellutuskehyksessä. Mitat ovat itse kankaan — kehys lisää kapean reunuksen."
+      },
+      "framed": {
+        "label": "Kehystetty vedos paspiksella",
+        "blurb": "Matta giclée-vedos akryylilasin takana, lumenvalkoisella paspiksella. Mitat ovat valmiin kehyksen — kuva on paspiksen sisällä."
+      }
+    }
   },
   "cart": {
     "emailLabel": "Sähköposti (latauslinkkiäsi varten)",
