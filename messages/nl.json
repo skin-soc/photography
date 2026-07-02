@@ -122,19 +122,19 @@
     "paper": {
       "PAP": {
         "label": "Fotografisch",
-        "blurb": "Lustre fotografisch · 240gsm"
+        "blurb": "Klassiek fotopapier met zachte lustre-glans, 240 g. Ongelijste print — de maten zijn het papier zelf."
       },
       "FAP": {
         "label": "Enhanced Matte",
-        "blurb": "Gladde matte giclée · 200gsm"
+        "blurb": "Glad mat papier met rijke, reflectievrije kleuren, 200 g. Ongelijste print — de maten zijn het papier zelf."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% katoen museummat"
+        "blurb": "Hahnemühle Photo Rag — 100% katoenen mat museumpapier, dé fine-artstandaard, 308 g. Ongelijste print — de maten zijn het papier zelf."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Getextureerd handgemaakt fijne kunst"
+        "blurb": "Hahnemühle German Etching — getextureerd, geschept fine-artpapier met fluweelzachte toplaag, 310 g. Ongelijste print — de maten zijn het papier zelf."
       }
     },
     "deliveryEstimate": "Op bestelling gemaakt — verwachte levering {min}–{max} weken",
@@ -147,7 +147,8 @@
         "label": "Ingelijste print met passe-partout",
         "blurb": "Matte giclée-print achter acrylglas, in een sneeuwwit passe-partout. De maten zijn de afgewerkte lijst — de afbeelding zit binnen het passe-partout."
       }
-    }
+    },
+    "paperType": "Papier"
   },
   "cart": {
     "emailLabel": "E-mail (voor je downloadlink)",

@@ -122,19 +122,19 @@
     "paper": {
       "PAP": {
         "label": "Fotografico",
-        "blurb": "Lustre fotografico · 240gsm"
+        "blurb": "Classica carta fotografica con delicata finitura lustre, 240 g. Stampa senza cornice — le misure sono della carta stessa."
       },
       "FAP": {
         "label": "Matte migliorato",
-        "blurb": "Giclée matte liscio · 200gsm"
+        "blurb": "Carta opaca liscia con colori intensi e senza riflessi, 200 g. Stampa senza cornice — le misure sono della carta stessa."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% cotone qualità museo"
+        "blurb": "Hahnemühle Photo Rag — carta opaca da museo in 100% cotone, lo standard del fine art, 308 g. Stampa senza cornice — le misure sono della carta stessa."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Arte fine texturizzato artigianale"
+        "blurb": "Hahnemühle German Etching — carta fine art testurizzata di fabbricazione artigianale con superficie vellutata, 310 g. Stampa senza cornice — le misure sono della carta stessa."
       }
     },
     "deliveryEstimate": "Realizzato su ordinazione — consegna stimata in {min}–{max} settimane",
@@ -147,7 +147,8 @@
         "label": "Stampa incorniciata con passe-partout",
         "blurb": "Stampa giclée opaca sotto vetro acrilico, con passe-partout bianco neve. Le misure si riferiscono alla cornice finita — l’immagine è all’interno del passe-partout."
       }
-    }
+    },
+    "paperType": "Carta"
   },
   "cart": {
     "emailLabel": "E-mail (per il tuo link di download)",

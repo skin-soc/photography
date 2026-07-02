@@ -122,19 +122,19 @@
     "paper": {
       "PAP": {
         "label": "Photographique",
-        "blurb": "Lustre photographique · 240gsm"
+        "blurb": "Papier photo classique au léger brillant lustré, 240 g. Tirage non encadré — les dimensions sont celles du papier."
       },
       "FAP": {
         "label": "Mat amélioré",
-        "blurb": "Giclée mat doux · 200gsm"
+        "blurb": "Papier mat lisse aux couleurs riches et sans reflets, 200 g. Tirage non encadré — les dimensions sont celles du papier."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% coton mat musée"
+        "blurb": "Hahnemühle Photo Rag — papier mat qualité musée 100 % coton, la référence du fine art, 308 g. Tirage non encadré — les dimensions sont celles du papier."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Beaux-arts texturé fait main"
+        "blurb": "Hahnemühle German Etching — papier fine art texturé à la cuve, au toucher velouté, 310 g. Tirage non encadré — les dimensions sont celles du papier."
       }
     },
     "deliveryEstimate": "Fabriqué à la commande — livraison estimée sous {min}–{max} semaines",
@@ -147,7 +147,8 @@
         "label": "Tirage encadré avec passe-partout",
         "blurb": "Tirage giclée mat sous verre acrylique, dans un passe-partout blanc neige. Les dimensions sont celles du cadre fini — l’image est en retrait dans le passe-partout."
       }
-    }
+    },
+    "paperType": "Papier"
   },
   "cart": {
     "emailLabel": "E-mail (pour votre lien de téléchargement)",

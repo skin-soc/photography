@@ -453,7 +453,9 @@ export default function ShopProductPicker({
             {/* Paper chooser (posters only) */}
             {isPoster && (
               <div className="px-5 pt-4 pb-3 border-b border-foreground/[0.06]">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Say what the pills ARE — matches the fine-art "Frame colour" eyebrow. */}
+                  <span className="text-[10px] tracking-[0.18em] uppercase text-foreground/35 mr-1">{t('paperType')}</span>
                   {posterPapers.map((pp) => {
                     const on = pp.code === selectedPaper
                     return (

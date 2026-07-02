@@ -121,19 +121,19 @@
     "paper": {
       "PAP": {
         "label": "Fotográfico",
-        "blurb": "Lustre fotográfico · 240gsm"
+        "blurb": "Papel fotográfico clásico con un suave brillo lustre, 240 g. Impresión sin marco — las medidas son del propio papel."
       },
       "FAP": {
         "label": "Mate mejorado",
-        "blurb": "Giclée mate suave · 200gsm"
+        "blurb": "Papel mate liso con color intenso y sin reflejos, 200 g. Impresión sin marco — las medidas son del propio papel."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% algodón mate museo"
+        "blurb": "Hahnemühle Photo Rag — papel mate de museo, 100 % algodón, el estándar del fine art, 308 g. Impresión sin marco — las medidas son del propio papel."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Arte fino texturizado artesanal"
+        "blurb": "Hahnemühle German Etching — papel fine art texturizado de fabricación artesanal con superficie aterciopelada, 310 g. Impresión sin marco — las medidas son del propio papel."
       }
     },
     "deliveryEstimate": "Hecho por encargo — entrega estimada en {min}–{max} semanas",
@@ -146,7 +146,8 @@
         "label": "Impresión enmarcada con paspartú",
         "blurb": "Impresión giclée mate tras vidrio acrílico, con paspartú blanco nieve. Las medidas corresponden al marco terminado — la imagen queda dentro del paspartú."
       }
-    }
+    },
+    "paperType": "Papel"
   },
   "cart": {
     "emailLabel": "Correo electrónico (para tu enlace de descarga)",

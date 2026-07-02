@@ -122,19 +122,19 @@
     "paper": {
       "PAP": {
         "label": "Fotograficzny",
-        "blurb": "Lustre fotograficzny · 240gsm"
+        "blurb": "Klasyczny papier fotograficzny o delikatnym połysku lustre, 240 g. Wydruk bez ramy — wymiary dotyczą samego papieru."
       },
       "FAP": {
         "label": "Enhanced Matte",
-        "blurb": "Gładki matowy giclée · 200gsm"
+        "blurb": "Gładki matowy papier o nasyconych, bezrefleksyjnych kolorach, 200 g. Wydruk bez ramy — wymiary dotyczą samego papieru."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% bawełna mat muzealny"
+        "blurb": "Hahnemühle Photo Rag — matowy papier muzealny w 100% z bawełny, standard fine art, 308 g. Wydruk bez ramy — wymiary dotyczą samego papieru."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Fakturowana ręcznie robiona sztuka"
+        "blurb": "Hahnemühle German Etching — fakturowany, czerpany papier fine art o aksamitnej powierzchni, 310 g. Wydruk bez ramy — wymiary dotyczą samego papieru."
       }
     },
     "deliveryEstimate": "Wykonywane na zamówienie — szacowana dostawa {min}–{max} tygodni",
@@ -147,7 +147,8 @@
         "label": "Oprawiona odbitka z passe-partout",
         "blurb": "Matowa odbitka giclée za szkłem akrylowym, w śnieżnobiałym passe-partout. Wymiary dotyczą gotowej ramy — obraz znajduje się wewnątrz passe-partout."
       }
-    }
+    },
+    "paperType": "Papier"
   },
   "cart": {
     "emailLabel": "E-mail (do linku do pobrania)",

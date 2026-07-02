@@ -122,19 +122,19 @@
     "paper": {
       "PAP": {
         "label": "Fotografisch",
-        "blurb": "Lustre fotografisch · 240gsm"
+        "blurb": "Klassisches Fotopapier mit sanftem Lustre-Glanz, 240 g. Ungerahmter Druck — die Maße beziehen sich auf das Papier selbst."
       },
       "FAP": {
         "label": "Enhanced Matte",
-        "blurb": "Glatter matter Giclée · 200gsm"
+        "blurb": "Glattes, mattes Papier mit sattem, blendfreiem Farbbild, 200 g. Ungerahmter Druck — die Maße beziehen sich auf das Papier selbst."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% Baumwolle Museumsmatte"
+        "blurb": "Hahnemühle Photo Rag — mattes Museumspapier aus 100 % Baumwolle, der Fine-Art-Standard, 308 g. Ungerahmter Druck — die Maße beziehen sich auf das Papier selbst."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Texturiertes Büttenpapier Fine-Art"
+        "blurb": "Hahnemühle German Etching — strukturiertes Büttenpapier mit samtiger Oberfläche, 310 g. Ungerahmter Druck — die Maße beziehen sich auf das Papier selbst."
       }
     },
     "deliveryEstimate": "Auf Bestellung gefertigt — voraussichtliche Lieferung {min}–{max} Wochen",
@@ -147,7 +147,8 @@
         "label": "Gerahmter Druck mit Passepartout",
         "blurb": "Matter Giclée-Druck hinter Acrylglas mit schneeweißem Passepartout. Die Maße beziehen sich auf den fertigen Rahmen — das Bild sitzt im Passepartout."
       }
-    }
+    },
+    "paperType": "Papier"
   },
   "cart": {
     "emailLabel": "E-Mail (für Ihren Download-Link)",

@@ -121,19 +121,19 @@
     "paper": {
       "PAP": {
         "label": "Fotografisk",
-        "blurb": "Lustre fotografisk · 240gsm"
+        "blurb": "Klassisk fotopapir med blød lustre-glans, 240 g. Uindrammet print — målene er selve papiret."
       },
       "FAP": {
         "label": "Enhanced Matte",
-        "blurb": "Glat mat giclée · 200gsm"
+        "blurb": "Glat, mat papir med fyldig, refleksfri farve, 200 g. Uindrammet print — målene er selve papiret."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% bomuld museumsmatte"
+        "blurb": "Hahnemühle Photo Rag — 100 % bomuld, mat papir i museumskvalitet og fine art-standarden, 308 g. Uindrammet print — målene er selve papiret."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Tekstureret håndgjort finkunst"
+        "blurb": "Hahnemühle German Etching — tekstureret, bøttefremstillet fine art-papir med fløjlsblød overflade, 310 g. Uindrammet print — målene er selve papiret."
       }
     },
     "deliveryEstimate": "Fremstilles på bestilling — forventet levering {min}–{max} uger",
@@ -146,7 +146,8 @@
         "label": "Indrammet print med passepartout",
         "blurb": "Mat giclée-print bag akrylglas i snehvid passepartout. Målene er den færdige ramme — billedet sidder inden for passepartouten."
       }
-    }
+    },
+    "paperType": "Papir"
   },
   "cart": {
     "emailLabel": "E-mail (til dit downloadlink)",

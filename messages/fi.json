@@ -121,19 +121,19 @@
     "paper": {
       "PAP": {
         "label": "Valokuvapaperi",
-        "blurb": "Kiiltävä valokuva · 240gsm"
+        "blurb": "Klassinen valokuvapaperi pehmeällä lustre-kiillolla, 240 g. Kehystämätön vedos — mitat ovat itse paperin."
       },
       "FAP": {
         "label": "Mattapaperi",
-        "blurb": "Sileä matta giclée · 200gsm"
+        "blurb": "Sileä mattapaperi, jossa syvät ja heijastamattomat värit, 200 g. Kehystämätön vedos — mitat ovat itse paperin."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% puuvilla museolaatu"
+        "blurb": "Hahnemühle Photo Rag — 100 % puuvillaa, museolaadun mattapaperi ja fine art -standardi, 308 g. Kehystämätön vedos — mitat ovat itse paperin."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Teksturoitu käsinvalmistettu taidepaino"
+        "blurb": "Hahnemühle German Etching — teksturoitu, perinteisesti valmistettu taidepaperi samettisella pinnalla, 310 g. Kehystämätön vedos — mitat ovat itse paperin."
       }
     },
     "deliveryEstimate": "Valmistetaan tilauksesta — arvioitu toimitus {min}–{max} viikkoa",
@@ -146,7 +146,8 @@
         "label": "Kehystetty vedos paspiksella",
         "blurb": "Matta giclée-vedos akryylilasin takana, lumenvalkoisella paspiksella. Mitat ovat valmiin kehyksen — kuva on paspiksen sisällä."
       }
-    }
+    },
+    "paperType": "Paperi"
   },
   "cart": {
     "emailLabel": "Sähköposti (latauslinkkiäsi varten)",

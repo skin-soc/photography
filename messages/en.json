@@ -122,19 +122,19 @@
     "paper": {
       "PAP": {
         "label": "Photographic",
-        "blurb": "Lustre photographic · 240gsm"
+        "blurb": "Classic photo-lab paper with a soft lustre sheen, 240gsm. Unframed print — sizes are the paper itself."
       },
       "FAP": {
         "label": "Enhanced Matte",
-        "blurb": "Smooth matte giclée · 200gsm"
+        "blurb": "Smooth matte paper with rich, glare-free colour, 200gsm. Unframed print — sizes are the paper itself."
       },
       "HPR": {
         "label": "Hahnemühle Photo Rag",
-        "blurb": "100% cotton museum matte"
+        "blurb": "Hahnemühle Photo Rag — 100% cotton museum-grade matte paper, the fine-art standard, 308gsm. Unframed print — sizes are the paper itself."
       },
       "HGE": {
         "label": "Hahnemühle German Etching",
-        "blurb": "Textured mould-made fine-art"
+        "blurb": "Hahnemühle German Etching — textured, mould-made fine-art paper with a velvety surface, 310gsm. Unframed print — sizes are the paper itself."
       }
     },
     "deliveryEstimate": "Made to order — estimated delivery {min}–{max} weeks",
@@ -147,7 +147,8 @@
         "label": "Framed & mounted print",
         "blurb": "Matte giclée print behind acrylic glazing, set in a snow-white mount. Sizes are the finished frame — the image sits within the mount."
       }
-    }
+    },
+    "paperType": "Paper"
   },
   "cart": {
     "emailLabel": "Email (for your download link)",
