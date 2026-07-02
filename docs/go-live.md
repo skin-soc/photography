@@ -186,12 +186,36 @@ Because merge = live, you can't "deploy then test" on prod cheaply. Options:
     OFF, one Stripe amount, no `tax_rate` objects).
   - Shipping quotes resolve; EU guard passes a real NL-routed order.
 
-## 7. Cutover
+## 7. Cutover — DONE 2026-07-02
 
-- [ ] Confirm §0–§6 all checked.
-- [ ] **Merge the go-live PR to `main`.** Watch the Workers Build succeed and deploy.
-- [ ] Verify `gusmcewan.com` serves the new build; run the §6 live smoke test.
-- [ ] Enable the Stripe live webhook; leave test webhook as-is.
+- [x] Merged `final` → `main` (fast-forward, `b476933`), pushed, triggered the
+      Workers Build.
+- [x] **First build failed**: `Cannot find module '@ast-grep/napi-linux-x64-gnu'`
+      — the earlier lockfile fix (`c9c80a4`) was only ever verified on this
+      Mac (macOS), never on Linux x64 (Cloudflare's actual build platform).
+      Fixed properly with a full fresh `rm -rf node_modules package-lock.json
+      && npm install` (not just `--package-lock-only`), which correctly
+      captured all 9 `@ast-grep/napi-*` platform variants. Verified this time
+      by actually running `npx opennextjs-cloudflare build` locally end to
+      end, not just `next build`. Commit `d54167b`.
+- [x] Two subsequent builds got stuck at "Initializing build environment..."
+      indefinitely (0 progress into Cloning) — unrelated to the lockfile fix.
+      Owner cancelled, created a fresh build token, retried — third attempt
+      built and deployed successfully (build `7fff2c90`).
+- [x] Verified live: `gusmcewan.com/shop` → 200, `POST /api/checkout-session`
+      → real app response (not 404), `PRODIGI_MODE: "live"` bound (confirmed
+      via Cloudflare API), all 4 custom domains still attached (a wrangler
+      deploy warning about differing remote routes/IMAGES binding turned out
+      to only drop the unused `IMAGES` binding — nothing else affected).
+- [x] `workers/prodigi-cron` redeployed with its `MAIN` binding pointed at
+      `photography` (prod) instead of `photography-preview` — this was fixed
+      in code earlier but needed its own separate `wrangler deploy` (it's not
+      part of the main app's git-triggered Workers Build). Confirmed via the
+      owner's own deploy output: `env.MAIN (photography)`, both schedules
+      active.
+- [ ] Enable the Stripe live webhook; leave test webhook as-is. (Webhook
+      already exists with all 6 needed events — confirm it's the active one
+      in Stripe's dashboard, not left disabled.)
 
 ## 8. Rollback
 
