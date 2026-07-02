@@ -473,7 +473,7 @@ export default function ShopProductPicker({
                   })}
                 </div>
                 {selectedPaper && (
-                  <p className="mt-2 text-[11px] font-light text-accent">{t('paper.' + selectedPaper + '.blurb')}</p>
+                  <p className="mt-2 text-[13px] font-light text-foreground/90 leading-relaxed">{t('paper.' + selectedPaper + '.blurb')}</p>
                 )}
               </div>
             )}
@@ -533,7 +533,7 @@ export default function ShopProductPicker({
                     repeating frame/mount details under every size row. Also says
                     whether the sizes are the canvas or the finished frame. */}
                 {isFamilyCode(selectedFamily) && (
-                  <p className="text-[11px] font-light text-accent leading-relaxed">
+                  <p className="text-[13px] font-light text-foreground/90 leading-relaxed">
                     {t(`fineArtFamily.${selectedFamily}.blurb`)}
                   </p>
                 )}

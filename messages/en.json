@@ -141,7 +141,7 @@
     "fineArtFamily": {
       "canvas": {
         "label": "Float-framed canvas",
-        "blurb": "400gsm gallery canvas in a black float frame. Sizes are the canvas itself — the frame adds a slim surround."
+        "blurb": "400gsm gallery canvas in a black wooden float frame. Sizes are the canvas itself — the frame and shadow gap add 1.7 cm on each side; the finished piece is 5.3 cm deep."
       },
       "framed": {
         "label": "Framed & mounted print",
