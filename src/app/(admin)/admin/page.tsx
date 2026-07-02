@@ -460,15 +460,15 @@ function RefundPrefs() {
     <section className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] p-6">
       <h2 className="text-[11px] font-mono-ibm uppercase tracking-[0.28em] text-white/40">Refunds</h2>
       <p className="mt-3 text-[12px] font-light text-white/40 leading-relaxed">
-        Which refund the order card highlights as the primary action. Both buttons are always
-        available regardless.
+        When on, the order card pre-selects undownloaded digital items for the itemised refund.
+        Any line (physical, digital or shipping) can still be ticked on or off before refunding.
       </p>
       <CheckBox
         className="mt-5"
         checked={val === true}
         disabled={val === null || busy}
         onChange={(next) => save(next)}
-        label="Default to “refund undownloaded only”"
+        label="Pre-select undownloaded digital items for refund"
       />
       {note && <p className="mt-3 text-[12px] text-white/55">{note}</p>}
     </section>
@@ -2560,20 +2560,27 @@ function RecentOrdersTable({ onSelect }: { onSelect: (code: string) => void }) {
   const fmtDate = (ms: number) =>
     new Date(ms).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })
   const dlCount = (o: AdminOrder) => o.items.reduce((n, i) => n + i.downloads, 0)
+  // All charged product lines (physical + digital), not just digital downloads —
+  // a poster-only order used to show "0 items" because only `items` (digital
+  // deliverables) was counted. Falls back for orders that pre-date lineItems.
+  const itemCount = (o: AdminOrder) =>
+    o.lineItems?.length
+      ? o.lineItems.filter((l) => l.sku !== 'shipping').reduce((n, l) => n + l.qty, 0)
+      : o.items.length
   const cell = (o: AdminOrder, k: OrderSortKey): string => {
     switch (k) {
       case 'date': return fmtDate(o.createdAt)
       case 'code': return o.orderId
       case 'email': return o.email ?? ''
       case 'region': return regionCode(o)
-      case 'items': return String(o.items.length)
+      case 'items': return String(itemCount(o))
       case 'downloads': return String(dlCount(o))
       case 'status': return o.refunded ? 'Refunded' : o.expired ? 'Expired' : 'Active'
     }
   }
   const sortVal = (o: AdminOrder, k: OrderSortKey): number | string => {
     if (k === 'date') return o.createdAt
-    if (k === 'items') return o.items.length
+    if (k === 'items') return itemCount(o)
     if (k === 'downloads') return dlCount(o)
     return cell(o, k).toLowerCase()
   }
@@ -2658,7 +2665,7 @@ function RecentOrdersTable({ onSelect }: { onSelect: (code: string) => void }) {
                   <td className="py-2.5 pr-4 whitespace-nowrap font-mono-ibm text-[#931020]">{o.orderId}</td>
                   <td className="py-2.5 pr-4 text-white/70 truncate max-w-[14rem]">{o.email ?? '—'}</td>
                   <td className="py-2.5 pr-4 whitespace-nowrap"><RegionBadge order={o} /><B2bBadge order={o} /></td>
-                  <td className="py-2.5 pr-4 text-white/60">{o.items.length}</td>
+                  <td className="py-2.5 pr-4 text-white/60">{itemCount(o)}</td>
                   <td className="py-2.5 pr-4 text-white/60">{dlCount(o)}</td>
                   <td className={`py-2.5 pr-4 whitespace-nowrap ${o.refunded || o.expired ? 'text-[#931020]' : 'text-white/45'}`}>
                     {o.refunded ? 'Refunded' : o.expired ? 'Expired' : 'Active'}
@@ -2696,37 +2703,103 @@ async function search0(
   }
 }
 
+/** One row of the unified order-composition list — physical, digital and
+ *  shipping lines rendered identically, with a preview thumb where one exists. */
+interface DisplayLine {
+  sku: string
+  label: string
+  detail?: string | null
+  qty: number
+  net: number | null
+  previewUrl?: string | null
+  /** Download count for digital deliverables; null for physical/shipping. */
+  downloads: number | null
+  refunded: boolean
+  shipping: boolean
+}
+
 function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => void }) {
-  const [busy, setBusy] = useState<'resend' | 'extend' | 'refund' | 'refund-full' | null>(null)
+  const [busy, setBusy] = useState<'resend' | 'extend' | 'refund' | 'refund-full' | 'refund-lines' | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const expiry = new Date(order.expiresAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })
-  // Items still refundable: not downloaded and not already refunded.
-  const undownloaded = order.items.filter((i) => i.downloads === 0 && !i.refunded)
-  // Per-item gross (price + its proportional share of VAT), so item values sum
-  // to the order total and explain the refund amount.
-  const subtotalSum = order.items.reduce((s, i) => s + (i.price ?? 0), 0)
   const hasVat = (order.taxAmount ?? 0) > 0
-  const grossOf = (price?: number | null): number | null =>
-    price == null ? null
-      : order.amount != null && subtotalSum > 0
-        ? Math.round((price * order.amount) / subtotalSum)
-        : price
-  // Which refund button is highlighted (admin preference).
-  const [refundDefaultUndl, setRefundDefaultUndl] = useState(true)
+
+  // Unified composition: prefer the charged lineItems (covers posters,
+  // fine-art, digital and shipping alike); fall back to the digital-only
+  // items list for orders that pre-date itemised recording.
+  const dlBySku = new Map(order.items.map((i) => [i.sku, i]))
+  const revoked = new Set(order.revokedSkus ?? [])
+  const hasLines = (order.lineItems?.length ?? 0) > 0
+  const lines: DisplayLine[] = hasLines
+    ? order.lineItems!.map((l) => {
+        const dl = dlBySku.get(l.sku)
+        return {
+          sku: l.sku,
+          label: l.label,
+          detail: dl && l.detail ? `${l.detail} · ${dl.filename}` : l.detail,
+          qty: l.qty,
+          net: l.net,
+          previewUrl: l.previewUrl,
+          downloads: dl ? dl.downloads : null,
+          refunded: !!order.refunded || revoked.has(l.sku) || !!dl?.refunded,
+          shipping: l.sku === 'shipping',
+        }
+      })
+    : order.items.map((i) => ({
+        sku: i.sku,
+        label: i.filename,
+        detail: `${i.label} · ${i.format === 'tiff' ? '16-bit TIFF' : 'JPEG'}`,
+        qty: 1,
+        net: i.price ?? null,
+        downloads: i.downloads,
+        refunded: !!order.refunded || !!i.refunded,
+        shipping: false,
+      }))
+  // Per-line gross (net + proportional VAT share) so line values sum to the
+  // charged total and explain refund amounts.
+  const netSum = lines.reduce((s, l) => s + (l.net ?? 0), 0)
+  const grossOf = (net?: number | null): number | null =>
+    net == null ? null
+      : order.amount != null && netSum > 0
+        ? Math.round((net * order.amount) / netSum)
+        : net
+  // Items still refundable: not downloaded and not already refunded (legacy flow).
+  const undownloaded = order.items.filter((i) => i.downloads === 0 && !i.refunded)
+
+  // Line selection for the itemised refund. Undownloaded digital items are
+  // pre-selected when the admin preference says so.
+  const refundable = !order.refunded && !!order.paymentId
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const selGross = lines.filter((l) => sel.has(l.sku)).reduce((s, l) => s + (grossOf(l.net) ?? 0), 0)
   useEffect(() => {
     fetch('/api/admin/prefs')
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => setRefundDefaultUndl((d as { refundUndownloadedDefault: boolean }).refundUndownloadedDefault))
+      .then((d) => {
+        if ((d as { refundUndownloadedDefault: boolean }).refundUndownloadedDefault) {
+          setSel(new Set(order.items.filter((i) => i.downloads === 0 && !i.refunded).map((i) => i.sku)))
+        }
+      })
       .catch(() => {})
-  }, [])
-  const refundBase = 'rounded-md border px-4 py-2 text-[10px] font-mono-ibm uppercase tracking-[0.2em] transition-colors disabled:opacity-40'
-  const refundPrimary = 'border-[#931020]/50 text-[#931020] hover:bg-[#931020] hover:text-white disabled:hover:bg-transparent disabled:hover:text-[#931020]'
-  const refundSecondary = 'border-white/15 text-white/45 hover:border-[#931020]/60 hover:text-[#931020]'
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order.orderId])
+  const toggleSel = (sku: string) =>
+    setSel((prev) => {
+      const next = new Set(prev)
+      if (next.has(sku)) next.delete(sku)
+      else next.add(sku)
+      return next
+    })
 
-  async function act(action: 'resend' | 'extend' | 'refund' | 'refund-full') {
+  // Refund actions are destructive — always unmistakably red.
+  const refundBtn =
+    'rounded-md border border-[#931020] bg-[#931020]/15 px-4 py-2 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#e0485a] hover:bg-[#931020] hover:text-white transition-colors disabled:opacity-40 disabled:hover:bg-[#931020]/15 disabled:hover:text-[#e0485a]'
+
+  async function act(action: 'resend' | 'extend' | 'refund' | 'refund-full' | 'refund-lines') {
+    const hasPhysicalSel = lines.some((l) => sel.has(l.sku) && l.downloads === null && !l.shipping)
     const confirms: Partial<Record<typeof action, string>> = {
       refund: 'Refund the items the customer has NOT downloaded? They’re refunded in Stripe (tax included) and access to those items is revoked.',
-      'refund-full': 'FULL refund regardless of downloads? The customer is fully refunded and ALL download access is revoked.',
+      'refund-full': `FULL refund of ${order.amount != null ? fmtMoney(order.amount - (order.refundedAmount ?? 0), order.currency) : 'the remaining balance'}? The customer is refunded in Stripe and ALL download access is revoked.${hasLines && lines.some((l) => l.downloads === null && !l.shipping) ? ' Physical production is NOT auto-cancelled — cancel with Prodigi separately if it hasn’t shipped.' : ''}`,
+      'refund-lines': `Refund the ${sel.size} selected item${sel.size === 1 ? '' : 's'} (${fmtMoney(selGross, order.currency)}${hasVat ? ' inc. VAT' : ''})? Digital access to them is revoked.${hasPhysicalSel ? ' Physical production is NOT auto-cancelled — cancel with Prodigi separately if it hasn’t shipped.' : ''}`,
     }
     if (confirms[action] && !window.confirm(confirms[action]!)) return
     setBusy(action)
@@ -2738,7 +2811,8 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         body: JSON.stringify({
           action,
           orderId: order.orderId,
-          ...(action === 'refund' || action === 'refund-full' ? { paymentId: order.paymentId } : {}),
+          ...(action.startsWith('refund') ? { paymentId: order.paymentId } : {}),
+          ...(action === 'refund-lines' ? { skus: Array.from(sel) } : {}),
         }),
       })
       const data = (await res.json().catch(() => ({}))) as { refunded?: number; error?: string }
@@ -2805,34 +2879,6 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
             ].filter(Boolean).join(', ')}
           />
         )}
-        {(() => {
-          // The itemised order (posters, fine-art, shipping line) — the
-          // digital-only `order.items` list below can't show this, and was
-          // the only product breakdown rendered here, so a physical-only
-          // order showed nothing about what was actually bought.
-          const shippingLine = order.lineItems?.find((l) => l.sku === 'shipping')
-          const productLines = order.lineItems?.filter((l) => l.sku !== 'shipping') ?? []
-          if (productLines.length === 0 && !shippingLine) return null
-          return (
-            <div className="grid grid-cols-[140px_1fr] gap-4 py-3.5">
-              <dt className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 pt-0.5">Order</dt>
-              <dd className="font-mono-ibm text-sm text-white/90 space-y-1">
-                {productLines.map((l, i) => (
-                  <div key={i} className="flex items-start justify-between gap-3">
-                    <span>{l.qty > 1 ? `${l.qty}× ` : ''}{l.label}{l.detail ? ` — ${l.detail}` : ''}</span>
-                    <span className="shrink-0 text-white/45">{fmtMoney(l.net, order.currency)}</span>
-                  </div>
-                ))}
-                {shippingLine && (
-                  <div className="flex items-start justify-between gap-3 text-white/60">
-                    <span>{shippingLine.label}</span>
-                    <span className="shrink-0 text-white/45">{fmtMoney(shippingLine.net, order.currency)}</span>
-                  </div>
-                )}
-              </dd>
-            </div>
-          )
-        })()}
         {!order.fulfilment && order.lineItems?.some((l) => l.sku === 'shipping') && (
           <Row
             label="Fulfilment"
@@ -2896,16 +2942,52 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         <Row label="Order status page" value={order.downloadUrl} mono />
       </dl>
 
-      <ul className="mt-4 space-y-1.5">
-        {order.items.map((it) => (
-          <li key={it.sku} className={`flex items-center justify-between gap-3 text-[13px] ${it.refunded ? 'opacity-45' : ''}`}>
-            <span className="font-mono-ibm text-white/70 truncate">{it.filename}</span>
-            <span className="shrink-0 text-white/35 text-[11px]">
-              {it.label} · {it.format === 'tiff' ? '16-bit TIFF' : 'JPEG'}
-              {it.price != null && ` · ${fmtMoney(grossOf(it.price), order.currency)}${hasVat ? ' inc. VAT' : ''}`}
-              {' · '}{it.downloads} download{it.downloads === 1 ? '' : 's'}
-              {it.refunded && <span className="ml-1.5 text-[#931020]">· refunded</span>}
+      {/* Unified order composition — every charged line (posters, fine-art,
+          digital, shipping) with a preview thumb, gross value and per-line
+          refund selection. */}
+      <ul className="mt-5 divide-y divide-white/[0.06] rounded-lg border border-white/10 overflow-hidden">
+        {lines.map((l) => (
+          <li
+            key={l.sku}
+            className={`flex items-center gap-3 bg-white/[0.02] px-3 py-2.5 text-[13px] ${l.refunded ? 'opacity-45' : ''}`}
+          >
+            {refundable && hasLines && (
+              <input
+                type="checkbox"
+                checked={sel.has(l.sku)}
+                disabled={l.refunded || busy !== null}
+                onChange={() => toggleSel(l.sku)}
+                className="h-3.5 w-3.5 shrink-0 accent-[#931020]"
+                title={l.refunded ? 'Already refunded' : 'Include in itemised refund'}
+              />
+            )}
+            {l.previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={`${l.previewUrl}&max=200`}
+                alt=""
+                className="h-11 w-9 shrink-0 rounded object-cover border border-white/10"
+              />
+            ) : (
+              <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded border border-white/10 text-[13px] text-white/25">
+                {l.shipping ? '⛟' : '—'}
+              </span>
+            )}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-mono-ibm text-white/80">
+                {l.qty > 1 ? `${l.qty}× ` : ''}{l.label}
+              </span>
+              <span className="block truncate text-[11px] text-white/35">
+                {l.detail}
+                {l.downloads != null && `${l.detail ? ' · ' : ''}${l.downloads} download${l.downloads === 1 ? '' : 's'}`}
+                {l.refunded && <span className="ml-1.5 text-[#e0485a]">· refunded</span>}
+              </span>
             </span>
+            {l.net != null && (
+              <span className="shrink-0 text-[11px] text-white/45 tabular-nums" title={hasVat ? 'Gross — includes proportional VAT share' : undefined}>
+                {fmtMoney(grossOf(l.net), order.currency)}
+              </span>
+            )}
           </li>
         ))}
       </ul>
@@ -2959,20 +3041,34 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
             </button>
           </>
         )}
-        {!order.refunded && order.paymentId && (
+        {refundable && (
           <>
-            <button
-              onClick={() => act('refund')}
-              disabled={busy !== null || undownloaded.length === 0}
-              title={undownloaded.length === 0 ? 'All items downloaded — nothing to refund' : undefined}
-              className={`${refundBase} ${refundDefaultUndl ? refundPrimary : refundSecondary}`}
-            >
-              {busy === 'refund' ? 'Refunding…' : `Refund undownloaded${undownloaded.length ? ` (${undownloaded.length})` : ''}`}
-            </button>
+            {hasLines ? (
+              <button
+                onClick={() => act('refund-lines')}
+                disabled={busy !== null || sel.size === 0}
+                title={sel.size === 0 ? 'Tick the items to refund in the list above' : undefined}
+                className={refundBtn}
+              >
+                {busy === 'refund-lines'
+                  ? 'Refunding…'
+                  : `Refund selected${sel.size ? ` (${sel.size}) · ${fmtMoney(selGross, order.currency)}` : ''}`}
+              </button>
+            ) : (
+              // Orders that pre-date itemised lineItems: digital-only flow.
+              <button
+                onClick={() => act('refund')}
+                disabled={busy !== null || undownloaded.length === 0}
+                title={undownloaded.length === 0 ? 'All items downloaded — nothing to refund' : undefined}
+                className={refundBtn}
+              >
+                {busy === 'refund' ? 'Refunding…' : `Refund undownloaded${undownloaded.length ? ` (${undownloaded.length})` : ''}`}
+              </button>
+            )}
             <button
               onClick={() => act('refund-full')}
               disabled={busy !== null}
-              className={`${refundBase} ${refundDefaultUndl ? refundSecondary : refundPrimary}`}
+              className={refundBtn}
             >
               {busy === 'refund-full' ? 'Refunding…' : 'Full refund (override)'}
             </button>

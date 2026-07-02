@@ -38,6 +38,9 @@ export interface OrderLine {
   /** Digital deliverable filename (e.g. GMP-THOR-ECHNZ.jpg) — shown in italic
    *  parentheses on the invoice for audit. Absent for physical lines. */
   filename?: string | null
+  /** Photo preview image (admin order views) — resolved from the catalog by
+   *  sku at read time, never stored. Absent for shipping/unresolvable skus. */
+  previewUrl?: string | null
 }
 
 /**
