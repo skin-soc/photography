@@ -219,26 +219,27 @@
     "shippingLine": "Livraison"
   },
   "downloads": {
-    "eyebrow": "Vos téléchargements",
-    "heading": "Téléchargez vos fichiers.",
-    "intro": "Chaque fichier vous est concédé sous licence et comporte un copyright intégré. Ce lien est valable jusqu'au {date}.",
+    "eyebrow": "Votre commande",
+    "heading": "Détails de votre commande.",
+    "intro": "Ce lien est valable jusqu'au {date}.",
     "footerHelp": "Un problème de téléchargement ? <link>Contactez-nous</link> avec votre code de commande et nous réglerons cela.",
     "unavailableEyebrow": "Téléchargements",
     "unavailableHeading": "Lien indisponible.",
     "unavailableBody": "Ce lien de téléchargement est invalide ou a expiré. Les liens de téléchargement sont valables 30 jours après l'achat. Si vous avez de nouveau besoin d'un accès, veuillez utiliser le formulaire de contact de ce site.",
     "returnToShop": "Retour à la boutique",
     "enterPasscode": "Saisissez votre code d'accès",
-    "passcodePrompt": "Nous vous avons envoyé un code d'accès avec votre confirmation de commande. Saisissez-le pour déverrouiller vos téléchargements.",
+    "passcodePrompt": "Nous vous avons envoyé un code d'accès avec votre confirmation de commande. Saisissez-le ci-dessous.",
     "passcodeIncorrect": "Ce code d'accès est incorrect.",
     "passcodeError": "Une erreur s'est produite. Veuillez réessayer.",
     "passcodeNetworkError": "Impossible de joindre le serveur. Veuillez réessayer.",
     "unlocking": "Déverrouillage…",
-    "unlockDownloads": "Déverrouiller les téléchargements",
+    "unlockDownloads": "Continuer",
     "yourFiles": "Vos fichiers",
     "download": "Télécharger",
     "invoicePdf": "Facture (PDF)",
     "licencePdf": "Licence (PDF)",
-    "contactTitle": "Aide au téléchargement"
+    "contactTitle": "Aide au téléchargement",
+    "fileLicenseNote": "Chaque fichier vous est concédé sous licence et comporte un copyright intégré."
   },
   "licensing": {
     "title": "Conditions de licence et droits d'utilisation",

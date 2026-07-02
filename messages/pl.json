@@ -219,26 +219,27 @@
     "shippingLine": "Wysyłka"
   },
   "downloads": {
-    "eyebrow": "Twoje pobrania",
-    "heading": "Pobierz swoje pliki.",
-    "intro": "Każdy plik jest licencjonowany dla Ciebie i zawiera osadzone prawa autorskie. Ten link jest ważny do {date}.",
+    "eyebrow": "Twoje zamówienie",
+    "heading": "Szczegóły zamówienia.",
+    "intro": "Ten link jest ważny do {date}.",
     "footerHelp": "Problem z pobieraniem? <link>Skontaktuj się z nami</link>, podając kod zamówienia, a my to rozwiążemy.",
     "unavailableEyebrow": "Pobrania",
     "unavailableHeading": "Link niedostępny.",
     "unavailableBody": "Ten link do pobrania jest nieprawidłowy lub wygasł. Linki do pobrania są ważne przez 30 dni od zakupu. Jeśli ponownie potrzebujesz dostępu, skorzystaj z formularza kontaktowego na tej stronie.",
     "returnToShop": "Powrót do sklepu",
     "enterPasscode": "Wprowadź swój kod dostępu",
-    "passcodePrompt": "Wysłaliśmy kod dostępu wraz z potwierdzeniem zamówienia. Wprowadź go, aby odblokować pobierania.",
+    "passcodePrompt": "Wysłaliśmy kod dostępu wraz z potwierdzeniem zamówienia. Wprowadź go poniżej.",
     "passcodeIncorrect": "Ten kod dostępu jest nieprawidłowy.",
     "passcodeError": "Coś poszło nie tak. Spróbuj ponownie.",
     "passcodeNetworkError": "Nie można połączyć się z serwerem. Spróbuj ponownie.",
     "unlocking": "Odblokowywanie…",
-    "unlockDownloads": "Odblokuj pobierania",
+    "unlockDownloads": "Kontynuuj",
     "yourFiles": "Twoje pliki",
     "download": "Pobierz",
     "invoicePdf": "Faktura (PDF)",
     "licencePdf": "Licencja (PDF)",
-    "contactTitle": "Pomoc z pobieraniem"
+    "contactTitle": "Pomoc z pobieraniem",
+    "fileLicenseNote": "Każdy plik jest licencjonowany dla Ciebie i zawiera osadzone prawa autorskie."
   },
   "licensing": {
     "title": "Warunki licencji i prawa użytkowania",

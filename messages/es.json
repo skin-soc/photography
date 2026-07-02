@@ -218,26 +218,27 @@
     "shippingLine": "Envío"
   },
   "downloads": {
-    "eyebrow": "Tus descargas",
-    "heading": "Descarga tus archivos.",
-    "intro": "Cada archivo tiene licencia para ti e incluye copyright integrado. Este enlace es válido hasta el {date}.",
+    "eyebrow": "Tu pedido",
+    "heading": "Detalles de tu pedido.",
+    "intro": "Este enlace es válido hasta el {date}.",
     "footerHelp": "¿Problemas con la descarga? <link>Contáctanos</link> con tu código de pedido y lo solucionamos.",
     "unavailableEyebrow": "Descargas",
     "unavailableHeading": "Enlace no disponible.",
     "unavailableBody": "Este enlace de descarga no es válido o ha caducado. Los enlaces de descarga son válidos durante 30 días tras la compra. Si necesitas acceso de nuevo, usa el formulario de contacto de este sitio.",
     "returnToShop": "Volver a la tienda",
     "enterPasscode": "Introduce tu código de acceso",
-    "passcodePrompt": "Te enviamos un código de acceso con la confirmación de tu pedido. Introdúcelo para desbloquear tus descargas.",
+    "passcodePrompt": "Te enviamos un código de acceso con la confirmación de tu pedido. Introdúcelo a continuación.",
     "passcodeIncorrect": "El código de acceso no es correcto.",
     "passcodeError": "Algo salió mal. Inténtalo de nuevo.",
     "passcodeNetworkError": "No se pudo conectar con el servidor. Inténtalo de nuevo.",
     "unlocking": "Desbloqueando…",
-    "unlockDownloads": "Desbloquear descargas",
+    "unlockDownloads": "Continuar",
     "yourFiles": "Tus archivos",
     "download": "Descargar",
     "invoicePdf": "Factura (PDF)",
     "licencePdf": "Licencia (PDF)",
-    "contactTitle": "Ayuda con la descarga"
+    "contactTitle": "Ayuda con la descarga",
+    "fileLicenseNote": "Cada archivo tiene licencia para ti e incluye copyright integrado."
   },
   "licensing": {
     "title": "Términos de licencia y derechos de uso",

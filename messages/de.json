@@ -219,26 +219,27 @@
     "shippingLine": "Versand"
   },
   "downloads": {
-    "eyebrow": "Ihre Downloads",
-    "heading": "Laden Sie Ihre Dateien herunter.",
-    "intro": "Jede Datei ist für Sie lizenziert und enthält eingebettetes Copyright. Dieser Link ist gültig bis {date}.",
+    "eyebrow": "Ihre Bestellung",
+    "heading": "Ihre Bestelldetails.",
+    "intro": "Dieser Link ist gültig bis {date}.",
     "footerHelp": "Probleme beim Herunterladen? <link>Kontaktieren Sie uns</link> mit Ihrer Bestellnummer, und wir kümmern uns darum.",
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link nicht verfügbar.",
     "unavailableBody": "Dieser Download-Link ist ungültig oder abgelaufen. Download-Links sind 30 Tage nach dem Kauf gültig. Falls Sie erneut Zugang benötigen, nutzen Sie bitte das Kontaktformular auf dieser Website.",
     "returnToShop": "Zurück zum Shop",
     "enterPasscode": "Geben Sie Ihren Zugangscode ein",
-    "passcodePrompt": "Wir haben Ihnen mit Ihrer Bestellbestätigung einen Zugangscode per E-Mail gesendet. Geben Sie ihn ein, um Ihre Downloads freizuschalten.",
+    "passcodePrompt": "Wir haben Ihnen mit Ihrer Bestellbestätigung einen Zugangscode per E-Mail gesendet. Geben Sie ihn unten ein.",
     "passcodeIncorrect": "Dieser Zugangscode ist nicht korrekt.",
     "passcodeError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
     "passcodeNetworkError": "Server nicht erreichbar. Bitte versuchen Sie es erneut.",
     "unlocking": "Wird freigeschaltet…",
-    "unlockDownloads": "Downloads freischalten",
+    "unlockDownloads": "Weiter",
     "yourFiles": "Ihre Dateien",
     "download": "Herunterladen",
     "invoicePdf": "Rechnung (PDF)",
     "licencePdf": "Lizenz (PDF)",
-    "contactTitle": "Hilfe beim Download"
+    "contactTitle": "Hilfe beim Download",
+    "fileLicenseNote": "Jede Datei ist für Sie lizenziert und enthält eingebettetes Copyright."
   },
   "licensing": {
     "title": "Lizenzbedingungen und Nutzungsrechte",

@@ -219,26 +219,27 @@
     "shippingLine": "运费"
   },
   "downloads": {
-    "eyebrow": "您的下载",
-    "heading": "下载您的文件。",
-    "intro": "每个文件均已授权给您，并嵌入版权信息。此链接在 {date} 之前有效。",
+    "eyebrow": "您的订单",
+    "heading": "您的订单详情。",
+    "intro": "此链接在 {date} 之前有效。",
     "footerHelp": "下载遇到问题？<link>联系我们</link>并提供您的订单号，我们会帮您解决。",
     "unavailableEyebrow": "下载",
     "unavailableHeading": "链接不可用。",
     "unavailableBody": "此下载链接无效或已过期。下载链接在购买后 30 天内有效。如果您需要再次访问，请使用本网站的联系表单。",
     "returnToShop": "返回商店",
     "enterPasscode": "请输入您的访问码",
-    "passcodePrompt": "我们已随订单确认向您发送了访问码。请输入以解锁您的下载。",
+    "passcodePrompt": "我们已随订单确认向您发送了访问码。请在下方输入。",
     "passcodeIncorrect": "访问码不正确。",
     "passcodeError": "出了点问题。请重试。",
     "passcodeNetworkError": "无法连接到服务器。请重试。",
     "unlocking": "正在解锁…",
-    "unlockDownloads": "解锁下载",
+    "unlockDownloads": "继续",
     "yourFiles": "您的文件",
     "download": "下载",
     "invoicePdf": "发票 (PDF)",
     "licencePdf": "许可 (PDF)",
-    "contactTitle": "下载帮助"
+    "contactTitle": "下载帮助",
+    "fileLicenseNote": "每个文件均已授权给您，并嵌入版权信息。"
   },
   "licensing": {
     "title": "许可条款与使用权利",

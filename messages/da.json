@@ -218,26 +218,27 @@
     "shippingLine": "Forsendelse"
   },
   "downloads": {
-    "eyebrow": "Dine downloads",
-    "heading": "Download dine filer.",
-    "intro": "Hver fil er licenseret til dig og indeholder indlejret copyright. Dette link er gyldigt indtil {date}.",
+    "eyebrow": "Din ordre",
+    "heading": "Dine ordredetaljer.",
+    "intro": "Dette link er gyldigt indtil {date}.",
     "footerHelp": "Problemer med download? <link>Kontakt os</link> med din ordrekode, så løser vi det.",
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link ikke tilgængeligt.",
     "unavailableBody": "Dette downloadlink er ugyldigt eller udløbet. Downloadlinks er gyldige i 30 dage efter købet. Hvis du har brug for adgang igen, så brug kontaktformularen på dette site.",
     "returnToShop": "Tilbage til butikken",
     "enterPasscode": "Indtast din adgangskode",
-    "passcodePrompt": "Vi har sendt en adgangskode med din ordrebekræftelse. Indtast den for at låse op for dine downloads.",
+    "passcodePrompt": "Vi har sendt en adgangskode med din ordrebekræftelse. Indtast den nedenfor.",
     "passcodeIncorrect": "Adgangskoden er ikke korrekt.",
     "passcodeError": "Noget gik galt. Prøv venligst igen.",
     "passcodeNetworkError": "Kunne ikke nå serveren. Prøv venligst igen.",
     "unlocking": "Låser op…",
-    "unlockDownloads": "Lås downloads op",
+    "unlockDownloads": "Fortsæt",
     "yourFiles": "Dine filer",
     "download": "Download",
     "invoicePdf": "Faktura (PDF)",
     "licencePdf": "Licens (PDF)",
-    "contactTitle": "Hjælp til download"
+    "contactTitle": "Hjælp til download",
+    "fileLicenseNote": "Hver fil er licenseret til dig og indeholder indlejret copyright."
   },
   "licensing": {
     "title": "Licensbetingelser og brugsrettigheder",

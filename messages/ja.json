@@ -219,26 +219,27 @@
     "shippingLine": "配送料"
   },
   "downloads": {
-    "eyebrow": "あなたのダウンロード",
-    "heading": "ファイルをダウンロード。",
-    "intro": "各ファイルはあなたにライセンスされ、著作権情報が埋め込まれています。このリンクは {date} まで有効です。",
+    "eyebrow": "ご注文",
+    "heading": "ご注文の詳細。",
+    "intro": "このリンクは {date} まで有効です。",
     "footerHelp": "ダウンロードでお困りですか？注文番号を添えて<link>お問い合わせ</link>ください。解決いたします。",
     "unavailableEyebrow": "ダウンロード",
     "unavailableHeading": "リンクは利用できません。",
     "unavailableBody": "このダウンロードリンクは無効か、有効期限が切れています。ダウンロードリンクは購入後30日間有効です。再度アクセスが必要な場合は、当サイトのお問い合わせフォームをご利用ください。",
     "returnToShop": "ショップに戻る",
     "enterPasscode": "パスコードを入力してください",
-    "passcodePrompt": "ご注文確認とともにパスコードをメールでお送りしました。入力してダウンロードのロックを解除してください。",
+    "passcodePrompt": "ご注文確認とともにパスコードをメールでお送りしました。以下に入力してください。",
     "passcodeIncorrect": "パスコードが正しくありません。",
     "passcodeError": "問題が発生しました。もう一度お試しください。",
     "passcodeNetworkError": "サーバーに接続できませんでした。もう一度お試しください。",
     "unlocking": "ロックを解除しています…",
-    "unlockDownloads": "ダウンロードのロックを解除",
+    "unlockDownloads": "続ける",
     "yourFiles": "あなたのファイル",
     "download": "ダウンロード",
     "invoicePdf": "請求書 (PDF)",
     "licencePdf": "ライセンス (PDF)",
-    "contactTitle": "ダウンロードのヘルプ"
+    "contactTitle": "ダウンロードのヘルプ",
+    "fileLicenseNote": "各ファイルはあなたにライセンスされ、著作権情報が埋め込まれています。"
   },
   "licensing": {
     "title": "ライセンス条件と使用権",

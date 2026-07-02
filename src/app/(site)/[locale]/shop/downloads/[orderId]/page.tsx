@@ -48,6 +48,7 @@ export default async function DownloadsPage({ params }: { params: Params }) {
               {t('heading')}
             </h1>
             <p className="text-[14px] font-light text-foreground/50 leading-relaxed mb-10">
+              {meta.items.length > 0 && `${t('fileLicenseNote')} `}
               {t('intro', { date: expiry ?? '' })}
             </p>
 

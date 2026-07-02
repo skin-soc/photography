@@ -111,9 +111,11 @@ export default function DownloadsClient({
 
   return (
     <div className="space-y-3 mt-2">
-      <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30 mb-4">
-        {t('yourFiles')}
-      </p>
+      {items.length > 0 && (
+        <p className="text-[9px] font-light tracking-[0.22em] uppercase text-foreground/30 mb-4">
+          {t('yourFiles')}
+        </p>
+      )}
       {items.map((item) => (
         <div
           key={item.sku}

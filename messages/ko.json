@@ -218,26 +218,27 @@
     "shippingLine": "배송"
   },
   "downloads": {
-    "eyebrow": "내 다운로드",
-    "heading": "파일을 다운로드하세요.",
-    "intro": "각 파일은 귀하에게 라이선스가 부여되며 저작권 정보가 포함되어 있습니다. 이 링크는 {date}까지 유효합니다.",
+    "eyebrow": "주문 내역",
+    "heading": "주문 상세 정보.",
+    "intro": "이 링크는 {date}까지 유효합니다.",
     "footerHelp": "다운로드에 문제가 있나요? 주문 코드와 함께 <link>문의하기</link>를 눌러 주시면 해결해 드리겠습니다.",
     "unavailableEyebrow": "다운로드",
     "unavailableHeading": "링크를 사용할 수 없습니다.",
     "unavailableBody": "이 다운로드 링크는 유효하지 않거나 만료되었습니다. 다운로드 링크는 구매 후 30일 동안 유효합니다. 다시 접근이 필요하면 이 사이트의 문의 양식을 이용해 주세요.",
     "returnToShop": "상점으로 돌아가기",
     "enterPasscode": "접근 코드를 입력하세요",
-    "passcodePrompt": "주문 확인과 함께 접근 코드를 이메일로 보내드렸습니다. 코드를 입력하여 다운로드 잠금을 해제하세요.",
+    "passcodePrompt": "주문 확인과 함께 접근 코드를 이메일로 보내드렸습니다. 아래에 입력하세요.",
     "passcodeIncorrect": "접근 코드가 올바르지 않습니다.",
     "passcodeError": "문제가 발생했습니다. 다시 시도해 주세요.",
     "passcodeNetworkError": "서버에 연결할 수 없습니다. 다시 시도해 주세요.",
     "unlocking": "잠금 해제 중…",
-    "unlockDownloads": "다운로드 잠금 해제",
+    "unlockDownloads": "계속",
     "yourFiles": "내 파일",
     "download": "다운로드",
     "invoicePdf": "인보이스 (PDF)",
     "licencePdf": "라이선스 (PDF)",
-    "contactTitle": "다운로드 도움말"
+    "contactTitle": "다운로드 도움말",
+    "fileLicenseNote": "각 파일은 귀하에게 라이선스가 부여되며 저작권 정보가 포함되어 있습니다."
   },
   "licensing": {
     "title": "라이선스 약관 및 사용 권리",

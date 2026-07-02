@@ -218,26 +218,27 @@
     "shippingLine": "Frakt"
   },
   "downloads": {
-    "eyebrow": "Dina nedladdningar",
-    "heading": "Ladda ner dina filer.",
-    "intro": "Varje fil är licensierad till dig och innehåller inbäddad upphovsrätt. Den här länken är giltig till {date}.",
+    "eyebrow": "Din beställning",
+    "heading": "Detaljer om din beställning.",
+    "intro": "Den här länken är giltig till {date}.",
     "footerHelp": "Problem med nedladdningen? <link>Kontakta oss</link> med din orderkod, så löser vi det.",
     "unavailableEyebrow": "Nedladdningar",
     "unavailableHeading": "Länken är inte tillgänglig.",
     "unavailableBody": "Den här nedladdningslänken är ogiltig eller har gått ut. Nedladdningslänkar är giltiga i 30 dagar efter köpet. Om du behöver åtkomst igen, använd kontaktformuläret på den här webbplatsen.",
     "returnToShop": "Tillbaka till butiken",
     "enterPasscode": "Ange din åtkomstkod",
-    "passcodePrompt": "Vi mejlade en åtkomstkod med din orderbekräftelse. Ange den för att låsa upp dina nedladdningar.",
+    "passcodePrompt": "Vi mejlade en åtkomstkod med din orderbekräftelse. Ange den nedan.",
     "passcodeIncorrect": "Åtkomstkoden är inte korrekt.",
     "passcodeError": "Något gick fel. Försök igen.",
     "passcodeNetworkError": "Kunde inte nå servern. Försök igen.",
     "unlocking": "Låser upp…",
-    "unlockDownloads": "Lås upp nedladdningar",
+    "unlockDownloads": "Fortsätt",
     "yourFiles": "Dina filer",
     "download": "Ladda ner",
     "invoicePdf": "Faktura (PDF)",
     "licencePdf": "Licens (PDF)",
-    "contactTitle": "Hjälp med nedladdning"
+    "contactTitle": "Hjälp med nedladdning",
+    "fileLicenseNote": "Varje fil är licensierad till dig och innehåller inbäddad upphovsrätt."
   },
   "licensing": {
     "title": "Licensvillkor och användningsrättigheter",

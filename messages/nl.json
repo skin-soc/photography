@@ -219,26 +219,27 @@
     "shippingLine": "Verzending"
   },
   "downloads": {
-    "eyebrow": "Je downloads",
-    "heading": "Download je bestanden.",
-    "intro": "Elk bestand is aan jou gelicentieerd en bevat ingebedde copyright. Deze link is geldig tot {date}.",
+    "eyebrow": "Je bestelling",
+    "heading": "Je bestelgegevens.",
+    "intro": "Deze link is geldig tot {date}.",
     "footerHelp": "Problemen met downloaden? <link>Neem contact op</link> met je bestelcode en we lossen het op.",
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link niet beschikbaar.",
     "unavailableBody": "Deze downloadlink is ongeldig of verlopen. Downloadlinks zijn 30 dagen geldig na aankoop. Als je opnieuw toegang nodig hebt, gebruik dan het contactformulier op deze site.",
     "returnToShop": "Terug naar de shop",
     "enterPasscode": "Voer je toegangscode in",
-    "passcodePrompt": "We hebben een toegangscode met je orderbevestiging gemaild. Voer deze in om je downloads te ontgrendelen.",
+    "passcodePrompt": "We hebben een toegangscode met je orderbevestiging gemaild. Voer deze hieronder in.",
     "passcodeIncorrect": "Die toegangscode is niet juist.",
     "passcodeError": "Er ging iets mis. Probeer het opnieuw.",
     "passcodeNetworkError": "Kan de server niet bereiken. Probeer het opnieuw.",
     "unlocking": "Ontgrendelen…",
-    "unlockDownloads": "Downloads ontgrendelen",
+    "unlockDownloads": "Doorgaan",
     "yourFiles": "Je bestanden",
     "download": "Downloaden",
     "invoicePdf": "Factuur (PDF)",
     "licencePdf": "Licentie (PDF)",
-    "contactTitle": "Hulp bij downloaden"
+    "contactTitle": "Hulp bij downloaden",
+    "fileLicenseNote": "Elk bestand is aan jou gelicentieerd en bevat ingebedde copyright."
   },
   "licensing": {
     "title": "Licentievoorwaarden en gebruiksrechten",

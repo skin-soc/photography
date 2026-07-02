@@ -219,26 +219,27 @@
     "shippingLine": "Shipping"
   },
   "downloads": {
-    "eyebrow": "Your downloads",
-    "heading": "Download your files.",
-    "intro": "Each file is licensed to you and carries embedded copyright. This link is valid until {date}.",
+    "eyebrow": "Your order",
+    "heading": "Your order details.",
+    "intro": "This link is valid until {date}.",
     "footerHelp": "Having trouble downloading? <link>Contact us</link> with your order code and we’ll sort it out.",
     "unavailableEyebrow": "Downloads",
     "unavailableHeading": "Link not available.",
     "unavailableBody": "This download link is invalid or has expired. Download links are valid for 30 days after purchase. If you need access again, please use the contact form on this site.",
     "returnToShop": "Return to shop",
     "enterPasscode": "Enter your passcode",
-    "passcodePrompt": "We emailed a passcode with your order confirmation. Enter it to unlock your downloads.",
+    "passcodePrompt": "We emailed a passcode with your order confirmation. Enter it below.",
     "passcodeIncorrect": "That passcode is not correct.",
     "passcodeError": "Something went wrong. Please try again.",
     "passcodeNetworkError": "Could not reach the server. Please try again.",
     "unlocking": "Unlocking…",
-    "unlockDownloads": "Unlock downloads",
+    "unlockDownloads": "Continue",
     "yourFiles": "Your files",
     "download": "Download",
     "invoicePdf": "Invoice (PDF)",
     "licencePdf": "Licence (PDF)",
-    "contactTitle": "Download help"
+    "contactTitle": "Download help",
+    "fileLicenseNote": "Each file is licensed to you and carries embedded copyright."
   },
   "licensing": {
     "title": "Licensing Terms & Usage Rights",

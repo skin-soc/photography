@@ -218,26 +218,27 @@
     "shippingLine": "Envio"
   },
   "downloads": {
-    "eyebrow": "As suas transferências",
-    "heading": "Transfira os seus ficheiros.",
-    "intro": "Cada ficheiro é licenciado para si e contém direitos de autor incorporados. Este link é válido até {date}.",
+    "eyebrow": "A sua encomenda",
+    "heading": "Detalhes da sua encomenda.",
+    "intro": "Este link é válido até {date}.",
     "footerHelp": "Problemas com a transferência? <link>Contacte-nos</link> com o seu código de encomenda e tratamos disso.",
     "unavailableEyebrow": "Transferências",
     "unavailableHeading": "Link indisponível.",
     "unavailableBody": "Este link de transferência é inválido ou expirou. Os links de transferência são válidos durante 30 dias após a compra. Se precisar de acesso novamente, use o formulário de contacto deste site.",
     "returnToShop": "Voltar à loja",
     "enterPasscode": "Introduza o seu código de acesso",
-    "passcodePrompt": "Enviámos um código de acesso com a confirmação da sua encomenda. Introduza-o para desbloquear as suas transferências.",
+    "passcodePrompt": "Enviámos um código de acesso com a confirmação da sua encomenda. Introduza-o abaixo.",
     "passcodeIncorrect": "O código de acesso não está correto.",
     "passcodeError": "Algo correu mal. Tente novamente.",
     "passcodeNetworkError": "Não foi possível contactar o servidor. Tente novamente.",
     "unlocking": "A desbloquear…",
-    "unlockDownloads": "Desbloquear transferências",
+    "unlockDownloads": "Continuar",
     "yourFiles": "Os seus ficheiros",
     "download": "Transferir",
     "invoicePdf": "Fatura (PDF)",
     "licencePdf": "Licença (PDF)",
-    "contactTitle": "Ajuda com a transferência"
+    "contactTitle": "Ajuda com a transferência",
+    "fileLicenseNote": "Cada ficheiro é licenciado para si e contém direitos de autor incorporados."
   },
   "licensing": {
     "title": "Termos de licença e direitos de uso",
