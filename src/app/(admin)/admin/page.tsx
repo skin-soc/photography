@@ -2784,6 +2784,13 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         {order.paidAt && (
           <Row label="Paid" value={`${new Date(order.paidAt).toLocaleDateString('en-GB')}${order.paymentMethod ? ` · ${order.paymentMethod}` : ''}`} />
         )}
+        {order.amount != null && (
+          <Row
+            label="Amount"
+            value={`${fmtMoney(order.amount, order.currency)}${hasVat ? ` (incl. ${fmtMoney(order.taxAmount ?? 0, order.currency)} VAT)` : ''}`}
+            accent
+          />
+        )}
         {(order.buyerCountry || order.buyerIp) && (
           <Row label="VAT evidence" value={`${order.buyerCountry ?? '—'}${order.buyerIp ? ` · ${order.buyerIp}` : ''}`} mono />
         )}
@@ -2796,6 +2803,40 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
               [order.shipping.address?.postalCode, order.shipping.address?.city].filter(Boolean).join(' '),
               order.shipping.address?.country,
             ].filter(Boolean).join(', ')}
+          />
+        )}
+        {(() => {
+          // The itemised order (posters, fine-art, shipping line) — the
+          // digital-only `order.items` list below can't show this, and was
+          // the only product breakdown rendered here, so a physical-only
+          // order showed nothing about what was actually bought.
+          const shippingLine = order.lineItems?.find((l) => l.sku === 'shipping')
+          const productLines = order.lineItems?.filter((l) => l.sku !== 'shipping') ?? []
+          if (productLines.length === 0 && !shippingLine) return null
+          return (
+            <div className="grid grid-cols-[140px_1fr] gap-4 py-3.5">
+              <dt className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 pt-0.5">Order</dt>
+              <dd className="font-mono-ibm text-sm text-white/90 space-y-1">
+                {productLines.map((l, i) => (
+                  <div key={i} className="flex items-start justify-between gap-3">
+                    <span>{l.qty > 1 ? `${l.qty}× ` : ''}{l.label}{l.detail ? ` — ${l.detail}` : ''}</span>
+                    <span className="shrink-0 text-white/45">{fmtMoney(l.net, order.currency)}</span>
+                  </div>
+                ))}
+                {shippingLine && (
+                  <div className="flex items-start justify-between gap-3 text-white/60">
+                    <span>{shippingLine.label}</span>
+                    <span className="shrink-0 text-white/45">{fmtMoney(shippingLine.net, order.currency)}</span>
+                  </div>
+                )}
+              </dd>
+            </div>
+          )
+        })()}
+        {!order.fulfilment && order.lineItems?.some((l) => l.sku === 'shipping') && (
+          <Row
+            label="Fulfilment"
+            value="Awaiting settlement / payout — not yet sent to Prodigi"
           />
         )}
         {order.fulfilment && (() => {
