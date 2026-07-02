@@ -421,6 +421,17 @@ needed because the print price is static while Prodigi cost can drift.
    per order in EUR." A GBP 0.00 charge seen when adding the debit card was
    just Prodigi's card-verification test charge, not a billing-currency
    issue — false alarm, no account migration needed.
+5. ~~Register our VAT number with Prodigi for B2B reverse-charge~~ **DONE
+   2026-07-01** — entered `DK34922993` in the live account's Profile →
+   Customs information → **OSS** field (Account Settings, not Billing).
+   Confirmed via Prodigi's own support article ("Should I register for VAT in
+   the EU?") that they use "VAT ID" and "OSS" interchangeably — this IS the
+   field, not a separate one. Without it, Prodigi defaults to treating the
+   account as an individual/consumer for VAT purposes rather than a
+   registered EU business. IOSS and VOEC fields on the same page are
+   unrelated (customs declarations for shipments to end customers, not this).
+   Verify on a real invoice once live orders flow that VAT is actually
+   reverse-charged (0%) rather than charged.
 
 ---
 
