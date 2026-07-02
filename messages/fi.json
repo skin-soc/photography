@@ -135,7 +135,8 @@
         "label": "Hahnemühle German Etching",
         "blurb": "Teksturoitu käsinvalmistettu taidepaino"
       }
-    }
+    },
+    "deliveryEstimate": "Valmistetaan tilauksesta — arvioitu toimitus {min}–{max} viikkoa"
   },
   "cart": {
     "emailLabel": "Sähköposti (latauslinkkiäsi varten)",

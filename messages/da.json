@@ -135,7 +135,8 @@
         "label": "Hahnemühle German Etching",
         "blurb": "Tekstureret håndgjort finkunst"
       }
-    }
+    },
+    "deliveryEstimate": "Fremstilles på bestilling — forventet levering {min}–{max} uger"
   },
   "cart": {
     "emailLabel": "E-mail (til dit downloadlink)",

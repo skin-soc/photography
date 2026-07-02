@@ -135,7 +135,8 @@
         "label": "하네뮬레 저먼 에칭",
         "blurb": "텍스처드 수제 파인아트"
       }
-    }
+    },
+    "deliveryEstimate": "주문 제작 — 예상 배송 기간 {min}–{max}주"
   },
   "cart": {
     "emailLabel": "이메일 (다운로드 링크용)",

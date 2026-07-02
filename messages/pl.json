@@ -136,7 +136,8 @@
         "label": "Hahnemühle German Etching",
         "blurb": "Fakturowana ręcznie robiona sztuka"
       }
-    }
+    },
+    "deliveryEstimate": "Wykonywane na zamówienie — szacowana dostawa {min}–{max} tygodni"
   },
   "cart": {
     "emailLabel": "E-mail (do linku do pobrania)",

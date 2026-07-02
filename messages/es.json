@@ -135,7 +135,8 @@
         "label": "Hahnemühle German Etching",
         "blurb": "Arte fino texturizado artesanal"
       }
-    }
+    },
+    "deliveryEstimate": "Hecho por encargo — entrega estimada en {min}–{max} semanas"
   },
   "cart": {
     "emailLabel": "Correo electrónico (para tu enlace de descarga)",

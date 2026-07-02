@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ProductType, LicenseTier } from '@/lib/shop'
 import { printArea, defaultFineArtProduct } from '@/lib/fine-art-default'
+import { deliveryEstimateWeeks } from '@/lib/delivery-estimate'
 import { useCartStore } from '@/store/cart'
 import type { CartItemType } from '@/store/cart'
 import { useFineArtPreview } from '@/store/fineart-preview'
@@ -611,6 +612,17 @@ export default function ShopProductPicker({
                   </div>
                 )
               })}
+
+              {/* Made-to-order delivery estimate — no-float funding delay +
+                  Prodigi production + shipping (src/lib/delivery-estimate.ts). */}
+              {(g.type === 'print' || g.type === 'fine-art') && (
+                <p className="px-5 py-3 text-[11px] font-light tracking-[0.04em] text-foreground/40 border-t border-foreground/[0.06]">
+                  {(() => {
+                    const w = deliveryEstimateWeeks(g.type)
+                    return t('deliveryEstimate', { min: w.min, max: w.max })
+                  })()}
+                </p>
+              )}
 
               {/* RAW on request */}
               {g.type === 'digital' && rawAvailable && (

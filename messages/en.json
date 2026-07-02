@@ -136,7 +136,8 @@
         "label": "Hahnemühle German Etching",
         "blurb": "Textured mould-made fine-art"
       }
-    }
+    },
+    "deliveryEstimate": "Made to order — estimated delivery {min}–{max} weeks"
   },
   "cart": {
     "emailLabel": "Email (for your download link)",

@@ -136,7 +136,8 @@
         "label": "哈内姆勒德国蚀刻纸",
         "blurb": "纹理手工制作艺术纸"
       }
-    }
+    },
+    "deliveryEstimate": "按订单制作 — 预计 {min}–{max} 周送达"
   },
   "cart": {
     "emailLabel": "电子邮箱（用于您的下载链接）",

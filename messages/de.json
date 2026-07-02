@@ -136,7 +136,8 @@
         "label": "Hahnemühle German Etching",
         "blurb": "Texturiertes Büttenpapier Fine-Art"
       }
-    }
+    },
+    "deliveryEstimate": "Auf Bestellung gefertigt — voraussichtliche Lieferung {min}–{max} Wochen"
   },
   "cart": {
     "emailLabel": "E-Mail (für Ihren Download-Link)",
