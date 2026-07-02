@@ -227,7 +227,11 @@
     "quoting": "Haetaan toimitusvaihtoehtoja…",
     "shippingUnavailable": "Emme voi toimittaa tähän osoitteeseen juuri nyt. Ota meihin yhteyttä.",
     "continueToPayment": "Jatka maksamiseen",
-    "shippingLine": "Toimitus"
+    "shippingLine": "Toimitus",
+    "acceptTerms": "Hyväksyn <link>käyttöehdot</link>.",
+    "acceptTermsPhysical": "Hyväksyn <link>käyttöehdot</link> ja vahvistan, että tilauksesta valmistettavilla vedoksilla (julisteet ja fine art) ei ole 14 päivän peruuttamisoikeutta (16 art. c alakohta, direktiivi 2011/83/EU).",
+    "acceptDigital": "Pyydän nimenomaisesti digitaalisten tiedostojeni välitöntä toimitusta, hyväksyn <link>latauslisenssin</link> ja vahvistan, että menetän siten 14 päivän peruuttamisoikeuteni (16 art. m alakohta, direktiivi 2011/83/EU).",
+    "acceptToContinue": "Rastita yllä olevat ruudut jatkaaksesi kassalle."
   },
   "downloads": {
     "eyebrow": "Tilauksesi",
@@ -300,5 +304,20 @@
     "agreeAndClose": "Hyväksyn nämä ehdot",
     "viewTerms": "Lisenssiehdot",
     "contactSubtitle": "Erityislisenssit ja tiedustelut"
+  },
+  "terms": {
+    "title": "Käyttöehdot",
+    "intro": "Nämä ehdot koskevat ostoksia Gus McEwan Photography -kaupasta. EU-oikeuden ja Tanskan kuluttajalainsäädännön mukaiset lakisääteiset oikeutesi säilyvät, ellei alla nimenomaisesti toisin todeta.",
+    "s1Title": "Tilauksesta valmistettavat tuotteet — ei peruuttamisoikeutta",
+    "s1_1": "Julisteet ja fine art -vedokset valmistetaan yksilöllisesti sinulle tilauksen jälkeen. EU:n kuluttajanoikeusdirektiivin (2011/83/EU) 16 artiklan c alakohdan mukaan 14 päivän peruuttamisoikeus ei koske kuluttajan vaatimusten mukaisesti valmistettuja tavaroita. Näitä tuotteita ei voi palauttaa tai vaihtaa, elleivät ne ole viallisia.",
+    "s2Title": "Digitaaliset lataukset",
+    "s2_1": "Digitaaliset tiedostot toimitetaan heti maksun jälkeen. Suostumalla kassalla nimenomaisesti välittömään toimitukseen vahvistat menettäväsi 14 päivän peruuttamisoikeuden, kun toimitus on alkanut (direktiivin 2011/83/EU 16 artiklan m alakohta). Tiedostojen käyttöä sääntelee latauslisenssi.",
+    "s3Title": "Vialliset tai vaurioituneet tuotteet",
+    "s3_1": "Lakisääteiset oikeutesi virheellisten tuotteiden osalta säilyvät. Jos vedos saapuu vaurioituneena tai valmistusvirheellisenä, ota yhteyttä — vaihdamme tuotteen tai palautamme rahat. Lakisääteinen vaatimustenmukaisuustakuu (direktiivi (EU) 2019/771) on täysimääräisesti voimassa.",
+    "s4Title": "Hinnat, ALV ja toimitus",
+    "s4_1": "Hinnat näytetään ilman arvonlisäveroa; ALV lasketaan kassalla toimitus- tai laskutusmaasi mukaan. Tilaustuotteet valmistaa ja lähettää painokumppanimme; tuotesivujen toimitusajat ovat arvioita, eivät takuita.",
+    "s5Title": "Sovellettava laki",
+    "s5_1": "Näihin ehtoihin sovelletaan Tanskan lakia. Mikään niissä ei rajoita asuinmaasi lain pakottavia oikeuksia.",
+    "close": "Sulje"
   }
 }

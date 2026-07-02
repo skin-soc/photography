@@ -9,6 +9,8 @@ import type { DownloadItem, CheckoutSummary } from './CheckoutPane'
 
 const CheckoutPane = dynamic(() => import('./CheckoutPane'), { ssr: false })
 const ShippingStep = dynamic(() => import('./ShippingStep'), { ssr: false })
+const TermsModal = dynamic(() => import('./TermsModal'), { ssr: false })
+const LicensingModal = dynamic(() => import('./LicensingModal'), { ssr: false })
 import type { ShippingAddress } from './ShippingStep'
 
 type Step = 'cart' | 'shipping' | 'payment' | 'success'
@@ -102,6 +104,19 @@ export default function CartDrawer() {
   const checkoutItems = buyNowItem ? [buyNowItem] : items
   // Physical orders need a delivery address + shipping quote before payment.
   const hasPhysicalCheckout = checkoutItems.some((i) => i.type !== 'digital')
+  const hasDigitalCheckout = checkoutItems.some((i) => i.type === 'digital')
+
+  // Pre-checkout consent — EU Consumer Rights Directive (2011/83/EU).
+  // T&C acceptance is always required (it discloses that made-to-order prints
+  // carry no withdrawal right, Art. 16(c)). For digital items the buyer must
+  // ALSO expressly consent to immediate delivery + acknowledge losing the
+  // 14-day withdrawal right (Art. 16(m)) — without that recorded consent the
+  // exemption doesn't apply, so the licence box is a legal requirement, not UX.
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [digitalAccepted, setDigitalAccepted] = useState(false)
+  const [showTerms, setShowTerms] = useState(false)
+  const [showLicence, setShowLicence] = useState(false)
+  const consentReady = termsAccepted && (!hasDigitalCheckout || digitalAccepted)
 
   // Auto-jump when Buy Now opens the cart: physical items need the shipping step
   // first; digital go straight to payment.
@@ -660,21 +675,84 @@ export default function CartDrawer() {
             <p className="text-[17px] font-light text-foreground">{totalText}</p>
           </div>
 
+          {/* Pre-checkout consent (2011/83/EU) — see the state block above. */}
+          <div className="space-y-2.5">
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={termsAccepted}
+              onClick={() => setTermsAccepted((v) => !v)}
+              className="flex items-start gap-2 text-left select-none cursor-pointer"
+            >
+              <span className={`mt-0.5 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${termsAccepted ? 'border-[#931020] bg-[#931020]' : 'border-foreground/35'}`}>
+                {termsAccepted && <span className="h-1.5 w-1.5 rounded-[1px] bg-white" />}
+              </span>
+              <span className="text-[11px] font-light text-foreground/70 leading-snug">
+                {t.rich(hasPhysicalCheckout ? 'acceptTermsPhysical' : 'acceptTerms', {
+                  link: (chunks) => (
+                    <span
+                      role="link"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); setShowTerms(true) }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setShowTerms(true) } }}
+                      className="underline text-foreground/90 hover:text-foreground"
+                    >
+                      {chunks}
+                    </span>
+                  ),
+                })}
+              </span>
+            </button>
+            {hasDigitalCheckout && (
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={digitalAccepted}
+                onClick={() => setDigitalAccepted((v) => !v)}
+                className="flex items-start gap-2 text-left select-none cursor-pointer"
+              >
+                <span className={`mt-0.5 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border transition-colors ${digitalAccepted ? 'border-[#931020] bg-[#931020]' : 'border-foreground/35'}`}>
+                  {digitalAccepted && <span className="h-1.5 w-1.5 rounded-[1px] bg-white" />}
+                </span>
+                <span className="text-[11px] font-light text-foreground/70 leading-snug">
+                  {t.rich('acceptDigital', {
+                    link: (chunks) => (
+                      <span
+                        role="link"
+                        tabIndex={0}
+                        onClick={(e) => { e.stopPropagation(); setShowLicence(true) }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setShowLicence(true) } }}
+                        className="underline text-foreground/90 hover:text-foreground"
+                      >
+                        {chunks}
+                      </span>
+                    ),
+                  })}
+                </span>
+              </button>
+            )}
+            {!consentReady && (
+              <p className="text-[10px] font-light text-foreground/35">{t('acceptToContinue')}</p>
+            )}
+          </div>
+
           {intentError && (
             <p className="text-[11px] text-red-400/70">{t('error')}</p>
           )}
           <button
             type="button"
-            onClick={() => { if (hasPhysicalCheckout) setStep('shipping'); else void startPayment() }}
-            disabled={intentLoading}
+            onClick={() => { if (!consentReady) return; if (hasPhysicalCheckout) setStep('shipping'); else void startPayment() }}
+            disabled={intentLoading || !consentReady}
             className={`w-full rounded-[14px] py-3.5 text-[11px] font-light tracking-[0.22em] uppercase text-white transition-colors ${
-              intentLoading
+              intentLoading || !consentReady
                 ? 'bg-[#931020]/35 cursor-default'
                 : 'bg-[#931020]/80 hover:bg-[#931020] cursor-pointer'
             }`}
           >
             {intentLoading ? t('preparing') : t('checkout')}
           </button>
+          {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+          {showLicence && <LicensingModal mode="view" onClose={() => setShowLicence(false)} />}
         </div>
       )}
     </>

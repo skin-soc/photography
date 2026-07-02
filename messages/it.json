@@ -228,7 +228,11 @@
     "quoting": "Recupero delle opzioni di spedizione…",
     "shippingUnavailable": "Al momento non possiamo spedire a questo indirizzo. Contattaci.",
     "continueToPayment": "Continua al pagamento",
-    "shippingLine": "Spedizione"
+    "shippingLine": "Spedizione",
+    "acceptTerms": "Accetto i <link>termini e condizioni</link>.",
+    "acceptTermsPhysical": "Accetto i <link>termini e condizioni</link> e riconosco che le stampe realizzate su ordinazione (poster e fine art) non godono del diritto di recesso di 14 giorni (art. 16 c, direttiva 2011/83/UE).",
+    "acceptDigital": "Richiedo espressamente la consegna immediata dei miei file digitali, accetto la <link>licenza di download</link> e riconosco di perdere così il diritto di recesso di 14 giorni (art. 16 m, direttiva 2011/83/UE).",
+    "acceptToContinue": "Spunta le caselle qui sopra per procedere al pagamento."
   },
   "downloads": {
     "eyebrow": "Il tuo ordine",
@@ -301,5 +305,20 @@
     "agreeAndClose": "Accetto questi termini",
     "viewTerms": "Termini di licenza",
     "contactSubtitle": "Licenze personalizzate e richieste"
+  },
+  "terms": {
+    "title": "Termini e condizioni",
+    "intro": "Questi termini si applicano agli acquisti nello shop di Gus McEwan Photography. I tuoi diritti legali ai sensi del diritto UE e della normativa danese sui consumatori restano invariati, salvo quanto espressamente indicato di seguito.",
+    "s1Title": "Articoli su ordinazione — nessun diritto di recesso",
+    "s1_1": "Poster e stampe fine art vengono prodotti individualmente per te dopo l'ordine. Ai sensi dell'articolo 16 c della direttiva UE sui diritti dei consumatori (2011/83/UE), il diritto di recesso di 14 giorni non si applica ai beni confezionati su specifiche del consumatore. Questi articoli non possono essere resi o cambiati, salvo difetti.",
+    "s2Title": "Download digitali",
+    "s2_1": "I file digitali vengono consegnati subito dopo il pagamento. Acconsentendo espressamente alla consegna immediata al momento del pagamento, riconosci di perdere il diritto di recesso di 14 giorni una volta iniziata la consegna (articolo 16 m della direttiva 2011/83/UE). L'uso dei file è regolato dalla licenza di download.",
+    "s3Title": "Articoli difettosi o danneggiati",
+    "s3_1": "I tuoi diritti legali per i prodotti difettosi restano invariati. Se una stampa arriva danneggiata o con un difetto di fabbricazione, contattaci: la sostituiremo o ti rimborseremo — la garanzia legale di conformità (direttiva (UE) 2019/771) si applica integralmente.",
+    "s4Title": "Prezzi, IVA e consegna",
+    "s4_1": "I prezzi sono mostrati IVA esclusa; l'IVA viene calcolata al pagamento in base al paese di consegna o fatturazione. Gli articoli su ordinazione sono prodotti e spediti dal nostro partner di stampa; i tempi di consegna indicati sulle pagine prodotto sono stime, non garanzie.",
+    "s5Title": "Legge applicabile",
+    "s5_1": "Questi termini sono regolati dal diritto danese. Nulla in essi limita i diritti inderogabili previsti dalla legge del tuo paese di residenza.",
+    "close": "Chiudi"
   }
 }

@@ -227,7 +227,11 @@
     "quoting": "A obter opções de envio…",
     "shippingUnavailable": "De momento não conseguimos enviar para esta morada. Contacte-nos, por favor.",
     "continueToPayment": "Continuar para o pagamento",
-    "shippingLine": "Envio"
+    "shippingLine": "Envio",
+    "acceptTerms": "Aceito os <link>termos e condições</link>.",
+    "acceptTermsPhysical": "Aceito os <link>termos e condições</link> e reconheço que as impressões feitas por encomenda (pósteres e fine art) não têm direito de livre resolução de 14 dias (art. 16.º c, Diretiva 2011/83/UE).",
+    "acceptDigital": "Solicito expressamente a entrega imediata dos meus ficheiros digitais, aceito a <link>licença de descarga</link> e reconheço que perco assim o direito de livre resolução de 14 dias (art. 16.º m, Diretiva 2011/83/UE).",
+    "acceptToContinue": "Assinala as caixas acima para continuar para o pagamento."
   },
   "downloads": {
     "eyebrow": "A sua encomenda",
@@ -300,5 +304,20 @@
     "agreeAndClose": "Aceito estes termos",
     "viewTerms": "Termos de licença",
     "contactSubtitle": "Licenças personalizadas e consultas"
+  },
+  "terms": {
+    "title": "Termos e condições",
+    "intro": "Estes termos aplicam-se às compras na loja Gus McEwan Photography. Os teus direitos legais ao abrigo do direito da UE e da lei dinamarquesa do consumidor mantêm-se inalterados, salvo indicação expressa em contrário abaixo.",
+    "s1Title": "Artigos por encomenda — sem direito de livre resolução",
+    "s1_1": "Os pósteres e as impressões fine art são produzidos individualmente para ti após a encomenda. Nos termos do artigo 16.º c da Diretiva dos Direitos dos Consumidores da UE (2011/83/UE), o direito de livre resolução de 14 dias não se aplica a bens produzidos segundo as especificações do consumidor. Estes artigos não podem ser devolvidos nem trocados, salvo defeito.",
+    "s2Title": "Descargas digitais",
+    "s2_1": "Os ficheiros digitais são entregues imediatamente após o pagamento. Ao consentires expressamente na entrega imediata no pagamento, reconheces que perdes o direito de livre resolução de 14 dias assim que a entrega tiver começado (artigo 16.º m da Diretiva 2011/83/UE). A utilização dos ficheiros rege-se pela licença de descarga.",
+    "s3Title": "Artigos defeituosos ou danificados",
+    "s3_1": "Os teus direitos legais relativos a bens defeituosos mantêm-se. Se uma impressão chegar danificada ou com defeito de fabrico, contacta-nos — substituímo-la ou reembolsamos-te. A garantia legal de conformidade (Diretiva (UE) 2019/771) aplica-se integralmente.",
+    "s4Title": "Preços, IVA e entrega",
+    "s4_1": "Os preços são apresentados sem IVA; o IVA é calculado no pagamento com base no país de entrega ou faturação. Os artigos por encomenda são produzidos e expedidos pelo nosso parceiro de impressão; os prazos de entrega nas páginas de produto são estimativas, não garantias.",
+    "s5Title": "Lei aplicável",
+    "s5_1": "Estes termos regem-se pelo direito dinamarquês. Nada neles limita direitos imperativamente aplicáveis segundo a lei do teu país de residência.",
+    "close": "Fechar"
   }
 }

@@ -228,7 +228,11 @@
     "quoting": "Getting shipping options…",
     "shippingUnavailable": "We can’t ship to this address right now. Please contact us.",
     "continueToPayment": "Continue to payment",
-    "shippingLine": "Shipping"
+    "shippingLine": "Shipping",
+    "acceptTerms": "I accept the <link>Terms & Conditions</link>.",
+    "acceptTermsPhysical": "I accept the <link>Terms & Conditions</link> and acknowledge that made-to-order prints (posters and fine art) carry no 14-day right of withdrawal (Art. 16(c), Directive 2011/83/EU).",
+    "acceptDigital": "I expressly request immediate delivery of my digital files, accept the <link>download licence</link>, and acknowledge that I thereby lose my 14-day right of withdrawal (Art. 16(m), Directive 2011/83/EU).",
+    "acceptToContinue": "Please tick the box(es) above to continue to checkout."
   },
   "downloads": {
     "eyebrow": "Your order",
@@ -301,5 +305,20 @@
     "agreeAndClose": "I agree to these terms",
     "viewTerms": "Licensing terms",
     "contactSubtitle": "Custom licensing & enquiries"
+  },
+  "terms": {
+    "title": "Terms & Conditions",
+    "intro": "These terms apply to purchases from the Gus McEwan Photography shop. Your statutory rights under EU and Danish consumer law remain unaffected except as expressly stated below.",
+    "s1Title": "Made-to-order items — no right of withdrawal",
+    "s1_1": "Posters and fine-art prints are produced individually for you once your order is placed. Under Article 16(c) of the EU Consumer Rights Directive (2011/83/EU), the 14-day right of withdrawal does not apply to goods made to the consumer's specifications. These items cannot be returned or exchanged unless defective.",
+    "s2Title": "Digital downloads",
+    "s2_1": "Digital files are delivered immediately after payment. By expressly consenting to immediate delivery at checkout, you acknowledge that you lose the 14-day right of withdrawal once delivery has begun (Article 16(m) of Directive 2011/83/EU). Use of the files is governed by the download licence.",
+    "s3Title": "Defective or damaged items",
+    "s3_1": "Your statutory rights for faulty goods are unaffected. If a print arrives damaged or with a manufacturing defect, contact us and we will replace it or refund you — the legal guarantee of conformity (Directive (EU) 2019/771) applies in full.",
+    "s4Title": "Prices, VAT & delivery",
+    "s4_1": "Prices are shown excluding VAT; VAT is calculated at checkout based on your delivery or billing country. Made-to-order items are produced and dispatched by our print partner; delivery times shown on product pages are estimates, not guarantees.",
+    "s5Title": "Governing law",
+    "s5_1": "These terms are governed by Danish law. Nothing in them limits rights that mandatorily apply under the law of your country of residence.",
+    "close": "Close"
   }
 }

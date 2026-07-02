@@ -228,7 +228,11 @@
     "quoting": "Récupération des options de livraison…",
     "shippingUnavailable": "Nous ne pouvons pas livrer à cette adresse pour le moment. Veuillez nous contacter.",
     "continueToPayment": "Continuer vers le paiement",
-    "shippingLine": "Livraison"
+    "shippingLine": "Livraison",
+    "acceptTerms": "J'accepte les <link>conditions générales</link>.",
+    "acceptTermsPhysical": "J'accepte les <link>conditions générales</link> et reconnais que les tirages fabriqués à la commande (posters et fine art) ne bénéficient pas du droit de rétractation de 14 jours (art. 16 c, directive 2011/83/UE).",
+    "acceptDigital": "Je demande expressément la livraison immédiate de mes fichiers numériques, j'accepte la <link>licence de téléchargement</link> et je reconnais perdre ainsi mon droit de rétractation de 14 jours (art. 16 m, directive 2011/83/UE).",
+    "acceptToContinue": "Cochez la ou les cases ci-dessus pour passer au paiement."
   },
   "downloads": {
     "eyebrow": "Votre commande",
@@ -301,5 +305,20 @@
     "agreeAndClose": "J'accepte ces conditions",
     "viewTerms": "Conditions de licence",
     "contactSubtitle": "Licences personnalisées et demandes"
+  },
+  "terms": {
+    "title": "Conditions générales",
+    "intro": "Ces conditions s'appliquent aux achats effectués sur la boutique Gus McEwan Photography. Vos droits légaux au titre du droit de l'UE et du droit danois de la consommation restent inchangés, sauf mention expresse ci-dessous.",
+    "s1Title": "Articles fabriqués à la commande — pas de droit de rétractation",
+    "s1_1": "Les posters et tirages fine art sont produits individuellement pour vous après la commande. En vertu de l'article 16 c de la directive européenne relative aux droits des consommateurs (2011/83/UE), le droit de rétractation de 14 jours ne s'applique pas aux biens confectionnés selon les spécifications du consommateur. Ces articles ne peuvent être retournés ou échangés, sauf défaut.",
+    "s2Title": "Téléchargements numériques",
+    "s2_1": "Les fichiers numériques sont livrés immédiatement après le paiement. En consentant expressément à la livraison immédiate lors du paiement, vous reconnaissez perdre le droit de rétractation de 14 jours dès le début de la livraison (article 16 m de la directive 2011/83/UE). L'utilisation des fichiers est régie par la licence de téléchargement.",
+    "s3Title": "Articles défectueux ou endommagés",
+    "s3_1": "Vos droits légaux en cas de produit défectueux restent inchangés. Si un tirage arrive endommagé ou présente un défaut de fabrication, contactez-nous : nous le remplacerons ou vous rembourserons — la garantie légale de conformité (directive (UE) 2019/771) s'applique pleinement.",
+    "s4Title": "Prix, TVA et livraison",
+    "s4_1": "Les prix sont affichés hors TVA ; la TVA est calculée au paiement selon votre pays de livraison ou de facturation. Les articles à la commande sont produits et expédiés par notre partenaire d'impression ; les délais indiqués sur les pages produit sont des estimations, non des garanties.",
+    "s5Title": "Droit applicable",
+    "s5_1": "Ces conditions sont régies par le droit danois. Rien n'y limite les droits impératifs applicables selon la loi de votre pays de résidence.",
+    "close": "Fermer"
   }
 }

@@ -227,7 +227,11 @@
     "quoting": "Hämtar fraktalternativ…",
     "shippingUnavailable": "Vi kan inte leverera till den här adressen just nu. Kontakta oss.",
     "continueToPayment": "Fortsätt till betalning",
-    "shippingLine": "Frakt"
+    "shippingLine": "Frakt",
+    "acceptTerms": "Jag godkänner <link>villkoren</link>.",
+    "acceptTermsPhysical": "Jag godkänner <link>villkoren</link> och bekräftar att beställningstillverkade tryck (postrar och fine art) saknar 14 dagars ångerrätt (art. 16 c, direktiv 2011/83/EU).",
+    "acceptDigital": "Jag begär uttryckligen omedelbar leverans av mina digitala filer, godkänner <link>nedladdningslicensen</link> och bekräftar att jag därmed förlorar min 14 dagars ångerrätt (art. 16 m, direktiv 2011/83/EU).",
+    "acceptToContinue": "Bocka i rutorna ovan för att fortsätta till kassan."
   },
   "downloads": {
     "eyebrow": "Din beställning",
@@ -300,5 +304,20 @@
     "agreeAndClose": "Jag godkänner dessa villkor",
     "viewTerms": "Licensvillkor",
     "contactSubtitle": "Speciallicenser och förfrågningar"
+  },
+  "terms": {
+    "title": "Villkor",
+    "intro": "Dessa villkor gäller köp i Gus McEwan Photography-butiken. Dina lagstadgade rättigheter enligt EU-rätten och dansk konsumentlagstiftning påverkas inte, om inte annat uttryckligen anges nedan.",
+    "s1Title": "Beställningstillverkade varor — ingen ångerrätt",
+    "s1_1": "Postrar och fine art-tryck tillverkas individuellt för dig efter beställning. Enligt artikel 16 c i EU:s konsumenträttighetsdirektiv (2011/83/EU) gäller inte 14 dagars ångerrätt för varor som tillverkats enligt konsumentens specifikationer. Dessa varor kan inte returneras eller bytas om de inte är defekta.",
+    "s2Title": "Digitala nedladdningar",
+    "s2_1": "Digitala filer levereras direkt efter betalning. Genom att uttryckligen samtycka till omedelbar leverans i kassan bekräftar du att du förlorar 14 dagars ångerrätt när leveransen har påbörjats (artikel 16 m i direktiv 2011/83/EU). Användningen av filerna regleras av nedladdningslicensen.",
+    "s3Title": "Defekta eller skadade varor",
+    "s3_1": "Dina lagstadgade rättigheter vid felaktiga varor påverkas inte. Om ett tryck anländer skadat eller med ett tillverkningsfel, kontakta oss — vi ersätter det eller återbetalar dig. Den lagstadgade garantin om avtalsenlighet (direktiv (EU) 2019/771) gäller fullt ut.",
+    "s4Title": "Priser, moms och leverans",
+    "s4_1": "Priser visas exklusive moms; momsen beräknas i kassan utifrån ditt leverans- eller faktureringsland. Beställningsvaror tillverkas och skickas av vår tryckpartner; leveranstider på produktsidorna är uppskattningar, inte garantier.",
+    "s5Title": "Tillämplig lag",
+    "s5_1": "Dessa villkor regleras av dansk rätt. Inget i dem begränsar rättigheter som tvingande gäller enligt lagen i ditt bosättningsland.",
+    "close": "Stäng"
   }
 }

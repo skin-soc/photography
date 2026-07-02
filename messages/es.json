@@ -227,7 +227,11 @@
     "quoting": "Obteniendo opciones de envío…",
     "shippingUnavailable": "No podemos enviar a esta dirección ahora mismo. Contáctanos, por favor.",
     "continueToPayment": "Continuar al pago",
-    "shippingLine": "Envío"
+    "shippingLine": "Envío",
+    "acceptTerms": "Acepto los <link>términos y condiciones</link>.",
+    "acceptTermsPhysical": "Acepto los <link>términos y condiciones</link> y reconozco que las impresiones hechas por encargo (pósters y fine art) no tienen derecho de desistimiento de 14 días (art. 16 c, Directiva 2011/83/UE).",
+    "acceptDigital": "Solicito expresamente la entrega inmediata de mis archivos digitales, acepto la <link>licencia de descarga</link> y reconozco que con ello pierdo mi derecho de desistimiento de 14 días (art. 16 m, Directiva 2011/83/UE).",
+    "acceptToContinue": "Marca las casillas de arriba para continuar al pago."
   },
   "downloads": {
     "eyebrow": "Tu pedido",
@@ -300,5 +304,20 @@
     "agreeAndClose": "Acepto estos términos",
     "viewTerms": "Términos de licencia",
     "contactSubtitle": "Licencias personalizadas y consultas"
+  },
+  "terms": {
+    "title": "Términos y condiciones",
+    "intro": "Estos términos se aplican a las compras en la tienda de Gus McEwan Photography. Tus derechos legales según la normativa de la UE y la legislación danesa de consumo no se ven afectados salvo que se indique expresamente lo contrario.",
+    "s1Title": "Artículos por encargo — sin derecho de desistimiento",
+    "s1_1": "Los pósters y las impresiones fine art se producen individualmente para ti una vez realizado el pedido. Según el artículo 16 c de la Directiva de Derechos de los Consumidores de la UE (2011/83/UE), el derecho de desistimiento de 14 días no se aplica a bienes confeccionados conforme a las especificaciones del consumidor. Estos artículos no pueden devolverse ni cambiarse salvo defecto.",
+    "s2Title": "Descargas digitales",
+    "s2_1": "Los archivos digitales se entregan inmediatamente tras el pago. Al consentir expresamente la entrega inmediata en el pago, reconoces que pierdes el derecho de desistimiento de 14 días una vez iniciada la entrega (artículo 16 m de la Directiva 2011/83/UE). El uso de los archivos se rige por la licencia de descarga.",
+    "s3Title": "Artículos defectuosos o dañados",
+    "s3_1": "Tus derechos legales ante productos defectuosos no se ven afectados. Si una impresión llega dañada o con un defecto de fabricación, contáctanos y la sustituiremos o te reembolsaremos — la garantía legal de conformidad (Directiva (UE) 2019/771) se aplica íntegramente.",
+    "s4Title": "Precios, IVA y entrega",
+    "s4_1": "Los precios se muestran sin IVA; el IVA se calcula en el pago según tu país de entrega o facturación. Los artículos por encargo los produce y envía nuestro socio de impresión; los plazos de entrega de las páginas de producto son estimaciones, no garantías.",
+    "s5Title": "Ley aplicable",
+    "s5_1": "Estos términos se rigen por el derecho danés. Nada en ellos limita los derechos que se apliquen imperativamente según la ley de tu país de residencia.",
+    "close": "Cerrar"
   }
 }

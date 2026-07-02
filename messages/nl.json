@@ -228,7 +228,11 @@
     "quoting": "Verzendopties ophalen…",
     "shippingUnavailable": "We kunnen momenteel niet naar dit adres verzenden. Neem contact met ons op.",
     "continueToPayment": "Doorgaan naar betaling",
-    "shippingLine": "Verzending"
+    "shippingLine": "Verzending",
+    "acceptTerms": "Ik accepteer de <link>algemene voorwaarden</link>.",
+    "acceptTermsPhysical": "Ik accepteer de <link>algemene voorwaarden</link> en erken dat op bestelling gemaakte prints (posters en fine art) geen 14-daags herroepingsrecht hebben (art. 16 c, richtlijn 2011/83/EU).",
+    "acceptDigital": "Ik verzoek uitdrukkelijk om onmiddellijke levering van mijn digitale bestanden, accepteer de <link>downloadlicentie</link> en erken dat ik daarmee mijn 14-daagse herroepingsrecht verlies (art. 16 m, richtlijn 2011/83/EU).",
+    "acceptToContinue": "Vink de vakjes hierboven aan om door te gaan naar afrekenen."
   },
   "downloads": {
     "eyebrow": "Je bestelling",
@@ -301,5 +305,20 @@
     "agreeAndClose": "Ik ga akkoord met deze voorwaarden",
     "viewTerms": "Licentievoorwaarden",
     "contactSubtitle": "Speciale licenties en vragen"
+  },
+  "terms": {
+    "title": "Algemene voorwaarden",
+    "intro": "Deze voorwaarden gelden voor aankopen in de shop van Gus McEwan Photography. Je wettelijke rechten onder EU-recht en Deens consumentenrecht blijven onaangetast, tenzij hieronder uitdrukkelijk anders vermeld.",
+    "s1Title": "Op bestelling gemaakte artikelen — geen herroepingsrecht",
+    "s1_1": "Posters en fine-artprints worden na je bestelling individueel voor je gemaakt. Op grond van artikel 16 c van de EU-richtlijn consumentenrechten (2011/83/EU) geldt het 14-daagse herroepingsrecht niet voor goederen die volgens specificaties van de consument zijn vervaardigd. Deze artikelen kunnen niet worden geretourneerd of geruild, tenzij ze gebreken vertonen.",
+    "s2Title": "Digitale downloads",
+    "s2_1": "Digitale bestanden worden direct na betaling geleverd. Door bij het afrekenen uitdrukkelijk in te stemmen met onmiddellijke levering, erken je dat je het 14-daagse herroepingsrecht verliest zodra de levering is begonnen (artikel 16 m van richtlijn 2011/83/EU). Het gebruik van de bestanden valt onder de downloadlicentie.",
+    "s3Title": "Defecte of beschadigde artikelen",
+    "s3_1": "Je wettelijke rechten bij gebrekkige producten blijven onaangetast. Komt een print beschadigd of met een fabricagefout aan, neem dan contact op — we vervangen hem of betalen je terug. De wettelijke conformiteitsgarantie (richtlijn (EU) 2019/771) is volledig van toepassing.",
+    "s4Title": "Prijzen, btw & levering",
+    "s4_1": "Prijzen worden exclusief btw getoond; de btw wordt bij het afrekenen berekend op basis van je leverings- of factuurland. Op bestelling gemaakte artikelen worden geproduceerd en verzonden door onze printpartner; levertijden op productpagina's zijn schattingen, geen garanties.",
+    "s5Title": "Toepasselijk recht",
+    "s5_1": "Op deze voorwaarden is Deens recht van toepassing. Niets hierin beperkt rechten die dwingend gelden volgens het recht van je woonland.",
+    "close": "Sluiten"
   }
 }

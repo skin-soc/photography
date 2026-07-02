@@ -228,7 +228,11 @@
     "quoting": "Versandoptionen werden geladen…",
     "shippingUnavailable": "Wir können derzeit nicht an diese Adresse liefern. Bitte kontaktieren Sie uns.",
     "continueToPayment": "Weiter zur Zahlung",
-    "shippingLine": "Versand"
+    "shippingLine": "Versand",
+    "acceptTerms": "Ich akzeptiere die <link>AGB</link>.",
+    "acceptTermsPhysical": "Ich akzeptiere die <link>AGB</link> und nehme zur Kenntnis, dass auf Bestellung gefertigte Drucke (Poster und Fine Art) kein 14-tägiges Widerrufsrecht haben (Art. 16 Buchst. c, Richtlinie 2011/83/EU).",
+    "acceptDigital": "Ich verlange ausdrücklich die sofortige Lieferung meiner digitalen Dateien, akzeptiere die <link>Download-Lizenz</link> und nehme zur Kenntnis, dass ich dadurch mein 14-tägiges Widerrufsrecht verliere (Art. 16 Buchst. m, Richtlinie 2011/83/EU).",
+    "acceptToContinue": "Bitte die Kästchen oben ankreuzen, um zur Kasse fortzufahren."
   },
   "downloads": {
     "eyebrow": "Ihre Bestellung",
@@ -301,5 +305,20 @@
     "agreeAndClose": "Ich stimme diesen Bedingungen zu",
     "viewTerms": "Lizenzbedingungen",
     "contactSubtitle": "Sonderlizenzen und Anfragen"
+  },
+  "terms": {
+    "title": "Allgemeine Geschäftsbedingungen",
+    "intro": "Diese Bedingungen gelten für Käufe im Shop von Gus McEwan Photography. Ihre gesetzlichen Rechte nach EU-Recht und dänischem Verbraucherrecht bleiben unberührt, soweit unten nicht ausdrücklich anders angegeben.",
+    "s1Title": "Auf Bestellung gefertigte Artikel — kein Widerrufsrecht",
+    "s1_1": "Poster und Fine-Art-Drucke werden nach Bestelleingang individuell für Sie gefertigt. Nach Artikel 16 Buchstabe c der EU-Verbraucherrechterichtlinie (2011/83/EU) gilt das 14-tägige Widerrufsrecht nicht für Waren, die nach Verbraucherspezifikation angefertigt werden. Diese Artikel können nur bei Mängeln zurückgegeben oder umgetauscht werden.",
+    "s2Title": "Digitale Downloads",
+    "s2_1": "Digitale Dateien werden unmittelbar nach der Zahlung geliefert. Mit Ihrer ausdrücklichen Zustimmung zur sofortigen Lieferung an der Kasse erkennen Sie an, dass Sie das 14-tägige Widerrufsrecht verlieren, sobald die Lieferung begonnen hat (Artikel 16 Buchstabe m der Richtlinie 2011/83/EU). Die Nutzung der Dateien richtet sich nach der Download-Lizenz.",
+    "s3Title": "Defekte oder beschädigte Artikel",
+    "s3_1": "Ihre gesetzlichen Rechte bei mangelhafter Ware bleiben unberührt. Kommt ein Druck beschädigt oder mit einem Herstellungsfehler an, kontaktieren Sie uns — wir ersetzen ihn oder erstatten den Kaufpreis. Die gesetzliche Gewährleistung (Richtlinie (EU) 2019/771) gilt in vollem Umfang.",
+    "s4Title": "Preise, MwSt. & Lieferung",
+    "s4_1": "Preise verstehen sich zzgl. MwSt.; die MwSt. wird an der Kasse anhand Ihres Liefer- bzw. Rechnungslandes berechnet. Auf Bestellung gefertigte Artikel werden von unserem Druckpartner produziert und versandt; die auf den Produktseiten angegebenen Lieferzeiten sind Schätzungen, keine Garantien.",
+    "s5Title": "Anwendbares Recht",
+    "s5_1": "Diese Bedingungen unterliegen dänischem Recht. Zwingende Rechte nach dem Recht Ihres Wohnsitzlandes bleiben unberührt.",
+    "close": "Schließen"
   }
 }

@@ -228,7 +228,11 @@
     "quoting": "Pobieranie opcji wysyłki…",
     "shippingUnavailable": "Obecnie nie możemy wysłać na ten adres. Skontaktuj się z nami.",
     "continueToPayment": "Przejdź do płatności",
-    "shippingLine": "Wysyłka"
+    "shippingLine": "Wysyłka",
+    "acceptTerms": "Akceptuję <link>regulamin</link>.",
+    "acceptTermsPhysical": "Akceptuję <link>regulamin</link> i przyjmuję do wiadomości, że wydruki na zamówienie (plakaty i fine art) nie podlegają 14-dniowemu prawu odstąpienia (art. 16 lit. c dyrektywy 2011/83/UE).",
+    "acceptDigital": "Wyraźnie żądam natychmiastowego dostarczenia moich plików cyfrowych, akceptuję <link>licencję pobrania</link> i przyjmuję do wiadomości, że tym samym tracę 14-dniowe prawo odstąpienia (art. 16 lit. m dyrektywy 2011/83/UE).",
+    "acceptToContinue": "Zaznacz powyższe pola, aby przejść do płatności."
   },
   "downloads": {
     "eyebrow": "Twoje zamówienie",
@@ -301,5 +305,20 @@
     "agreeAndClose": "Akceptuję te warunki",
     "viewTerms": "Warunki licencji",
     "contactSubtitle": "Licencje specjalne i zapytania"
+  },
+  "terms": {
+    "title": "Regulamin",
+    "intro": "Niniejsze warunki dotyczą zakupów w sklepie Gus McEwan Photography. Twoje ustawowe prawa wynikające z prawa UE i duńskiego prawa konsumenckiego pozostają nienaruszone, chyba że poniżej wyraźnie wskazano inaczej.",
+    "s1Title": "Produkty na zamówienie — brak prawa odstąpienia",
+    "s1_1": "Plakaty i wydruki fine art są produkowane indywidualnie po złożeniu zamówienia. Zgodnie z art. 16 lit. c dyrektywy UE w sprawie praw konsumentów (2011/83/UE) 14-dniowe prawo odstąpienia nie dotyczy towarów wyprodukowanych według specyfikacji konsumenta. Produkty te nie podlegają zwrotowi ani wymianie, chyba że są wadliwe.",
+    "s2Title": "Pliki cyfrowe",
+    "s2_1": "Pliki cyfrowe są dostarczane natychmiast po dokonaniu płatności. Wyrażając przy płatności wyraźną zgodę na natychmiastowe dostarczenie, przyjmujesz do wiadomości utratę 14-dniowego prawa odstąpienia z chwilą rozpoczęcia dostawy (art. 16 lit. m dyrektywy 2011/83/UE). Korzystanie z plików reguluje licencja pobrania.",
+    "s3Title": "Produkty wadliwe lub uszkodzone",
+    "s3_1": "Twoje ustawowe prawa dotyczące towarów wadliwych pozostają nienaruszone. Jeśli wydruk dotrze uszkodzony lub z wadą produkcyjną, skontaktuj się z nami — wymienimy go lub zwrócimy pieniądze. Ustawowa gwarancja zgodności (dyrektywa (UE) 2019/771) obowiązuje w pełni.",
+    "s4Title": "Ceny, VAT i dostawa",
+    "s4_1": "Ceny podane są bez VAT; VAT jest naliczany przy płatności na podstawie kraju dostawy lub rozliczenia. Produkty na zamówienie są wytwarzane i wysyłane przez naszego partnera drukarskiego; terminy dostawy na stronach produktów są szacunkowe, nie gwarantowane.",
+    "s5Title": "Prawo właściwe",
+    "s5_1": "Niniejsze warunki podlegają prawu duńskiemu. Żadne ich postanowienie nie ogranicza praw bezwzględnie obowiązujących według prawa kraju Twojego zamieszkania.",
+    "close": "Zamknij"
   }
 }

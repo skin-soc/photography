@@ -227,7 +227,11 @@
     "quoting": "Henter forsendelsesmuligheder…",
     "shippingUnavailable": "Vi kan ikke sende til denne adresse lige nu. Kontakt os venligst.",
     "continueToPayment": "Fortsæt til betaling",
-    "shippingLine": "Forsendelse"
+    "shippingLine": "Forsendelse",
+    "acceptTerms": "Jeg accepterer <link>handelsbetingelserne</link>.",
+    "acceptTermsPhysical": "Jeg accepterer <link>handelsbetingelserne</link> og anerkender, at bestillingsfremstillede print (plakater og fine art) ikke er omfattet af 14 dages fortrydelsesret (art. 16, litra c, direktiv 2011/83/EU).",
+    "acceptDigital": "Jeg anmoder udtrykkeligt om øjeblikkelig levering af mine digitale filer, accepterer <link>downloadlicensen</link> og anerkender, at jeg dermed mister min 14 dages fortrydelsesret (art. 16, litra m, direktiv 2011/83/EU).",
+    "acceptToContinue": "Sæt kryds i boksen(e) ovenfor for at fortsætte til betaling."
   },
   "downloads": {
     "eyebrow": "Din ordre",
@@ -300,5 +304,20 @@
     "agreeAndClose": "Jeg accepterer disse betingelser",
     "viewTerms": "Licensbetingelser",
     "contactSubtitle": "Speciallicenser og henvendelser"
+  },
+  "terms": {
+    "title": "Handelsbetingelser",
+    "intro": "Disse betingelser gælder for køb i Gus McEwan Photography-shoppen. Dine lovbestemte rettigheder efter EU-retten og dansk forbrugerlovgivning berøres ikke, medmindre andet udtrykkeligt fremgår nedenfor.",
+    "s1Title": "Bestillingsfremstillede varer — ingen fortrydelsesret",
+    "s1_1": "Plakater og fine art-print fremstilles individuelt til dig, når din ordre er afgivet. Efter artikel 16, litra c, i EU's forbrugerrettighedsdirektiv (2011/83/EU) gælder 14 dages fortrydelsesret ikke for varer, som er fremstillet efter forbrugerens specifikationer. Disse varer kan ikke returneres eller ombyttes, medmindre de er defekte.",
+    "s2Title": "Digitale downloads",
+    "s2_1": "Digitale filer leveres umiddelbart efter betaling. Ved udtrykkeligt at samtykke til øjeblikkelig levering ved checkout anerkender du, at du mister 14 dages fortrydelsesret, når leveringen er påbegyndt (artikel 16, litra m, i direktiv 2011/83/EU). Brugen af filerne er reguleret af downloadlicensen.",
+    "s3Title": "Defekte eller beskadigede varer",
+    "s3_1": "Dine lovbestemte rettigheder ved mangelfulde varer berøres ikke. Hvis et print ankommer beskadiget eller med en produktionsfejl, så kontakt os — vi ombytter eller refunderer. Den lovpligtige garanti for overensstemmelse (direktiv (EU) 2019/771) gælder fuldt ud.",
+    "s4Title": "Priser, moms og levering",
+    "s4_1": "Priser vises eksklusive moms; momsen beregnes ved checkout ud fra dit leverings- eller faktureringsland. Bestillingsfremstillede varer produceres og afsendes af vores printpartner; leveringstider på produktsiderne er estimater, ikke garantier.",
+    "s5Title": "Lovvalg",
+    "s5_1": "Disse betingelser er underlagt dansk ret. Intet i dem begrænser rettigheder, der ufravigeligt gælder efter lovgivningen i dit bopælsland.",
+    "close": "Luk"
   }
 }

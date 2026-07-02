@@ -227,7 +227,11 @@
     "quoting": "Henter fraktalternativer…",
     "shippingUnavailable": "Vi kan ikke sende til denne adressen akkurat nå. Ta kontakt med oss.",
     "continueToPayment": "Fortsett til betaling",
-    "shippingLine": "Frakt"
+    "shippingLine": "Frakt",
+    "acceptTerms": "Jeg godtar <link>vilkårene</link>.",
+    "acceptTermsPhysical": "Jeg godtar <link>vilkårene</link> og bekrefter at bestillingsproduserte trykk (plakater og fine art) ikke har 14 dagers angrerett (art. 16 bokstav c, direktiv 2011/83/EU).",
+    "acceptDigital": "Jeg ber uttrykkelig om umiddelbar levering av de digitale filene mine, godtar <link>nedlastingslisensen</link> og bekrefter at jeg dermed mister min 14 dagers angrerett (art. 16 bokstav m, direktiv 2011/83/EU).",
+    "acceptToContinue": "Kryss av i boksen(e) ovenfor for å fortsette til kassen."
   },
   "downloads": {
     "eyebrow": "Bestillingen din",
@@ -300,5 +304,20 @@
     "agreeAndClose": "Jeg godtar disse vilkårene",
     "viewTerms": "Lisensvilkår",
     "contactSubtitle": "Spesiallisenser og henvendelser"
+  },
+  "terms": {
+    "title": "Vilkår",
+    "intro": "Disse vilkårene gjelder kjøp i Gus McEwan Photography-butikken. Dine lovbestemte rettigheter etter EU-retten og dansk forbrukerlovgivning berøres ikke, med mindre annet uttrykkelig fremgår nedenfor.",
+    "s1Title": "Bestillingsproduserte varer — ingen angrerett",
+    "s1_1": "Plakater og fine art-trykk produseres individuelt for deg etter bestilling. Etter artikkel 16 bokstav c i EUs forbrukerrettighetsdirektiv (2011/83/EU) gjelder ikke 14 dagers angrerett for varer fremstilt etter forbrukerens spesifikasjoner. Disse varene kan ikke returneres eller byttes med mindre de er defekte.",
+    "s2Title": "Digitale nedlastinger",
+    "s2_1": "Digitale filer leveres umiddelbart etter betaling. Ved uttrykkelig å samtykke til umiddelbar levering i kassen bekrefter du at du mister 14 dagers angrerett når leveringen har begynt (artikkel 16 bokstav m i direktiv 2011/83/EU). Bruken av filene reguleres av nedlastingslisensen.",
+    "s3Title": "Defekte eller skadede varer",
+    "s3_1": "Dine lovbestemte rettigheter ved mangelfulle varer berøres ikke. Hvis et trykk ankommer skadet eller med en produksjonsfeil, kontakt oss — vi erstatter eller refunderer. Den lovpålagte samsvarsgarantien (direktiv (EU) 2019/771) gjelder fullt ut.",
+    "s4Title": "Priser, MVA og levering",
+    "s4_1": "Priser vises uten MVA; MVA beregnes i kassen ut fra leverings- eller faktureringslandet ditt. Bestillingsvarer produseres og sendes av trykkpartneren vår; leveringstider på produktsidene er estimater, ikke garantier.",
+    "s5Title": "Lovvalg",
+    "s5_1": "Disse vilkårene er underlagt dansk rett. Ingenting i dem begrenser rettigheter som ufravikelig gjelder etter loven i bostedslandet ditt.",
+    "close": "Lukk"
   }
 }
