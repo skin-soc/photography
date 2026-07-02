@@ -7,7 +7,23 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { ADMIN_COOKIE, verifySessionToken } from '@/lib/admin-auth'
-import { listCoupons, createCoupon, deactivateCoupon, type Coupon } from '@/lib/coupons'
+import { listCoupons, createCoupon, deactivateCoupon, getCoupon, type Coupon } from '@/lib/coupons'
+
+// Excludes visually-ambiguous characters (0/O, 1/I/L) — this code gets typed
+// in by a customer at checkout, so legibility matters more than entropy.
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+
+/** Random 8-char code for when the admin leaves the field blank (the field is
+ *  labelled "optional" — this is what makes that true; it used to just
+ *  reject with "code required"). Retries on the rare collision. */
+async function generateUniqueCode(): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    let candidate = ''
+    for (let i = 0; i < 8; i++) candidate += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]
+    if (!(await getCoupon(candidate))) return candidate
+  }
+  throw new Error('could not generate a unique code, try again')
+}
 
 async function authed(req: NextRequest): Promise<boolean> {
   const token = req.cookies.get(ADMIN_COOKIE)?.value
@@ -73,10 +89,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok }, { status: ok ? 200 : 502 })
   }
 
-  // Create (default action)
-  if (!body.code) return NextResponse.json({ error: 'code required' }, { status: 400 })
+  // Create (default action). Code is genuinely optional — auto-generate one
+  // when left blank, matching the "Code (optional)" label in the admin UI.
+  let code = body.code
+  if (!code) {
+    try {
+      code = await generateUniqueCode()
+    } catch (err) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : 'code generation failed' }, { status: 502 })
+    }
+  }
   const res = await createCoupon({
-    code: body.code,
+    code,
     type: body.type === 'amount' ? 'amount' : 'percent',
     percent: body.percent,
     amount: body.type === 'amount' ? Math.round((body.amount ?? 0) * 100) : undefined,
