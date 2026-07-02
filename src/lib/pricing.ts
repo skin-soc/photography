@@ -27,6 +27,7 @@ import { eurToDkkOre, type Rates } from '@/lib/currency'
 interface KVLike {
   get(key: string): Promise<string | null>
   put(key: string, value: string): Promise<void>
+  delete(key: string): Promise<void>
 }
 
 const PRICING_KEY = 'pricing:config'

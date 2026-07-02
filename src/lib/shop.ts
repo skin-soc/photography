@@ -476,9 +476,13 @@ let _inflight: Promise<ShopPhoto[]> | null = null
 
 /** Schema version of the /api/shop/catalog payload shape. Folded into
  *  catalogVersion() so a CODE change to that shape (not just data/price/rates)
- *  busts the edge-cached grid catalog. Bump when the payload gains/changes fields.
- *  v2 = added per-photo `faCovers` (fine-art grid cover variants). */
-const CATALOG_SCHEMA = 2
+ *  busts the edge-cached grid catalog AND the KV-persisted processed catalog.
+ *  Bump when the payload gains/changes fields — INCLUDING derived text baked
+ *  into products (e.g. `material`), or the old processed catalog is restored
+ *  from KV forever (the cache key is data-only, so code changes never miss).
+ *  v2 = added per-photo `faCovers` (fine-art grid cover variants).
+ *  v3 = fine-art `material` shortened to the cm size only. */
+const CATALOG_SCHEMA = 3
 
 /** The origin's current mockup-asset version, captured on the last catalog build.
  *  Drives every mockup URL + cache key, so the origin bumping it (on a render-batch
@@ -683,10 +687,20 @@ export async function getCatalog(): Promise<ShopPhoto[]> {
  * of waiting out the 60s cache window.
  */
 export async function purgeCatalogCache(): Promise<void> {
+  const staleKey = _processed?.key
   _processed = null
   _inflight = null
   const edge: Cache | undefined = (globalThis as { caches?: { default?: Cache } }).caches?.default
-  if (edge) await edge.delete(CATALOG_CACHE_KEY).catch(() => {})
+  if (edge) {
+    await edge.delete(CATALOG_CACHE_KEY).catch(() => {})
+    // Also drop this colo's processed entry, else the rebuild instantly
+    // restores the stale processing under the same key.
+    if (staleKey) await edge.delete(PROCESSED_CACHE_PREFIX + encodeURIComponent(staleKey)).catch(() => {})
+  }
+  // Drop the durable processed catalog too — "Refresh catalog" must force a
+  // genuine reprocess, not a KV restore of the previous build.
+  const kv = await shopSettingsKV()
+  if (kv) await kv.delete(PROCESSED_KV_KEY).catch(() => {})
 }
 
 async function buildCatalog(): Promise<ShopPhoto[]> {
