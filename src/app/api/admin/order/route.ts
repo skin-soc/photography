@@ -105,11 +105,22 @@ export async function POST(req: NextRequest) {
       if (!order.lineItems || !(await hasPhysicalItems(order.lineItems))) {
         return NextResponse.json({ error: 'order has no physical items' }, { status: 400 })
       }
-      // Only a REAL Prodigi id blocks the override — absent fulfilment, the
-      // awaiting-payout sentinel and failed states may all be forced through.
+      // Only a LIVE (non-cancelled) Prodigi order blocks the override — absent
+      // fulfilment, the awaiting-payout sentinel and failed states may all be
+      // forced through. A real id whose Prodigi order was since CANCELLED may
+      // be deliberately resubmitted: that needs a fresh idempotency key, since
+      // the default (the order code) would just return the cancelled order.
       const pid = order.fulfilment?.prodigiId
+      let idempotencyKey: string | undefined
       if (pid && !payoutIdFromSentinel(pid)) {
-        return NextResponse.json({ error: `already submitted to Prodigi (${pid})` }, { status: 400 })
+        const existing = await getProdigiOrder(pid).catch(() => null)
+        if (!existing || existing.stage.toLowerCase() !== 'cancelled') {
+          return NextResponse.json(
+            { error: `already submitted to Prodigi (${pid}${existing ? `, stage ${existing.stage}` : ''})` },
+            { status: 400 },
+          )
+        }
+        idempotencyKey = `${orderId}:resubmit:${Date.now()}`
       }
       // Locale / monochrome / shipping method from the Stripe session — the
       // deferred paths must NOT default these (an 'en' fallback here once sent
@@ -128,6 +139,7 @@ export async function POST(req: NextRequest) {
         bwSkus: facts.bwSkus,
         shippingMethod,
         callbackUrl: prodigiCallbackUrl(SITE_URL, orderId),
+        idempotencyKey,
       })
       if (!result) return NextResponse.json({ error: 'Prodigi submission returned nothing' }, { status: 502 })
       await recordFulfilment(orderId, {

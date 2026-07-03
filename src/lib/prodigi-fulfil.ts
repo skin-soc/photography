@@ -130,6 +130,10 @@ export async function submitProdigiOrder(input: {
   locale?: string
   /** SKUs the customer ordered in black-and-white. */
   bwSkus?: Set<string>
+  /** Distinct Prodigi idempotency key — ONLY for a deliberate resubmission of
+   *  an order whose previous Prodigi order was cancelled (the default key is
+   *  the order code, which would just return the cancelled order). */
+  idempotencyKey?: string
 }): Promise<ProdigiOrderResult | null> {
   if (!prodigiConfigured()) return null
   const physical = await resolvePhysicalItems(input.lineItems)
@@ -188,5 +192,6 @@ export async function submitProdigiOrder(input: {
     items,
     callbackUrl: input.callbackUrl,
     ...(input.shippingMethod ? { shippingMethod: input.shippingMethod } : {}),
+    ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
   })
 }

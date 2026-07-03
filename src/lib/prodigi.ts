@@ -417,6 +417,9 @@ export async function createOrder(input: {
   /** Per-order CloudEvents callback (status updates) — token-secured by us. */
   callbackUrl?: string
   metadata?: Record<string, string>
+  /** Overrides the Idempotency-Key (default: merchantReference). Only for a
+   *  deliberate resubmission after the previous Prodigi order was cancelled. */
+  idempotencyKey?: string
 }): Promise<ProdigiOrderResult> {
   const body = {
     merchantReference: input.merchantReference,
@@ -435,7 +438,7 @@ export async function createOrder(input: {
   }
   const d = await prodigiFetch<CreateOrderResponse>('/orders', {
     method: 'POST',
-    headers: { 'Idempotency-Key': input.merchantReference },
+    headers: { 'Idempotency-Key': input.idempotencyKey ?? input.merchantReference },
     body: JSON.stringify(body),
   })
   return {

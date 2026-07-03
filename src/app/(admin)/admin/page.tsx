@@ -3126,17 +3126,24 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         )}
         {/* No-float manual override: physical order not yet (really) submitted
             to Prodigi — a sentinel/failed state may be forced through; a real
-            Prodigi id may not. Charges the debit card immediately. */}
+            Prodigi id may not, UNLESS its Prodigi order was since cancelled
+            (verified server-side; run "Check Prodigi" to reveal the resubmit
+            button). Charges the debit card immediately. */}
         {!order.refunded &&
           order.lineItems?.some((l) => l.sku === 'shipping') &&
-          !(order.fulfilment?.prodigiId && !order.fulfilment.prodigiId.startsWith('payout-pending:')) && (
+          (!(order.fulfilment?.prodigiId && !order.fulfilment.prodigiId.startsWith('payout-pending:')) ||
+            prodigiLive?.stage.toLowerCase() === 'cancelled') && (
             <button
               onClick={() => act('force-submit')}
               disabled={busy !== null}
               className={refundBtn}
               title="Bypasses the settlement/payout wait — you bridge the float manually"
             >
-              {busy === 'force-submit' ? 'Sending…' : 'Send to Prodigi now (override)'}
+              {busy === 'force-submit'
+                ? 'Sending…'
+                : prodigiLive?.stage.toLowerCase() === 'cancelled'
+                  ? 'Resubmit to Prodigi (override)'
+                  : 'Send to Prodigi now (override)'}
             </button>
           )}
         {refundable && (
