@@ -604,7 +604,7 @@ export default function ShopGrid({
           {isLanding ? (
             /* Landing: doorway panels — one per product type, taller than the
                old flat cards, with count + a one-line description. */
-            <div id="collection" className="grid grid-cols-1 sm:grid-cols-3 gap-3 scroll-mt-28">
+            <div id="collection" className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 scroll-mt-28">
               {landingItems.map(({ type, heroSrcs }, idx) => {
                 const doorKey =
                   type === 'print' ? 'landing.doorPrint' : type === 'fine-art' ? 'landing.doorFineArt' : 'landing.doorDigital'
@@ -612,7 +612,7 @@ export default function ShopGrid({
                   <Link
                     key={type}
                     href={categoryUrl([type])}
-                    className="group relative block overflow-hidden rounded-[16px] aspect-[4/3] sm:aspect-[3/4] bg-foreground/5 text-left transition-transform duration-300 hover:-translate-y-1 shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)]"
+                    className="group relative block overflow-hidden rounded-[16px] aspect-[4/3] sm:aspect-[3/4] bg-foreground/5 text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:-translate-y-1 shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#931020]"
                   >
                     <RotatingImage srcs={heroSrcs} delay={idx * 700} gen={viewKey} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 transition-all duration-500" />
@@ -628,20 +628,23 @@ export default function ShopGrid({
               })}
             </div>
           ) : isFolderView ? (
-            /* Has sub-categories: always show folder cards, never the photo grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 bg-foreground/5">
+            /* Has sub-categories: always show folder cards, never the photo
+               grid. Same treatment as the landing doorway panels — mono white
+               title on a strong gradient, shadow, rise on hover/focus. */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {folderCards.map((folder, nodeIdx) => {
                 const { name, heroSrcs, path: folderPath } = folder
                 return (
                   <Link
                     key={name}
                     href={categoryUrl(folderPath)}
-                    className="group relative block overflow-hidden aspect-[4/3] bg-bg text-left"
+                    className="group relative block overflow-hidden rounded-[16px] aspect-[4/3] bg-foreground/5 text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:-translate-y-1 shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#931020]"
                   >
                     <RotatingImage srcs={heroSrcs} delay={nodeIdx * 700} gen={viewKey} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/65 transition-all duration-500" />
-                    <div className="absolute bottom-0 left-0 p-6 z-10">
-                      <p className="text-xl font-light text-accent">{name}</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 group-focus-visible:from-black/70 transition-all duration-500" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex items-end justify-between gap-3">
+                      <p className="font-mono-ibm font-[200] text-2xl text-white">{name}</p>
+                      <span className="shrink-0 text-[#e0485a] text-lg transition-transform duration-300 group-hover:translate-x-1 group-focus-visible:translate-x-1">→</span>
                     </div>
                   </Link>
                 )
