@@ -8,7 +8,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ADMIN_COOKIE, verifySessionToken } from '@/lib/admin-auth'
 import { stripe } from '@/lib/stripe-server'
 import { getCatalog } from '@/lib/shop'
-import { adminLookupOrders, adminRecentOrders, adminResendOrder, adminExtendOrder, markRefund, type AdminOrder } from '@/lib/downloads'
+import { adminLookupOrders, adminRecentOrders, adminResendOrder, adminExtendOrder, markRefund, recordFulfilment, prodigiCallbackUrl, type AdminOrder } from '@/lib/downloads'
+import { hasPhysicalItems, submitProdigiOrder } from '@/lib/prodigi-fulfil'
+import { payoutIdFromSentinel } from '@/lib/prodigi-payout'
+import { SITE_URL } from '@/i18n/seo'
 
 async function authed(req: NextRequest): Promise<boolean> {
   const token = req.cookies.get(ADMIN_COOKIE)?.value
@@ -50,7 +53,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!(await authed(req))) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const body = (await req.json().catch(() => ({}))) as {
-    action?: 'resend' | 'extend' | 'refund' | 'refund-full' | 'refund-lines'
+    action?: 'resend' | 'extend' | 'refund' | 'refund-full' | 'refund-lines' | 'force-submit'
     orderId?: string
     email?: string
     paymentId?: string
@@ -67,6 +70,53 @@ export async function POST(req: NextRequest) {
   if (body.action === 'extend') {
     const ok = await adminExtendOrder(orderId)
     return NextResponse.json({ ok }, { status: ok ? 200 : 502 })
+  }
+  if (body.action === 'force-submit') {
+    // MANUAL OVERRIDE of the no-float funding wait: submit this order to
+    // Prodigi NOW, before its charge has settled / payout posted. The debit
+    // card is charged immediately, so the admin is knowingly bridging the
+    // float from their own funds. The automatic mechanism is untouched — once
+    // a real Prodigi id is recorded, the funding cron skips this order (and a
+    // later payout.paid event no-ops on the sentinel check), so no automatic
+    // payout is ever created for it: transfer the settled funds manually.
+    try {
+      const order = (await adminLookupOrders(orderId)).find((o) => o.orderId === orderId)
+      if (!order) return NextResponse.json({ error: 'order not found' }, { status: 404 })
+      if (order.refunded) return NextResponse.json({ error: 'order is refunded' }, { status: 400 })
+      if (!order.lineItems || !(await hasPhysicalItems(order.lineItems))) {
+        return NextResponse.json({ error: 'order has no physical items' }, { status: 400 })
+      }
+      // Only a REAL Prodigi id blocks the override — absent fulfilment, the
+      // awaiting-payout sentinel and failed states may all be forced through.
+      const pid = order.fulfilment?.prodigiId
+      if (pid && !payoutIdFromSentinel(pid)) {
+        return NextResponse.json({ error: `already submitted to Prodigi (${pid})` }, { status: 400 })
+      }
+      const shippingLine = order.lineItems.find((l) => l.sku === 'shipping')
+      const shippingMethod = shippingLine?.label.split('—')[1]?.trim()
+      const result = await submitProdigiOrder({
+        orderCode: orderId,
+        lineItems: order.lineItems,
+        shipping: order.shipping ?? null,
+        email: order.email,
+        locale: 'en',
+        shippingMethod,
+        callbackUrl: prodigiCallbackUrl(SITE_URL, orderId),
+      })
+      if (!result) return NextResponse.json({ error: 'Prodigi submission returned nothing' }, { status: 502 })
+      await recordFulfilment(orderId, {
+        provider: 'prodigi',
+        prodigiId: result.id,
+        stage: result.stage,
+        outcome: result.outcome,
+        mode: result.mode,
+      })
+      return NextResponse.json({ ok: true, prodigiId: result.id, stage: result.stage, mode: result.mode })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'force-submit failed'
+      console.error('[admin/order] force-submit failed:', message)
+      return NextResponse.json({ ok: false, error: message }, { status: 502 })
+    }
   }
   if (body.action === 'refund-lines') {
     // Line-item refund for any composition — digital, poster, fine-art, mixed,

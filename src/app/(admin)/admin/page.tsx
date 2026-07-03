@@ -2719,7 +2719,7 @@ interface DisplayLine {
 }
 
 function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => void }) {
-  const [busy, setBusy] = useState<'resend' | 'extend' | 'refund' | 'refund-full' | 'refund-lines' | null>(null)
+  const [busy, setBusy] = useState<'resend' | 'extend' | 'refund' | 'refund-full' | 'refund-lines' | 'force-submit' | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const expiry = new Date(order.expiresAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })
   const hasVat = (order.taxAmount ?? 0) > 0
@@ -2794,9 +2794,10 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
   const refundBtn =
     'rounded-md border border-[#931020] bg-[#931020]/15 px-4 py-2 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#e0485a] hover:bg-[#931020] hover:text-white transition-colors disabled:opacity-40 disabled:hover:bg-[#931020]/15 disabled:hover:text-[#e0485a]'
 
-  async function act(action: 'resend' | 'extend' | 'refund' | 'refund-full' | 'refund-lines') {
+  async function act(action: 'resend' | 'extend' | 'refund' | 'refund-full' | 'refund-lines' | 'force-submit') {
     const hasPhysicalSel = lines.some((l) => sel.has(l.sku) && l.downloads === null && !l.shipping)
     const confirms: Partial<Record<typeof action, string>> = {
+      'force-submit': 'MANUAL OVERRIDE — send this order to Prodigi NOW, before the customer’s payment has settled? The Prodigi debit card is charged immediately, so you are bridging the float from your own funds. No automatic payout will be created for this order — transfer the settled amount to the bank manually.',
       refund: 'Refund the items the customer has NOT downloaded? They’re refunded in Stripe (tax included) and access to those items is revoked.',
       'refund-full': `FULL refund of ${order.amount != null ? fmtMoney(order.amount - (order.refundedAmount ?? 0), order.currency) : 'the remaining balance'}? The customer is refunded in Stripe and ALL download access is revoked.${hasLines && lines.some((l) => l.downloads === null && !l.shipping) ? ' Physical production is NOT auto-cancelled — cancel with Prodigi separately if it hasn’t shipped.' : ''}`,
       'refund-lines': `Refund the ${sel.size} selected item${sel.size === 1 ? '' : 's'} (${fmtMoney(selGross, order.currency)}${hasVat ? ' inc. VAT' : ''})? Digital access to them is revoked.${hasPhysicalSel ? ' Physical production is NOT auto-cancelled — cancel with Prodigi separately if it hasn’t shipped.' : ''}`,
@@ -2820,6 +2821,7 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
         setNote(
           action === 'resend' ? 'Email re-sent.'
             : action === 'extend' ? 'Link extended.'
+            : action === 'force-submit' ? `Sent to Prodigi: ${(data as { prodigiId?: string }).prodigiId ?? 'ok'}. Remember to transfer the settled funds manually.`
             : `Refunded ${fmtMoney(data.refunded ?? 0, order.currency)}.`,
         )
         onChanged()
@@ -3041,6 +3043,21 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
             </button>
           </>
         )}
+        {/* No-float manual override: physical order not yet (really) submitted
+            to Prodigi — a sentinel/failed state may be forced through; a real
+            Prodigi id may not. Charges the debit card immediately. */}
+        {!order.refunded &&
+          order.lineItems?.some((l) => l.sku === 'shipping') &&
+          !(order.fulfilment?.prodigiId && !order.fulfilment.prodigiId.startsWith('payout-pending:')) && (
+            <button
+              onClick={() => act('force-submit')}
+              disabled={busy !== null}
+              className={refundBtn}
+              title="Bypasses the settlement/payout wait — you bridge the float manually"
+            >
+              {busy === 'force-submit' ? 'Sending…' : 'Send to Prodigi now (override)'}
+            </button>
+          )}
         {refundable && (
           <>
             {hasLines ? (
