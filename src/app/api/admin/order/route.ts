@@ -10,7 +10,7 @@ import { stripe } from '@/lib/stripe-server'
 import { getCatalog } from '@/lib/shop'
 import { adminLookupOrders, adminRecentOrders, adminResendOrder, adminExtendOrder, markRefund, recordFulfilment, prodigiCallbackUrl, type AdminOrder } from '@/lib/downloads'
 import { hasPhysicalItems, submitProdigiOrder } from '@/lib/prodigi-fulfil'
-import { payoutIdFromSentinel } from '@/lib/prodigi-payout'
+import { payoutIdFromSentinel, checkoutFactsForPayment } from '@/lib/prodigi-payout'
 import { getOrder as getProdigiOrder } from '@/lib/prodigi'
 import { SITE_URL } from '@/i18n/seo'
 
@@ -111,14 +111,21 @@ export async function POST(req: NextRequest) {
       if (pid && !payoutIdFromSentinel(pid)) {
         return NextResponse.json({ error: `already submitted to Prodigi (${pid})` }, { status: 400 })
       }
+      // Locale / monochrome / shipping method from the Stripe session — the
+      // deferred paths must NOT default these (an 'en' fallback here once sent
+      // an English poster master for a Danish purchase).
+      const facts = order.paymentId
+        ? await checkoutFactsForPayment(order.paymentId)
+        : { locale: 'en', bwSkus: new Set<string>(), shippingMethod: undefined }
       const shippingLine = order.lineItems.find((l) => l.sku === 'shipping')
-      const shippingMethod = shippingLine?.label.split('—')[1]?.trim()
+      const shippingMethod = facts.shippingMethod ?? shippingLine?.label.split('—')[1]?.trim()
       const result = await submitProdigiOrder({
         orderCode: orderId,
         lineItems: order.lineItems,
         shipping: order.shipping ?? null,
         email: order.email,
-        locale: 'en',
+        locale: facts.locale,
+        bwSkus: facts.bwSkus,
         shippingMethod,
         callbackUrl: prodigiCallbackUrl(SITE_URL, orderId),
       })

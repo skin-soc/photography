@@ -90,6 +90,31 @@ async function settledAmount(
 }
 
 /**
+ * The customer's checkout facts that only live in Stripe session metadata —
+ * the browsing LOCALE (selects the localised typeset poster master), the
+ * monochrome poster selection (bwSkus) and the chosen shipping method. The
+ * order record doesn't carry these, so any deferred submission (payout path,
+ * admin override) MUST fetch them back from the session or the customer gets
+ * an English/colour print they didn't buy.
+ */
+export async function checkoutFactsForPayment(
+  paymentId: string,
+): Promise<{ locale: string; bwSkus: Set<string>; shippingMethod?: string }> {
+  try {
+    const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentId, limit: 1 })
+    const meta = sessions.data[0]?.metadata ?? {}
+    return {
+      locale: meta.locale || 'en',
+      bwSkus: new Set((meta.bwSkus ?? '').split(',').filter(Boolean)),
+      shippingMethod: meta.shippingMethod || undefined,
+    }
+  } catch (err) {
+    console.error('[prodigi-payout] session metadata lookup failed for', paymentId, err)
+    return { locale: 'en', bwSkus: new Set() }
+  }
+}
+
+/**
  * Submit an order to Prodigi once its payout has actually posted. Called from
  * the `payout.paid` webhook handler (the normal path), and as a fallback by
  * the cron loop below in case a webhook delivery was ever missed. Verifies
@@ -106,12 +131,17 @@ export async function submitAfterPayout(orderId: string, payoutId: string): Prom
   }
   if (!order.lineItems) throw new Error(`submitAfterPayout: order ${orderId} has no lineItems`)
 
-  // The shipping method isn't stored as its own AdminOrder field — it's
-  // baked into the synthetic 'shipping' line's label as "Shipping — X" (see
-  // checkout-session/route.ts). Extract it the same way Prodigi needs it
-  // (Budget/Standard/Express/Overnight).
+  // Locale / monochrome / shipping method — from the Stripe session (see
+  // checkoutFactsForPayment). Previously this hardcoded locale 'en' and
+  // dropped bwSkus, which sent the ENGLISH poster master (and colour instead
+  // of monochrome) for every live order — the wrong physical product.
+  const facts = order.paymentId
+    ? await checkoutFactsForPayment(order.paymentId)
+    : { locale: 'en', bwSkus: new Set<string>(), shippingMethod: undefined }
+  // Fallback: the method is also baked into the synthetic 'shipping' line's
+  // label as "Shipping — X" (see checkout-session/route.ts).
   const shippingLine = order.lineItems.find((l) => l.sku === 'shipping')
-  const shippingMethod = shippingLine?.label.split('—')[1]?.trim()
+  const shippingMethod = facts.shippingMethod ?? shippingLine?.label.split('—')[1]?.trim()
 
   try {
     const result = await submitProdigiOrder({
@@ -119,7 +149,8 @@ export async function submitAfterPayout(orderId: string, payoutId: string): Prom
       lineItems: order.lineItems,
       shipping: order.shipping ?? null,
       email: order.email,
-      locale: 'en',
+      locale: facts.locale,
+      bwSkus: facts.bwSkus,
       shippingMethod,
       callbackUrl: prodigiCallbackUrl(SITE_URL, orderId),
     })
