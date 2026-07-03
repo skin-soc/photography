@@ -543,7 +543,7 @@ function CacheControls() {
 /** Live progress bars for the background pre-render batches (posters + mockups),
  *  polled from the origin. Hidden until a batch has run this session. */
 interface RenderBatch { total: number; done: number; failed: number; running: boolean; finishedAt: number }
-interface ProgressData { poster: RenderBatch; mockup: RenderBatch; previewVersion?: number; mockupVersion?: number }
+interface ProgressData { poster: RenderBatch; mockup: RenderBatch; preview?: RenderBatch; previewVersion?: number; mockupVersion?: number }
 function RenderProgress() {
   const [p, setP] = useState<ProgressData | null>(null)
   const [status, setStatus] = useState<'loading' | 'ok' | 'unavailable'>('loading')
@@ -573,7 +573,7 @@ function RenderProgress() {
           if (mv != null) lastMockupVer.current = mv
           // Poll fast only while a batch is actually running; otherwise idle slowly
           // so the admin page isn't hammering the Worker forever.
-          const active = data.poster.running || data.mockup.running
+          const active = data.poster.running || data.mockup.running || data.preview?.running === true
           if (!stop) iv = setTimeout(tick, active ? 2500 : 30000)
         } else {
           setStatus('unavailable')
@@ -621,7 +621,13 @@ function RenderProgress() {
         <p className="mt-3 text-[11px] text-white/35">Loading…</p>
       ) : (
         <>
-          <div className="mt-3 space-y-3">{bar('Posters', p.poster)}{bar('Mockups', p.mockup)}</div>
+          <div className="mt-3 space-y-3">
+            {bar('Posters', p.poster)}
+            {bar('Mockups', p.mockup)}
+            {p.preview ? bar('Previews', p.preview) : (
+              <p className="text-[10px] text-amber-400/60">Preview re-render progress needs the newer origin build — rebuild the NAS origin to enable it.</p>
+            )}
+          </div>
           {/* Cache versions — bumped automatically on re-render; the catalog is
               re-synced on the spot so the new version reaches the shop instantly. */}
           <div className="mt-3 flex items-center justify-between text-[10px] font-mono-ibm text-white/30">

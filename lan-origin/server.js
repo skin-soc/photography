@@ -716,6 +716,10 @@ async function warmPreviewCache(primeEdge = false) {
     }
     if (jobs.length === 0) return
 
+    // Live progress for the admin page (same shape as poster/mockup batches).
+    startProgress('preview', jobs.length)
+    const prog = renderProgress.preview
+
     const ver = previewVersion()
     const doPrime = primeEdge && Boolean(PREVIEW_PUBLIC_BASE)
     let cursor = 0, built = 0, failed = 0, primed = 0
@@ -730,8 +734,9 @@ async function warmPreviewCache(primeEdge = false) {
           await stat(join(CACHE_DIR, previewCacheKey(id, max, logo, poster)))
         } catch {
           try { await buildPreview(id, max, logo, poster); built++ }
-          catch (err) { ok = false; failed++; console.error('[warm]', id, max, err.message) }
+          catch (err) { ok = false; failed++; prog.failed++; console.error('[warm]', id, max, err.message) }
         }
+        prog.done++
         // Prime loki's edge for this exact variant. The origin's own GET reaches
         // the CF edge: a miss pulls from here (populating the edge + tiered upper
         // tier), a hit is cheap. Draining the body ensures the entry is stored.
@@ -750,6 +755,10 @@ async function warmPreviewCache(primeEdge = false) {
     }
   } finally {
     _warming = false
+    if (renderProgress.preview.running) {
+      renderProgress.preview.running = false
+      renderProgress.preview.finishedAt = Date.now()
+    }
   }
 }
 
@@ -1337,6 +1346,9 @@ app.post('/admin/mockup-prerender', express.json({ limit: '512kb' }), async (req
 const renderProgress = {
   poster: { total: 0, done: 0, failed: 0, running: false, startedAt: 0, finishedAt: 0 },
   mockup: { total: 0, done: 0, failed: 0, running: false, startedAt: 0, finishedAt: 0 },
+  // Preview warm/re-render sweeps (warmPreviewCache) — every variant counts as
+  // one job, whether it was rebuilt or already cached.
+  preview: { total: 0, done: 0, failed: 0, running: false, startedAt: 0, finishedAt: 0 },
 }
 function startProgress(kind, total) {
   renderProgress[kind] = { total, done: 0, failed: 0, running: true, startedAt: Date.now(), finishedAt: 0 }

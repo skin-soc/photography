@@ -1,6 +1,6 @@
 {
   "name": "photography-portfolio",
-  "version": "1.40.13",
+  "version": "1.41.0",
   "description": "Gus McEwan Portfolio Website",
   "main": "index.js",
   "scripts": {
