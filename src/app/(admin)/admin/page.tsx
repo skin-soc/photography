@@ -2956,11 +2956,24 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
                       </div>
                     ))
                   )}
-                  {prodigiLive.charges.length > 0 && (
-                    <div className="text-amber-300/90 text-[11px]">
-                      VAT check: compare the charged total against the ex-VAT quote — equal ⇒ reverse-charged (0%), ~21% higher ⇒ Prodigi added VAT (investigate).
-                    </div>
-                  )}
+                  {prodigiLive.charges.length > 0 && (() => {
+                    const total = prodigiLive.charges.reduce((s, c) => s + c.totalMinor, 0)
+                    const cur = prodigiLive.charges[0].currency
+                    // Reverse-charge self-assessment: 25% DK acquisition VAT on the
+                    // intra-EU purchase — declared AND deducted in the same return
+                    // (rubrik A + købsmoms), so the net cash effect is normally 0.
+                    const selfVat = Math.round(total * 0.25)
+                    return (
+                      <>
+                        <div className="text-amber-300/90 text-[11px]">
+                          VAT check: equal to the ex-VAT quote ⇒ reverse-charged (0%) ✓ · ~21% higher ⇒ Prodigi added NL VAT (investigate).
+                        </div>
+                        <div className="text-emerald-400/90 text-[11px]">
+                          Reverse charge self-assessment: declare {(selfVat / 100).toFixed(2)} {cur} (25% of {(total / 100).toFixed(2)} {cur}) as DK acquisition VAT in the quarterly return (rubrik A + salgsmoms) and deduct the same as købsmoms — net 0 for taxable business use. Convert to DKK at the invoice-date rate.
+                        </div>
+                      </>
+                    )
+                  })()}
                   {prodigiLive.carrier && (
                     <div>Carrier: <span className="text-white/70">{prodigiLive.carrier}{prodigiLive.tracking ? ` · ${prodigiLive.tracking}` : ''}</span></div>
                   )}
