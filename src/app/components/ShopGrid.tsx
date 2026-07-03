@@ -338,57 +338,39 @@ function LandingHero({
     return () => clearInterval(id)
   }, [slides.length])
 
-  // Warm the next slides one at a time so the crossfade never paints in.
-  useEffect(() => {
-    let stop = false
-    ;(async () => {
-      for (const s of slides.slice(1)) {
-        if (stop) return
-        await new Promise<void>((done) => {
-          const img = new Image()
-          img.onload = () => done()
-          img.onerror = () => done()
-          img.src = urlOf(s)
-        })
-      }
-    })()
-    return () => { stop = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // No JS warm-up needed: every slide is a mounted background layer, so the
+  // browser fetches them all up front and the crossfade never paints in.
 
   const cur = slides[idx]
   return (
-    <div className="relative mb-10 h-[52vh] min-h-[380px] sm:h-[68vh] overflow-hidden rounded-[20px] bg-foreground/5">
-      {/* Each slide: the FULL square mockup contained (the artwork for sale is
-          never cropped), over a blurred cover copy of the same scene filling
-          the wide hero — reads as depth-of-field, not letterboxing. */}
+    /* Full-screen, full-bleed hero: escapes the page's 6vw/128px padding and
+       spans exactly one viewport. The rotating room scene is a FIXED
+       background (positioned to the viewport TOP, so the artwork is never
+       cropped); the page content then slides over it on scroll — the classic
+       fixed-background parallax. iOS ignores background-attachment: fixed and
+       gracefully degrades to a normal scrolling cover. */
+    <section
+      aria-label={`${cur.title}${cur.location ? ` — ${cur.location}` : ''}`}
+      className="relative left-1/2 w-screen -translate-x-1/2 -mt-[calc(6vw+128px)] mb-14 h-[100svh]"
+    >
       {slides.map((s, i) => (
         <div
           key={s.slug}
-          className="absolute inset-0 transition-opacity duration-[2000ms] ease-in-out"
-          style={{ opacity: i === idx ? 1 : 0 }}
           aria-hidden={i !== idx}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={urlOf(s)}
-            alt=""
-            loading={i === 0 ? 'eager' : 'lazy'}
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ filter: 'blur(28px) brightness(0.6)', transform: 'scale(1.12)' }}
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={urlOf(s)}
-            alt={i === idx ? `${s.title} — ${s.location}` : ''}
-            loading={i === 0 ? 'eager' : 'lazy'}
-            className="absolute inset-0 mx-auto h-full object-contain"
-          />
-        </div>
+          className="absolute inset-0 transition-opacity duration-[2000ms] ease-in-out"
+          style={{
+            opacity: i === idx ? 1 : 0,
+            backgroundImage: `url(${urlOf(s)})`,
+            backgroundAttachment: 'fixed',
+            backgroundPosition: 'top center',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
       ))}
       {/* Gradient sits on the photo, so white text is safe in both themes. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/10" />
-      <div className="absolute left-6 right-6 bottom-7 sm:left-10 sm:bottom-10 sm:max-w-xl">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/25" />
+      <div className="absolute left-[6vw] right-[6vw] bottom-[7vh] sm:max-w-xl">
         <h1 className="font-mono-ibm font-[200] leading-[1.05] tracking-tight text-white text-3xl sm:text-5xl">
           {title}
         </h1>
@@ -403,13 +385,13 @@ function LandingHero({
         </a>
       </div>
       {/* Caption — credits the visible work; hidden on small screens. */}
-      <div className="absolute right-6 bottom-7 sm:right-10 sm:bottom-10 hidden md:block text-right font-mono-ibm text-[10px] leading-relaxed tracking-[0.2em] uppercase text-white/50">
+      <div className="absolute right-[6vw] bottom-[7vh] hidden md:block text-right font-mono-ibm text-[10px] leading-relaxed tracking-[0.2em] uppercase text-white/50">
         {cur.title}
         {cur.location ? ` · ${cur.location}` : ''}
         <br />
         {from(cur.fromText)}
       </div>
-    </div>
+    </section>
   )
 }
 
