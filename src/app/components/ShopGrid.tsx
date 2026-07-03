@@ -406,7 +406,7 @@ function LandingHero({
       {/* Gradient sits on the photo, so white text is safe in both themes.
           Zero darkening at the top — the artwork shows untouched; it darkens
           only toward the bottom where the copy sits. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+      <div className="absolute inset-[-2px] bg-gradient-to-t from-black/85 via-transparent to-transparent" />
       <div className="absolute left-6 right-6 sm:left-10 bottom-8 sm:bottom-10 sm:max-w-xl">
         <h1 className="font-mono-ibm font-[200] leading-[1.05] tracking-tight text-white text-3xl sm:text-5xl">
           {title}
@@ -635,7 +635,7 @@ export default function ShopGrid({
                     className="group relative block overflow-hidden rounded-[16px] aspect-[4/3] sm:aspect-[3/4] bg-foreground/5 text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:-translate-y-1 shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#931020]"
                   >
                     <RotatingImage srcs={heroSrcs} delay={idx * 700} gen={viewKey} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 transition-all duration-500" />
+                    <div className="absolute inset-[-2px] bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex items-end justify-between gap-3">
                       <div>
                         <p className="font-mono-ibm font-[200] text-2xl text-white">{t(typeMessageKey(type))}</p>
@@ -661,7 +661,7 @@ export default function ShopGrid({
                     className="group relative block overflow-hidden rounded-[16px] aspect-[4/3] bg-foreground/5 text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:-translate-y-1 shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#931020]"
                   >
                     <RotatingImage srcs={heroSrcs} delay={nodeIdx * 700} gen={viewKey} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 group-focus-visible:from-black/70 transition-all duration-500" />
+                    <div className="absolute inset-[-2px] bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 group-focus-visible:from-black/70 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex items-end justify-between gap-3">
                       <p className="font-mono-ibm font-[200] text-2xl text-white">{name}</p>
                       <span className="shrink-0 text-[#e0485a] text-lg transition-transform duration-300 group-hover:translate-x-1 group-focus-visible:translate-x-1">→</span>
