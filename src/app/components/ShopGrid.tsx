@@ -358,17 +358,33 @@ function LandingHero({
 
   const cur = slides[idx]
   return (
-    <div className="relative mb-10 h-[52vh] min-h-[380px] sm:h-[68vh] overflow-hidden rounded-[20px]">
+    <div className="relative mb-10 h-[52vh] min-h-[380px] sm:h-[68vh] overflow-hidden rounded-[20px] bg-foreground/5">
+      {/* Each slide: the FULL square mockup contained (the artwork for sale is
+          never cropped), over a blurred cover copy of the same scene filling
+          the wide hero — reads as depth-of-field, not letterboxing. */}
       {slides.map((s, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <div
           key={s.slug}
-          src={urlOf(s)}
-          alt={i === idx ? `${s.title} — ${s.location}` : ''}
-          loading={i === 0 ? 'eager' : 'lazy'}
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] ease-in-out"
+          className="absolute inset-0 transition-opacity duration-[2000ms] ease-in-out"
           style={{ opacity: i === idx ? 1 : 0 }}
-        />
+          aria-hidden={i !== idx}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={urlOf(s)}
+            alt=""
+            loading={i === 0 ? 'eager' : 'lazy'}
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ filter: 'blur(28px) brightness(0.6)', transform: 'scale(1.12)' }}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={urlOf(s)}
+            alt={i === idx ? `${s.title} — ${s.location}` : ''}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            className="absolute inset-0 mx-auto h-full object-contain"
+          />
+        </div>
       ))}
       {/* Gradient sits on the photo, so white text is safe in both themes. */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/10" />
