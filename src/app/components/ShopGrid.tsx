@@ -132,7 +132,12 @@ function RotatingImage({
   if (order.length === 0) return null
 
   return (
-    <div className="absolute inset-0">
+    // inset-[-2px]: a real 2px layout overscan on top of the images' scale
+    // overscan. Mobile Safari rounds composited layer bounds to device pixels,
+    // which could leave a 1px band of the card's own background visible at the
+    // bottom edge — extending the wrapper past the (overflow-hidden) card edge
+    // removes it in a way transform scaling alone doesn't.
+    <div className="absolute inset-[-2px]">
       {order.map((src, i) => (
         <img
           key={src}
@@ -574,14 +579,25 @@ export default function ShopGrid({
       {/* Landing with hero: the welcome copy (incl. the h1) lives INSIDE the
           gallery-wall hero. Other views keep the plain heading. */}
       {isLanding && (heroSlides?.length ?? 0) > 0 ? (
-        <LandingHero
-          slides={heroSlides!}
-          mockupVersion={mockupVersion}
-          title={t('landing.title')}
-          lead={t('landing.lead')}
-          cta={t('landing.cta')}
-          from={(price) => t('landing.from', { price })}
-        />
+        <>
+          {/* The hero card is desktop/tablet-only — on a phone the copy
+              overruns the room scene, so mobile gets the plain welcome header
+              instead (the hero's hidden h1 remains the page's single h1). */}
+          <div className="hidden sm:block">
+            <LandingHero
+              slides={heroSlides!}
+              mockupVersion={mockupVersion}
+              title={t('landing.title')}
+              lead={t('landing.lead')}
+              cta={t('landing.cta')}
+              from={(price) => t('landing.from', { price })}
+            />
+          </div>
+          <header className="sm:hidden mb-10 mt-4">
+            <p className="font-mono-ibm font-[200] leading-[1.05] tracking-tight text-3xl">{t('landing.title')}</p>
+            <p className="mt-3 text-[13px] font-light leading-relaxed text-foreground/60">{t('landing.lead')}</p>
+          </header>
+        </>
       ) : (
         <header className="mb-12">
           <h1 className="text-4xl md:text-5xl font-light">
