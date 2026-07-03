@@ -265,8 +265,11 @@ export default async function Shop({ params }: { params: Params }) {
   const leafType = folder.isLeaf ? initialCategoryPath[0] : null
   const brandBg = leafType === 'print' || leafType === 'fine-art'
 
+  // Landing with the hero card: drop the usual 6vw of breathing room below the
+  // fixed nav — the hero should sit right beneath it, not float mid-page.
+  const heroLanding = (heroSlides?.length ?? 0) > 0
   return (
-    <main className={`min-h-screen ${brandBg ? 'shop-brand-bg' : 'bg-bg'} text-foreground px-[6vw] pt-[calc(6vw+128px)] pb-32`}>
+    <main className={`min-h-screen ${brandBg ? 'shop-brand-bg' : 'bg-bg'} text-foreground px-[6vw] ${heroLanding ? 'pt-[calc(128px+16px)]' : 'pt-[calc(6vw+128px)]'} pb-32`}>
       {catalog.length > 0 ? (
         <ShopGrid
           catalogVersion={version}
