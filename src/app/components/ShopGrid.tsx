@@ -12,7 +12,7 @@ import {
 import PosterMat from '@/app/components/PosterMat'
 import SalePill from '@/app/components/SalePill'
 import { categoryUrl } from '@/lib/shop-url'
-import type { TypeCard, FolderCard } from '@/lib/shop-cards'
+import type { TypeCard, FolderCard, HeroSlide } from '@/lib/shop-cards'
 
 export interface GridPhoto {
   id: string
@@ -306,9 +306,101 @@ function Breadcrumb({
   )
 }
 
+/** The landing's "gallery wall" hero: a full-width fine-art room mockup slowly
+ *  crossfading through curated slides, with the localized welcome copy overlaid
+ *  and a caption crediting the visible work. Images are the same edge-cached
+ *  room07 mockups the product pages use. Theme-safe: the overlay gradient sits
+ *  on the PHOTO (like the type cards' gradients), so text stays white in both
+ *  light and dark themes. */
+function LandingHero({
+  slides,
+  mockupVersion,
+  title,
+  lead,
+  cta,
+  from,
+}: {
+  slides: HeroSlide[]
+  mockupVersion: number
+  title: string
+  lead: string
+  cta: string
+  /** "from {price}" line, pre-localized with the CURRENT slide's price. */
+  from: (price: string) => string
+}) {
+  const [idx, setIdx] = useState(0)
+  const urlOf = (s: HeroSlide) =>
+    `/api/fineart-mockup?photo=${encodeURIComponent(s.slug)}&family=${encodeURIComponent(s.family)}&size=${encodeURIComponent(s.size)}&color=${encodeURIComponent(s.color)}&v=${mockupVersion}`
+
+  useEffect(() => {
+    if (slides.length <= 1) return
+    const id = setInterval(() => setIdx((i) => (i + 1) % slides.length), 6000)
+    return () => clearInterval(id)
+  }, [slides.length])
+
+  // Warm the next slides one at a time so the crossfade never paints in.
+  useEffect(() => {
+    let stop = false
+    ;(async () => {
+      for (const s of slides.slice(1)) {
+        if (stop) return
+        await new Promise<void>((done) => {
+          const img = new Image()
+          img.onload = () => done()
+          img.onerror = () => done()
+          img.src = urlOf(s)
+        })
+      }
+    })()
+    return () => { stop = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const cur = slides[idx]
+  return (
+    <div className="relative mb-10 h-[52vh] min-h-[380px] sm:h-[68vh] overflow-hidden rounded-[20px]">
+      {slides.map((s, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={s.slug}
+          src={urlOf(s)}
+          alt={i === idx ? `${s.title} — ${s.location}` : ''}
+          loading={i === 0 ? 'eager' : 'lazy'}
+          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] ease-in-out"
+          style={{ opacity: i === idx ? 1 : 0 }}
+        />
+      ))}
+      {/* Gradient sits on the photo, so white text is safe in both themes. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/10" />
+      <div className="absolute left-6 right-6 bottom-7 sm:left-10 sm:bottom-10 sm:max-w-xl">
+        <h1 className="font-mono-ibm font-[200] leading-[1.05] tracking-tight text-white text-3xl sm:text-5xl">
+          {title}
+        </h1>
+        <p className="mt-3 text-[13px] sm:text-[15px] font-light leading-relaxed text-white/65">
+          {lead}
+        </p>
+        <a
+          href="#collection"
+          className="mt-5 inline-block rounded-full border border-white/35 px-6 py-3 text-[10px] font-light tracking-[0.22em] uppercase text-white hover:border-[#c2233f] hover:text-[#e0485a] transition-colors"
+        >
+          {cta} →
+        </a>
+      </div>
+      {/* Caption — credits the visible work; hidden on small screens. */}
+      <div className="absolute right-6 bottom-7 sm:right-10 sm:bottom-10 hidden md:block text-right font-mono-ibm text-[10px] leading-relaxed tracking-[0.2em] uppercase text-white/50">
+        {cur.title}
+        {cur.location ? ` · ${cur.location}` : ''}
+        <br />
+        {from(cur.fromText)}
+      </div>
+    </div>
+  )
+}
+
 export default function ShopGrid({
   catalogVersion,
   landingCards = null,
+  heroSlides = null,
   folderCards = [],
   isLeaf = false,
   availableTypes,
@@ -325,6 +417,8 @@ export default function ShopGrid({
   /** Server-rendered landing product-type cards — present only on the landing,
    *  so entering the shop needs no client catalog fetch. */
   landingCards?: TypeCard[] | null
+  /** "Gallery wall" hero slides (fine-art room mockups) — landing only. */
+  heroSlides?: HeroSlide[] | null
   /** Server-rendered sub-folder cards for a category view (empty on a leaf). */
   folderCards?: FolderCard[]
   /** True when this view is an actual photo collection (tiles are client-fetched). */
@@ -447,16 +541,27 @@ export default function ShopGrid({
 
   return (
     <>
-      {/* Heading — the shop title on the landing, then "<Type> Shop" once a
-          product type is chosen, held at that tier while browsing subjects. */}
-      <header className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-light">
-          {typeFilter ? t('sectionTitle', { name: t(typeMessageKey(typeFilter)) }) : heading}
-        </h1>
-        {isLanding && (
-          <p className="mt-4 max-w-2xl text-foreground/60 leading-relaxed">{intro}</p>
-        )}
-      </header>
+      {/* Landing with hero: the welcome copy (incl. the h1) lives INSIDE the
+          gallery-wall hero. Other views keep the plain heading. */}
+      {isLanding && (heroSlides?.length ?? 0) > 0 ? (
+        <LandingHero
+          slides={heroSlides!}
+          mockupVersion={mockupVersion}
+          title={t('landing.title')}
+          lead={t('landing.lead')}
+          cta={t('landing.cta')}
+          from={(price) => t('landing.from', { price })}
+        />
+      ) : (
+        <header className="mb-12">
+          <h1 className="text-4xl md:text-5xl font-light">
+            {typeFilter ? t('sectionTitle', { name: t(typeMessageKey(typeFilter)) }) : heading}
+          </h1>
+          {isLanding && (
+            <p className="mt-4 max-w-2xl text-foreground/60 leading-relaxed">{intro}</p>
+          )}
+        </header>
+      )}
 
       {/* Breadcrumb (hidden on the landing) */}
       <Breadcrumb navPath={navPath} backPath={backPath} typeLabel={typeLabel} rootLabel={t('shopRoot')} />
@@ -471,19 +576,29 @@ export default function ShopGrid({
 
         <div>
           {isLanding ? (
-            /* Landing: one card per product type — Fine Art · Prints · Digital */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 bg-foreground/5">
-              {landingItems.map(({ type, heroSrcs }, idx) => {
+            /* Landing: doorway panels — one per product type, taller than the
+               old flat cards, with count + a one-line description. */
+            <div id="collection" className="grid grid-cols-1 sm:grid-cols-3 gap-3 scroll-mt-28">
+              {landingItems.map(({ type, count, heroSrcs }, idx) => {
+                const doorKey =
+                  type === 'print' ? 'landing.doorPrint' : type === 'fine-art' ? 'landing.doorFineArt' : 'landing.doorDigital'
                 return (
                   <Link
                     key={type}
                     href={categoryUrl([type])}
-                    className="group relative block overflow-hidden aspect-[4/3] bg-bg text-left"
+                    className="group relative block overflow-hidden rounded-[16px] aspect-[4/3] sm:aspect-[3/4] bg-foreground/5 text-left"
                   >
                     <RotatingImage srcs={heroSrcs} delay={idx * 700} gen={viewKey} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/65 transition-all duration-500" />
-                    <div className="absolute bottom-0 left-0 p-6 z-10">
-                      <p className="text-2xl font-light text-accent">{t(typeMessageKey(type))}</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 transition-all duration-500" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex items-end justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-light tracking-[0.24em] uppercase text-[#e0485a]">
+                          {t('landing.works', { count })}
+                        </p>
+                        <p className="mt-1.5 font-mono-ibm font-[200] text-2xl text-white">{t(typeMessageKey(type))}</p>
+                        <p className="mt-1 text-[11px] font-light text-white/55">{t(doorKey)}</p>
+                      </div>
+                      <span className="shrink-0 text-[#e0485a] text-lg transition-transform duration-300 group-hover:translate-x-1">→</span>
                     </div>
                   </Link>
                 )

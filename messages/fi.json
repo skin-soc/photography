@@ -147,7 +147,17 @@
         "blurb": "Matta giclée-vedos akryylilasin takana, lumenvalkoisella paspiksella. Mitat ovat valmiin kehyksen — kuva on paspiksen sisällä."
       }
     },
-    "paperType": "Paperi"
+    "paperType": "Paperi",
+    "landing": {
+      "title": "Valokuvia, tehty seinille.",
+      "lead": "Museolaadun fine art -vedoksia, galleriajulisteita ja täyden resoluution tiedostoja — jokainen teos painetaan tilauksesta EU:ssa ja toimitetaan ovellesi.",
+      "cta": "Tutustu kokoelmaan",
+      "from": "alkaen {price}",
+      "works": "{count} teosta",
+      "doorPrint": "Typografiset galleriajulisteet neljällä arkistopaperilla",
+      "doorFineArt": "Canvas kellutuskehyksessä & kehystetyt vedokset",
+      "doorDigital": "Lisensoidut täyden resoluution lataukset"
+    }
   },
   "cart": {
     "emailLabel": "Sähköposti (latauslinkkiäsi varten)",

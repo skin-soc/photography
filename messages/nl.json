@@ -148,7 +148,17 @@
         "blurb": "Matte giclée-print achter acrylglas, in een sneeuwwit passe-partout. De maten zijn de afgewerkte lijst — de afbeelding zit binnen het passe-partout."
       }
     },
-    "paperType": "Papier"
+    "paperType": "Papier",
+    "landing": {
+      "title": "Fotografie, gemaakt voor muren.",
+      "lead": "Fine art van museumkwaliteit, galerieposters en bestanden in volledige resolutie — elk werk wordt op bestelling gedrukt in de EU en thuisbezorgd.",
+      "cta": "Ontdek de collectie",
+      "from": "vanaf {price}",
+      "works": "{count} werken",
+      "doorPrint": "Typografische galerieposters op vier archiefpapieren",
+      "doorFineArt": "Canvas in zwevende lijst & ingelijste prints",
+      "doorDigital": "Gelicentieerde downloads in volledige resolutie"
+    }
   },
   "cart": {
     "emailLabel": "E-mail (voor je downloadlink)",

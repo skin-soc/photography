@@ -148,7 +148,17 @@
         "blurb": "Matter Giclée-Druck hinter Acrylglas mit schneeweißem Passepartout. Die Maße beziehen sich auf den fertigen Rahmen — das Bild sitzt im Passepartout."
       }
     },
-    "paperType": "Papier"
+    "paperType": "Papier",
+    "landing": {
+      "title": "Fotografie, gemacht für Wände.",
+      "lead": "Fine Art in Museumsqualität, Galerie-Poster und Dateien in voller Auflösung — jedes Werk wird auf Bestellung in der EU gedruckt und bis an Ihre Tür geliefert.",
+      "cta": "Kollektion entdecken",
+      "from": "ab {price}",
+      "works": "{count} Werke",
+      "doorPrint": "Typografische Galerie-Poster auf vier Archivpapieren",
+      "doorFineArt": "Leinwand im Schattenfugenrahmen & gerahmte Drucke",
+      "doorDigital": "Lizenzierte Downloads in voller Auflösung"
+    }
   },
   "cart": {
     "emailLabel": "E-Mail (für Ihren Download-Link)",

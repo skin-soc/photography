@@ -21,7 +21,7 @@ import { getPosterTranslations } from '@/lib/shop-settings'
 import { resolveText } from '@/lib/poster-translations'
 import { typeFromUrlSlug } from '@/lib/product-types'
 import { isProductSlug, resolveShopPath, categoryUrl } from '@/lib/shop-url'
-import { landingTypeCards, shopFolderCards } from '@/lib/shop-cards'
+import { landingTypeCards, shopFolderCards, landingHeroSlides } from '@/lib/shop-cards'
 import { SITE_URL, OG_LOCALE_MAP, getKeywords } from '@/i18n/seo'
 import { routing } from '@/i18n/routing'
 
@@ -255,6 +255,8 @@ export default async function Shop({ params }: { params: Params }) {
   // `isLeaf`) fetches the catalog client-side. This keeps browsing instant while
   // the heavy per-photo work stays off the Worker (no error 1102).
   const landingCards = initialCategoryPath.length === 0 ? landingTypeCards(catalog, types) : null
+  // "Gallery wall" hero slides (fine-art room mockups) — landing only.
+  const heroSlides = initialCategoryPath.length === 0 ? landingHeroSlides(catalog) : null
   const folder = shopFolderCards(catalog, categoryTree, initialCategoryPath)
 
   // Poster & fine-art LEAF grids get the brand-red (#931020) page background in
@@ -269,6 +271,7 @@ export default async function Shop({ params }: { params: Params }) {
         <ShopGrid
           catalogVersion={version}
           landingCards={landingCards}
+          heroSlides={heroSlides}
           folderCards={folder.cards}
           isLeaf={folder.isLeaf}
           availableTypes={types}

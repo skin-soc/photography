@@ -10,8 +10,61 @@
  * same whether rendered from these props or (as a fallback) from fetched photos.
  */
 
-import { type ShopPhoto, type CategoryNode, photoTypes } from '@/lib/shop'
+import { type ShopPhoto, type CategoryNode, photoTypes, displayTitle, fromPrice } from '@/lib/shop'
+import { formatDKK } from '@/lib/currency'
 import { PRODUCT_TYPE_ORDER, type ProductType } from '@/lib/product-types'
+
+/** One slide of the landing's "gallery wall" hero — a fine-art room mockup with
+ *  its caption facts. The client builds the /api/fineart-mockup URL (room07
+ *  view) from the variant + the mockup version it already has. */
+export interface HeroSlide {
+  slug: string
+  family: string
+  size: string
+  color: string
+  title: string
+  location: string
+  /** Lowest price on the photo, formatted ("270 kr.") — caption "from X". */
+  fromText: string
+}
+
+/**
+ * Curated slides for the landing hero: fine-art photos (they have real room
+ * mockups), green-labelled `key` photos first, capped at `max`. Each uses its
+ * LARGEST offered variant (framed preferred — the strongest room shot), which
+ * per the standing rule always has a pre-rendered mockup.
+ */
+export function landingHeroSlides(catalog: ShopPhoto[], max = 4): HeroSlide[] {
+  const fineArt = catalog.filter((p) => photoTypes(p).includes('fine-art'))
+  const ordered = [...fineArt.filter((p) => p.key), ...fineArt.filter((p) => !p.key)]
+  const slides: HeroSlide[] = []
+  for (const p of ordered) {
+    if (slides.length >= max) break
+    let best: { family: string; size: string; color: string; area: number } | null = null
+    for (const x of p.products) {
+      if (x.type !== 'fine-art' || !x.family || !x.faSize) continue
+      const area = (x.printSize?.w ?? 0) * (x.printSize?.h ?? 0)
+      // Prefer framed over canvas at equal-or-larger area — the mount + frame
+      // reads best in the room scene.
+      const better =
+        !best ||
+        area > best.area ||
+        (area === best.area && x.family === 'framed' && best.family !== 'framed')
+      if (better) best = { family: x.family, size: x.faSize, color: x.frameColor ?? 'black', area }
+    }
+    if (!best) continue
+    slides.push({
+      slug: p.slug,
+      family: best.family,
+      size: best.size,
+      color: best.color,
+      title: displayTitle(p),
+      location: p.location,
+      fromText: formatDKK(fromPrice(p).price),
+    })
+  }
+  return slides
+}
 
 export interface TypeCard {
   type: ProductType

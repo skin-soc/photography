@@ -147,7 +147,17 @@
         "blurb": "Impresión giclée mate tras vidrio acrílico, con paspartú blanco nieve. Las medidas corresponden al marco terminado — la imagen queda dentro del paspartú."
       }
     },
-    "paperType": "Papel"
+    "paperType": "Papel",
+    "landing": {
+      "title": "Fotografía, hecha para paredes.",
+      "lead": "Fine art con calidad de museo, pósters de galería y archivos a máxima resolución — cada pieza se imprime por encargo en la UE y se entrega en tu puerta.",
+      "cta": "Explora la colección",
+      "from": "desde {price}",
+      "works": "{count} obras",
+      "doorPrint": "Pósters de galería tipografiados en cuatro papeles de archivo",
+      "doorFineArt": "Lienzo con marco flotante e impresiones enmarcadas",
+      "doorDigital": "Descargas licenciadas a máxima resolución"
+    }
   },
   "cart": {
     "emailLabel": "Correo electrónico (para tu enlace de descarga)",

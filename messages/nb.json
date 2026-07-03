@@ -147,7 +147,17 @@
         "blurb": "Matt giclée-trykk bak akrylglass i snøhvit passepartout. Målene er den ferdige rammen — bildet sitter innenfor passepartouten."
       }
     },
-    "paperType": "Papir"
+    "paperType": "Papir",
+    "landing": {
+      "title": "Fotografi, laget for vegger.",
+      "lead": "Fine art i museumskvalitet, galleriplakater og filer i full oppløsning — hvert verk trykkes på bestilling i EU og leveres til døren din.",
+      "cta": "Utforsk samlingen",
+      "from": "fra {price}",
+      "works": "{count} verk",
+      "doorPrint": "Typografiske galleriplakater på fire arkivpapirer",
+      "doorFineArt": "Canvas i svevende ramme & innrammede trykk",
+      "doorDigital": "Lisensierte nedlastinger i full oppløsning"
+    }
   },
   "cart": {
     "emailLabel": "E-post (for nedlastingslenken din)",
