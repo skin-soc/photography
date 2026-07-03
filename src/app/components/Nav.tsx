@@ -80,7 +80,7 @@ export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-[transform,background-color,border-color] duration-300 ease-out ${
           frosted
-            ? 'bg-bg/60 backdrop-blur-md border-b border-foreground/10'
+            ? 'bg-bg/45 backdrop-blur-md border-b border-foreground/10'
             : 'bg-transparent border-b border-transparent'
         }`}
         style={{ padding: '3vw 6vw', transform: navHidden ? 'translateY(-120%)' : 'translateY(0)' }}
