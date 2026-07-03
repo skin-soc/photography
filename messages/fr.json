@@ -151,10 +151,9 @@
     "paperType": "Papier",
     "landing": {
       "title": "La photographie, faite pour les murs.",
-      "lead": "Fine art qualité musée, affiches de galerie et fichiers pleine résolution — chaque pièce est imprimée à la commande dans l'UE et livrée à votre porte.",
+      "lead": "Fine art qualité musée, affiches de galerie et fichiers pleine résolution — chaque pièce est fabriquée à la commande et livrée à votre porte.",
       "cta": "Explorer la collection",
       "from": "à partir de {price}",
-      "works": "{count} œuvres",
       "doorPrint": "Affiches de galerie typographiées sur quatre papiers d'archive",
       "doorFineArt": "Toile en caisse américaine & tirages encadrés",
       "doorDigital": "Téléchargements sous licence en pleine résolution"

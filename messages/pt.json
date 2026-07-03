@@ -150,10 +150,9 @@
     "paperType": "Papel",
     "landing": {
       "title": "Fotografia, feita para paredes.",
-      "lead": "Fine art com qualidade de museu, pósteres de galeria e ficheiros em resolução máxima — cada peça é impressa por encomenda na UE e entregue à tua porta.",
+      "lead": "Fine art com qualidade de museu, pósteres de galeria e ficheiros em resolução máxima — cada peça é feita por encomenda e entregue à tua porta.",
       "cta": "Explorar a coleção",
       "from": "desde {price}",
-      "works": "{count} obras",
       "doorPrint": "Pósteres de galeria tipografados em quatro papéis de arquivo",
       "doorFineArt": "Tela com moldura flutuante e impressões emolduradas",
       "doorDigital": "Downloads licenciados em resolução máxima"

@@ -150,10 +150,9 @@
     "paperType": "Papper",
     "landing": {
       "title": "Fotografi, gjort för väggar.",
-      "lead": "Fine art i museikvalitet, galleripostrar och filer i full upplösning — varje verk trycks på beställning i EU och levereras till din dörr.",
+      "lead": "Fine art i museikvalitet, galleripostrar och filer i full upplösning — varje verk tillverkas på beställning och levereras till din dörr.",
       "cta": "Utforska samlingen",
       "from": "från {price}",
-      "works": "{count} verk",
       "doorPrint": "Typografiska galleripostrar på fyra arkivpapper",
       "doorFineArt": "Canvas i svävande ram & inramade tryck",
       "doorDigital": "Licensierade nedladdningar i full upplösning"

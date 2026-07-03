@@ -151,10 +151,9 @@
     "paperType": "Papier",
     "landing": {
       "title": "Fotografie, gemacht für Wände.",
-      "lead": "Fine Art in Museumsqualität, Galerie-Poster und Dateien in voller Auflösung — jedes Werk wird auf Bestellung in der EU gedruckt und bis an Ihre Tür geliefert.",
+      "lead": "Fine Art in Museumsqualität, Galerie-Poster und Dateien in voller Auflösung — jedes Werk wird auf Bestellung gefertigt und bis an Ihre Tür geliefert.",
       "cta": "Kollektion entdecken",
       "from": "ab {price}",
-      "works": "{count} Werke",
       "doorPrint": "Typografische Galerie-Poster auf vier Archivpapieren",
       "doorFineArt": "Leinwand im Schattenfugenrahmen & gerahmte Drucke",
       "doorDigital": "Lizenzierte Downloads in voller Auflösung"

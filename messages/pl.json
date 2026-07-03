@@ -151,10 +151,9 @@
     "paperType": "Papier",
     "landing": {
       "title": "Fotografia stworzona na ściany.",
-      "lead": "Fine art w jakości muzealnej, plakaty galeryjne i pliki w pełnej rozdzielczości — każda praca drukowana na zamówienie w UE i dostarczana pod drzwi.",
+      "lead": "Fine art w jakości muzealnej, plakaty galeryjne i pliki w pełnej rozdzielczości — każda praca powstaje na zamówienie i jest dostarczana pod drzwi.",
       "cta": "Poznaj kolekcję",
       "from": "od {price}",
-      "works": "{count} prac",
       "doorPrint": "Typograficzne plakaty galeryjne na czterech papierach archiwalnych",
       "doorFineArt": "Canvas w ramie dystansowej i oprawione odbitki",
       "doorDigital": "Licencjonowane pliki w pełnej rozdzielczości"

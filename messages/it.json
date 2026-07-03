@@ -151,10 +151,9 @@
     "paperType": "Carta",
     "landing": {
       "title": "Fotografia, fatta per le pareti.",
-      "lead": "Fine art da museo, poster da galleria e file a piena risoluzione — ogni pezzo è stampato su ordinazione nell'UE e consegnato a casa tua.",
+      "lead": "Fine art da museo, poster da galleria e file a piena risoluzione — ogni pezzo è realizzato su ordinazione e consegnato a casa tua.",
       "cta": "Esplora la collezione",
       "from": "da {price}",
-      "works": "{count} opere",
       "doorPrint": "Poster da galleria tipografici su quattro carte d'archivio",
       "doorFineArt": "Canvas con cornice flottante e stampe incorniciate",
       "doorDigital": "Download su licenza a piena risoluzione"

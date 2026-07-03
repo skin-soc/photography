@@ -150,10 +150,9 @@
     "paperType": "Paperi",
     "landing": {
       "title": "Valokuvia, tehty seinille.",
-      "lead": "Museolaadun fine art -vedoksia, galleriajulisteita ja täyden resoluution tiedostoja — jokainen teos painetaan tilauksesta EU:ssa ja toimitetaan ovellesi.",
+      "lead": "Museolaadun fine art -vedoksia, galleriajulisteita ja täyden resoluution tiedostoja — jokainen teos valmistetaan tilauksesta ja toimitetaan ovellesi.",
       "cta": "Tutustu kokoelmaan",
       "from": "alkaen {price}",
-      "works": "{count} teosta",
       "doorPrint": "Typografiset galleriajulisteet neljällä arkistopaperilla",
       "doorFineArt": "Canvas kellutuskehyksessä & kehystetyt vedokset",
       "doorDigital": "Lisensoidut täyden resoluution lataukset"

@@ -150,10 +150,9 @@
     "paperType": "Papir",
     "landing": {
       "title": "Fotografi, skabt til vægge.",
-      "lead": "Fine art i museumskvalitet, galleriplakater og filer i fuld opløsning — hvert værk printes på bestilling i EU og leveres til din dør.",
+      "lead": "Fine art i museumskvalitet, galleriplakater og filer i fuld opløsning — hvert værk fremstilles på bestilling og leveres til din dør.",
       "cta": "Udforsk samlingen",
       "from": "fra {price}",
-      "works": "{count} værker",
       "doorPrint": "Typografiske galleriplakater på fire arkivpapirer",
       "doorFineArt": "Canvas i svæveramme & indrammede print",
       "doorDigital": "Licenserede downloads i fuld opløsning"

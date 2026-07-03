@@ -151,10 +151,9 @@
     "paperType": "Papier",
     "landing": {
       "title": "Fotografie, gemaakt voor muren.",
-      "lead": "Fine art van museumkwaliteit, galerieposters en bestanden in volledige resolutie — elk werk wordt op bestelling gedrukt in de EU en thuisbezorgd.",
+      "lead": "Fine art van museumkwaliteit, galerieposters en bestanden in volledige resolutie — elk werk wordt op bestelling gemaakt en thuisbezorgd.",
       "cta": "Ontdek de collectie",
       "from": "vanaf {price}",
-      "works": "{count} werken",
       "doorPrint": "Typografische galerieposters op vier archiefpapieren",
       "doorFineArt": "Canvas in zwevende lijst & ingelijste prints",
       "doorDigital": "Gelicentieerde downloads in volledige resolutie"

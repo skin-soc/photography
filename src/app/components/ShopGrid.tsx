@@ -595,7 +595,7 @@ export default function ShopGrid({
             /* Landing: doorway panels — one per product type, taller than the
                old flat cards, with count + a one-line description. */
             <div id="collection" className="grid grid-cols-1 sm:grid-cols-3 gap-3 scroll-mt-28">
-              {landingItems.map(({ type, count, heroSrcs }, idx) => {
+              {landingItems.map(({ type, heroSrcs }, idx) => {
                 const doorKey =
                   type === 'print' ? 'landing.doorPrint' : type === 'fine-art' ? 'landing.doorFineArt' : 'landing.doorDigital'
                 return (
@@ -608,10 +608,7 @@ export default function ShopGrid({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex items-end justify-between gap-3">
                       <div>
-                        <p className="text-[10px] font-light tracking-[0.24em] uppercase text-[#e0485a]">
-                          {t('landing.works', { count })}
-                        </p>
-                        <p className="mt-1.5 font-mono-ibm font-[200] text-2xl text-white">{t(typeMessageKey(type))}</p>
+                        <p className="font-mono-ibm font-[200] text-2xl text-white">{t(typeMessageKey(type))}</p>
                         <p className="mt-1 text-[11px] font-light text-white/55">{t(doorKey)}</p>
                       </div>
                       <span className="shrink-0 text-[#e0485a] text-lg transition-transform duration-300 group-hover:translate-x-1">→</span>

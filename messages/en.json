@@ -151,10 +151,9 @@
     "paperType": "Paper",
     "landing": {
       "title": "Photography, made for walls.",
-      "lead": "Museum-grade fine art, gallery posters and full-resolution files — each piece printed to order in the EU and delivered to your door.",
+      "lead": "Museum-grade fine art, gallery posters and full-resolution files — each piece made to order and delivered to your door.",
       "cta": "Explore the collection",
       "from": "from {price}",
-      "works": "{count} works",
       "doorPrint": "Typeset gallery posters on four archival papers",
       "doorFineArt": "Float-framed canvas & mounted prints",
       "doorDigital": "Licensed full-resolution downloads"
