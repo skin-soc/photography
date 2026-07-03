@@ -156,7 +156,8 @@
       "doorPrint": "Pósteres de galeria tipografados em quatro papéis de arquivo",
       "doorFineArt": "Tela com moldura flutuante e impressões emolduradas",
       "doorDigital": "Downloads licenciados em resolução máxima"
-    }
+    },
+    "productMetaDescription": "Disponível como pósteres, edições fine art e downloads digitais licenciados de {site}. Feito por encomenda, entregue em toda a Europa."
   },
   "cart": {
     "emailLabel": "E-mail (para o seu link de transferência)",

@@ -157,7 +157,8 @@
       "doorPrint": "Typograficzne plakaty galeryjne na czterech papierach archiwalnych",
       "doorFineArt": "Canvas w ramie dystansowej i oprawione odbitki",
       "doorDigital": "Licencjonowane pliki w pełnej rozdzielczości"
-    }
+    },
+    "productMetaDescription": "Dostępne jako plakaty, edycje fine art i licencjonowane pliki cyfrowe od {site}. Wykonywane na zamówienie, dostawa w całej Europie."
   },
   "cart": {
     "emailLabel": "E-mail (do linku do pobrania)",

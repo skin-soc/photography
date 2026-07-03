@@ -157,7 +157,8 @@
       "doorPrint": "Poster da galleria tipografici su quattro carte d'archivio",
       "doorFineArt": "Canvas con cornice flottante e stampe incorniciate",
       "doorDigital": "Download su licenza a piena risoluzione"
-    }
+    },
+    "productMetaDescription": "Disponibile come poster, edizioni fine art e download digitali su licenza di {site}. Realizzato su ordinazione, consegna in tutta Europa."
   },
   "cart": {
     "emailLabel": "E-mail (per il tuo link di download)",

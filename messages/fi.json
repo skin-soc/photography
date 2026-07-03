@@ -156,7 +156,8 @@
       "doorPrint": "Typografiset galleriajulisteet neljällä arkistopaperilla",
       "doorFineArt": "Canvas kellutuskehyksessä & kehystetyt vedokset",
       "doorDigital": "Lisensoidut täyden resoluution lataukset"
-    }
+    },
+    "productMetaDescription": "Saatavana julisteina, fine art -vedoksina ja lisensoituina digitaalisina latauksina — {site}. Valmistetaan tilauksesta, toimitus koko Eurooppaan."
   },
   "cart": {
     "emailLabel": "Sähköposti (latauslinkkiäsi varten)",

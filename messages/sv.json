@@ -156,7 +156,8 @@
       "doorPrint": "Typografiska galleripostrar på fyra arkivpapper",
       "doorFineArt": "Canvas i svävande ram & inramade tryck",
       "doorDigital": "Licensierade nedladdningar i full upplösning"
-    }
+    },
+    "productMetaDescription": "Finns som postrar, fine art-utgåvor och licensierade digitala nedladdningar från {site}. Tillverkas på beställning och levereras i hela Europa."
   },
   "cart": {
     "emailLabel": "E-post (för din nedladdningslänk)",

@@ -157,7 +157,8 @@
       "doorPrint": "Typografische Galerie-Poster auf vier Archivpapieren",
       "doorFineArt": "Leinwand im Schattenfugenrahmen & gerahmte Drucke",
       "doorDigital": "Lizenzierte Downloads in voller Auflösung"
-    }
+    },
+    "productMetaDescription": "Erhältlich als Poster, Fine-Art-Editionen und lizenzierte digitale Downloads von {site}. Auf Bestellung gefertigt, Lieferung in ganz Europa."
   },
   "cart": {
     "emailLabel": "E-Mail (für Ihren Download-Link)",

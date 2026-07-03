@@ -156,7 +156,8 @@
       "doorPrint": "Pósters de galería tipografiados en cuatro papeles de archivo",
       "doorFineArt": "Lienzo con marco flotante e impresiones enmarcadas",
       "doorDigital": "Descargas licenciadas a máxima resolución"
-    }
+    },
+    "productMetaDescription": "Disponible como pósters, ediciones fine art y descargas digitales con licencia de {site}. Hecho por encargo y entregado en toda Europa."
   },
   "cart": {
     "emailLabel": "Correo electrónico (para tu enlace de descarga)",

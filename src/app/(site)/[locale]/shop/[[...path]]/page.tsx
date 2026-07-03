@@ -113,12 +113,29 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     const photo = await getPhoto(productSlug)
     if (!photo) return {}
     const site = await getTranslations({ locale, namespace: 'site' })
-    const title = `${displayTitle(photo)} — ${photo.location}`
-    const description = `${photo.caption} Available as posters, fine art editions and digital downloads by ${site('title')}.`
+    const shopT = await getTranslations({ locale, namespace: 'shop' })
+    // Localized title/caption where a poster translation exists — the SERP
+    // snippet should match the localized page, not the English catalog values.
+    const text = resolveText(await getPosterTranslations(), photo.id, locale, {
+      title: photo.title || photo.id,
+      caption: photo.caption,
+    })
+    const name = text.title !== photo.title ? text.title : displayTitle(photo)
+    // No dangling "—" when a photo has no location (it rendered as
+    // "The Kelpies —  | Gus McEwan Photography" in live SERPs/tabs).
+    const title = photo.location ? `${name} — ${photo.location}` : name
+    const caption = (text.caption ?? '').trim()
+    // Localized description: caption (period-terminated) + the localized
+    // product boilerplate — previously hardcoded English on all 17 locales.
+    const description = `${caption ? caption.replace(/([^.!?。])$/, '$1.') + ' ' : ''}${shopT('productMetaDescription', { site: site('title') })}`
     const canonical = shopCanonical(locale, [productSlug])
     const languages: Record<string, string> = {}
     for (const l of routing.locales) languages[l] = shopCanonical(l, [productSlug])
     languages['x-default'] = `${SITE_URL}/shop/${productSlug}`
+    // OG image capped at 1200px (the bare preview URL serves the full-size
+    // render — heavy for social/search crawlers) with matching dimensions.
+    const ogScale = Math.min(1200 / photo.width, 1200 / photo.height, 1)
+    const ogImage = `${photo.previewUrl}&max=1200`
     return {
       title,
       description,
@@ -129,9 +146,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
         url: canonical,
         type: 'website',
         locale: OG_LOCALE_MAP[locale] ?? 'en_GB',
-        images: [{ url: photo.previewUrl, width: photo.width, height: photo.height, alt: title }],
+        images: [{ url: ogImage, width: Math.round(photo.width * ogScale), height: Math.round(photo.height * ogScale), alt: title }],
       },
-      twitter: { card: 'summary_large_image', title, description, images: [photo.previewUrl] },
+      twitter: { card: 'summary_large_image', title, description, images: [ogImage] },
     }
   }
 

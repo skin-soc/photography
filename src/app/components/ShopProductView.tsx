@@ -176,7 +176,7 @@ export default async function ShopProductView({
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `${displayTitle(photo)} — ${photo.location}`,
+    name: photo.location ? `${displayTitle(photo)} — ${photo.location}` : displayTitle(photo),
     description: photo.caption,
     image: [productImage],
     url: productUrl,
@@ -289,7 +289,7 @@ export default async function ShopProductView({
                 previewSrc={`${photo.previewUrl}${heroQuery(800)}`}
                 previewSrcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
                 sizes={`${previewW}px`}
-                alt={`${displayTitle(photo)} — ${photo.location}`}
+                alt={photo.location ? `${displayTitle(photo)} — ${photo.location}` : displayTitle(photo)}
                 previewW={previewW}
                 previewH={previewH}
                 defaultFamily={defaultFineArtFamily}
@@ -304,7 +304,7 @@ export default async function ShopProductView({
               src={`${photo.previewUrl}${heroQuery(800)}`}
               srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
               sizes={`${posterCardMaxWidth}px`}
-              alt={`${displayTitle(photo)} — ${photo.location}`}
+              alt={photo.location ? `${displayTitle(photo)} — ${photo.location}` : displayTitle(photo)}
               title={posterText.title}
               caption={posterText.caption}
               siteLabel={siteLabel}
@@ -318,7 +318,7 @@ export default async function ShopProductView({
                 src={`${photo.previewUrl}${heroQuery(800)}`}
                 srcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}
                 sizes={`${previewW}px`}
-                alt={`${displayTitle(photo)} — ${photo.location}`}
+                alt={photo.location ? `${displayTitle(photo)} — ${photo.location}` : displayTitle(photo)}
                 width={previewW}
                 height={previewH}
                 draggable={false}

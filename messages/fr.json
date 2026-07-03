@@ -157,7 +157,8 @@
       "doorPrint": "Affiches de galerie typographiées sur quatre papiers d'archive",
       "doorFineArt": "Toile en caisse américaine & tirages encadrés",
       "doorDigital": "Téléchargements sous licence en pleine résolution"
-    }
+    },
+    "productMetaDescription": "Disponible en affiches, éditions fine art et téléchargements numériques sous licence par {site}. Fabriqué à la commande, livré dans toute l’Europe."
   },
   "cart": {
     "emailLabel": "E-mail (pour votre lien de téléchargement)",

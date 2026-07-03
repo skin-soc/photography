@@ -157,7 +157,8 @@
       "doorPrint": "Typeset gallery posters on four archival papers",
       "doorFineArt": "Float-framed canvas & mounted prints",
       "doorDigital": "Licensed full-resolution downloads"
-    }
+    },
+    "productMetaDescription": "Available as posters, fine-art editions and licensed digital downloads from {site}. Made to order and delivered across Europe."
   },
   "cart": {
     "emailLabel": "Email (for your download link)",

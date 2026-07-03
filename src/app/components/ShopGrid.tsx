@@ -242,7 +242,7 @@ function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version
   return (
     <img
       src={src}
-      alt={`${photo.title} — ${photo.location}`}
+      alt={photo.location ? `${photo.title} — ${photo.location}` : photo.title}
       loading={eager ? 'eager' : 'lazy'}
       draggable={false}
       onContextMenu={(e) => e.preventDefault()}
@@ -689,7 +689,7 @@ export default function ShopGrid({
                       {p.salePct ? <SalePill pct={p.salePct} className="absolute top-3 left-3 z-10" /> : null}
                       <PosterMat
                         src={previewSrc(p.previewUrl, 800, true, true)}
-                        alt={`${p.title} — ${p.location}`}
+                        alt={p.location ? `${p.title} — ${p.location}` : p.title}
                         title={posterTextOverrides[p.id]?.title ?? p.title}
                         caption={posterTextOverrides[p.id]?.caption ?? p.caption}
                         siteLabel={siteLabel}
@@ -754,7 +754,7 @@ export default function ShopGrid({
                         {p.salePct ? <SalePill pct={p.salePct} className="absolute top-2 left-2 z-10" /> : null}
                         <LazyImage
                           src={previewSrc(p.previewUrl, 800, isPhysical(typeFilter))}
-                          alt={`${p.title} — ${p.location}`}
+                          alt={p.location ? `${p.title} — ${p.location}` : p.title}
                           eager={i < EAGER}
                           gen={viewKey}
                         />

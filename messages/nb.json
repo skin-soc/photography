@@ -156,7 +156,8 @@
       "doorPrint": "Typografiske galleriplakater på fire arkivpapirer",
       "doorFineArt": "Canvas i svevende ramme & innrammede trykk",
       "doorDigital": "Lisensierte nedlastinger i full oppløsning"
-    }
+    },
+    "productMetaDescription": "Tilgjengelig som plakater, fine art-utgaver og lisensierte digitale nedlastinger fra {site}. Lages på bestilling og leveres i hele Europa."
   },
   "cart": {
     "emailLabel": "E-post (for nedlastingslenken din)",
