@@ -373,6 +373,7 @@ function LandingHero({
       ref={wrapRef}
       aria-label={`${cur.title}${cur.location ? ` — ${cur.location}` : ''}`}
       className="relative mb-14 w-full aspect-square overflow-hidden rounded-[20px] bg-foreground/5"
+      style={{ boxShadow: '0 28px 64px -18px rgba(0,0,0,0.6)' }}
     >
       <div ref={layerRef} className="absolute inset-0 will-change-transform">
         {slides.map((s, i) => (
@@ -606,7 +607,7 @@ export default function ShopGrid({
                   <Link
                     key={type}
                     href={categoryUrl([type])}
-                    className="group relative block overflow-hidden rounded-[16px] aspect-[4/3] sm:aspect-[3/4] bg-foreground/5 text-left"
+                    className="group relative block overflow-hidden rounded-[16px] aspect-[4/3] sm:aspect-[3/4] bg-foreground/5 text-left transition-transform duration-300 hover:-translate-y-1 shadow-[0_20px_32px_-18px_rgba(0,0,0,0.85)]"
                   >
                     <RotatingImage srcs={heroSrcs} delay={idx * 700} gen={viewKey} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-black/70 transition-all duration-500" />
