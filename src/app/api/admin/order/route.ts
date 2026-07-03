@@ -11,6 +11,7 @@ import { getCatalog } from '@/lib/shop'
 import { adminLookupOrders, adminRecentOrders, adminResendOrder, adminExtendOrder, markRefund, recordFulfilment, prodigiCallbackUrl, type AdminOrder } from '@/lib/downloads'
 import { hasPhysicalItems, submitProdigiOrder } from '@/lib/prodigi-fulfil'
 import { payoutIdFromSentinel } from '@/lib/prodigi-payout'
+import { getOrder as getProdigiOrder } from '@/lib/prodigi'
 import { SITE_URL } from '@/i18n/seo'
 
 async function authed(req: NextRequest): Promise<boolean> {
@@ -39,6 +40,24 @@ async function withLinePreviews(orders: AdminOrder[]): Promise<AdminOrder[]> {
 
 export async function GET(req: NextRequest) {
   if (!(await authed(req))) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  // ?prodigi=<orderId> → live Prodigi status + actual charges for that order's
+  // fulfilment (admin monitoring: stage, invoice totals, VAT reverse-charge check).
+  const prodigiFor = req.nextUrl.searchParams.get('prodigi')?.trim()
+  if (prodigiFor) {
+    const order = (await adminLookupOrders(prodigiFor)).find((o) => o.orderId === prodigiFor)
+    if (!order) return NextResponse.json({ error: 'order not found' }, { status: 404 })
+    const pid = order.fulfilment?.prodigiId
+    if (!pid || payoutIdFromSentinel(pid)) {
+      return NextResponse.json({ error: 'order not yet submitted to Prodigi' }, { status: 400 })
+    }
+    try {
+      const status = await getProdigiOrder(pid)
+      // The recorded ex-VAT cost quote (EUR minor) from checkout, for comparison.
+      return NextResponse.json({ ok: true, status })
+    } catch (err) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : 'prodigi fetch failed' }, { status: 502 })
+    }
+  }
   // ?recent=90 → the full recent-orders list for the table; ?q=… → a search.
   const recent = req.nextUrl.searchParams.get('recent')
   if (recent !== null) {

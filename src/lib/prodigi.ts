@@ -337,6 +337,66 @@ export interface ProdigiOrderResult {
   mode: 'sandbox' | 'live'
 }
 
+// ── Order status/charges (GET /orders/{id}) ───────────────────────────────────
+
+export interface ProdigiOrderCharge {
+  /** Prodigi's own invoice number for this charge (appears on their invoice). */
+  invoiceNumber: string | null
+  totalMinor: number
+  currency: string
+}
+
+export interface ProdigiOrderStatus {
+  id: string
+  stage: string
+  /** What Prodigi has actually charged for this order (production + shipping).
+   *  Compare against the recorded ex-VAT quote: equal totals mean the VAT was
+   *  reverse-charged (0%); ~21%/25% higher means Prodigi added VAT. */
+  charges: ProdigiOrderCharge[]
+  chargesTotalMinor: number
+  currency: string | null
+  carrier: string | null
+  tracking: string | null
+}
+
+interface GetOrderResponse {
+  outcome: string
+  order: {
+    id: string
+    status?: { stage?: string }
+    charges?: Array<{
+      prodigiInvoiceNumber?: string | null
+      totalCost?: { amount?: string | number; currency?: string } | null
+    }>
+    shipments?: Array<{
+      carrier?: { name?: string | null } | null
+      tracking?: { number?: string | null } | null
+    }>
+  }
+}
+
+/** Fetch a submitted order's live status + actual charges from Prodigi. Used by
+ *  the admin to monitor fulfilment and verify VAT reverse-charging on the
+ *  first live orders. */
+export async function getOrder(id: string): Promise<ProdigiOrderStatus> {
+  const d = await prodigiFetch<GetOrderResponse>(`/orders/${encodeURIComponent(id)}`)
+  const charges: ProdigiOrderCharge[] = (d.order.charges ?? []).map((c) => ({
+    invoiceNumber: c.prodigiInvoiceNumber ?? null,
+    totalMinor: toMinor(c.totalCost?.amount),
+    currency: (c.totalCost?.currency ?? 'EUR').toUpperCase(),
+  }))
+  const ship = (d.order.shipments ?? [])[0]
+  return {
+    id: d.order.id,
+    stage: d.order.status?.stage ?? 'Unknown',
+    charges,
+    chargesTotalMinor: charges.reduce((s, c) => s + c.totalMinor, 0),
+    currency: charges[0]?.currency ?? null,
+    carrier: ship?.carrier?.name ?? null,
+    tracking: ship?.tracking?.number ?? null,
+  }
+}
+
 interface CreateOrderResponse {
   outcome: string
   order: { id: string; status?: { stage?: string } }

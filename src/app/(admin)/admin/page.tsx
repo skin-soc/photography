@@ -2790,6 +2790,32 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
       return next
     })
 
+  // Live Prodigi status + charges (on demand — monitoring the first live
+  // orders: production stage and whether Prodigi reverse-charged VAT).
+  interface ProdigiLive {
+    stage: string
+    charges: { invoiceNumber: string | null; totalMinor: number; currency: string }[]
+    carrier: string | null
+    tracking: string | null
+  }
+  const [prodigiLive, setProdigiLive] = useState<ProdigiLive | null>(null)
+  const [prodigiBusy, setProdigiBusy] = useState(false)
+  const [prodigiError, setProdigiError] = useState<string | null>(null)
+  async function checkProdigi() {
+    setProdigiBusy(true)
+    setProdigiError(null)
+    try {
+      const res = await fetch(`/api/admin/order?prodigi=${encodeURIComponent(order.orderId)}`)
+      const data = (await res.json().catch(() => ({}))) as { status?: ProdigiLive; error?: string }
+      if (res.ok && data.status) setProdigiLive(data.status)
+      else setProdigiError(data.error || 'Prodigi check failed.')
+    } catch {
+      setProdigiError('Prodigi check failed.')
+    } finally {
+      setProdigiBusy(false)
+    }
+  }
+
   // Refund actions are destructive — always unmistakably red.
   const refundBtn =
     'rounded-md border border-[#931020] bg-[#931020]/15 px-4 py-2 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-[#e0485a] hover:bg-[#931020] hover:text-white transition-colors disabled:opacity-40 disabled:hover:bg-[#931020]/15 disabled:hover:text-[#e0485a]'
@@ -2910,6 +2936,48 @@ function OrderCard({ order, onChanged }: { order: AdminOrder; onChanged: () => v
             </>
           )
         })()}
+        {/* Live Prodigi check — stage + what Prodigi ACTUALLY charged, with a
+            VAT reverse-charge verdict (0% expected: DK VAT id registered with
+            Prodigi, intra-EU B2B supply). */}
+        {order.fulfilment?.prodigiId && !order.fulfilment.prodigiId.startsWith('payout-pending:') && (
+          <div className="grid grid-cols-[140px_1fr] gap-4 py-3.5">
+            <dt className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 pt-0.5">Prodigi live</dt>
+            <dd className="text-sm text-white/90">
+              {prodigiLive ? (
+                <div className="space-y-1 font-mono-ibm text-[13px]">
+                  <div>Stage: <span className="text-white/70">{prodigiLive.stage}</span></div>
+                  {prodigiLive.charges.length === 0 ? (
+                    <div className="text-white/45">No charges recorded by Prodigi yet — check again later.</div>
+                  ) : (
+                    prodigiLive.charges.map((c, i) => (
+                      <div key={i}>
+                        Charged{c.invoiceNumber ? ` (inv ${c.invoiceNumber})` : ''}:{' '}
+                        <span className="text-white/70">{(c.totalMinor / 100).toFixed(2)} {c.currency}</span>
+                      </div>
+                    ))
+                  )}
+                  {prodigiLive.charges.length > 0 && (
+                    <div className="text-amber-300/90 text-[11px]">
+                      VAT check: compare the charged total against the ex-VAT quote — equal ⇒ reverse-charged (0%), ~21% higher ⇒ Prodigi added VAT (investigate).
+                    </div>
+                  )}
+                  {prodigiLive.carrier && (
+                    <div>Carrier: <span className="text-white/70">{prodigiLive.carrier}{prodigiLive.tracking ? ` · ${prodigiLive.tracking}` : ''}</span></div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => void checkProdigi()}
+                  disabled={prodigiBusy}
+                  className="rounded-md border border-white/15 px-3 py-1.5 text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/70 hover:border-white/40 hover:text-white transition-colors disabled:opacity-40"
+                >
+                  {prodigiBusy ? 'Checking…' : 'Check Prodigi status & charges'}
+                </button>
+              )}
+              {prodigiError && <p className="mt-1 text-[11px] text-amber-300">{prodigiError}</p>}
+            </dd>
+          </div>
+        )}
         {order.fulfilment?.tracking && order.fulfilment.tracking.length > 0 && (
           <div className="grid grid-cols-[140px_1fr] gap-4 py-3.5">
             <dt className="text-[10px] font-mono-ibm uppercase tracking-[0.2em] text-white/35 pt-0.5">Tracking</dt>
