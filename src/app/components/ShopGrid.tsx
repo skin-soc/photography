@@ -377,7 +377,9 @@ function LandingHero({
     <section
       ref={wrapRef}
       aria-label={`${cur.title}${cur.location ? ` — ${cur.location}` : ''}`}
-      className="relative mb-14 w-full aspect-square overflow-hidden rounded-[20px] bg-foreground/5"
+      // 18% shorter than the square mockup (100:82) — the top-aligned scene
+      // crops only the sofa band at the bottom, never the artwork up top.
+      className="relative mb-14 w-full aspect-[100/82] overflow-hidden rounded-[20px] bg-foreground/5"
       style={{ boxShadow: '0 28px 64px -18px rgba(0,0,0,0.6)' }}
     >
       <div ref={layerRef} className="absolute inset-0 will-change-transform">
@@ -396,8 +398,10 @@ function LandingHero({
           />
         ))}
       </div>
-      {/* Gradient sits on the photo, so white text is safe in both themes. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/25" />
+      {/* Gradient sits on the photo, so white text is safe in both themes.
+          Zero darkening at the top — the artwork shows untouched; it darkens
+          only toward the bottom where the copy sits. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
       <div className="absolute left-6 right-6 sm:left-10 bottom-8 sm:bottom-10 sm:max-w-xl">
         <h1 className="font-mono-ibm font-[200] leading-[1.05] tracking-tight text-white text-3xl sm:text-5xl">
           {title}
