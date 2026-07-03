@@ -143,7 +143,12 @@ function RotatingImage({
           loading={i === 0 ? 'eager' : 'lazy'}
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${
+          // scale-[1.01]: each slide paints ~1% past the container edge. Browsers
+          // round every object-cover image's painted box from its OWN intrinsic
+          // size, so stacked slides can differ by a subpixel — leaving a 1px seam
+          // at an edge where the photo behind shows through on every crossfade.
+          // The overscan (clipped by the card's overflow-hidden) removes the seam.
+          className={`absolute inset-0 w-full h-full object-cover scale-[1.01] transition-opacity duration-1000 pointer-events-none ${
             i === idx ? 'opacity-100' : 'opacity-0'
           }`}
         />
