@@ -15,10 +15,13 @@ import { formatDKK } from '@/lib/currency'
 import { PRODUCT_TYPE_ORDER, type ProductType } from '@/lib/product-types'
 
 /** One slide of the landing's "gallery wall" hero — a fine-art room mockup with
- *  its caption facts. The client builds the /api/fineart-mockup URL (room07
- *  view) from the variant + the mockup version it already has. */
+ *  its caption facts. The client builds the loki mockup URL (room07 view) from
+ *  the variant + the mockup version it already has (see lib/mockup-url.ts). */
 export interface HeroSlide {
+  id: string
   slug: string
+  /** Preview URL — the client derives the mockup asset host from it. */
+  previewUrl: string
   family: string
   size: string
   color: string
@@ -64,7 +67,9 @@ export function landingHeroSlides(catalog: ShopPhoto[], max = 4): HeroSlide[] {
     const best = fineArtHeroVariant(p)
     if (!best) continue
     slides.push({
+      id: p.id,
       slug: p.slug,
+      previewUrl: p.previewUrl,
       family: best.family,
       size: best.size,
       color: best.color,

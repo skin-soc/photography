@@ -5,20 +5,14 @@ import { ADMIN_COOKIE, verifySessionToken } from './lib/admin-auth'
 
 const intlMiddleware = createMiddleware(routing)
 
-const CANONICAL_HOST = 'gusmcewan.com'
+// NOTE: the gusmcewan.uk → gusmcewan.com canonical 301 is handled at the
+// Cloudflare EDGE, by a zone-level Dynamic Redirect rule on the gusmcewan.uk
+// zone (which has no Worker route — its apex/www are proxied black-hole
+// records). So .uk requests never reach this Worker; a host check here would be
+// dead code and just add work to every real request. Verified live: both
+// gusmcewan.uk and www.gusmcewan.uk 301 with `server: cloudflare`, no Worker.
 
 export default async function middleware(request: NextRequest) {
-  const host = request.headers.get('host') ?? ''
-  // 301 every non-canonical host (gusmcewan.uk, www.*, etc.) to gusmcewan.com,
-  // preserving path + query so Google consolidates signals on a single domain.
-  if (host && host !== CANONICAL_HOST && host.endsWith('gusmcewan.uk')) {
-    const url = new URL(request.url)
-    url.host = CANONICAL_HOST
-    url.protocol = 'https:'
-    url.port = ''
-    return NextResponse.redirect(url, 301)
-  }
-
   const { pathname } = request.nextUrl
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     // The login page itself is public; everything else under /admin requires a
