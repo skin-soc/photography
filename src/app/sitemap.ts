@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { buildSitemapEntries, SITE_URL } from '@/i18n/seo'
-import { getCatalog, photoTypes, type ShopPhoto } from '@/lib/shop'
+import { getCatalog, photoTypes, mockupAssetVersion, type ShopPhoto } from '@/lib/shop'
+import { fineArtHeroVariant } from '@/lib/shop-cards'
 import { PRODUCT_TYPE_ORDER } from '@/lib/product-types'
 import { categoryUrl } from '@/lib/shop-url'
 import { routing } from '@/i18n/routing'
@@ -48,17 +49,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const now = new Date()
+  // Lightroom epoch (2001-01-01 UTC) → Date. Stable per-photo dates instead of
+  // "now" on every fetch, so Google sees real changes rather than daily churn.
+  const LR_EPOCH = 978307200
+  const photoDate = (p: ShopPhoto): Date =>
+    p.captureDate ? new Date((p.captureDate + LR_EPOCH) * 1000) : now
 
   // Product pages — the money pages. One canonical entry each, with alternates.
+  // Fine-art products also list their room07 mockup — the in-room scenes are
+  // the image-search asset competitors' listings don't have.
   for (const photo of catalog) {
     const tail = `/shop/${photo.slug}`
+    const images = [absImg(photo.previewUrl)]
+    const fa = fineArtHeroVariant(photo)
+    if (fa) {
+      images.push(
+        `${SITE_URL}/api/fineart-mockup?photo=${encodeURIComponent(photo.slug)}&family=${encodeURIComponent(fa.family)}&size=${encodeURIComponent(fa.size)}&color=${encodeURIComponent(fa.color)}&v=${mockupAssetVersion()}`,
+      )
+    }
     entries.push({
       url: `${SITE_URL}${tail}`,
-      lastModified: now,
+      lastModified: photoDate(photo),
       changeFrequency: 'monthly',
       priority: 0.8,
       alternates: { languages: langMap(tail) },
-      images: [absImg(photo.previewUrl)],
+      images,
     })
   }
 
@@ -80,9 +95,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         (p) => folders.length === 0 || p.category.some((c) => folders.every((s, i) => c[i] === s)),
       )
       const hero = heroImage(inCat)
+      // Newest photo in the set = the collection's real last change.
+      const newest = inCat.reduce((m, p) => Math.max(m, p.captureDate ?? 0), 0)
       entries.push({
         url: `${SITE_URL}${url}`,
-        lastModified: now,
+        lastModified: newest ? new Date((newest + LR_EPOCH) * 1000) : now,
         changeFrequency: 'weekly',
         priority: folders.length === 0 ? 0.7 : 0.6,
         alternates: { languages: langMap(url) },

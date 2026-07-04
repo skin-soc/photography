@@ -27,7 +27,8 @@
     "shop": {
       "title": "Shop",
       "h1": "Stampe d’arte, poster e download",
-      "description": "Acquista stampe d'arte e download digitali di Gus McEwan — una selezione di fotografia di ritratto, paesaggio e viaggio da Copenaghen, Londra e oltre."
+      "description": "Acquista stampe d'arte e download digitali di Gus McEwan — una selezione di fotografia di ritratto, paesaggio e viaggio da Copenaghen, Londra e oltre.",
+      "categoryDescription": "Sfoglia {count} opere in {name} — disponibili come poster, edizioni fine art e download digitali su licenza, realizzate su ordinazione e consegnate in tutta Europa."
     }
   },
   "nav": {

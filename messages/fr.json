@@ -27,7 +27,8 @@
     "shop": {
       "title": "Boutique",
       "h1": "Boutique tirages d’art, affiches & téléchargements",
-      "description": "Achetez des tirages d'art et des téléchargements numériques de Gus McEwan — une sélection de photographies de portrait, de paysage et de voyage de Copenhague, Londres et au-delà."
+      "description": "Achetez des tirages d'art et des téléchargements numériques de Gus McEwan — une sélection de photographies de portrait, de paysage et de voyage de Copenhague, Londres et au-delà.",
+      "categoryDescription": "Découvrez {count} œuvres dans {name} — disponibles en affiches, éditions fine art et téléchargements numériques sous licence, fabriquées à la commande et livrées dans toute l’Europe."
     }
   },
   "nav": {

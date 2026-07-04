@@ -27,7 +27,8 @@
     "shop": {
       "title": "Kauppa",
       "h1": "Taidetulosteet, julisteet ja lataukset",
-      "description": "Osta taidevedoksia ja digitaalisia latauksia Gus McEwanilta — valikoima muotokuva-, maisema- ja matkavalokuvausta Kööpenhaminasta, Lontoosta ja muualta."
+      "description": "Osta taidevedoksia ja digitaalisia latauksia Gus McEwanilta — valikoima muotokuva-, maisema- ja matkavalokuvausta Kööpenhaminasta, Lontoosta ja muualta.",
+      "categoryDescription": "Selaa {count} teosta kokoelmassa {name} — saatavana julisteina, fine art -vedoksina ja lisensoituina digitaalisina latauksina, valmistetaan tilauksesta ja toimitetaan koko Eurooppaan."
     }
   },
   "nav": {

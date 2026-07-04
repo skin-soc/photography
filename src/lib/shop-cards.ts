@@ -28,6 +28,27 @@ export interface HeroSlide {
   fromText: string
 }
 
+/** The photo's strongest fine-art variant for a room scene — largest offered
+ *  size, framed preferred over canvas at equal area. Null for photos without
+ *  fine-art products. Per the standing rule every offered (family, size) has a
+ *  pre-rendered room07 mockup, so this variant is always renderable. Used by
+ *  the landing hero, the product-page schema images and the sitemap. */
+export function fineArtHeroVariant(
+  p: ShopPhoto,
+): { family: string; size: string; color: string } | null {
+  let best: { family: string; size: string; color: string; area: number } | null = null
+  for (const x of p.products) {
+    if (x.type !== 'fine-art' || !x.family || !x.faSize) continue
+    const area = (x.printSize?.w ?? 0) * (x.printSize?.h ?? 0)
+    const better =
+      !best ||
+      area > best.area ||
+      (area === best.area && x.family === 'framed' && best.family !== 'framed')
+    if (better) best = { family: x.family, size: x.faSize, color: x.frameColor ?? 'black', area }
+  }
+  return best && { family: best.family, size: best.size, color: best.color }
+}
+
 /**
  * Curated slides for the landing hero: fine-art photos (they have real room
  * mockups), green-labelled `key` photos first, capped at `max`. Each uses its
@@ -40,18 +61,7 @@ export function landingHeroSlides(catalog: ShopPhoto[], max = 4): HeroSlide[] {
   const slides: HeroSlide[] = []
   for (const p of ordered) {
     if (slides.length >= max) break
-    let best: { family: string; size: string; color: string; area: number } | null = null
-    for (const x of p.products) {
-      if (x.type !== 'fine-art' || !x.family || !x.faSize) continue
-      const area = (x.printSize?.w ?? 0) * (x.printSize?.h ?? 0)
-      // Prefer framed over canvas at equal-or-larger area — the mount + frame
-      // reads best in the room scene.
-      const better =
-        !best ||
-        area > best.area ||
-        (area === best.area && x.family === 'framed' && best.family !== 'framed')
-      if (better) best = { family: x.family, size: x.faSize, color: x.frameColor ?? 'black', area }
-    }
+    const best = fineArtHeroVariant(p)
     if (!best) continue
     slides.push({
       slug: p.slug,

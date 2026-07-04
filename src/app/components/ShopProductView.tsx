@@ -15,6 +15,7 @@ import {
 import { categoryUrl } from '@/lib/shop-url'
 import { getRates, formatDKK, approxLine } from '@/lib/currency'
 import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProductPicker'
+import { fineArtHeroVariant } from '@/lib/shop-cards'
 import { defaultFineArtProduct } from '@/lib/fine-art-default'
 import FineArtHero from '@/app/components/FineArtHero'
 import PosterBwHero from '@/app/components/PosterBwHero'
@@ -164,9 +165,23 @@ export default async function ShopProductView({
     digital: 'Digital download',
   }
   const productUrl = `${SITE_URL}/shop/${photo.slug}`
-  const productImage = photo.previewUrl.startsWith('http')
+  const absPreview = photo.previewUrl.startsWith('http')
     ? photo.previewUrl
     : `${SITE_URL}${photo.previewUrl}`
+  const productImage = `${absPreview}&max=1200`
+  // Multi-image schema: artwork + the poster-crop render (posters) + the room07
+  // mockup (fine art). Multi-angle product images improve rich-result and Image
+  // Search eligibility — and the room scenes are assets competitors don't have.
+  const schemaImages = [productImage]
+  if (photo.products.some((p) => p.type === 'print')) {
+    schemaImages.push(`${absPreview}&max=1200&logo=0&poster=1`)
+  }
+  const heroVariant = fineArtHeroVariant(photo)
+  if (heroVariant) {
+    schemaImages.push(
+      `${SITE_URL}/api/fineart-mockup?photo=${encodeURIComponent(photo.slug)}&family=${encodeURIComponent(heroVariant.family)}&size=${encodeURIComponent(heroVariant.size)}&color=${encodeURIComponent(heroVariant.color)}&v=${mockupAssetVersion()}`,
+    )
+  }
   // Prices are minor units; the offer spans poster / fine-art / digital tiers, so
   // an AggregateOffer (low–high range) drives the "from kr X" rich-result display.
   const prices = photo.products.map((p) => p.price)
@@ -178,7 +193,7 @@ export default async function ShopProductView({
     '@type': 'Product',
     name: photo.location ? `${displayTitle(photo)} — ${photo.location}` : displayTitle(photo),
     description: photo.caption,
-    image: [productImage],
+    image: schemaImages,
     url: productUrl,
     sku: photo.id,
     brand: { '@type': 'Brand', name: BUSINESS_NAME },
@@ -207,6 +222,25 @@ export default async function ShopProductView({
         seller,
       })),
     },
+  }
+
+  // BreadcrumbList schema mirroring the visible breadcrumb (Shop → type →
+  // subject folders → product), localized labels — SERP breadcrumb display.
+  const localePrefix = locale === 'en' ? '' : `/${locale}`
+  const crumbUrl = (navP: string[]) => `${SITE_URL}${localePrefix}${categoryUrl(navP)}`
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: t('shopRoot'), item: `${SITE_URL}${localePrefix}/shop` },
+      ...navPath.map((seg, i) => ({
+        '@type': 'ListItem',
+        position: i + 2,
+        name: i === 0 && isProductType(seg) ? t(typeMessageKey(seg)) : seg,
+        item: crumbUrl(navPath.slice(0, i + 1)),
+      })),
+      { '@type': 'ListItem', position: navPath.length + 2, name: displayTitle(photo), item: productUrl },
+    ],
   }
 
   // Calculate actual preview dimensions (longest edge capped at 1200px).
@@ -255,6 +289,10 @@ export default async function ShopProductView({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       {navPath.length > 0 ? (

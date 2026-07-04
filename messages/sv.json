@@ -27,7 +27,8 @@
     "shop": {
       "title": "Butik",
       "h1": "Butik för konsttryck, affischer & nedladdningar",
-      "description": "Köp konsttryck och digitala nedladdningar av Gus McEwan — ett urval av porträtt-, landskaps- och resefotografi från Köpenhamn, London och vidare."
+      "description": "Köp konsttryck och digitala nedladdningar av Gus McEwan — ett urval av porträtt-, landskaps- och resefotografi från Köpenhamn, London och vidare.",
+      "categoryDescription": "Se {count} verk i {name} — finns som postrar, fine art-utgåvor och licensierade digitala nedladdningar, tillverkade på beställning och levererade i hela Europa."
     }
   },
   "nav": {

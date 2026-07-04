@@ -27,7 +27,8 @@
     "shop": {
       "title": "Loja",
       "h1": "Loja de arte, pósteres e downloads",
-      "description": "Compre impressões artísticas e downloads digitais de Gus McEwan — uma coleção selecionada de fotografia de retrato, paisagem e viagem de Copenhaga, Londres e além."
+      "description": "Compre impressões artísticas e downloads digitais de Gus McEwan — uma coleção selecionada de fotografia de retrato, paisagem e viagem de Copenhaga, Londres e além.",
+      "categoryDescription": "Explora {count} obras em {name} — disponíveis como pósteres, edições fine art e downloads digitais licenciados, feitas por encomenda e entregues em toda a Europa."
     }
   },
   "nav": {

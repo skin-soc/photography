@@ -27,7 +27,8 @@
     "shop": {
       "title": "Shop",
       "h1": "Shop voor kunstprints, posters & downloads",
-      "description": "Koop kunstprints en digitale downloads van Gus McEwan — een geselecteerde collectie portret-, landschaps- en reisfotografie uit Kopenhagen, Londen en daarbuiten."
+      "description": "Koop kunstprints en digitale downloads van Gus McEwan — een geselecteerde collectie portret-, landschaps- en reisfotografie uit Kopenhagen, Londen en daarbuiten.",
+      "categoryDescription": "Bekijk {count} werken in {name} — verkrijgbaar als posters, fine-artedities en gelicentieerde digitale downloads, op bestelling gemaakt en geleverd in heel Europa."
     }
   },
   "nav": {

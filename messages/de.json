@@ -27,7 +27,8 @@
     "shop": {
       "title": "Shop",
       "h1": "Fine-Art-, Poster- & Download-Shop",
-      "description": "Kaufen Sie Kunstdrucke und digitale Downloads von Gus McEwan — eine ausgewählte Sammlung von Porträt-, Landschafts- und Reisefotografie aus Kopenhagen, London und darüber hinaus."
+      "description": "Kaufen Sie Kunstdrucke und digitale Downloads von Gus McEwan — eine ausgewählte Sammlung von Porträt-, Landschafts- und Reisefotografie aus Kopenhagen, London und darüber hinaus.",
+      "categoryDescription": "Entdecken Sie {count} Werke in {name} — erhältlich als Poster, Fine-Art-Editionen und lizenzierte digitale Downloads, auf Bestellung gefertigt und in ganz Europa geliefert."
     }
   },
   "nav": {

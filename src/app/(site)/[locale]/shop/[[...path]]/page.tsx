@@ -19,7 +19,7 @@ import {
 } from '@/lib/shop'
 import { getPosterTranslations } from '@/lib/shop-settings'
 import { resolveText } from '@/lib/poster-translations'
-import { typeFromUrlSlug } from '@/lib/product-types'
+import { typeFromUrlSlug, isProductType } from '@/lib/product-types'
 import { isProductSlug, resolveShopPath, categoryUrl } from '@/lib/shop-url'
 import { landingTypeCards, shopFolderCards, landingHeroSlides } from '@/lib/shop-cards'
 import { SITE_URL, OG_LOCALE_MAP, getKeywords } from '@/i18n/seo'
@@ -166,7 +166,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const typeSlug = path[0]
   const type = typeSlug ? typeFromUrlSlug(typeSlug) : null
   const title = type ? shop('sectionTitle', { name: shop(typeMessageKey(type)) }) : t('title')
-  const description = t('description')
+  let description = t('description')
   // Lead the social/search preview with a green-labelled hero (Lightroom's "use
   // this one") for the chosen type, falling back to a portfolio image.
   let heroImage = `${SITE_URL}/images/gallery/PL00003.webp`
@@ -175,6 +175,20 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   try {
     const catalog = await getCatalog()
     const pool = type ? catalog.filter((p) => photoTypes(p).includes(type)) : catalog
+    // Unique, localized description per CATEGORY page (type or folder) — every
+    // category previously shared one generic string, so snippets were
+    // duplicates. Name = localized type label, or the folder's own name.
+    if (type) {
+      // Resolve URL slugs to REAL folder names (same resolver the page uses) —
+      // slug↔name comparison would be fragile.
+      const navPath = resolveShopPath(buildCategoryTree(catalog), path)
+      const folders = navPath && navPath.length > 1 ? navPath.slice(1) : []
+      const inCat = pool.filter(
+        (p) => folders.length === 0 || p.category.some((c) => folders.every((s, i) => c[i] === s)),
+      )
+      const name = folders.length > 0 ? folders[folders.length - 1] : shop(typeMessageKey(type))
+      if (inCat.length > 0) description = t('categoryDescription', { name, count: inCat.length })
+    }
     const hero = pool.find((p) => p.key) ?? pool[0]
     if (hero) {
       heroImage = hero.previewUrl.startsWith('http') ? hero.previewUrl : `${SITE_URL}${hero.previewUrl}`
@@ -285,8 +299,31 @@ export default async function Shop({ params }: { params: Params }) {
   // Landing with the hero card: drop the usual 6vw of breathing room below the
   // fixed nav — the hero should sit right beneath it, not float mid-page.
   const heroLanding = (heroSlides?.length ?? 0) > 0
+  // BreadcrumbList schema for category views (Shop → type → folders),
+  // localized labels — mirrors the visible breadcrumb for SERP display.
+  const localePrefix = locale === routing.defaultLocale ? '' : `/${locale}`
+  const breadcrumbSchema =
+    initialCategoryPath.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: tShop('shopRoot'), item: `${SITE_URL}${localePrefix}/shop` },
+            ...initialCategoryPath.map((seg, i) => ({
+              '@type': 'ListItem',
+              position: i + 2,
+              name: i === 0 && isProductType(seg) ? tShop(typeMessageKey(seg)) : seg,
+              item: `${SITE_URL}${localePrefix}${categoryUrl(initialCategoryPath.slice(0, i + 1))}`,
+            })),
+          ],
+        }
+      : null
+
   return (
     <main className={`min-h-screen ${brandBg ? 'shop-brand-bg' : 'bg-bg'} text-foreground px-[6vw] ${heroLanding ? 'pt-[calc(128px+16px)]' : 'pt-[calc(6vw+128px)]'} pb-32`}>
+      {breadcrumbSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      )}
       {catalog.length > 0 ? (
         <ShopGrid
           catalogVersion={version}

@@ -27,7 +27,8 @@
     "shop": {
       "title": "Sklep",
       "h1": "Sklep z grafiką, plakatami i plikami do pobrania",
-      "description": "Kup wydruki artystyczne i pliki cyfrowe Gusa McEwana — wybrana kolekcja fotografii portretowej, krajobrazowej i podróżniczej z Kopenhagi, Londynu i nie tylko."
+      "description": "Kup wydruki artystyczne i pliki cyfrowe Gusa McEwana — wybrana kolekcja fotografii portretowej, krajobrazowej i podróżniczej z Kopenhagi, Londynu i nie tylko.",
+      "categoryDescription": "Przeglądaj {count} prac w kolekcji {name} — dostępne jako plakaty, edycje fine art i licencjonowane pliki cyfrowe, wykonywane na zamówienie i dostarczane w całej Europie."
     }
   },
   "nav": {

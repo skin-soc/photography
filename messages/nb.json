@@ -27,7 +27,8 @@
     "shop": {
       "title": "Butikk",
       "h1": "Kunsttrykk, plakater & nedlastinger",
-      "description": "Kjøp kunsttrykk og digitale nedlastinger av Gus McEwan — et utvalg av portrett-, landskaps- og reisefotografi fra København, London og videre."
+      "description": "Kjøp kunsttrykk og digitale nedlastinger av Gus McEwan — et utvalg av portrett-, landskaps- og reisefotografi fra København, London og videre.",
+      "categoryDescription": "Se {count} verk i {name} — tilgjengelig som plakater, fine art-utgaver og lisensierte digitale nedlastinger, laget på bestilling og levert i hele Europa."
     }
   },
   "nav": {

@@ -27,7 +27,8 @@
     "shop": {
       "title": "Butik",
       "h1": "Kunsttryk, plakater & downloads",
-      "description": "Køb kunsttryk og digitale downloads af Gus McEwan — en udvalgt samling af portræt-, landskabs- og rejsefotografi fra København, London og videre omkring."
+      "description": "Køb kunsttryk og digitale downloads af Gus McEwan — en udvalgt samling af portræt-, landskabs- og rejsefotografi fra København, London og videre omkring.",
+      "categoryDescription": "Se {count} værker i {name} — fås som plakater, fine art-udgaver og licenserede digitale downloads, fremstillet på bestilling og leveret i hele Europa."
     }
   },
   "nav": {
