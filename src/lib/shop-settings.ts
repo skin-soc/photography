@@ -32,6 +32,29 @@ async function settingsKV(): Promise<KVLike | undefined> {
   }
 }
 
+// ── In-isolate read memo ──────────────────────────────────────────────────────
+// The layout reads theme + shop-online on EVERY server render (and getPricing
+// reads on every catalog build), which was ~5 KV reads per SSR view — the KV
+// free tier is 100k reads/day, so settings were the binding constraint, not
+// requests. Values change at most a few times a day (admin edits), so a warm
+// isolate re-reads each key at most once per minute. Setters update the memo,
+// so the admin who changed a value sees it immediately; other isolates converge
+// within the TTL.
+const MEMO_TTL_MS = 60_000
+const _memo = new Map<string, { v: string | null; exp: number }>()
+
+async function readCached(kv: KVLike, key: string): Promise<string | null> {
+  const hit = _memo.get(key)
+  if (hit && hit.exp > Date.now()) return hit.v
+  const v = await kv.get(key)
+  _memo.set(key, { v, exp: Date.now() + MEMO_TTL_MS })
+  return v
+}
+
+function memoWrite(key: string, v: string): void {
+  _memo.set(key, { v, exp: Date.now() + MEMO_TTL_MS })
+}
+
 /**
  * Is the shop currently shown in the nav? Defaults to ONLINE whenever the flag
  * is unset or KV is unavailable, so a transient glitch never hides the shop —
@@ -41,7 +64,7 @@ export async function getShopOnline(): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return true
   try {
-    return (await kv.get(SHOP_ONLINE_KEY)) !== 'off'
+    return (await readCached(kv, SHOP_ONLINE_KEY)) !== 'off'
   } catch {
     return true
   }
@@ -51,7 +74,9 @@ export async function getShopOnline(): Promise<boolean> {
 export async function setShopOnline(online: boolean): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return false
-  await kv.put(SHOP_ONLINE_KEY, online ? 'on' : 'off')
+  const v = online ? 'on' : 'off'
+  await kv.put(SHOP_ONLINE_KEY, v)
+  memoWrite(SHOP_ONLINE_KEY, v)
   return true
 }
 
@@ -67,8 +92,8 @@ export async function getSaleNotify(): Promise<SaleNotify> {
   if (!kv) return { enabled: false, email: DEFAULT_NOTIFY_EMAIL }
   try {
     const [flag, email] = await Promise.all([
-      kv.get(SALE_NOTIFY_KEY),
-      kv.get(SALE_NOTIFY_EMAIL_KEY),
+      readCached(kv, SALE_NOTIFY_KEY),
+      readCached(kv, SALE_NOTIFY_EMAIL_KEY),
     ])
     return { enabled: flag === 'on', email: email || DEFAULT_NOTIFY_EMAIL }
   } catch {
@@ -80,10 +105,13 @@ export async function getSaleNotify(): Promise<SaleNotify> {
 export async function setSaleNotify(input: SaleNotify): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return false
+  const flag = input.enabled ? 'on' : 'off'
   await Promise.all([
-    kv.put(SALE_NOTIFY_KEY, input.enabled ? 'on' : 'off'),
+    kv.put(SALE_NOTIFY_KEY, flag),
     kv.put(SALE_NOTIFY_EMAIL_KEY, input.email),
   ])
+  memoWrite(SALE_NOTIFY_KEY, flag)
+  memoWrite(SALE_NOTIFY_EMAIL_KEY, input.email)
   return true
 }
 
@@ -93,7 +121,7 @@ export async function getRefundUndownloadedDefault(): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return true
   try {
-    return (await kv.get(REFUND_UNDOWNLOADED_DEFAULT_KEY)) !== 'off'
+    return (await readCached(kv, REFUND_UNDOWNLOADED_DEFAULT_KEY)) !== 'off'
   } catch {
     return true
   }
@@ -102,7 +130,9 @@ export async function getRefundUndownloadedDefault(): Promise<boolean> {
 export async function setRefundUndownloadedDefault(value: boolean): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return false
-  await kv.put(REFUND_UNDOWNLOADED_DEFAULT_KEY, value ? 'on' : 'off')
+  const v = value ? 'on' : 'off'
+  await kv.put(REFUND_UNDOWNLOADED_DEFAULT_KEY, v)
+  memoWrite(REFUND_UNDOWNLOADED_DEFAULT_KEY, v)
   return true
 }
 
@@ -116,7 +146,7 @@ export async function getVatRate(): Promise<number> {
   const kv = await settingsKV()
   if (!kv) return DEFAULT_VAT_RATE
   try {
-    const raw = await kv.get(VAT_RATE_KEY)
+    const raw = await readCached(kv, VAT_RATE_KEY)
     const n = raw == null ? NaN : Number(raw)
     return Number.isFinite(n) && n >= 0 && n <= 100 ? n : DEFAULT_VAT_RATE
   } catch {
@@ -129,6 +159,7 @@ export async function setVatRate(pct: number): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return false
   await kv.put(VAT_RATE_KEY, String(pct))
+  memoWrite(VAT_RATE_KEY, String(pct))
   return true
 }
 
@@ -150,7 +181,7 @@ export async function getThemePref(): Promise<ThemePref> {
   const kv = await settingsKV()
   if (!kv) return 'auto'
   try {
-    const raw = await kv.get(THEME_KEY)
+    const raw = await readCached(kv, THEME_KEY)
     return isThemePref(raw) ? raw : 'auto'
   } catch {
     return 'auto'
@@ -162,6 +193,7 @@ export async function setThemePref(theme: ThemePref): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return false
   await kv.put(THEME_KEY, theme)
+  memoWrite(THEME_KEY, theme)
   return true
 }
 
@@ -179,7 +211,7 @@ export async function getPosterTranslations(): Promise<PosterTranslations> {
   const kv = await settingsKV()
   if (!kv) return {}
   try {
-    const raw = await kv.get(POSTER_TRANSLATIONS_KEY)
+    const raw = await readCached(kv, POSTER_TRANSLATIONS_KEY)
     return raw ? (JSON.parse(raw) as PosterTranslations) : {}
   } catch {
     return {}
@@ -190,6 +222,8 @@ export async function getPosterTranslations(): Promise<PosterTranslations> {
 export async function setPosterTranslations(data: PosterTranslations): Promise<boolean> {
   const kv = await settingsKV()
   if (!kv) return false
-  await kv.put(POSTER_TRANSLATIONS_KEY, JSON.stringify(data))
+  const body = JSON.stringify(data)
+  await kv.put(POSTER_TRANSLATIONS_KEY, body)
+  memoWrite(POSTER_TRANSLATIONS_KEY, body)
   return true
 }

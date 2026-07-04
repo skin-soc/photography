@@ -206,15 +206,24 @@ function coerce(raw: unknown): PricingConfig {
   }
 }
 
+/** In-isolate memo — getPricing runs on every catalog build (i.e. every SSR shop
+ *  view even when the processed catalog is warm), which was a KV read per view
+ *  against the 100k/day free-tier read cap. Pricing changes only via setPricing
+ *  (which refreshes the memo), so a 60s TTL just bounds cross-isolate staleness. */
+const PRICING_MEMO_TTL_MS = 60_000
+let _pricingMemo: { v: PricingConfig; exp: number } | null = null
+
 /** Current pricing config. Falls back to DEFAULT_PRICING when KV is unset or
  *  unavailable, so the shop is never left with zero prices. */
 export async function getPricing(): Promise<PricingConfig> {
+  if (_pricingMemo && _pricingMemo.exp > Date.now()) return _pricingMemo.v
   const kv = await settingsKV()
   if (!kv) return DEFAULT_PRICING
   try {
     const raw = await kv.get(PRICING_KEY)
-    if (!raw) return DEFAULT_PRICING
-    return coerce(JSON.parse(raw))
+    const cfg = raw ? coerce(JSON.parse(raw)) : DEFAULT_PRICING
+    _pricingMemo = { v: cfg, exp: Date.now() + PRICING_MEMO_TTL_MS }
+    return cfg
   } catch {
     return DEFAULT_PRICING
   }
@@ -344,5 +353,6 @@ export async function setPricing(
   const kv = await settingsKV()
   if (!kv) return { ok: false, errors: [], markupErrors: [] }
   await kv.put(PRICING_KEY, JSON.stringify(clean))
+  _pricingMemo = { v: clean, exp: Date.now() + PRICING_MEMO_TTL_MS }
   return { ok: true, errors: [], markupErrors: [] }
 }

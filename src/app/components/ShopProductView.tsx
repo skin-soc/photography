@@ -18,6 +18,7 @@ import ShopProductPicker, { type PickerProduct } from '@/app/components/ShopProd
 import { fineArtHeroVariant } from '@/lib/shop-cards'
 import { defaultFineArtProduct } from '@/lib/fine-art-default'
 import FineArtHero from '@/app/components/FineArtHero'
+import { fineArtMockupUrl } from '@/lib/mockup-url'
 import PosterBwHero from '@/app/components/PosterBwHero'
 import SalePill from '@/app/components/SalePill'
 import LicensingLink from '@/app/components/LicensingLink'
@@ -178,9 +179,11 @@ export default async function ShopProductView({
   }
   const heroVariant = fineArtHeroVariant(photo)
   if (heroVariant) {
-    schemaImages.push(
-      `${SITE_URL}/api/fineart-mockup?photo=${encodeURIComponent(photo.slug)}&family=${encodeURIComponent(heroVariant.family)}&size=${encodeURIComponent(heroVariant.size)}&color=${encodeURIComponent(heroVariant.color)}&v=${mockupAssetVersion()}`,
-    )
+    // Loki-hosted (robots-crawlable — /api/ is disallowed in robots.txt, which
+    // was blocking Google Images from these); falls back to the Worker proxy
+    // when no public preview host is configured.
+    const mockup = fineArtMockupUrl(photo, heroVariant.family, heroVariant.size, heroVariant.color, 'room07', mockupAssetVersion())
+    schemaImages.push(mockup.startsWith('http') ? mockup : `${SITE_URL}${mockup}`)
   }
   // Prices are minor units; the offer spans poster / fine-art / digital tiers, so
   // an AggregateOffer (low–high range) drives the "from kr X" rich-result display.
@@ -323,6 +326,7 @@ export default async function ShopProductView({
             <div className="relative w-full" style={{ maxWidth: previewW }}>
               {photo.salePct ? <SalePill pct={photo.salePct} className="absolute top-3 left-3 z-10" /> : null}
               <FineArtHero
+                photoId={photo.id}
                 photoSlug={slug}
                 previewSrc={`${photo.previewUrl}${heroQuery(800)}`}
                 previewSrcSet={`${photo.previewUrl}${heroQuery(400)} 400w, ${photo.previewUrl}${heroQuery(800)} 800w`}

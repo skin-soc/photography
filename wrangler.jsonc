@@ -30,8 +30,11 @@
         "SHOP_PREVIEW_BASE_URL": "https://loki.gusmcewan.com",
         "PRODIGI_MODE": "sandbox"
       },
+      // Isolated preview namespace — was sharing the PROD namespace, so preview
+      // writes (pricing edits, the processed-catalog blob, settings) landed in
+      // production's store. Its own namespace keeps the two apart.
       "kv_namespaces": [
-        { "binding": "SHOP_SETTINGS", "id": "8a07bbf434824d53b510c8fa3b9a18f7" }
+        { "binding": "SHOP_SETTINGS", "id": "a6a1861406cf4b19bfbeefae1c633f4e" }
       ]
     }
   },

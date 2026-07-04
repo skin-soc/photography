@@ -1,3 +1,17 @@
 # https://developers.cloudflare.com/workers/static-assets/headers
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable
+
+# Gallery photos are content-stable (a re-edit ships under a new name/version),
+# so they get the 1-year immutable cache — repeat visitors stop revalidating
+# 170MB of imagery. The next.config headers() rule set this for Worker-served
+# responses, but these are served straight from static assets, which honour
+# _headers instead.
+#
+# NOTE: Cloudflare CONCATENATES the Cache-Control of every matching rule (it
+# does NOT let the more specific rule win), so a broad `/images/*` rule here
+# would double up the header on gallery paths. We therefore scope this to the
+# gallery only; other /images/* chrome (favicons, logo) keeps the asset
+# server's default (etag revalidation), which is cheap for those few small files.
+/images/gallery/*
+  Cache-Control: public,max-age=31536000,immutable

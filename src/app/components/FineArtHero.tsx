@@ -2,18 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useFineArtPreview } from '@/store/fineart-preview'
-
-/** Frame colours that have a real mockup cover (canvas always previews in black). */
-function mockupColor(family: string, color: string): string {
-  return family === 'canvas' ? 'black' : color
-}
-
-/** The edge-cached mockup URL for a (family, size, colour) selection. `v` is the
- *  MOCKUP_VERSION (passed in, since this is a client component) — it busts the
- *  1-year immutable browser cache when the mockup format/render changes. */
-function mockupUrl(photoSlug: string, family: string, size: string, color: string, v: number): string {
-  return `/api/fineart-mockup?photo=${encodeURIComponent(photoSlug)}&family=${encodeURIComponent(family)}&size=${encodeURIComponent(size)}&color=${encodeURIComponent(mockupColor(family, color))}&v=${v}`
-}
+import { fineArtMockupUrl } from '@/lib/mockup-url'
 
 export interface FineArtVariant { family: string; size: string; color: string }
 
@@ -34,6 +23,7 @@ export interface FineArtVariant { family: string; size: string; color: string }
  *    cached before the customer reaches them.
  */
 export default function FineArtHero({
+  photoId,
   photoSlug,
   previewSrc,
   previewSrcSet,
@@ -47,6 +37,7 @@ export default function FineArtHero({
   mockupVersion,
   variants = [],
 }: {
+  photoId: string
   photoSlug: string
   previewSrc: string
   previewSrcSet: string
@@ -69,7 +60,10 @@ export default function FineArtHero({
   const color = sel.color ?? defaultColor
 
   const shadow = { boxShadow: '0 28px 64px -18px rgba(0,0,0,0.6)' }
-  const mockupSrc = family && size && color ? mockupUrl(photoSlug, family, size, color, mockupVersion) : null
+  // Loki-hosted mockup (asset host derived from the preview URL) — off-Worker.
+  const target = { id: photoId, slug: photoSlug, previewUrl: previewSrc }
+  const mockupSrc =
+    family && size && color ? fineArtMockupUrl(target, family, size, color, 'room07', mockupVersion) : null
 
   // The mockup currently ON SCREEN. Starts as the selection so SSR/first paint
   // shows the default straight away; after that it only advances once the next
@@ -99,7 +93,7 @@ export default function FineArtHero({
       (a, b) => (a.family === family ? 0 : 1) - (b.family === family ? 0 : 1),
     )
     const urls = Array.from(
-      new Set(ordered.map((v) => mockupUrl(photoSlug, v.family, v.size, v.color, mockupVersion))),
+      new Set(ordered.map((v) => fineArtMockupUrl(target, v.family, v.size, v.color, 'room07', mockupVersion))),
     ).filter((u) => u !== mockupSrc)
     let stop = false
     ;(async () => {

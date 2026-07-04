@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import LocaleSwitcher from './LocaleSwitcher'
 import CartIcon from './CartIcon'
+import { useSiteConfig } from '@/lib/use-site-config'
 
 const portfolioHrefs = ['/people', '/places', '/nature'] as const
 type NavKey = 'people' | 'places' | 'nature' | 'shop' | 'about'
@@ -15,9 +16,15 @@ type NavKey = 'people' | 'places' | 'nature' | 'shop' | 'about'
 // and looks grimy on a light page — is dropped. usePathname() is locale-stripped.
 const HERO_PATHS: string[] = ['/', '/people', '/places', '/nature']
 
-export default function Nav({ shopOnline = true }: { shopOnline?: boolean }) {
+export default function Nav({ shopOnline: shopOnlineSSR = true }: { shopOnline?: boolean }) {
   const t = useTranslations('nav')
   const pathname = usePathname()
+  // The SSR value is baked into prerendered marketing pages at build time; the
+  // live config (fetched client-side) overrides it so the admin kill-switch
+  // still hides the shop everywhere without a redeploy. Falls back to the SSR
+  // value until the config loads (or if the fetch fails).
+  const cfg = useSiteConfig()
+  const shopOnline = cfg?.shopOnline ?? shopOnlineSSR
   // The shop link is hidden from the nav when the admin takes the shop offline.
   const topHrefs: ('/shop' | '/about')[] = shopOnline ? ['/shop', '/about'] : ['/about']
   // Restore mobile-menu state across locale-switch remounts. LocaleSwitcher

@@ -13,6 +13,7 @@ import PosterMat from '@/app/components/PosterMat'
 import SalePill from '@/app/components/SalePill'
 import { categoryUrl } from '@/lib/shop-url'
 import type { TypeCard, FolderCard, HeroSlide } from '@/lib/shop-cards'
+import { fineArtMockupUrl } from '@/lib/mockup-url'
 
 export interface GridPhoto {
   id: string
@@ -218,10 +219,10 @@ function LazyImage({
   )
 }
 
-/** The head-on cover-mockup URL for a fine-art (family, size, colour). The worker
- *  maps the frame colour to the renderable cover; `v` busts the browser cache. */
-function coverUrl(slug: string, c: { family: string; size: string; color: string }, v: number): string {
-  return `/api/fineart-mockup?photo=${encodeURIComponent(slug)}&family=${encodeURIComponent(c.family)}&size=${encodeURIComponent(c.size)}&color=${encodeURIComponent(c.color)}&view=cover&v=${v}`
+/** The head-on cover-mockup URL for a fine-art (family, size, colour) — served
+ *  straight from the loki asset host (no Worker); `v` busts the browser cache. */
+function coverUrl(photo: GridPhoto, c: { family: string; size: string; color: string }, v: number): string {
+  return fineArtMockupUrl(photo, c.family, c.size, c.color, 'cover', v)
 }
 
 /**
@@ -238,7 +239,7 @@ function FineArtCoverTile({ photo, version, eager }: { photo: GridPhoto; version
   const pick = covers.find((c) => c.family === 'framed' && c.color === 'black') ?? covers[0] ?? null
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
-  const src = pick && !failed ? coverUrl(photo.slug, pick, version) : previewSrc(photo.previewUrl, 800, true)
+  const src = pick && !failed ? coverUrl(photo, pick, version) : previewSrc(photo.previewUrl, 800, true)
   return (
     <img
       src={src}
@@ -339,8 +340,7 @@ function LandingHero({
   from: (price: string) => string
 }) {
   const [idx, setIdx] = useState(0)
-  const urlOf = (s: HeroSlide) =>
-    `/api/fineart-mockup?photo=${encodeURIComponent(s.slug)}&family=${encodeURIComponent(s.family)}&size=${encodeURIComponent(s.size)}&color=${encodeURIComponent(s.color)}&v=${mockupVersion}`
+  const urlOf = (s: HeroSlide) => fineArtMockupUrl(s, s.family, s.size, s.color, 'room07', mockupVersion)
 
   useEffect(() => {
     if (slides.length <= 1) return
